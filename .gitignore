@@ -1,0 +1,5 @@
+obj/*
+!obj/.gitkeep
+.gdb*
+gdb_tuiffic
+gdb_tuiffic_dev

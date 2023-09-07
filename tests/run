@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# run tests on source or header file
+
+test="$1"
+
+# check if empty string
+if [[ -z "$test" ]]; then
+    echo "Usage:  test srcfile_test.c"
+    exit 1
+fi
+
+# if source file exists
+if [ -e "../src/$src_name.c" ]; then
+
+    # strip source file name
+    src_name="${test%%_test.c}"
+
+    # build
+    gcc -g -o test.out $test ../src/$src_name.c -lncurses
+    build_status=$?
+
+# if only header file
+else                                    
+    gcc -g -o test.out $test -lncurses
+    build_status=$?
+fi
+
+# run
+if [ $build_status -eq 0 ]; then
+    ./test.out
+fi
