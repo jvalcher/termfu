@@ -1,5 +1,9 @@
+.gdb*
+.vim-bookmarks
 obj/*
 !obj/.gitkeep
-.gdb*
-gdb_tuiffic
-gdb_tuiffic_dev
+gdb-tuiffic
+!.gdb-tuiffic
+*.out
+build.log
+proto/*

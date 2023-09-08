@@ -17,12 +17,12 @@ if [ -e "../src/$src_name.c" ]; then
     src_name="${test%%_test.c}"
 
     # build
-    gcc -g -o test.out $test ../src/$src_name.c -lncurses
+    gcc -g -o ./test.out $test ../src/$src_name.c -lncurses
     build_status=$?
 
 # if only header file
 else                                    
-    gcc -g -o test.out $test -lncurses
+    gcc -g -o ./test.out $test -lncurses
     build_status=$?
 fi
 

@@ -7,29 +7,47 @@
 #include <string.h>
 #include <ncurses.h>
 
-#include "ncurses_utilities.h"
+#include "render_screen.h"
 
 #define VERSION         "0.0.1"
 #define CMD_LEN         50
+#define RUNNING         true
 
 
 int main (void) 
 {
-    // set up window
+    /*
+        render initial screen
+    */
     initscr();
-    render_window();
-
-    // testing
-
-    // create windows
-    // newwin(rows, cols, y_org, x_org);
-    int h, w;
-    getmaxyx(stdscr, h, w);
-    WINDOW *main = newwin(10,10,0,0);
-    wrefresh(main);
-
     refresh();
-    //getch();
+    render_screen();
+
+
+    /*
+        main loop
+        ---------
+        q   - quit
+    */
+    int ch;
+    bool running = true;
+
+    while (RUNNING) {
+
+        // key read
+        noecho();
+        ch = getch();
+        echo();
+
+        // shortcuts
+        nodelay(stdscr, true);
+        if (ch == 'q')
+            break;
+        nodelay(stdscr, false);
+    }
+
+
+    getch();
     endwin();
 
     return 0;
@@ -77,5 +95,11 @@ int main (void)
     flushinp();
     getnstr(buff, 100);
     printw("You typed: %s\n", buff);    // no output
+
+    // refresh()
+    // wrefresh()
+    // touchwin(stdscr) + refresh()
+
+    // delwin(win)
 */
 
