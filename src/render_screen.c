@@ -15,21 +15,14 @@
     // "visual" layout
     // component colors
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <ctype.h>
-#include <unistd.h>
 #include <ncurses.h>
+#include <stdbool.h>
 
 #include "render_screen.h"
 #include "utilities.h"
 
-#define CONFIG_FILE         ".gdb-tuiffic"
 #define BORDER_COLOR        BLUE_BLACK
 #define TITLE_COLOR         CYAN_BLACK
-#define MAX_CONFIGS         20
 #define MAX_WIN_CONFIG_Y    10
 #define MAX_WIN_CONFIG_X    10
 
@@ -62,7 +55,7 @@ render_screen()
     */
 
     // terminal screen
-    FILE *screen = create_sub_window(stdscr, "gdb-tuiffic", screen_height, screen_width, 0, 0);
+    WINDOW *screen = create_sub_window(stdscr, "gdb-tuiffic", screen_height, screen_width, 0, 0);
 }
 
 
@@ -130,78 +123,4 @@ create_sub_window(
     wrefresh(window);
 }
 
-
-/*
-    Read, apply configuration file
-    ---------------------
-    - looks for .gdb-tuiffic in current and then HOME directory
-    - example configuration in README.md
-*/
-void apply_config_file()
-{
-    FILE *file;
-    char file_buffer[500];
-    int width = 0;
-    int curr_width = 0;
-    int height = 0;
-
-    // open config file
-    char path[100];
-
-    // check current directory
-    char cwd[100];
-    getcwd(cwd, sizeof(cwd));
-    snprintf(path, sizeof(path), "%s/%s", cwd, CONFIG_FILE);
-    file = fopen(path, "r");
-    if (file == NULL) {
-
-        // check in HOME directory
-        char *home = getenv("HOME");
-        snprintf(path, sizeof(path), "%s/%s", home, CONFIG_FILE);
-        file = fopen(path, "r");
-    }
-
-    // no config file
-    if (file == NULL) {
-        mvprintw(4, 5, "Config file not found.");
-        return;
-    }
-
-    // parse file
-    char ch;
-    int i;
-    char config_category[20];
-    char config_value[20];
-
-    while ((ch = fgetc(file)) != EOF) {
-
-        // get config section
-        if (ch == '[') {
-
-            // get config category
-            i = 0;
-            while ((ch = fgetc(file)) != ':') {
-                mvprintw(4, 5, "Config: ch", ch);
-                config_category[i++] = ch;
-            }
-            config_category[i] = '\0';
-
-            // get config category value
-            i = 0;
-            while ((ch = fgetc(file)) != ']') {
-                config_value[i++] = ch;
-            }
-            config_value[i] = '\0';
-        }     
-
-        // apply configuration
-        if (strcmp(config_category, "layout") == 0) {
-            mvprintw(4, 5, "Config: %s = %s", config_category, config_value);
-            refresh();
-            napms(100);
-        }
-    }
-
-    fclose(file);
-}
 

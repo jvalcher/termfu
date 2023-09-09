@@ -10,11 +10,11 @@ if [[ -z "$test" ]]; then
     exit 1
 fi
 
+# strip source file name
+src_name="${test%%_test.c}"
+
 # if source file exists
 if [ -e "../src/$src_name.c" ]; then
-
-    # strip source file name
-    src_name="${test%%_test.c}"
 
     # build
     gcc -g -o ./test.out $test ../src/$src_name.c -lncurses
