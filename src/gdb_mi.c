@@ -19,11 +19,13 @@ struct gdb_state {
     (gdb) info line
     Line 12 of "test.c" starts at address 0x55555555517e <main+53> (...)
          ^^     ^^^^^^
-*/
+
+
+
 void get_location (void) 
 {
-
-
     return 0;
 }
+
+*/
 

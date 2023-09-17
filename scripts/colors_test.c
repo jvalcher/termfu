@@ -92,7 +92,7 @@ int main(void)
             init_color(34, 1000, 750, 750);
             PRINT_COLOR(34, 0, "pink: 100, 75, 75");
         } else {
-            printw("(!) Terminal unable to mix colors\n");
+            printw("can_change_color() returned false: \nTerminal unable to mix colors\n");
         }
 
 
@@ -109,4 +109,3 @@ int main(void)
 
     return 0;
 }
-

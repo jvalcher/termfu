@@ -16,11 +16,9 @@
 
 int main (void) 
 {
-    /*
-        render initial screen
-    */
     initscr();
     refresh();
+
     render_screen();
 
 
@@ -32,7 +30,9 @@ int main (void)
     int ch;
     bool running = true;
 
-    while (RUNNING) {
+    while (running) {
+
+        render_screen();
 
         // key read
         noecho();

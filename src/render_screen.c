@@ -1,40 +1,24 @@
 
 /*
-    Ncurses rendering utilities
-    --------------
-    Public:
-        render_window
-    Static:
-        create_colors
-        render_title
-        center_string
+   Render Ncurses screen
 */
 
-// TODO: implement normal, insert (cmd) modes
-// TODO: external config file
-    // "visual" layout
-    // component colors
 
 #include <ncurses.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stdbool.h>
 
 #include "render_screen.h"
+#include "create_layouts.h"
+#include "colors.h"
 #include "utilities.h"
 
-#define BORDER_COLOR        BLUE_BLACK
-#define TITLE_COLOR         CYAN_BLACK
 #define MAX_WIN_CONFIG_Y    10
 #define MAX_WIN_CONFIG_X    10
 
-static char layout[MAX_WIN_CONFIG_Y][MAX_WIN_CONFIG_X] = {0};
+static void create_sub_window(WINDOW *window, char *window_name, int rows, int cols, int pos_y, int pos_x);
 
-
-/*
-    Prototypes
-*/
-static void create_colors();
-static WINDOW* create_sub_window(WINDOW *window, char *window_name, int rows, int cols, int pos_y, int pos_x);
-void apply_config_file();
 
 
 /*
@@ -43,43 +27,17 @@ void apply_config_file();
 void 
 render_screen()
 {
-    // create color pairs
-    create_colors();
-    apply_config_file();
+    create_colors ();
 
-    int screen_width     = getmaxx(stdscr);
-    int screen_height    = getmaxy(stdscr);    
-
-    /*
-        Create windows
-    */
-
-    // terminal screen
-    WINDOW *screen = create_sub_window(stdscr, "gdb-tuiffic", screen_height, screen_width, 0, 0);
-}
+    // render outer border, title
+    int screen_width  = getmaxx (stdscr);
+    int screen_height = getmaxy (stdscr);
+    create_sub_window(stdscr, "", screen_height, screen_width, 0, 0);
+    create_sub_window(stdscr, "gdb-tuiffic", 3, screen_width, 0, 0);
 
 
-/*
-   Create font_background color pairs
-   ---------------------
-   - check current terminal's color capability with:  
-        $ make colors
-*/
-static void 
-create_colors()
-{
-    if (has_colors()) {
+    create_layouts ();
 
-        start_color();
-
-        init_pair(RED_BLACK, COLOR_RED, COLOR_BLACK);
-        init_pair(YELLOW_BLACK, COLOR_YELLOW, COLOR_BLACK);
-        init_pair(BLUE_BLACK, COLOR_BLUE, COLOR_BLACK);
-        init_pair(MAGENTA_BLACK, COLOR_MAGENTA, COLOR_BLACK);
-        init_pair(CYAN_BLACK, COLOR_CYAN, COLOR_BLACK);
-        init_pair(WHITE_BLACK, COLOR_WHITE, COLOR_BLACK);
-        init_pair(WHITE_BLUE, COLOR_WHITE, COLOR_BLUE);
-    }
 }
 
 
@@ -89,7 +47,7 @@ create_colors()
     rows, cols      - height, width
     pos_y, pos_x    - window position in terms of top left corner
 */
-static WINDOW*
+static void
 create_sub_window(
         WINDOW *window, 
         char *window_name, 
@@ -98,7 +56,10 @@ create_sub_window(
         int pos_y, 
         int pos_x) 
 {
-    // create main window
+    //int screen_width     = getmaxx (stdscr);
+    //int screen_height    = getmaxy (stdscr);    
+
+    // create window object
     window = subwin(window, rows, cols, pos_y, pos_x);
     if (window == NULL) {
         fprintf(stderr, "Unable to create window\n");

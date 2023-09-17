@@ -6,4 +6,4 @@ gdb-tuiffic
 !.gdb-tuiffic
 *.out
 build.log
-proto/*
+prototypes/*

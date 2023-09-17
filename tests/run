@@ -6,27 +6,43 @@ test="$1"
 
 # check if empty string
 if [[ -z "$test" ]]; then
-    echo "Usage:  test srcfile_test.c"
+    echo "Usage:"
+    echo "    $ ./run file_test.c"
     exit 1
 fi
 
 # strip source file name
 src_name="${test%%_test.c}"
 
-# if source file exists
+# build
+printf "\nSearching for source file ../src/$src_name.c ...\n"
+#
+# if ../src/file.c exists
 if [ -e "../src/$src_name.c" ]; then
 
-    # build
+    echo   "Building with source file..."
+    printf "    gcc -g -o ./test.out $test ../src/$src_name.c -lncurses ...\n"
     gcc -g -o ./test.out $test ../src/$src_name.c -lncurses
     build_status=$?
 
-# if only header file
-else                                    
+# else if only ../src/file.h exists
+elif [ -e "../src/$src_name.h" ]; then
+
+    echo   "No source file found."
+    echo   "Building with header file only:"
+    printf "    gcc -g -o ./test.out $test -lncurses ...\n"
     gcc -g -o ./test.out $test -lncurses
     build_status=$?
+
+else
+    printf    "No header file found\n"
 fi
 
 # run
 if [ $build_status -eq 0 ]; then
+    printf "Running...\n"
+    printf "    ./test.out \n"
+    printf "___________\n\n"
     ./test.out
+    echo ""
 fi

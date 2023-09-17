@@ -1,4 +1,12 @@
-[layout:mylayout]
-c s
-w s
+
+[layout:layout1]
+c a
+w a
 b s
+r s
+
+[layout:layout2]
+c w b r
+a a c c
+a a c c
+
