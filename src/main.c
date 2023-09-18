@@ -7,6 +7,8 @@
 #include <string.h>
 #include <ncurses.h>
 
+#include "colors.h"
+#include "apply_config.h"
 #include "render_screen.h"
 
 #define VERSION         "0.0.1"
@@ -16,40 +18,43 @@
 
 int main (void) 
 {
+    // initialize Ncurses
     initscr();
-    refresh();
 
-    render_screen();
+    // initialize font colors (colors.h)
+    create_colors ();
 
+    // parse external configuration file (parse_config.h)
+    struct layouts *layouts = NULL;
+    apply_config (layouts);
 
-    /*
-        main loop
-        ---------
-        q   - quit
-    */
+    //
+    //  Main loop
+    //  ---------
+    //  q   - quit
+    //
     int ch;
     bool running = true;
-
     while (running) {
 
-        render_screen();
+        render_screen (layouts);    // render_screen.h
 
-        // key read
+        // read keypress
         noecho();
         ch = getch();
         echo();
 
-        // shortcuts
+        // actions
         nodelay(stdscr, true);
+
+        // quit
         if (ch == 'q')
             break;
+
         nodelay(stdscr, false);
     }
 
-
-    getch();
     endwin();
-
     return 0;
 }
 
