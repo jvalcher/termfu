@@ -1,13 +1,11 @@
 
+/*
+    Color setups
+*/
+
+
 #ifndef COLORS_H
 #define COLORS_H
-
-/*
-    Color settings
-*/
-#define BORDER_COLOR        BLUE_BLACK
-#define TITLE_COLOR         CYAN_BLACK
-
 
 /* 
     Color pair identifiers
@@ -23,11 +21,16 @@
 #define WHITE_BLACK     26
 #define WHITE_BLUE      27
 
+#define BORDER_COLOR        BLUE_BLACK
+#define TITLE_COLOR         CYAN_BLACK
+
 
 /*
-   Create font_background color pairs
-   ---------------------
-   - check current terminal's color capability with:  
+    create_colors ()
+    ----------------
+    Create font_background color pairs
+
+    * check current terminal's color capability with:  
         $ make colors
 */
 void  create_colors();
