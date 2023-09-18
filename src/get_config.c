@@ -11,6 +11,7 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <ncurses.h>
 
 #include "utilities.h"
 #include "get_config.h"
@@ -26,6 +27,7 @@ static void  parse_config_file_data (FILE*, struct config_file_data*);
 void get_config_file_data (struct config_file_data *data)
 {
     if (data == NULL) {
+        endwin();
         pfem ("config_file_data struct pointer is NULL");
         exit (EXIT_FAILURE);
     }
@@ -63,6 +65,7 @@ static FILE *open_config_file ()
 
     // no config file
     if (file == NULL) {
+        endwin();
         pfem  ("Unable to find config file in pwd or HOME");
         pfemo (cwd_path);
         pfemo (home_path);
@@ -85,6 +88,7 @@ static void parse_config_file_data (
         struct config_file_data *data )
 {
     if (file == NULL) {
+        endwin();
         pfem ("FILE pointer is NULL");
         exit (EXIT_FAILURE);
     }
