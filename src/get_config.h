@@ -1,4 +1,8 @@
 
+/*
+   Open, parse CONFIG_FILE
+*/
+
 #ifndef GET_CONFIG_H
 #define GET_CONFIG_H
 
@@ -9,10 +13,10 @@
         PWD/CONFIG_FILE
         HOME/CONFIG_FILE
 
-
-    Layout example:
+    Layouts
 
         Window type symbols
+
             status              t
             commands            c
             watches             w
@@ -24,7 +28,7 @@
 
             newline symbol      n
 
-        CONFIG_FILE:
+        Example CONFIG_FILE layouts
 
             [layout:srcHoriz1]
             cs
@@ -39,6 +43,7 @@
 
             c c b r
 
+    More to come...
 */
 
 
@@ -50,10 +55,21 @@
 
 
 /*
-    Data structure to hold CONFIG_FILE settings
-    --------------------
+    Data structure to hold CONFIG_FILE data
+*/
+struct config_file_data {
+    int     num_configs;
+    char    categories      [MAX_CONFIG_ENTRIES][MAX_CONFIG_CATEG_LEN];
+    char    categ_labels    [MAX_CONFIG_ENTRIES][MAX_CONFIG_LABEL_LEN];
+    char    categ_values    [MAX_CONFIG_ENTRIES][MAX_CONFIG_VALUE_LEN];
+};
 
-    Layout example:
+
+/*
+    Add data from CONFIG_FILE to config_file_data struct
+    ----------
+
+    Layout parsing example:
 
         CONFIG_FILE -->
 
@@ -68,17 +84,6 @@
             categories   [i]  ==  "layout"
             categ_labels [i]  ==  "my_layout_1"
             categ_values [i]  ==  "cwbrnaaccnaaccn"
-*/
-struct config_file_data {
-    int     num_configs;
-    char    categories      [MAX_CONFIG_ENTRIES][MAX_CONFIG_CATEG_LEN];
-    char    categ_labels    [MAX_CONFIG_ENTRIES][MAX_CONFIG_LABEL_LEN];
-    char    categ_values    [MAX_CONFIG_ENTRIES][MAX_CONFIG_VALUE_LEN];
-};
-
-
-/*
-    Add data from CONFIG_FILE to config_file_data struct
 */
 void get_config_file_data (struct config_file_data *data);
 

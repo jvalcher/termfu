@@ -4,7 +4,7 @@
 
 
 /*
-    perr()
+    pfem, pfemo
 */
 int main (void)
 {
@@ -14,8 +14,8 @@ int main (void)
 
     puts("");
     
-    char ch_err_mes[] = "Unknown window layout symbol (_)";
-    ch_err_mes [strlen(ch_err_mes) - 2] = 'c';
+    char ch_err_mes [] = "Unknown layout window symbol (_)";
+    ch_err_mes [strlen (ch_err_mes) - 2] = 'c';
     pfem (ch_err_mes);
 
     return 0;

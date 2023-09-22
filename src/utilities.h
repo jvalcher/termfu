@@ -34,13 +34,13 @@
 \
 fprintf (stderr, "\
 \033[1;31m%s\033[1;0m \
-\033[1;36m%s\033[1;0m : \
 \033[1;32m%s\033[1;0m() : \
+\033[1;36m%s\033[1;0m : \
 \033[1;33m%d\033[1;0m\n\
-       %s\n\n", \
+       %s\n", \
 "ERROR:", \
-__FILE__, \
 __func__, \
+__FILE__, \
 __LINE__, \
 (message));\
 } while (0)
@@ -59,7 +59,7 @@ __LINE__, \
            var1 == 5
            var2 == 10
 */
-#define pfemo(message) fprintf (stderr, "       %s\n\n", (message))
+#define pfemo(message) fprintf (stderr, "       %s\n", (message))
 
 
 #endif

@@ -1,7 +1,13 @@
 #!/bin/bash
 
-# run tests on source or header file
+# Run tests on source and/or header file in ../src
+#
+# Usage:
+#
+#   $ ./run file_test.c
+#
 
+# get test file name
 test="$1"
 
 # check if empty string
@@ -11,38 +17,42 @@ if [[ -z "$test" ]]; then
     exit 1
 fi
 
-# strip source file name
-src_name="${test%%_test.c}"
+# strip file name  ( <name>_test.c )
+name="${test%%_test.c}"
 
-# build
-printf "\nSearching for source file ../src/$src_name.c ...\n"
-#
-# if ../src/file.c exists
-if [ -e "../src/$src_name.c" ]; then
+# if source file found
+if [ -e "../src/$name.c" ]; then
 
-    echo   "Building with source file..."
-    printf "    gcc -g -o ./test.out $test ../src/$src_name.c -lncurses ...\n"
-    gcc -g -o ./test.out $test ../src/$src_name.c -lncurses
+    # build
+    echo "Building with source file"
+    printf "    gcc -g -o ./test.out $test ../src/$name.c -lncurses ...\n"
+    gcc -g -o ./test.out $test ../src/$name.c -lncurses
     build_status=$?
 
-# else if only ../src/file.h exists
-elif [ -e "../src/$src_name.h" ]; then
+# if only a header file
+elif [ -e "../src/$name.h" ]; then
 
-    echo   "No source file found."
-    echo   "Building with header file only:"
+    # build
+    echo "No source file found."
+    echo "Building with header file only"
     printf "    gcc -g -o ./test.out $test -lncurses ...\n"
     gcc -g -o ./test.out $test -lncurses
     build_status=$?
 
+# if no matching files found, exit
 else
-    printf    "No header file found\n"
+    printf "No header found\n\n"
+    printf "Make sure the test file name matches its respective\n"
+    printf "source and/or header file\n\n"
+    printf "    main.c  ->  main_test.c\n\n"
+    exit
 fi
 
-# run
+# if build successful, run
 if [ $build_status -eq 0 ]; then
     printf "Running...\n"
     printf "    ./test.out \n"
     printf "___________\n\n"
     ./test.out
-    echo ""
+    echo "$?"
 fi

@@ -35,7 +35,6 @@ $(B_FILE_DEV): $(O_FILES)
 
 obj/%.o: src/%.c
 	$(CC) $(FLAGS) -c -o $@ $<
-	$(CC) $(FLAGS) -c -o $@ $<
 
 -include $(D_FILES)
 

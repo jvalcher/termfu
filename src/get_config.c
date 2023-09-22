@@ -1,10 +1,3 @@
-
-/*
-   config_file.c
-   -------------
-
-*/
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -16,9 +9,9 @@
 #include "utilities.h"
 #include "get_config.h"
 
-
 static FILE *open_config_file ();
-static void  parse_config_file_data (FILE*, struct config_file_data*);
+static void  parse_config_file_data (FILE* file, 
+                                     struct config_file_data* data);
 
 
 /*
@@ -26,22 +19,25 @@ static void  parse_config_file_data (FILE*, struct config_file_data*);
 */
 void get_config_file_data (struct config_file_data *data)
 {
+    // check data
     if (data == NULL) {
         endwin();
         pfem ("config_file_data struct pointer is NULL");
         exit (EXIT_FAILURE);
     }
 
-    // open, parse config file
+    // open config file
     FILE *config_file = open_config_file ();
+
+    // parse it
     parse_config_file_data (config_file, data);
 }
 
 
 /*
     Open CONFIG_FILE
-    ---------------------
-    Looks for CONFIG_FILE in pwd and HOME directories
+    ----------
+    Looks for CONFIG_FILE in PWD and HOME directories
 */
 static FILE *open_config_file ()
 {
@@ -50,25 +46,28 @@ static FILE *open_config_file ()
     char cwd_path[130];
     char home_path[130];
 
-    // check cwd/CONFIG_FILE
-    if (getcwd (cwd, sizeof(cwd)) != NULL) {
+    // check current working directory
+    if (getcwd (cwd, sizeof (cwd)) != NULL) {
         snprintf (cwd_path, sizeof (cwd_path), "%s/%s", cwd, CONFIG_FILE);
-        file = fopen(cwd_path, "r");
+        file = fopen (cwd_path, "r");
     }
 
-    // if no config file in cwd, check HOME
+    // check in user's home directory
     if (file == NULL) {
         char *home = getenv ("HOME");
-        snprintf(home_path, sizeof(home_path), "%s/%s", home, CONFIG_FILE);
-        file = fopen(home_path, "r");
+        snprintf (home_path, sizeof (home_path), "%s/%s", home, CONFIG_FILE);
+        file = fopen (home_path, "r");
     }
 
-    // no config file
+    // if no config file found, exit
     if (file == NULL) {
-        endwin();
-        pfem  ("Unable to find config file in pwd or HOME");
+
+        endwin ();
+
+        pfem ("Unable to find config file in home or current working directory");
         pfemo (cwd_path);
         pfemo (home_path);
+
         exit (EXIT_FAILURE);
     }
         

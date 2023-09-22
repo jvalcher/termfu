@@ -5,11 +5,10 @@
     external configuration file (see config.h)
 */
 
-#ifndef PARSE_CONFIG_LAYOUT_H
-#define PARSE_CONFIG_LAYOUT_H
+#ifndef APPLY_CONFIG_LAYOUT_H
+#define APPLY_CONFIG_LAYOUT_H
 
 #include "get_config.h"
-
 
 #define MAX_WINDOW_TYPES    26
 #define MAX_LAYOUTS         10
@@ -35,7 +34,6 @@
 //
 struct window {
     char   symbol;                 
-    char   title [MAX_TITLE_LEN];  
     int    rows;                   
     int    cols;                   
     int    y;                      
@@ -52,12 +50,13 @@ struct window {
 //  num_windows - number of windows in each layout
 //  labels      - array of label strings  ( [layout:<label>], see config.h)
 //  windows     - array of window struct pointers, each pointing to head of window linked list
+//                TODO: convert to array
 //
 struct layouts {
     int    num_layouts;                      
     int    num_windows     [MAX_LAYOUTS];    
-    char   labels          [MAX_TITLE_LEN];  
-    struct window *windows [MAX_WINDOWS];    
+    char   labels          [MAX_LAYOUTS][MAX_TITLE_LEN];  
+    struct window *windows [MAX_LAYOUTS];    
 };
 
 
@@ -66,11 +65,15 @@ struct layouts {
 // Parse config layouts from config_file_data
 // Store data in layouts struct
 //
-void apply_config_layout (
-        int i,
-        int scr_rows,
-        int scr_cols,
-        struct config_file_data *data, 
-        struct layouts *layouts );
+// di   -> data struct index 
+// li   -> layout struct index 
+//
+void apply_config_layout (int di,
+                          int li,
+                          struct config_file_data *data, 
+                          struct layouts *layouts,
+                          int scr_rows,
+                          int scr_cols);
+
 
 #endif
