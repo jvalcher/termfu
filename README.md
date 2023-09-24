@@ -1,2 +1,2 @@
-# gdb-tuiffic
-An easy-to-configure ncurses frontend for GDB
+# termIDE
+An easy-to-configure tui frontend for debugging and more
