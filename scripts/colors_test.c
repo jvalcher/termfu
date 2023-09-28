@@ -24,6 +24,10 @@ int main(void)
 
         printw("\nTerminal colors enabled\n\n");
 
+        printw("\n---------------\n");
+        printw("\nTERMINAL COLORS ENABLED\n\n");
+        printw("\n---------------\n");
+
         printw("Available\n");
         printw("---------\n");
         printw("%d colors\n", COLORS);

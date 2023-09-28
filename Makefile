@@ -8,8 +8,8 @@ FLAGS=		-Wall -MMD
 PROD_FLAGS=	-O3
 DEV_FLAGS=	-g
 
-B_FILE_DEV=		gdb-tuiffic-dev
-B_FILE_PROD=	gdb-tuiffic
+B_FILE_DEV=		termide-dev
+B_FILE_PROD=	termide
 
 C_FILES=	$(wildcard ./src/*.c)
 O_FILES=	$(patsubst ./src/%.c, ./obj/%.o, $(C_FILES))

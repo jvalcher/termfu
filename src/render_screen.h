@@ -1,6 +1,8 @@
 
 /*
-   Render Ncurses windows
+    Render Ncurses window
+    --------------------
+
 */
 
 
@@ -8,28 +10,13 @@
 #define render_screen_h
 
 
-// Window symbols, titles
-#define NUM_SYMBOLS     52
-#define NUM_WINDOWS     8
-#define MAX_TITLE_LEN   20
-char win_symbols [] = {'a', 'b', 'c', 'l', 'r', 's', 't', 'w'};
-char *win_titles [] = {
-    "Assembly",         // a
-    "Breakpoints",      // b
-    "Commands",         // c
-    "Local vars",       // l
-    "Registers",        // r
-    "Source",           // s
-    "Status",           // t
-    "Watches"           // w
-};
+#include "parse_config.h"
 
+#define MAX_TITLE_LEN       20
+#define MAX_Y_SEGMENTS      10      // per layout
+#define MAX_X_SEGMENTS      10      // per layout
 
-// Window data
-struct window_data {
-    char symbols [NUM_SYMBOLS];
-    char titles  [NUM_SYMBOLS] [MAX_TITLE_LEN];
-};
+extern char *win_codes[];
 
 
 // Return index used in window_data struct 
@@ -44,12 +31,15 @@ struct window_data {
 //
 //      get_win_index ('B') --> 1
 //
-int get_win_index (char symbol);
+//int get_win_index (char symbol);
 
-/* 
-   Render main window
-*/
-void render_screen();
+
+// Render main window
+//
+//   i       - layouts_t index
+//   layouts - layouts_t struct
+// 
+void render_screen (int i, layouts_t *layouts);
 
 
 #endif

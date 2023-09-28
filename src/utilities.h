@@ -1,23 +1,33 @@
 
 /*
     Misc utilities
+    -------------
+
+    pfem()
+    pfemo()                 - print error messages
+
 */
 
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
+#include "parse_config.h"
+#include "render_screen.h"
 
 /*
     Print formatted message to stderr
     -----------
 
-    pfem ("My error message");
+    pfem ("Unknown character \"%c\" \n", ch);
     -->
-    ERROR: src_file.c : 10 : My error message
+
+        ERROR: src_file.c : func () : 10
+               Unknown character "t"
 
     ANSI color escape codes:
 
@@ -30,19 +40,19 @@
 
         end     -> \033[1;0m
 */
-#define pfem(message) do { \
+#define pfem(...) do { \
 \
-fprintf (stderr, "\
+    fprintf (stderr, "\
 \033[1;31m%s\033[1;0m \
 \033[1;32m%s\033[1;0m() : \
 \033[1;36m%s\033[1;0m : \
-\033[1;33m%d\033[1;0m\n\
-       %s\n", \
-"ERROR:", \
-__func__, \
-__FILE__, \
-__LINE__, \
-(message));\
+\033[1;33m%d\033[1;0m\n       ", \
+    "ERROR:", \
+    __func__, \
+    __FILE__, \
+    __LINE__); \
+\
+    fprintf (stderr, __VA_ARGS__); \
 } while (0)
 
 
@@ -50,16 +60,25 @@ __LINE__, \
     Print formatted error message only 
     -------------
 
+    pfem ("Unknown character \"%c\" \n", ch);
+
     pfem  ("My error message");
     pfemo ("var1 == 5");
-    pfemo ("var2 == 10");
 
     ERROR: src_file.c : func () :10
            My error message
            var1 == 5
-           var2 == 10
 */
-#define pfemo(message) fprintf (stderr, "       %s\n", (message))
+#define pfemo(...) do { \
+    fprintf (stderr, "       "); \
+    fprintf (stderr, __VA_ARGS__); \
+} while (0)
+
+
+/*
+    Print integer matrix [y][x] values
+*/
+void print_int_matrix (int matrix[MAX_Y_SEGMENTS][MAX_X_SEGMENTS], int y, int x);
 
 
 #endif

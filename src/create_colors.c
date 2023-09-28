@@ -1,7 +1,7 @@
 
 #include <ncurses.h>
 
-#include "colors.h"
+#include "create_colors.h"
 
 
 /*

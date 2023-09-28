@@ -7,26 +7,38 @@
 #include <string.h>
 #include <ncurses.h>
 
-#include "colors.h"
-#include "apply_config.h"
+#include "create_colors.h"
+#include "parse_config.h"
 #include "render_screen.h"
+#include "utilities.h"
 
 #define VERSION         "0.0.1"
 #define CMD_LEN         50
 #define RUNNING         true
 
+enum config_types {
+    LAYOUTS
+};
+
+static void *allocate_config (int);
+
 
 int main (void) 
 {
-    // initialize Ncurses
-    initscr();
 
-    // initialize font colors (colors.h)
+    // initialize Ncurses, create color pairs
+    initscr ();
     create_colors ();
 
-    // parse external configuration file (parse_config.h)
-    struct layouts *layouts = NULL;
-    apply_config (layouts);
+    // create data structures to hold parsed CONFIG_FILE data (parse_config.h)
+    layouts_t *layouts = allocate_config (LAYOUTS);
+
+    // parse configuration file
+    parse_config (layouts);
+
+    // render screen
+    int li = 0;                 // index of first layout
+    render_screen (li, layouts);
 
     //
     //  Main loop
@@ -34,32 +46,62 @@ int main (void)
     //  q   - quit
     //
     int ch;
-    bool running = true;
-    while (running) {
+    cbreak ();      // disable need to press Enter
+    noecho ();      // do not display pressed character
 
-        render_screen (layouts);    // render_screen.h
-
-        // read keypress
-        noecho();
-        ch = getch();
-        echo();
-
-        // actions
-        nodelay(stdscr, true);
+        // read key presses
+    while ((ch = getch()) != ERR) {
 
         // quit
         if (ch == 'q')
             break;
 
-        nodelay(stdscr, false);
+        // render screen
+        render_screen (li, layouts);
+
+        //nodelay(stdscr, true);
+        //nodelay(stdscr, false);
     }
 
-    endwin();
+    endwin ();
     return 0;
 }
 
-/*
 
+/*
+    Allocate memory for configuration structs
+*/
+static void *allocate_config (int config)
+{
+    void *config_ptr = NULL;
+
+    switch (config) {
+
+        // layouts_t
+        case LAYOUTS:
+            config_ptr = (layouts_t*) malloc (sizeof (layouts_t));
+            ((layouts_t *) config_ptr)->num = 0;
+            break;
+
+        default:
+            endwin ();
+            pfem  ("Configuration struct enum not recognized\n");
+            exit (EXIT_FAILURE);
+    }
+
+    if (config_ptr == NULL) {
+        endwin ();
+        pfem ("layouts_t allocation failed\n");
+        exit (EXIT_FAILURE);
+    } else {
+        return config_ptr;
+    }
+}
+
+
+
+
+/*
     // get row, column
     int x, y;
     getmaxyx(stdscr, y, x);

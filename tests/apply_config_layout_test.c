@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <ncurses.h>
 
-#include "../src/apply_config.h"
-#include "../src/apply_config_layout.h"
+#include "../src/render_screen.h"
 
 
 /*
