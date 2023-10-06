@@ -13,8 +13,8 @@
 #include "parse_config.h"
 
 #define MAX_TITLE_LEN       20
-#define MAX_Y_SEGMENTS      10      // per layout
-#define MAX_X_SEGMENTS      10      // per layout
+#define MAX_ROW_SEGMENTS    10      // per layout
+#define MAX_COL_SEGMENTS    10
 
 extern char *win_codes[];
 

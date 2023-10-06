@@ -33,9 +33,8 @@ static WINDOW *render_sub_window (WINDOW *window, char *window_name, int rows, i
     Render screen
 */
 // #render
-void render_screen (
-        int i, 
-        layouts_t *layouts)
+void render_screen ( int i, 
+                     layouts_t *layouts)
 {
     // check if screen width, height changed
     int scr_rows = getmaxy (stdscr);
@@ -43,7 +42,7 @@ void render_screen (
 
     // calculate all layouts if program just started or if
     // the screen size changed
-    int title_offset = 2;
+    int title_offset = 1;
     int main_rows = scr_rows - title_offset;
     int main_cols = scr_cols;
     if (scr_rows != layouts->scr_height || 
@@ -53,10 +52,13 @@ void render_screen (
         }
     }
 
-    // render windows
-        // title
-    render_sub_window (stdscr, "termIDE", 3, scr_cols, 0, 0);
+    // render title
+    char *title = "termIDE";
+    int title_length = strlen (title);
+    int title_indent = (scr_cols - title_length) / 2;
+    mvprintw (0, title_indent, "%s", title);
 
+    // render windows
         // main window area
     WINDOW *main;
     main = newwin (main_rows, main_cols, 0 + title_offset, 0);
@@ -65,45 +67,31 @@ void render_screen (
     //print_layouts (1, layouts);                 // one layout
     //print_layouts (layouts->num, layouts);    // all layouts
 
-    /*
-        // main sub windows from layouts->windows [i]
-    windows_t *windows = layouts->windows [i];
-    int act_i = 0;
-    char code [3];
-    char title [30];
-    //int row = 4;
+    windows_t *curr_window = layouts->windows [i];
+    //int act_i = 0;
+    //char code [3];
+    //char title [30];
+    char *win_title = "test";
     do {
-        memset (code,  '\0', (sizeof (char) * 3));
-        memset (title, '\0', (sizeof (char) * 30));
-
-        // find symbol index for actions, window names
-        for (int i = 0; i < NUM_ACTIONS; i++) {
-            if (windows->symb == action_keys [i]) {
-                act_i = i;
-                break;
-            }
-        }
 
         // get title, action code
-        strcpy (title, window_names [act_i]);
+        //strcpy (title, window_names [act_i]);
         //strcpy (code,  action_codes [act_i]);
 
-        //print_layouts (1, layouts);
 
         // print window data
         render_sub_window (
                         main, 
-                        title, 
-                        windows->rows,
-                        windows->cols,
-                        windows->y,
-                        windows->x);
+                        win_title, 
+                        curr_window->rows,
+                        curr_window->cols,
+                        curr_window->y,
+                        curr_window->x);
 
         // next window
-        windows = windows->next;
+        curr_window = curr_window->next;
 
-    } while (windows != NULL);
-    */
+    } while (curr_window != NULL);
 }
 
 
@@ -115,227 +103,237 @@ void render_screen (
 
     Parameters:
 
-        win_rows == window height
-        win_cols == window width
+        win_rows == main window height
+        win_cols == main window width
         li       == layouts_t struct index
         layouts  == layouts_t struct
 
 */
 // #layout
-static void create_layout (
-        int win_rows,
-        int win_cols,
-        int li,
-        layouts_t *layouts)
+static void create_layout ( int win_rows,
+                            int win_cols,
+                            int li,
+                            layouts_t *layouts)
 {
-
-    // create matrices for segment rows, columns, coordinates
+    // create matrices for number of rows, columns per segment
     //
-    //      21 21 21
-    //      21 21 21
-    //      20 20 20    --> rows per segment
+    //      * * *
+    //      * * *
+    //      * * *
+    //      * * *
     //
-    int i,j,k,pi;
-    int y_ratio = layouts->y_ratios [li];
-    int x_ratio = layouts->x_ratios [li];
+    //      win_rows: 41  win_cols: 83
+    //      row_ratio: 4  col_ratio: 3
+    //      floor_segm_rows: 10  floor_segm_cols: 27
+    //      segm_row_rem: 1  segm_col_rem: 2
+    //
+    //      segm_rows:
+    //      --------
+    //      11  11  11
+    //      10  10  10
+    //      10  10  10
+    //      10  10  10
+    //
+    //      segm_cols:
+    //      --------
+    //      28  28  27
+    //      28  28  27
+    //      28  28  27
+    //      28  28  27
+    //
+    int y, x;
+    int row_ratio = layouts->row_ratios [li];
+    int col_ratio = layouts->col_ratios [li];
+    int floor_segm_rows = win_rows / row_ratio;  // floor row amount per segment
+    int floor_segm_cols = win_cols / col_ratio;
+    int segm_rows [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0};
+    int segm_cols [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0};
 
-        // rows (y), columns (x)
-    int y_segm_len = win_rows / y_ratio;  // floor row amount per segment
-    int x_segm_len = win_cols / x_ratio;
-    int y_segm_lens [MAX_Y_SEGMENTS][MAX_X_SEGMENTS] = {0};
-    int x_segm_lens [MAX_Y_SEGMENTS][MAX_X_SEGMENTS] = {0};
+        // calculate total row, column remainders
+    int segm_row_rem = win_rows - (floor_segm_rows * row_ratio);
+    int segm_col_rem = win_cols - (floor_segm_cols * col_ratio);
 
-        // remainders
-    int y_segm_rem = win_rows - (y_segm_len * y_ratio);
-    int x_segm_rem = win_cols - (x_segm_len * x_ratio);
+    /*
+    // PRINT
+    mvprintw (5, 4, "row_ratio: %d  col_ratio: %d",
+            row_ratio, col_ratio);
+    mvprintw (4, 4, "win_rows: %d  win_cols: %d",
+            win_rows, win_cols);
+    mvprintw (6, 4, "floor_segm_rows: %d  floor_segm_cols: %d", 
+            floor_segm_rows, floor_segm_cols);
+    mvprintw (7, 4, "segm_row_rem: %d  segm_col_rem: %d", 
+            segm_row_rem, segm_col_rem);
+    */
 
-        // y,x coordinates (top left)
-    int segm_ys [MAX_Y_SEGMENTS][MAX_X_SEGMENTS] = {0};
-    int segm_xs [MAX_Y_SEGMENTS][MAX_X_SEGMENTS] = {0};
+        // add base segment rows, columns
+        // distribute remainders
+    for (y = 0; y < row_ratio; y++) {
 
-        // create matrices
-    for (i = 0; i < y_ratio; i++) {
-        for (j = 0; j < x_ratio; j++) {
+        int col_rem = segm_col_rem;
 
-            // rows, columns
-            y_segm_lens [i][j] = y_segm_len + ((y_segm_rem-- > 0) ? 1 : 0);
-            x_segm_lens [i][j] = x_segm_len + ((y_segm_rem-- > 0) ? 1 : 0);
+        for (x = 0; x < col_ratio; x++) {
 
-            // y, x (TODO)
-            pi = 0;
-            while (pi++ < i) segm_ys [i][j] += y_segm_lens [pi][j] - 1;
-            // ...
+            // base
+            segm_rows [y][x] = floor_segm_rows + ((segm_row_rem > 0) ? 1 : 0);
+            segm_cols [y][x] = floor_segm_cols + ((col_rem > 0) ? 1 : 0);
 
+            col_rem -= 1;
+        }
+        segm_row_rem -= 1;
+    }
+
+    /*
+    // PRINT
+    char row_label [] = "segm_rows:";
+    char col_label [] = "segm_cols:";
+    print_int_matrix (row_label, 9, segm_rows, row_ratio, col_ratio);
+    print_int_matrix (col_label, 16, segm_cols, row_ratio, col_ratio);
+    */
+
+    // create matrices for top left y and x segment coordinates
+    //
+    //     x - -
+    //     - - -        
+    //     - - -        
+    //
+    int segm_ys [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0};
+    int segm_xs [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0};
+
+    for (y = 0; y < row_ratio; y++) {
+        for (x = 0; x < col_ratio; x++) {
+
+            // y
+            int yc = 0;
+            while (yc < y) {
+                segm_ys [y][x] += segm_rows [yc][x];
+                yc += 1;
+            }
+
+            // x
+            int xc = 0;
+            while (xc < x) {
+                segm_xs [y][x] += segm_cols [y][xc];
+                xc += 1;
+            }
         }
     }
 
     /*
-    // create segment remainder matrices to keep track of
-    // which segments must add a single column or row
-    // 
-    //
-    //      1110
-    //      1110
-    //      0000
-    //
-        // y remainders
-    int y_segm_rem_matrix [MAX_Y_SEGMENTS][MAX_X_SEGMENTS] = {0};
-    int y_segm_len = win_rows / y_ratio;                  // floor row amount per segment
-    int y_segm_rem = win_rows - (y_segm_len * y_ratio);   // remainder
-    for (i = 0; i < y_ratio; i++) {
-        for (j = 0; j < x_ratio; j++) {
-            y_segm_rem_matrix [i][j] += (y_segm_rem > 0) ? 1 : 0;
-        }
-        y_segm_rem--;
-    }
-
-
-        // x remainders
-    int x_segm_rem_matrix [MAX_Y_SEGMENTS][MAX_X_SEGMENTS] = {0};
-    int x_segm_len = win_cols / x_ratio;
-    int x_segm_rem = win_cols - (x_segm_len * x_ratio);
-    int x_rem;
-    for (i = 0; i < y_ratio; i++) {
-        x_rem = x_segm_rem;
-        for (j = 0; j < x_ratio; j++) {
-            x_segm_rem_matrix [i][j] += (x_rem-- > 0) ? 1 : 0;
-        }
-    }
+    // PRINT
+    char y_label [] = "segm_ys:";
+    char x_label [] = "segm_xs:";
+    print_int_matrix (y_label, 23, segm_ys, row_ratio, col_ratio);
+    print_int_matrix (x_label, 30, segm_xs, row_ratio, col_ratio);
     */
-
-    //print_int_matrix (x_segm_rem_matrix, y_ratio, x_ratio);
 
     // create (un)used segments matrix
     //
-    //         1110
-    //         1110
+    //         0000
+    //         0000
     //         0000
     //
-        // allocate
-    int used_segm_matrix [MAX_Y_SEGMENTS][MAX_X_SEGMENTS] = {0};
+    int used_segm_matrix [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0};
 
-        // initialize to zero
-    for (i = 0; i < y_ratio; i++) {
-        for (j = 0; j < x_ratio; j++) {
-            used_segm_matrix [i][j] = 0;
-        }
-    }
-
-    // create windows_t pointers for arranging layout's 
-    // windows linked list
+    // create windows_t pointers for arranging
+    // layouts->windows linked list
     windows_t *curr_window = NULL;
     windows_t *prev_window = NULL;
 
-    // get layout matrix  (parse_config.h)
+    // get layouts->matrices [li]
     char **layout_matrix = (char **) layouts->matrices [li];
 
-    // store top left coordinates of next segment
-    int next_y;
-    int next_x = 0;
+    /*
+    // PRINT
+    int row = 37;
+    for (int i = 0; i < row_ratio; i++) {
+        int col = 4;
+        for (int j = 0; j < col_ratio; j++) {
+            mvprintw (row, col, "%c", layout_matrix [i][j]);
+            col += 4;
+        }
+        row += 1;
+    }
+    */
 
     // loop through layout_matrix segments
+    int row = 6;
     char ch;
-    for (int y = 0; y < y_ratio; y++) {
-        for (int x = 0; x < x_ratio; x++) {
+    for (y = 0; y < row_ratio; y++) {
+        for (x = 0; x < col_ratio; x++) {
 
             // if unused segment
             if (used_segm_matrix [y][x] == 0) {
 
-                // get window symbol character
-                ch = layout_matrix [y][x];
-
                 // create window
                 curr_window = allocate_window ();
-                curr_window->rows = 0;
-                curr_window->cols = 0;
-                curr_window->y = 0;
-                curr_window->x = 0;
                 curr_window->next = NULL;
+
+                // add key from matrix
+                ch = layout_matrix [y][x];
+                curr_window->key = ch;
 
                 // set head or link previous window
                 if (y == 0 && x == 0) {
-                    layouts->windows [li] = curr_window;     // set head window
+                    layouts->windows [li] = curr_window; // head
                 } else {
-                    prev_window->next = curr_window;    // else, link to previous window
+                    prev_window->next = curr_window;    // link previous
                 }
 
-                // add symbol
-                curr_window->symb = ch;
-
-                // calculate y,x coordinates*, height, width
+                // calculate window rows, cols
                 //  
-                //         *──aa
-                //         │ssaa
-                //         │sscc
-                //         bbwwr
+                //         x──a
+                //         │ssa
+                //         │ssc
+                //         bbww
                 //
-                    // y
-                int yi;
-                curr_window->y = 0;
-                for (yi = 0; yi < y; yi++) {
-                    curr_window->y += y_segm_len;
-                    curr_window->y += y_segm_rem_matrix [yi][x];
-                }
+                    // rows
+                int yi = y;
+                curr_window->rows = 0;
 
-                    // height in rows
-                for (yi = y; yi < y_ratio; yi++) {
-                    if (ch == layout_matrix [yi][x]) {
-
-
-                        // rows
-                        if (yi == (y_ratio - 1)) {      // bottom segment
-                            curr_window->rows = win_rows - next_y;
-                            break;
-                        } else {
-                            curr_window->rows += y_segm_len + y_segm_rem_matrix [yi][x];
-                        }
-
-                        // next y
-                        next_y += curr_window->rows - 1;
-
+                while (yi < row_ratio) {
+                    if (layout_matrix [yi][x] == ch) {
+                        curr_window->rows += segm_rows [yi][x];
+                        yi += 1;
                     } else {
                         break;
                     }
                 }
 
-                    // x, width in columns
-                int xi;
-                for (xi = x; xi < x_ratio; xi++) {
-
-                    if (ch == layout_matrix [y][xi]) {
-
-                        // x
-                        if (xi == 0) {
-                            curr_window->x = 0;
-                            next_x = 0;
-                        } else {
-                            curr_window->x = next_x;
-                        }
-
-                        // rows
-                        if (xi == x_ratio - 1) {    // most right segment
-                            curr_window->cols = win_cols - next_x;
-                            break;
-                        } else {
-                            curr_window->cols += x_segm_len + x_segm_rem_matrix [y][xi];
-                        }
-
-                        // next x
-                        next_x += curr_window->cols - 1;
-
+                    // cols
+                int xi = x;
+                curr_window->cols = 0;
+                while (xi < col_ratio) {
+                    if (layout_matrix [y][xi] == ch) {
+                        curr_window->cols += segm_cols [y][xi];
+                        xi += 1;
                     } else {
                         break;
                     }
+                }
+
+                // set coordinates
+                curr_window->y = segm_ys [y][x];
+                curr_window->x = segm_xs [y][x];
+
+                // resize to create overlapping borders
+                if (y > 0) {
+                    curr_window->y -= 1;
+                    curr_window->rows += yi - y;
+                }
+                if (x > 0) {
+                    curr_window->x -= 1;
+                    curr_window->cols += xi - x;
                 }
 
                 // set used segments
                 //
                 //      1110
                 //      1110
+                //      1110
                 //      0000
                 //
-                for (i = y; i < yi; i++) {
-                    for (j = x; j < xi; j++) {
+                for (int i = y; i < yi; i++) {
+                    for (int j = x; j < xi; j++) {
                         used_segm_matrix [i][j] = 1;
                     }
                 }
@@ -345,6 +343,7 @@ static void create_layout (
             }
         }
     }
+
     curr_window = NULL;
     prev_window = NULL;
 }
@@ -397,15 +396,18 @@ static WINDOW *render_sub_window(
     int title_length = strlen (window_name);
     int title_indent = (cols - title_length) / 2;
 
-    // render title
-    wattron (sub_window, A_BOLD | COLOR_PAIR(TITLE_COLOR) | A_UNDERLINE);
-    mvwaddstr (sub_window, 1, title_indent, window_name);
-    wattroff (sub_window, A_BOLD | COLOR_PAIR(TITLE_COLOR) | A_UNDERLINE);
-
     // render border
     wattron (sub_window, COLOR_PAIR(BORDER_COLOR));
     wborder (sub_window, 0,0,0,0,0,0,0,0);
     wattroff (sub_window, COLOR_PAIR(BORDER_COLOR));
+
+    // render title
+    char *space = " ";
+    wattron (sub_window, A_BOLD | COLOR_PAIR(TITLE_COLOR));
+    mvwaddstr (sub_window, 0, title_indent - 1, space);
+    mvwaddstr (sub_window, 0, title_indent, window_name);
+    mvwaddstr (sub_window, 0, title_indent + title_length, space);
+    wattroff (sub_window, A_BOLD | COLOR_PAIR(TITLE_COLOR));
 
     refresh ();
     wrefresh (sub_window);

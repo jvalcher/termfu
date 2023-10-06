@@ -77,8 +77,13 @@
 
 /*
     Print integer matrix [y][x] values
+    ---------
+    start_row   - row to start printing (ncurses)
 */
-void print_int_matrix (int matrix[MAX_Y_SEGMENTS][MAX_X_SEGMENTS], int y, int x);
-
+void print_int_matrix ( char *label,
+                        int start_row, 
+                        int matrix [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS], 
+                        int y, 
+                        int x);
 
 #endif

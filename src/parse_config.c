@@ -194,8 +194,8 @@ void parse_config (layouts_t *layouts)
 
             // calculate window segment ratio
             //
-            //  * * *     layouts->y_ratios [li] == 2
-            //  * * * --> layouts->x_ratios [li] == 3
+            //  * * *     layouts->row_ratios [li] == 2
+            //  * * * --> layouts->col_ratios [li] == 3
             //
             // *A segment refers to a single window symbol character
             //      
@@ -217,8 +217,8 @@ void parse_config (layouts_t *layouts)
             }
 
                 // add to layouts
-            layouts->y_ratios [li] = y_ratio;
-            layouts->x_ratios [li] = x_ratio;
+            layouts->row_ratios [li] = y_ratio;
+            layouts->col_ratios [li] = x_ratio;
 
             // create layout matrix
             //
@@ -296,17 +296,17 @@ void print_layouts (
         move (row++, 2);
         printw ("--%s--   ratio: %dx%d   screen: %dx%d\n\n",
                 layouts->labels [i],
-                layouts->y_ratios [i],
-                layouts->x_ratios [i],
+                layouts->row_ratios [i],
+                layouts->col_ratios [i],
                 getmaxy (stdscr),
                 getmaxx (stdscr));
 
         // matrix data
         char **matrix = (char **) layouts->matrices [i];
             // symbols
-        for (int k = 0; k < layouts->y_ratios [i]; k++) {
+        for (int k = 0; k < layouts->row_ratios [i]; k++) {
             col = 3;
-            for (int l = 0; l < layouts->x_ratios [i]; l++) {
+            for (int l = 0; l < layouts->col_ratios [i]; l++) {
                 move (row, col);
                 printw ("%c", matrix [k][l]);
                 col += 1;
@@ -319,9 +319,9 @@ void print_layouts (
         printw ("---------");
 
             // rows,cols
-        for (int k = 0; k < layouts->y_ratios [i]; k++) {
+        for (int k = 0; k < layouts->row_ratios [i]; k++) {
             col = 3;
-            for (int l = 0; l < layouts->x_ratios [i]; l++) {
+            for (int l = 0; l < layouts->col_ratios [i]; l++) {
                 move (row, col);
                 printw ("(%c) %dx%d", 
                         matrix [k][l], 
@@ -341,7 +341,7 @@ void print_layouts (
         do {
             move (row, col);
             printw ("%c (%d,%d) %dx%d",
-                    windows->symb,
+                    windows->key,
                     windows->y,
                     windows->x,
                     windows->rows,

@@ -6,7 +6,7 @@
 CC=			gcc
 FLAGS=		-Wall -MMD
 PROD_FLAGS=	-O3
-DEV_FLAGS=	-g
+DEV_FLAGS=	-g -DRENDER_PRINT 
 
 B_FILE_DEV=		termide-dev
 B_FILE_PROD=	termide

@@ -53,12 +53,11 @@ extern char  action_keys [];
 //
 typedef struct windows {
 
-    char           symb;                 
+    char           key;
     int            rows;                   
     int            cols;                   
     int            y;                      
     int            x;                      
-    // TODO: action_t *action;
     struct windows *next;           
 
 } windows_t;
@@ -83,15 +82,15 @@ typedef struct windows {
 //
 typedef struct {
 
-    int       num;
-    int       scr_height;
-    int       scr_width;
-    char      codes    [MAX_LAYOUTS][3];
-    char      labels   [MAX_LAYOUTS][MAX_LABEL_LEN];
-    char     *matrices [MAX_LAYOUTS];
-    int       y_ratios [MAX_LAYOUTS];
-    int       x_ratios [MAX_LAYOUTS];
-    windows_t *windows [MAX_LAYOUTS];
+    int        num;
+    int        scr_height;
+    int        scr_width;
+    char       codes      [MAX_LAYOUTS][3];
+    char       labels     [MAX_LAYOUTS][MAX_LABEL_LEN];
+    char      *matrices   [MAX_LAYOUTS];
+    int        row_ratios [MAX_LAYOUTS];
+    int        col_ratios [MAX_LAYOUTS];
+    windows_t *windows    [MAX_LAYOUTS];
 
 } layouts_t;
 
