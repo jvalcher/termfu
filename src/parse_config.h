@@ -40,24 +40,26 @@ extern char *action_codes [];
 extern char *window_names [];
 extern char  action_keys [];
 
-//  window_t
+//  windows_t
 //  --------
 //  Position, size data for single window 
 //
-//  symb    - window segment symbol character
+//  win     - ncurses WINDOW* object
+//  key     - window segment key
 //  rows    - height in rows
 //  cols    - width in columns
 //  y       - top left corner y coordinate
 //  x       - top left corner x coordinate
-//  next    - pointer to next window in layout
+//  next    - pointer to next windows_t object in layout
 //
 typedef struct windows {
 
-    char           key;
-    int            rows;                   
-    int            cols;                   
-    int            y;                      
-    int            x;                      
+    WINDOW         *win;
+    char            key;
+    int             rows;                   
+    int             cols;                   
+    int             y;                      
+    int             x;                      
     struct windows *next;           
 
 } windows_t;

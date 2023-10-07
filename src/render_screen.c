@@ -20,9 +20,8 @@
 
 static void create_layout (int win_rows, int win_cols, int li, layouts_t *layouts);
 static windows_t *allocate_window (void);
-static WINDOW *render_sub_window (WINDOW *window, char *window_name, int rows, int cols, int pos_y, int pos_x);
+static WINDOW *render_window (char *window_name, int rows, int cols, int pos_y, int pos_x);
 static void fix_border_char (int y, int x);
-static void fix_corners (int li, layouts_t *layouts);
 
 
 /*
@@ -32,20 +31,25 @@ static void fix_corners (int li, layouts_t *layouts);
 void render_screen ( int i, 
                      layouts_t *layouts)
 {
+
     // check if screen width, height changed
     int scr_rows = getmaxy (stdscr);
     int scr_cols  = getmaxx (stdscr);
 
     // calculate all layouts if program just started or if
     // the screen size changed
-    int main_rows = scr_rows - TITLE_OFFSET;
-    int main_cols = scr_cols;
     if (scr_rows != layouts->scr_height || 
         scr_cols != layouts->scr_width) {
         for (int i = 0; i < layouts->num; i++) {
-            create_layout (main_rows, main_cols, i, layouts);
+            create_layout (scr_rows - TITLE_OFFSET, scr_cols, i, layouts);
         }
     }
+
+    /*
+    // PRINT
+    print_layouts (1, layouts);             // first layout
+    print_layouts (layouts->num, layouts);  // all layouts
+    */
 
     // render title
     char *title = "termIDE";
@@ -54,43 +58,23 @@ void render_screen ( int i,
     wattroff (stdscr, A_BOLD | COLOR_PAIR(GREEN_BLACK));
     refresh ();
 
-    // render windows
-        // main window area
-    WINDOW *main;
-    main = newwin (main_rows, main_cols, 0 + TITLE_OFFSET, 0);
-    
-    /*
-    // PRINT
-    print_layouts (1, layouts);             // first layout
-    print_layouts (layouts->num, layouts);  // all layouts
-    */
-
+    // render current layout's windows
     windows_t *curr_window = layouts->windows [i];
-    //int act_i = 0;
-    //char code [3];
-    //char title [30];
-    char *win_title = "test";
     do {
+        char *win_title = "test";
 
-        // get title, action code
-        //strcpy (title, window_names [act_i]);
-        //strcpy (code,  action_codes [act_i]);
-
-        // print window data
-        render_sub_window (
-                        main, 
+        // render, store window
+        curr_window->win = render_window (
                         win_title, 
                         curr_window->rows,
                         curr_window->cols,
-                        curr_window->y,
+                        curr_window->y + TITLE_OFFSET,
                         curr_window->x);
 
         // next window
         curr_window = curr_window->next;
 
     } while (curr_window != NULL);
-
-    fix_corners (i, layouts);
 }
 
 
@@ -369,8 +353,7 @@ static windows_t *allocate_window (void)
     pos_y, pos_x    - window position in terms of top left corner
 */
 // #subwin
-static WINDOW *render_sub_window(
-        WINDOW *main, 
+static WINDOW *render_window(
         char *window_name, 
         int rows, 
         int cols, 
@@ -381,9 +364,8 @@ static WINDOW *render_sub_window(
     //int screen_height    = getmaxy (stdscr);    
 
     // create window object
-    WINDOW *sub_window;
-    sub_window = derwin (main, rows, cols, y, x);
-    if (sub_window == NULL) {
+    WINDOW *win = derwin (stdscr, rows, cols, y, x);
+    if (win == NULL) {
         endwin();
         pfem  ("Unable to create window\n");
         pfemo ("%s %d %d %d %d\n", window_name, rows, cols, y, x);
@@ -395,31 +377,57 @@ static WINDOW *render_sub_window(
     int title_indent = (cols - title_length) / 2;
 
     // render border
-    wattron (sub_window, COLOR_PAIR(BORDER_COLOR));
-    wborder (sub_window, 0,0,0,0,0,0,0,0);
-    wattroff (sub_window, COLOR_PAIR(BORDER_COLOR));
+    wattron (win, COLOR_PAIR(BORDER_COLOR));
+    wborder (win, 0,0,0,0,0,0,0,0);
+    wattroff (win, COLOR_PAIR(BORDER_COLOR));
 
     // render title
     char *space = " ";
-    wattron (sub_window, A_BOLD | COLOR_PAIR(TITLE_COLOR));
-    mvwaddstr (sub_window, 0, title_indent - 1, space);
-    mvwaddstr (sub_window, 0, title_indent, window_name);
-    mvwaddstr (sub_window, 0, title_indent + title_length, space);
-    wattroff (sub_window, A_BOLD | COLOR_PAIR(TITLE_COLOR));
+    wattron (win, A_BOLD | COLOR_PAIR(TITLE_COLOR));
+    mvwaddstr (win, 0, title_indent - 1, space);
+    mvwaddstr (win, 0, title_indent, window_name);
+    mvwaddstr (win, 0, title_indent + title_length, space);
+    wattroff (win, A_BOLD | COLOR_PAIR(TITLE_COLOR));
 
     refresh ();
-    wrefresh (sub_window);
+    wrefresh (win);
 
-    return sub_window;
+
+    /*
+    // TODO (see fix_border_char() below)
+
+    // fix broken border corners caused by 
+    // overlapping in create_layout()
+    //
+    //       │       │
+    //      ─┐ -->  ─┤
+    //       │       │
+    //
+    int of = TITLE_OFFSET;
+    cchar_t cch;
+
+        // top left
+    fix_border_char (y, x);
+
+        // top right
+    fix_border_char (y, x + (cols - 1));
+
+        // bottom left
+    fix_border_char (y + (rows - 1), x);
+
+        // bottom right
+    fix_border_char (y + (rows - 1), x + (cols - 1));
+    */
+
+    return win;
 }
 
 /*
     Fix current ncurses corner border character
-    ---------
-    Used by fix_corners() below
 */
 static void fix_border_char (int y, int x)
 {
+    /*
     // get screen dimensions
     int scr_rows = getmaxy (stdscr);
     int scr_cols  = getmaxx (stdscr);
@@ -430,20 +438,27 @@ static void fix_border_char (int y, int x)
     //    l c r     ─ c  -->  {1, 0, 0, 1}
     //      b                             
     //
-    setlocale(LC_ALL, "");
-    cchar_t cch;
     int borders [4] = {0};
+    cchar_t cch;
 
     // PRINT
+    noecho ();
     static int row = 3;
     int col = 0;
+    //move (y, x);
     mvin_wch (y, x, &cch);
-    mvadd_wch (row, col, &cch);
-    row++;
-    refresh();
+    getch ();
+    */
+    
 
-    noecho ();
-    int ch = getch();
+    // TODO: 
+    // mvin_wch() isn't copying the wchar border under it ???
+    // Test script using it and mvadd_wch in the same way works fine
+    // setlocale (LC_ALL, "") doesn't fix it
+    // Maybe need to use wide str functions, e.g.  {L'│', L'\0'}
+    // Uncomment code above and in render_window() to get started
+    // Below code not completely converted to using these functions
+
     /*
     col += 4;
     mvprintw (row, col, "%d", y);
@@ -458,10 +473,8 @@ static void fix_border_char (int y, int x)
     cchar_t b_vert, b_horiz;
     setcchar (&b_vert, &wb_vert, A_NORMAL, 0, NULL);
     setcchar (&b_horiz, &wb_horiz, A_NORMAL, 0, NULL);
-    */
 
 
-    /*
         // top
     if (y > TITLE_OFFSET) {
         mvin_wch (y+1, x, &cch);
@@ -553,36 +566,3 @@ static void fix_border_char (int y, int x)
     */
 }
 
-
-/*
-    Fix all of current layout's broken border corners 
-    caused by overlapping in create_layout()
-
-          │       │
-         ─┐ -->  ─┤
-          │       │
-*/
-static void fix_corners ( int li,
-                          layouts_t *layouts)
-{
-    int of = TITLE_OFFSET;
-    windows_t *win = layouts->windows [li];
-
-    do {
-        // top left
-        fix_border_char (win->y + of, win->x);
-
-        // top right
-        fix_border_char (win->y + of, win->x + (win->cols - 1));
-
-        // bottom left
-        fix_border_char (win->y + (win->rows - 1) + of, win->x);
-
-        // bottom right
-        fix_border_char (win->y + (win->rows - 1) + of, win->x + (win->cols - 1));
-
-        // next window
-        win = win->next;
-
-    } while (win != NULL);
-}

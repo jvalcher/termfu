@@ -26,7 +26,7 @@ static void *allocate_config (int);
 
 int main (void) 
 {
-    setlocale(LC_ALL, "");  // needed for wide border characters
+    //setlocale(LC_ALL, "");  // needed for wide border characters
 
     // initialize Ncurses, create color pairs
     initscr ();
