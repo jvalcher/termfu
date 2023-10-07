@@ -1,5 +1,5 @@
 
-#include <ncurses.h>
+#include <ncursesw/ncurses.h>
 
 #include "create_colors.h"
 
@@ -15,6 +15,7 @@ create_colors()
         start_color();
 
         init_pair(RED_BLACK, COLOR_RED, COLOR_BLACK);
+        init_pair(GREEN_BLACK, COLOR_GREEN, COLOR_BLACK);
         init_pair(YELLOW_BLACK, COLOR_YELLOW, COLOR_BLACK);
         init_pair(BLUE_BLACK, COLOR_BLUE, COLOR_BLACK);
         init_pair(MAGENTA_BLACK, COLOR_MAGENTA, COLOR_BLACK);

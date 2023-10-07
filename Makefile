@@ -3,10 +3,12 @@
 # make dev			- build development binary, run it
 # make colors		- check if current terminal can display colors
 
-CC=			gcc
-FLAGS=		-Wall -MMD
-PROD_FLAGS=	-O3
-DEV_FLAGS=	-g -DRENDER_PRINT 
+CC=				gcc
+FLAGS=			-Wall -MMD
+PROD_FLAGS=		-O3
+DEV_FLAGS=		-g -DRENDER_PRINT 
+NCURSES_CFLAGS 	:= $(shell ncursesw5-config --cflags)
+NCURSES_LIBS 	:= $(shell ncursesw5-config --libs)
 
 B_FILE_DEV=		termide-dev
 B_FILE_PROD=	termide
@@ -28,20 +30,20 @@ dev: $(B_FILE_DEV)
 	./$(B_FILE_DEV)
 
 $(B_FILE_PROD): $(O_FILES)
-	$(CC) -o $@ $^ -lncurses
+	$(CC) -o $@ $^ $(NCURSES_LIBS)
 
 $(B_FILE_DEV): $(O_FILES)
-	$(CC) -o $@ $^ -lncurses
+	$(CC) -o $@ $^ $(NCURSES_LIBS)
 
 obj/%.o: src/%.c
-	$(CC) $(FLAGS) -c -o $@ $<
+	$(CC) $(FLAGS) $(NCURSES_CFLAGS) -c -o $@ $<
 
 -include $(D_FILES)
 
 clean:
 	rm -f ./obj/*
-	rm -f ./gdb-tuiffic
-	rm -f ./gdb-tuiffic-dev
+	rm -f ./termide
+	rm -f ./termide-dev
 
 
 # misc

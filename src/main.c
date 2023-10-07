@@ -5,7 +5,8 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <ncurses.h>
+#include <locale.h>
+#include <ncursesw/ncurses.h>
 
 #include "create_colors.h"
 #include "parse_config.h"
@@ -25,6 +26,7 @@ static void *allocate_config (int);
 
 int main (void) 
 {
+    setlocale(LC_ALL, "");  // needed for wide border characters
 
     // initialize Ncurses, create color pairs
     initscr ();

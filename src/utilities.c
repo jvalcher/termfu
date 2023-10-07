@@ -1,4 +1,4 @@
-#include <ncurses.h>
+#include <ncursesw/ncurses.h>
 
 #include "utilities.h"
 
@@ -15,7 +15,7 @@ void print_int_matrix ( char *label,
 
     mvprintw (row, col, "%s", label);
     row += 1;
-    mvprintw (row, col, "--------", label);
+    mvprintw (row, col, "--------");
     row += 1;
 
     for (int i = 0; i < y; i++) {

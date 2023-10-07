@@ -19,7 +19,7 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <stdbool.h>
-#include <ncurses.h>
+#include <ncursesw/ncurses.h>
 
 #include "parse_config.h"
 #include "utilities.h"

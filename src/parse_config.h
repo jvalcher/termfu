@@ -82,6 +82,7 @@ typedef struct windows {
 //
 typedef struct {
 
+    // TODO: screen_change
     int        num;
     int        scr_height;
     int        scr_width;

@@ -1,33 +1,29 @@
 
 /*
    Render Ncurses screen
-   ---------------
-
-    Contents:
-
-        Tag         Description
-        ---         -----------
-        #render     render_screen(), main render function
-        #layout     create_layout(), create layout based on current screen size
-        #allocate   allocate_window(), allocate memory for windows_t struct
-        #subwin     create_sub_window(), render window
-
 */
 
-
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
 #include <stdbool.h>
-#include <ncurses.h>
+#include <ncursesw/ncurses.h>
 
 #include "render_screen.h"
 #include "parse_config.h"
 #include "create_colors.h"
 #include "utilities.h"
 
+
+#define TITLE_OFFSET  1
+
 static void create_layout (int win_rows, int win_cols, int li, layouts_t *layouts);
 static windows_t *allocate_window (void);
 static WINDOW *render_sub_window (WINDOW *window, char *window_name, int rows, int cols, int pos_y, int pos_x);
+static void fix_border_char (int y, int x);
+static void fix_corners (int li, layouts_t *layouts);
+
 
 /*
     Render screen
@@ -42,8 +38,7 @@ void render_screen ( int i,
 
     // calculate all layouts if program just started or if
     // the screen size changed
-    int title_offset = 1;
-    int main_rows = scr_rows - title_offset;
+    int main_rows = scr_rows - TITLE_OFFSET;
     int main_cols = scr_cols;
     if (scr_rows != layouts->scr_height || 
         scr_cols != layouts->scr_width) {
@@ -54,18 +49,21 @@ void render_screen ( int i,
 
     // render title
     char *title = "termIDE";
-    int title_length = strlen (title);
-    int title_indent = (scr_cols - title_length) / 2;
-    mvprintw (0, title_indent, "%s", title);
+    wattron (stdscr, A_BOLD | COLOR_PAIR(GREEN_BLACK));
+    mvprintw (0, 3, "%s", title);
+    wattroff (stdscr, A_BOLD | COLOR_PAIR(GREEN_BLACK));
+    refresh ();
 
     // render windows
         // main window area
     WINDOW *main;
-    main = newwin (main_rows, main_cols, 0 + title_offset, 0);
+    main = newwin (main_rows, main_cols, 0 + TITLE_OFFSET, 0);
     
-    // print layout(s) data  (for development)
-    //print_layouts (1, layouts);                 // one layout
-    //print_layouts (layouts->num, layouts);    // all layouts
+    /*
+    // PRINT
+    print_layouts (1, layouts);             // first layout
+    print_layouts (layouts->num, layouts);  // all layouts
+    */
 
     windows_t *curr_window = layouts->windows [i];
     //int act_i = 0;
@@ -77,7 +75,6 @@ void render_screen ( int i,
         // get title, action code
         //strcpy (title, window_names [act_i]);
         //strcpy (code,  action_codes [act_i]);
-
 
         // print window data
         render_sub_window (
@@ -92,6 +89,8 @@ void render_screen ( int i,
         curr_window = curr_window->next;
 
     } while (curr_window != NULL);
+
+    fix_corners (i, layouts);
 }
 
 
@@ -239,7 +238,7 @@ static void create_layout ( int win_rows,
     windows_t *curr_window = NULL;
     windows_t *prev_window = NULL;
 
-    // get layouts->matrices [li]
+    // get layout matrix
     char **layout_matrix = (char **) layouts->matrices [li];
 
     /*
@@ -255,8 +254,7 @@ static void create_layout ( int win_rows,
     }
     */
 
-    // loop through layout_matrix segments
-    int row = 6;
+    // create windows
     char ch;
     for (y = 0; y < row_ratio; y++) {
         for (x = 0; x < col_ratio; x++) {
@@ -268,18 +266,18 @@ static void create_layout ( int win_rows,
                 curr_window = allocate_window ();
                 curr_window->next = NULL;
 
-                // add key from matrix
-                ch = layout_matrix [y][x];
-                curr_window->key = ch;
-
-                // set head or link previous window
+                // set head window or link previous
                 if (y == 0 && x == 0) {
                     layouts->windows [li] = curr_window; // head
                 } else {
                     prev_window->next = curr_window;    // link previous
                 }
 
-                // calculate window rows, cols
+                // add key from matrix
+                ch = layout_matrix [y][x];
+                curr_window->key = ch;
+
+                // calculate rows, cols
                 //  
                 //         x──a
                 //         │ssa
@@ -315,14 +313,14 @@ static void create_layout ( int win_rows,
                 curr_window->y = segm_ys [y][x];
                 curr_window->x = segm_xs [y][x];
 
-                // resize to create overlapping borders
+                // create overlapping borders
                 if (y > 0) {
                     curr_window->y -= 1;
-                    curr_window->rows += yi - y;
+                    curr_window->rows += 1;
                 }
                 if (x > 0) {
                     curr_window->x -= 1;
-                    curr_window->cols += xi - x;
+                    curr_window->cols += 1;
                 }
 
                 // set used segments
@@ -338,7 +336,7 @@ static void create_layout ( int win_rows,
                     }
                 }
 
-                // set previous window
+                // set previous window for linking
                 prev_window = curr_window;
             }
         }
@@ -415,3 +413,176 @@ static WINDOW *render_sub_window(
     return sub_window;
 }
 
+/*
+    Fix current ncurses corner border character
+    ---------
+    Used by fix_corners() below
+*/
+static void fix_border_char (int y, int x)
+{
+    // get screen dimensions
+    int scr_rows = getmaxy (stdscr);
+    int scr_cols  = getmaxx (stdscr);
+
+    // check which borders are present
+    //
+    //      t         │       {t, r, b, l}
+    //    l c r     ─ c  -->  {1, 0, 0, 1}
+    //      b                             
+    //
+    setlocale(LC_ALL, "");
+    cchar_t cch;
+    int borders [4] = {0};
+
+    // PRINT
+    static int row = 3;
+    int col = 0;
+    mvin_wch (y, x, &cch);
+    mvadd_wch (row, col, &cch);
+    row++;
+    refresh();
+
+    noecho ();
+    int ch = getch();
+    /*
+    col += 4;
+    mvprintw (row, col, "%d", y);
+    col += 4;
+    mvprintw (row++, col, "%d", x);
+    */
+
+    /*
+    // create side border characters
+    wchar_t wb_vert = L'│';
+    wchar_t wb_horiz = L'─';
+    cchar_t b_vert, b_horiz;
+    setcchar (&b_vert, &wb_vert, A_NORMAL, 0, NULL);
+    setcchar (&b_horiz, &wb_horiz, A_NORMAL, 0, NULL);
+    */
+
+
+    /*
+        // top
+    if (y > TITLE_OFFSET) {
+        mvin_wch (y+1, x, &cch);
+        mvadd_wch (row, col, &cch);
+        col += 3;
+        if (memcmp (&cch, &b_vert, sizeof (cchar_t)) == 0) {
+            borders [0] = 1;
+        }
+    }
+
+        // right
+    if (x < (scr_cols - 1)) {
+        mvin_wch (y, x+1, &cch);
+        mvaddwstr (row, col, &cch);
+        col += 3;
+        if (memcmp (&cch, &b_horiz, sizeof (cchar_t)) == 0) {
+            borders [1] = 1;
+        }
+    }
+
+        // bottom
+    if (y < (scr_rows - 1)) {
+        mvin_wch (y-1, x, &cch);
+        mvaddwstr (row, col, &cch);
+        col += 3;
+        if (memcmp (&cch, &b_vert, sizeof (cchar_t)) == 0) {
+            borders [2] = 1;
+        }
+    }
+
+        // left
+    if (x > 0) {
+        mvin_wch (y, x-1, &cch);
+        mvaddwstr (row, col, &cch);
+        col += 3;
+        if (memcmp (&cch, &b_horiz, sizeof (cchar_t)) == 0) {
+            borders [3] = 1;
+        }
+    }
+
+
+    // PRINT
+    mvprintw (row++, col, "y:%d x:%d  %d %d %d %d", 
+            y, x, borders[0], borders[1], borders[2], borders[3]);
+    */
+
+    /*
+    // fix character
+    //
+    //   │       │
+    //  ─┐ -->  ─┤ 
+    //   │       │
+    //
+    
+        // {1,1,1,0} --> ├  
+    if (borders[0] && borders[1] && borders[2] && !borders[3]) {
+        bch [0] = L'├';
+        bch [1] = L'\0';
+        mvaddwstr (y, x, bch);
+    }
+
+        // {1,0,1,1} --> ┤
+    else if (borders[0] && !borders[1] && borders[2] && borders[3]) {
+        bch [0] = L'┤';
+        bch [1] = L'\0';
+        mvaddwstr (y, x, bch);
+    }
+
+        // {0,1,1,1} --> ┬
+    else if (!borders[0] && borders[1] && borders[2] && borders[3]) {
+        bch [0] = L'┬';
+        bch [1] = L'\0';
+        mvaddwstr (y, x, bch);
+    }
+
+        // {1,1,0,1} --> ┴
+    else if (borders[0] && borders[1] && !borders[2] && borders[3]) {
+        bch [0] = L'┴';
+        bch [1] = L'\0';
+        mvaddwstr (y, x, bch);
+    }
+
+        // {1,1,1,1} --> ┼
+    else if (borders[0] && borders[1] && borders[2] && borders[3]) {
+        bch [0] = L'┼';
+        bch [1] = L'\0';
+        mvaddwstr (y, x, bch);
+    }
+    */
+}
+
+
+/*
+    Fix all of current layout's broken border corners 
+    caused by overlapping in create_layout()
+
+          │       │
+         ─┐ -->  ─┤
+          │       │
+*/
+static void fix_corners ( int li,
+                          layouts_t *layouts)
+{
+    int of = TITLE_OFFSET;
+    windows_t *win = layouts->windows [li];
+
+    do {
+        // top left
+        fix_border_char (win->y + of, win->x);
+
+        // top right
+        fix_border_char (win->y + of, win->x + (win->cols - 1));
+
+        // bottom left
+        fix_border_char (win->y + (win->rows - 1) + of, win->x);
+
+        // bottom right
+        fix_border_char (win->y + (win->rows - 1) + of, win->x + (win->cols - 1));
+
+        // next window
+        win = win->next;
+
+    } while (win != NULL);
+}
