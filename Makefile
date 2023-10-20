@@ -7,8 +7,8 @@ CC=				gcc
 FLAGS=			-Wall -MMD
 PROD_FLAGS=		-O3
 DEV_FLAGS=		-g -DRENDER_PRINT 
-NCURSES_CFLAGS 	:= $(shell ncursesw5-config --cflags)
-NCURSES_LIBS 	:= $(shell ncursesw5-config --libs)
+NCURSES_CFLAGS 	:= $(shell ncurses5-config --cflags)
+NCURSES_LIBS 	:= $(shell ncurses5-config --libs)
 
 B_FILE_DEV=		termide-dev
 B_FILE_PROD=	termide
