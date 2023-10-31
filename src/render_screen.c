@@ -380,6 +380,11 @@ static WINDOW *render_window (
 
     // create window object
     WINDOW *win = create_new_window (rows, cols, y, x);
+    if (win == NULL) {
+        endwin();
+        pfem  ("Unable to create window\n");
+        exit (EXIT_FAILURE);
+    }
 
     // render border
     wattron (win, COLOR_PAIR(BORDER_COLOR));
@@ -516,6 +521,7 @@ static int fix_corner_char (
     else 
         return 0;
 }
+
 
 
 /*
