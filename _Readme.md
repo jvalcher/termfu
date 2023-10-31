@@ -1,7 +1,7 @@
 
 # termIDE
 
-A stress-free TUI development environment
+A stress-free terminal development environment
 
 - Fast performance
 - Fast navigation
@@ -11,15 +11,65 @@ A stress-free TUI development environment
 - Documented within an inch of its life
 
 
-# Uses
 
-- Debugger
+# Configuration file (.termide)
+
+## Examples
+
+### Layouts:
+
+- see `_Plugins.md` for a list of plugin codes
+
+- layout header format:
+
+  `[[ <type> : <title string> ]]`
+
+- sections:
+    >p  plugin, key, title settings
+    >h  header actions layout
+    >w  window layout for output plugins
+
+- plugin (>p) setting format:
+
+  `<code> : <key> : <window/action title string>`
+
+- Example layout configuration:
+
+  ```
+  [ layout : gdb_debug_1 ]
+  >p
+  Bld : b : (b)uilds -
+  Lay : l : (l)ayouts -
+  Qut : q : (q)uit
+  Run : r : (r)un
+  Nxt : n : (n)ext
+  Stp : s : (s)tep
+  Con : c : (c)ontinue
+  Fin : f : (f)inish
+  Kil : k : (k)ill
+  Brk : b : (b)reakpoints
+  Src : f : source (f)ile
+  Wat : w : (w)atch
+  Loc : l : (l)ocal vars
+  Out : o : (o)utput
+  >h
+  b l q
+  r n s c f k
+  >w
+  b f f
+  w f f
+  l o o
+  ```
 
 
 
 ## To do
 
 - config file name can be ".termide*" 
+
+  - plugin or title to indentify file being used
+
+
 
 - basic plugin functionality
 
@@ -66,7 +116,23 @@ A stress-free TUI development environment
         w s s
         r o m
 
+
+
 - plugin creator layout
+
+
+
+- debug macro change
+
+  ```
+  #ifdef DEBUG
+  #define dprintf(...) fprintf(stderr, __VA_ARGS__)
+  #else
+  #define dprintf(...) ((void)0)
+  #endif
+  ```
+
+
 
 - gdb plugins
 
@@ -83,18 +149,61 @@ A stress-free TUI development environment
 
   - normal or reverse mode toggle
 
+
+
 - software builds
 
   - list bash commands under each [build_01] config heading
   - runs first build in config file by default
 
+
+
+- Undo/redo
+
+  - On everything
+  - All events combined in D_LL whether gdb or other actions
+
+
+
 - bash
-  - popen() ?
 
-- vim
+  - mkfifo option
+    - NOT for this, use pty
+    - useful for other things potentially
 
-- top
+    - input terminal
 
-- Tetris
-  - Notcurses
+      ```
+      $ mkfifo mypipe
+      ```
+
+    - output terminal
+
+      ```
+      #!/bin/bash
+
+      while true; do
+          cat mypipe
+      done
+      ```
+
+    - input terminal
+
+      ```
+      $ printf "\e[34m$(basename "$(pwd)")/ $ \e[0mll\n" > mypipe 2>&1; ll > mypipe 2>&1
+      ```
+
+
+- plugins
+
+  - vim
+
+  - top
+
+  - memory viewer
+    - color coded stack, heap, data, memory
+
+  - Tetris
+    - Notcurses
+
 

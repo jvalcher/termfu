@@ -1,12 +1,16 @@
 
-# make				- build production binary
-# make dev			- build development binary, run it
-# make colors		- check if current terminal can display colors
+# Commands:
+	# make				- build production binary termide
+	# make dev			- build development binary termide-dev, run it
+	# make layouts		- print layout information before program continues  (src/data.h - PRINT_LAYOUTS)
+	# make colors		- check if current terminal can display colors
+	# make num_plugins	- print number of plugins for setting NUM_PLUGINS in src/data.h
 
 CC=				gcc
-FLAGS=			-Wall -MMD
+FLAGS=			-Wall -MMD -I ./src/plugins
 PROD_FLAGS=		-O3
 DEV_FLAGS=		-g -DRENDER_PRINT 
+LAY_FLAGS=		-g -DRENDER_PRINT -DLAYOUT
 NCURSES_CFLAGS 	:= $(shell ncurses5-config --cflags)
 NCURSES_LIBS 	:= $(shell ncurses5-config --libs)
 
@@ -26,7 +30,11 @@ all: FLAGS += $(PROD_FLAGS)
 all: clean $(B_FILE_PROD)
 
 dev: FLAGS += $(DEV_FLAGS)
-dev: $(B_FILE_DEV)
+dev: clean $(B_FILE_DEV)
+	./$(B_FILE_DEV)
+
+layouts: FLAGS += $(LAY_FLAGS)
+layouts: clean $(B_FILE_DEV)
 	./$(B_FILE_DEV)
 
 $(B_FILE_PROD): $(O_FILES)
@@ -38,6 +46,9 @@ $(B_FILE_DEV): $(O_FILES)
 obj/%.o: src/%.c
 	$(CC) $(FLAGS) $(NCURSES_CFLAGS) -c -o $@ $<
 
+obj/%.o: src/plugins/%.c
+	$(CC) $(FLAGS) $(NCURSES_CFLAGS) -c -o $@ $<
+
 -include $(D_FILES)
 
 clean:
@@ -46,8 +57,13 @@ clean:
 	rm -f ./termide-dev
 
 
-# misc
+# misc make commands
 
 colors:
 	@./scripts/run ./scripts/colors_test.c
 	@rm ./scripts/colors_test
+
+num_plugins:
+	@gcc -g src/plugins/plugins.c
+	@./a.out
+	@rm ./a.out

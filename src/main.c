@@ -8,32 +8,25 @@
 #include <locale.h>
 #include <ncurses.h>
 
-#include "create_colors.h"
+#include "data.h"
 #include "parse_config.h"
 #include "render_screen.h"
 #include "utilities.h"
 
-#define VERSION         "0.0.1"
-#define CMD_LEN         50
-#define RUNNING         true
 
-enum config_types {
-    LAYOUTS
-};
+static void create_colors ();
+static layouts_t* allocate_layouts_struct (void);
 
-static void *allocate_config (int);
 
 
 int main (void) 
 {
-    //setlocale(LC_ALL, "");  // needed for wide border characters
-
     // initialize Ncurses, create color pairs
     initscr ();
     create_colors ();
 
     // create data structures to hold parsed CONFIG_FILE data (parse_config.h)
-    layouts_t *layouts = allocate_config (LAYOUTS);
+    layouts_t *layouts = allocate_layouts_struct ();
 
     // parse configuration file
     parse_config (layouts);
@@ -48,48 +41,61 @@ int main (void)
     //  q   - quit
     //
     int ch;
-    cbreak ();      // disable need to press Enter
+    cbreak ();      // disable need to press Enter after key choice
     noecho ();      // do not display pressed character
 
         // read key presses
     while ((ch = getch()) != ERR) {
 
-        // quit
-        if (ch == 'q')
-            break;
+        switch (ch) {
 
-        // render screen
-        render_screen (li, layouts);
+            // quit
+            case 'q':
+                goto exit;
 
-        //nodelay(stdscr, true);
-        //nodelay(stdscr, false);
+            // render screen
+            default:
+                render_screen (li, layouts);
+                break;
+        }
     }
 
+exit:
     endwin ();
     return 0;
 }
 
 
+
+/*
+   Create font_background color pairs
+*/
+static void create_colors ()
+{
+    if (has_colors()) {
+
+        start_color();
+
+        init_pair(RED_BLACK, COLOR_RED, COLOR_BLACK);
+        init_pair(GREEN_BLACK, COLOR_GREEN, COLOR_BLACK);
+        init_pair(YELLOW_BLACK, COLOR_YELLOW, COLOR_BLACK);
+        init_pair(BLUE_BLACK, COLOR_BLUE, COLOR_BLACK);
+        init_pair(MAGENTA_BLACK, COLOR_MAGENTA, COLOR_BLACK);
+        init_pair(CYAN_BLACK, COLOR_CYAN, COLOR_BLACK);
+        init_pair(WHITE_BLACK, COLOR_WHITE, COLOR_BLACK);
+        init_pair(WHITE_BLUE, COLOR_WHITE, COLOR_BLUE);
+    }
+}
+
+
+
 /*
     Allocate memory for configuration structs
 */
-static void *allocate_config (int config)
+static layouts_t* allocate_layouts_struct (void)
 {
-    void *config_ptr = NULL;
-
-    switch (config) {
-
-        // layouts_t
-        case LAYOUTS:
-            config_ptr = (layouts_t*) malloc (sizeof (layouts_t));
-            ((layouts_t *) config_ptr)->num = 0;
-            break;
-
-        default:
-            endwin ();
-            pfem  ("Configuration struct enum not recognized\n");
-            exit (EXIT_FAILURE);
-    }
+    void *config_ptr = (layouts_t*) malloc (sizeof (layouts_t));
+    ((layouts_t *) config_ptr)->num = 0;
 
     if (config_ptr == NULL) {
         endwin ();
@@ -99,56 +105,4 @@ static void *allocate_config (int config)
         return config_ptr;
     }
 }
-
-
-
-
-/*
-    // get row, column
-    int x, y;
-    getmaxyx(stdscr, y, x);
-    printw("%d rows, %d columns\n", y, x);
-    printw("%d rows, %d columns\n", LINES, COLS);
-    mvaddstr(3, 0, "Test");
-    refresh();
-
-    // get cursor position
-    getyx(stdscr, y, x);
-
-    // enter command
-    char command[CMD_LEN];
-    getnstr(command, CMD_LEN - 1);
-    move(2, 0);
-
-    // insert line
-    addstr("Hello\n");
-    addstr("there\n");
-    move(1, 0);
-    insertln();
-    addstr("Insert\n");
-
-    // file.c
-    char *filename = "file";
-    char *ext = ".c";
-    int len = strlen(filename);
-    addstr(filename);
-    move(1,len);
-    insstr(ext);
-
-    // buffer
-    char buff[101];
-    addstr("Input: ");
-    refresh();
-    napms(5000);
-    addstr("\nFlushing buffer...\n");
-    flushinp();
-    getnstr(buff, 100);
-    printw("You typed: %s\n", buff);    // no output
-
-    // refresh()
-    // wrefresh()
-    // touchwin(stdscr) + refresh()
-
-    // delwin(win)
-*/
 

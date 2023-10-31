@@ -12,20 +12,21 @@
 #include <ctype.h>
 #include <ncurses.h>
 
+#include "data.h"
 #include "render_screen.h"
 #include "parse_config.h"
-#include "create_colors.h"
 #include "utilities.h"
 
-#define TITLE_OFFSET 1          // temporary, will be set by config file
+int header_offset;          // temporary, will be set by config file
 
 
 static void create_layout (int win_rows, int win_cols, int li, layouts_t *layouts);
 static windows_t *allocate_window (void);
-static WINDOW *render_window (char *window_name, int rows, int cols, int pos_y, int pos_x);
+static WINDOW *render_window (int rows, int cols, int pos_y, int pos_x);
+static void render_window_title (windows_t *window, char *title);
 void fix_corners (windows_t *win);
 static WINDOW* create_new_window (int rows, int cols, int y, int x);
-static WINDOW* create_sub_window (WINDOW *parent, int rows, int cols, int y, int x);
+//static WINDOW* create_sub_window (WINDOW *parent, int rows, int cols, int y, int x);
 
 
 /*
@@ -34,43 +35,39 @@ static WINDOW* create_sub_window (WINDOW *parent, int rows, int cols, int y, int
 void render_screen ( int i, 
                      layouts_t *layouts)
 {
+    int header_title_len = 12 + MAX_CONFIG_LABEL_LEN;
+    char header_title [header_title_len];
 
+    // get screen dimensions
     int scr_rows = getmaxy (stdscr);
-    int scr_cols  = getmaxx (stdscr);
-    int header_rows = 1;
+    int scr_cols = getmaxx (stdscr);
 
-    // calculate all layouts if program just started or if
-    // the screen size changed
-    if (scr_rows != layouts->scr_height || 
-        scr_cols != layouts->scr_width) {
-        for (int i = 0; i < layouts->num; i++) {
-            create_layout (scr_rows - header_rows, scr_cols, i, layouts);
-        }
-    }
+    // set header offset
+    header_offset = layouts->hdr_key_rows [i];
+
+    // create layout
+    create_layout (scr_rows - header_offset, scr_cols, i, layouts);
+
+    // print layout  (DEBUG)
+    print_layouts (PRINT_LAYOUTS, layouts);
 
     // render title
-    WINDOW *header = create_new_window (header_rows, COLS, 0, 0);
-    char *title = "termIDE";
-    wattron (stdscr, A_BOLD | COLOR_PAIR(GREEN_BLACK));
-    mvwprintw (header, 0, 3, "%s", title);
-    wattroff (stdscr, A_BOLD | COLOR_PAIR(GREEN_BLACK));
-    refresh ();
+    WINDOW *header = create_new_window (header_offset, COLS, 0, 0);
+    char* title = "termIDE -- ";
+    mv_print_title (GREEN_BLACK, header, 0, 3, title);
+    mv_print_title (YELLOW_BLACK, header, 0, 2 + strlen(title), layouts->labels[i]);
+    refresh  ();
     wrefresh (header);
 
-    // render current layout's windows
-    int pi = 0;
+    // render current layout's window borders
     windows_t *curr_window = layouts->windows [i];
-
-        // loop through windows
+        //
     do {
-        char *win_title = "test";
-
         // render, store window
         curr_window->win = render_window (
-                        win_title, 
                         curr_window->rows,
                         curr_window->cols,
-                        curr_window->y + header_rows,
+                        curr_window->y + header_offset,
                         curr_window->x);
 
         // next window
@@ -78,8 +75,63 @@ void render_screen ( int i,
 
     } while (curr_window != NULL);
 
-    // fix window border corners
+    // fix border corners
     fix_corners (layouts->windows [i]);
+
+    // render header titles
+    int row = 0;
+    int ch;
+    int header_title_indent = 0;
+    int title_str_len = scr_cols - (strlen (title) + 4);
+    char *titles_str = (char *) malloc (sizeof (char) * title_str_len);
+    memset (titles_str, '\0', title_str_len);
+    titles_str [0] = ' ';
+        //
+    for (int j = 0; j < strlen (layouts->hdr_key_strs[i]); j++) {
+
+        ch = layouts->hdr_key_strs [i][j];
+        
+        // render row of plugin titles
+        if (ch == '\n') {
+            header_title_indent = scr_cols - strlen (titles_str) - 2;
+            mv_print_title (GREEN_BLACK, header, row, header_title_indent, titles_str);
+            memset (titles_str, '\0', title_str_len);
+            row += 1;
+            continue;
+        }
+
+        // get title
+        for (int k = 0; k < NUM_PLUGINS; k++) {
+            if (ch == layouts->plugins[i]->keys[k][0]) {
+                title = (char *)layouts->plugins[i]->titles[k];
+                break;
+            } 
+        }
+
+        // concatenate title string
+        strcat (titles_str, title);
+        strcat (titles_str, "  ");
+    }
+    wrefresh (header);
+    free (titles_str);
+
+    // render window titles
+    curr_window = layouts->windows [i];
+    do {
+
+        // get title
+        for (int j = 0; j < NUM_PLUGINS; j++) {
+            if (curr_window->key == layouts->plugins[i]->keys[j][0])
+                title = (char *)layouts->plugins[i]->titles[j];
+        }
+
+        // render title
+        render_window_title (curr_window, title);
+
+        // next window
+        curr_window = curr_window->next;
+
+    } while (curr_window != NULL);
 }
 
 
@@ -141,18 +193,6 @@ static void create_layout ( int win_rows,
     int segm_row_rem = win_rows - (floor_segm_rows * row_ratio);
     int segm_col_rem = win_cols - (floor_segm_cols * col_ratio);
 
-    /*
-    // PRINT
-    mvprintw (5, 4, "row_ratio: %d  col_ratio: %d",
-            row_ratio, col_ratio);
-    mvprintw (4, 4, "win_rows: %d  win_cols: %d",
-            win_rows, win_cols);
-    mvprintw (6, 4, "floor_segm_rows: %d  floor_segm_cols: %d", 
-            floor_segm_rows, floor_segm_cols);
-    mvprintw (7, 4, "segm_row_rem: %d  segm_col_rem: %d", 
-            segm_row_rem, segm_col_rem);
-    */
-
         // add base segment rows, columns
         // distribute remainders
     for (y = 0; y < row_ratio; y++) {
@@ -170,14 +210,6 @@ static void create_layout ( int win_rows,
         segm_row_rem -= 1;
     }
 
-    /*
-    // PRINT
-    char row_label [] = "segm_rows:";
-    char col_label [] = "segm_cols:";
-    print_int_matrix (row_label, 9, segm_rows, row_ratio, col_ratio);
-    print_int_matrix (col_label, 16, segm_cols, row_ratio, col_ratio);
-    */
-
     // create matrices for top left y and x segment coordinates
     //
     //     x - -
@@ -186,7 +218,7 @@ static void create_layout ( int win_rows,
     //
     int segm_ys [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0};
     int segm_xs [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0};
-
+        //
     for (y = 0; y < row_ratio; y++) {
         for (x = 0; x < col_ratio; x++) {
 
@@ -206,14 +238,6 @@ static void create_layout ( int win_rows,
         }
     }
 
-    /*
-    // PRINT
-    char y_label [] = "segm_ys:";
-    char x_label [] = "segm_xs:";
-    print_int_matrix (y_label, 23, segm_ys, row_ratio, col_ratio);
-    print_int_matrix (x_label, 30, segm_xs, row_ratio, col_ratio);
-    */
-
     // create (un)used segments matrix
     //
     //         0000
@@ -228,20 +252,7 @@ static void create_layout ( int win_rows,
     windows_t *prev_window = NULL;
 
     // get layout matrix
-    char **layout_matrix = (char **) layouts->matrices [li];
-
-    /*
-    // PRINT
-    int row = 37;
-    for (int i = 0; i < row_ratio; i++) {
-        int col = 4;
-        for (int j = 0; j < col_ratio; j++) {
-            mvprintw (row, col, "%c", layout_matrix [i][j]);
-            col += 4;
-        }
-        row += 1;
-    }
-    */
+    char **layout_matrix = (char **) layouts->win_matrices [li];
 
     // create windows
     char ch;
@@ -359,7 +370,6 @@ static windows_t *allocate_window (void)
     pos_y, pos_x    - window position in terms of top left corner
 */
 static WINDOW *render_window (
-        char *window_name, 
         int rows, 
         int cols, 
         int y, 
@@ -371,25 +381,10 @@ static WINDOW *render_window (
     // create window object
     WINDOW *win = create_new_window (rows, cols, y, x);
 
-    // calculate title indent
-    int title_length = strlen (window_name);
-    int title_indent = (cols - title_length) / 2;
-
     // render border
     wattron (win, COLOR_PAIR(BORDER_COLOR));
     wborder (win, 0,0,0,0,0,0,0,0);
     wattroff (win, COLOR_PAIR(BORDER_COLOR));
-
-    /*
-    // render title
-    char *space = " ";
-    wattron (win, A_BOLD | COLOR_PAIR(TITLE_COLOR));
-    mvwaddstr (win, 0, title_indent - 1, space);
-    mvwaddstr (win, 0, title_indent, window_name);
-    mvwaddstr (win, 0, title_indent + title_length, space);
-    wattroff (win, A_BOLD | COLOR_PAIR(TITLE_COLOR));
-    */
-
     refresh ();
     wrefresh (win);
 
@@ -399,12 +394,34 @@ static WINDOW *render_window (
 
 
 /*
+    Render window title
+*/
+static void render_window_title (windows_t *window,
+                                 char *title)
+{
+    // get Ncurses WINDOW
+    WINDOW* win = window->win;
+
+    // calculate indent
+    int title_length = strlen (title);
+    int title_indent = (window->cols - title_length) / 2;
+
+    // print title
+    wattron   (win, A_BOLD | COLOR_PAIR(TITLE_COLOR));
+    mvwprintw (win, 0, title_indent - 1, " %s ", title);
+    wattroff  (win, A_BOLD | COLOR_PAIR(TITLE_COLOR));
+    wrefresh  (win);
+}
+
+
+
+/*
     Fix single ncurses border corner character
     ---------------
-    Called by fix_corners()
     Returns correct corner character int
+    Called by fix_corners()
 
-        y, x    - screen coordinates
+        y, x    - terminal screen coordinates
 
 */
 static int fix_corner_char (
@@ -415,9 +432,15 @@ static int fix_corner_char (
     int ch;
 
     // get border character
+    //
+    //     curscr:
+    //       - terminal or "physical" screen
+    //       - i.e. allows access to every character currently on 
+    //         screen without needing to know what window it is in
+    //
     ch = mvwinch (curscr, y, x) & A_CHARTEXT;
 
-    // if already corrected, return current character
+    // if border character already corrected, return it as is
     int corrected_chars [] = {
         ACS_LTEE,
         ACS_RTEE,
@@ -430,18 +453,18 @@ static int fix_corner_char (
             return corrected_chars [i];
     }
 
-    // check which borders are present
+    // check for surrounding border characters
     //
     //      t         │       {t, r, b, l}
     //    l c r     ─ c  -->  {1, 0, 0, 1}
     //      b                             
     //
     int borders [4] = {0};
-    int horiz_line = ACS_HLINE & A_CHARTEXT;
-    int vert_line = ACS_VLINE & A_CHARTEXT;
+    int horiz_line  = ACS_HLINE & A_CHARTEXT;
+    int vert_line   = ACS_VLINE & A_CHARTEXT;
 
         // top
-    if (y > TITLE_OFFSET) {
+    if (y > header_offset) {
         ch = mvwinch (curscr, y - 1, x) & A_CHARTEXT;
         if (ch == vert_line)
             borders [0] = 1;
@@ -502,18 +525,17 @@ static int fix_corner_char (
          ─┐ -->  ─┤
           │       │
    
-    Passed first window in layouts_t's windows_t linked list
+    Passed head of windows_t linked list in layouts_t
 */
 void fix_corners (windows_t *win)
 {
-    int of = TITLE_OFFSET;
+    int of = header_offset;
 
     do {
-        int y = win->y;
-        int x = win->x;
-        int rows = win->rows;
-        int cols = win->cols;
-        //
+        int y     = win->y;
+        int x     = win->x;
+        int rows  = win->rows;
+        int cols  = win->cols;
         int tl = 0;
         int tr = 0;
         int bl = 0;
@@ -536,7 +558,6 @@ void fix_corners (windows_t *win)
         //      wborder (win, ls, rs, ts, bs, tl, tr, bl, br)
         //
         WINDOW *w = win->win;
-            //
         wattron (w, COLOR_PAIR(BORDER_COLOR));
         wborder (w, 0, 0, 0, 0, tl, tr, bl, br);
         wattroff (w, COLOR_PAIR(BORDER_COLOR));
@@ -556,15 +577,15 @@ void fix_corners (windows_t *win)
 static void check_window (WINDOW *win)
 {
     if (win == NULL) {
-        endwin();
-        pfem  ("Unable to create window\n");
+        endwin ();
+        pfem ("Unable to create window\n");
         exit (EXIT_FAILURE);
     }
 }
 
 
 /*
-    Create new window
+    Create new window relative to stdscr
 */
 static WINDOW* create_new_window (
         int rows,
@@ -581,6 +602,7 @@ static WINDOW* create_new_window (
 /*
     Create subwindow relative to parent
 */
+/*
 static WINDOW* create_sub_window (
         WINDOW *parent,
         int rows,
@@ -592,3 +614,4 @@ static WINDOW* create_sub_window (
     check_window (swin);
     return swin;
 }
+*/

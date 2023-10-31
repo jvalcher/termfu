@@ -3,8 +3,10 @@
     Misc utilities
     -------------
 
-    pfem()
-    pfemo()                 - print error messages
+    arrlen()                - get length of array
+    pfem()                  - print file, error info
+    pfemo()                 - print       error info
+    print_int_matrix()      - print matrix values (ncurses)
 
 */
 
@@ -18,6 +20,14 @@
 
 #include "parse_config.h"
 #include "render_screen.h"
+
+
+
+/*
+    Get length of array
+*/
+#define arrlen(a) (sizeof(a) / sizeof *(a))
+
 
 /*
     Print formatted message to stderr
@@ -56,6 +66,7 @@
 } while (0)
 
 
+
 /*  
     Print formatted error message only 
     -------------
@@ -75,6 +86,7 @@
 } while (0)
 
 
+
 /*
     Print integer matrix [y][x] values
     ---------
@@ -85,5 +97,23 @@ void print_int_matrix ( char *label,
                         int matrix [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS], 
                         int y, 
                         int x);
+
+
+
+/*
+    Print bold, colored Ncurses string with mvwprintw()
+    ---------
+    Uses color pairs in src/data.h
+
+    Usage:
+
+        mv_print_title (GREEN_BLACK, win, 3, 2, "Layout: %s", layout_str);
+*/
+void mv_print_title (int     color, 
+                     WINDOW *win,
+                     int     row,
+                     int     col, 
+                     char   *str);
+
 
 #endif

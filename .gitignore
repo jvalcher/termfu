@@ -3,6 +3,8 @@ termide
 termide-dev
 core
 ncurses.h
+tags
+core
 
 .gdb*
 !.gdb-tuiffic

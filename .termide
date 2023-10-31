@@ -1,10 +1,28 @@
-[[layout:layout1]]
-aaasssww
-aaasssrr
-aaassscc
-wwwbbbrr
 
-[[layout:layout2]]
-wr
-bm
-
+[ layout : gdb_debug_1 ]
+>p
+Bld : b :(b)uilds
+Lay : l :(l)ayouts
+Qut : q :(q)uit
+Run : r :(r)un
+Nxt : n :(n)ext
+Stp : s :(s)tep
+Con : c :(c)ontinue
+Fin : f :(f)inish
+Kil : k :(k)ill
+Brk : b :(b)reakpoints
+Src : f :source (f)ile
+Asm : a :(a)ssembly
+Reg : e :r(e)gisters
+Prm : p :(p)rompt
+Wat : w :(w)atch
+Loc : l :(l)ocal vars
+Out : o :(o)utput
+>h
+b l q
+r n s c f k
+>w
+b f a 
+w f a
+l f a
+e p o 
