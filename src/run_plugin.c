@@ -17,13 +17,14 @@
     -----
     Sorted, three-letter, case-sensitive global identifiers for plugins
 
+        <key> -> <code> -> <code_function()>
+
     Key shortcut and title string associated with each plugin are 
     set in CONFIG_FILE for each layout
 
         See "Example layout configuration" in `_Readme.md`
 
     See src/plugins/_plugins.h for plugin information
-
 */
 const char *plugin_code [] = {
     "Asm",
@@ -45,6 +46,10 @@ const char *plugin_code [] = {
     "Stp",
     "Wat",
 };
+
+/*
+    enum plugin indices for switch statement
+*/
 enum plugin_index {
     Asm,
     Bak,
@@ -75,9 +80,7 @@ int get_plugin_index (char *code);
     Run plugin
     --------
     Match key input to plugin code as set in CONFIG_FILE (see data.h)
-
-    Uses NUM_PLUGINS in src/data.h
-
+    Run plugin function
 
         input_key   - key pressed
         li          - layouts_t struct index
@@ -134,11 +137,9 @@ int run_plugin (char input_key,
 
 
 /*
-    Get plugin function pointer index
+    Get plugin_code index
     ------------
-    Binary search for plugin code in `plugin_code` array
-    Return index
-        - matches index of related function pointer in `plugin` array
+    Binary search for matching plugin code string in `plugin_code` array
 */
 int get_plugin_index (char *code)
 {
@@ -146,12 +147,9 @@ int get_plugin_index (char *code)
     int end_index = NUM_PLUGINS - 1;
     int mid_index;
     int cmp;
-
     while (start_index <= end_index) {
-
         mid_index = start_index + (end_index - start_index) / 2;
         cmp = strcmp (plugin_code[mid_index], code);
-
         if (cmp == 0) {
             return mid_index;
         } else if (cmp < 0) {

@@ -103,6 +103,8 @@ void print_int_matrix ( char *label,
 /*
     Print bold, colored Ncurses string with mvwprintw()
     ---------
+    Takes int color variable instead of integer constant or macro
+
     Uses color pairs in src/data.h
 
     Usage:
@@ -114,6 +116,16 @@ void mv_print_title (int     color,
                      int     row,
                      int     col, 
                      char   *str);
+
+
+/*
+    Set, unset color using int variable
+    -----------
+    wattron/off() require the use of integer constants or macros
+*/
+void set_bold_color (WINDOW* win, int color);
+void unset_bold_color (WINDOW* win, int color);
+
 
 
 #endif

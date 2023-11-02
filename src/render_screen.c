@@ -23,6 +23,8 @@ int header_offset;          // temporary, will be set by config file
 static void create_layout (int win_rows, int win_cols, int li, layouts_t *layouts);
 static windows_t *allocate_window (void);
 static WINDOW *render_window (int rows, int cols, int pos_y, int pos_x);
+static void render_main_title (WINDOW* header, char *title, char *layout);
+static void render_header_title (WINDOW* header, int row, int col, char *title);
 static void render_window_title (windows_t *window, char *title);
 void fix_corners (windows_t *win);
 static WINDOW* create_new_window (int rows, int cols, int y, int x);
@@ -48,26 +50,23 @@ void render_screen (int i,
     // print layout  (DEBUG)
     print_layouts (PRINT_LAYOUTS, layouts);
 
-    // render title
+    // create header
     WINDOW *header = create_new_window (header_offset, COLS, 0, 0);
-    char* title = "termIDE : ";
-    mv_print_title (GREEN_BLACK, header, 1, 2, title);
-    mv_print_title (YELLOW_BLACK, header, 1, 2 + strlen(title), layouts->labels[i]);
+
+        // render header "termIDE : <layout name>" title
+    char* title = "termIDE";
+    render_main_title (header, title, layouts->labels[i]);
     refresh  ();
     wrefresh (header);
 
-    // render current layout's window borders
+    // render borders
     windows_t *curr_window = layouts->windows [i];
-        //
     do {
-        // render, store window
         curr_window->win = render_window (
                         curr_window->rows,
                         curr_window->cols,
                         curr_window->y + header_offset,
                         curr_window->x);
-
-        // next window
         curr_window = curr_window->next;
 
     } while (curr_window != NULL);
@@ -91,7 +90,7 @@ void render_screen (int i,
         // render row of plugin titles
         if (ch == '\n') {
             header_title_indent = scr_cols - strlen (titles_str) - 2;
-            mv_print_title (GREEN_BLACK, header, row, header_title_indent, titles_str);
+            render_header_title (header, row, header_title_indent, titles_str);
             memset (titles_str, '\0', title_str_len);
             row += 1;
             continue;
@@ -395,6 +394,41 @@ static WINDOW *render_window (
 }
 
 
+/*
+    Render header title
+*/
+static void render_header_title (WINDOW* header,
+                                 int row,
+                                 int col, 
+                                 char *title)
+{
+    int key_color_toggle = false;
+
+    // print title
+    wattron (header, COLOR_PAIR(HEADER_TITLE_COLOR));
+    for (int i = 0; i < strlen(title) + 1; i++) {
+
+        mvwprintw (header, row, col + i, "%c", title[i]);
+        wrefresh  (header);
+
+        // turn off key character color
+        if (key_color_toggle) {
+            //wattroff (win, A_BOLD | COLOR_PAIR(YELLOW_BLACK));
+            wattron (header, COLOR_PAIR(HEADER_TITLE_COLOR));
+            key_color_toggle = false;
+        }
+
+        if (title[i] == '(') {
+            //wattroff (win, COLOR_PAIR(TITLE_COLOR));
+            wattron (header, COLOR_PAIR(TITLE_KEY_COLOR));
+            key_color_toggle = true;
+        }
+    }
+}
+
+
+
+
 
 /*
     Render window title
@@ -402,6 +436,8 @@ static WINDOW *render_window (
 static void render_window_title (windows_t *window,
                                  char *title)
 {
+    int key_color_toggle = false;
+
     // get Ncurses WINDOW
     WINDOW* win = window->win;
 
@@ -410,10 +446,27 @@ static void render_window_title (windows_t *window,
     int title_indent = (window->cols - title_length) / 2;
 
     // print title
-    wattron   (win, A_BOLD | COLOR_PAIR(TITLE_COLOR));
-    mvwprintw (win, 0, title_indent - 1, " %s ", title);
-    wattroff  (win, A_BOLD | COLOR_PAIR(TITLE_COLOR));
-    wrefresh  (win);
+    wattron (win, COLOR_PAIR(WINDOW_TITLE_COLOR));
+    for (int i = 0; i < title_length + 1; i++) {
+
+        mvwprintw (win, 0, title_indent - 1 + i, "%c", title[i]);
+        wrefresh  (win);
+
+        // turn off key character color
+        if (key_color_toggle) {
+            //wattroff (win, A_BOLD | COLOR_PAIR(YELLOW_BLACK));
+            wattron (win, COLOR_PAIR(WINDOW_TITLE_COLOR));
+            key_color_toggle = false;
+        }
+
+        if (title[i] == '(') {
+            //wattroff (win, COLOR_PAIR(TITLE_COLOR));
+            wattron (win, COLOR_PAIR(TITLE_KEY_COLOR));
+            key_color_toggle = true;
+        }
+
+
+    }
 }
 
 
@@ -601,6 +654,39 @@ static WINDOW* create_new_window (
     check_window (win);
     return win;
 }
+
+
+
+/*
+    Render main title 
+    -----------
+    termIDE : <current layout>
+*/
+static void render_main_title (WINDOW* header,
+                               char *title,
+                               char *layout)
+{
+    int title_len = strlen (title);
+    char *colon = ":";
+
+    // program name
+    wattron (header, COLOR_PAIR(MAIN_TITLE_COLOR) | A_BOLD | A_UNDERLINE);
+    mvwprintw (header, 1, 2, "%s", title);
+    wattrset (header, A_NORMAL);
+
+    // colon
+    wattron (header, COLOR_PAIR(WHITE_BLACK));
+    mvwprintw (header, 1, title_len + 3, "%s", colon);
+
+    // current layout
+    wattron (header, COLOR_PAIR(LAYOUT_TITLE_COLOR));
+    mvwprintw (header, 1, title_len + 4, "%s", layout);
+    attrset (A_NORMAL);
+
+    refresh ();
+    wrefresh (header);
+}
+
 
 
 /*

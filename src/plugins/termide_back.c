@@ -14,7 +14,6 @@ int termide_back (void)
 {
     // close Ncurses properly
     endwin ();
-    printf ("\nGoodbye!\n");
     exit (EXIT_SUCCESS);
 }
 

@@ -30,17 +30,11 @@ void print_int_matrix ( char *label,
 }
 
 
-
 /*
-    Print bold, colored Ncurses string with mvwprintw()
+    Set color attribute with variable
 */
-void mv_print_title (int color, 
-                     WINDOW* win,
-                     int row,
-                     int col, 
-                     char *str)
+void set_bold_color (WINDOW* win, int color)
 {
-    // set color attribute
     switch (color) {
         case RED_BLACK:
             wattron (win, A_BOLD | COLOR_PAIR(RED_BLACK));
@@ -64,10 +58,55 @@ void mv_print_title (int color,
             wattron (win, A_BOLD | COLOR_PAIR(WHITE_BLACK));
             break;
     }
+}
 
-    // print string
-    mvwprintw (win, row, col, "%s", str);
 
-    // reset attributes
-    wattrset (win, A_NORMAL);
+/*
+    Unset color attribute with variable
+*/
+void unset_bold_color (WINDOW* win, int color)
+{
+    switch (color) {
+        case RED_BLACK:
+            wattroff (win, A_BOLD | COLOR_PAIR(RED_BLACK));
+            break;
+        case GREEN_BLACK:
+            wattroff (win, A_BOLD | COLOR_PAIR(GREEN_BLACK));
+            break;
+        case YELLOW_BLACK:
+            wattroff (win, A_BOLD | COLOR_PAIR(YELLOW_BLACK));
+            break;
+        case BLUE_BLACK:
+            wattroff (win, A_BOLD | COLOR_PAIR(BLUE_BLACK));
+            break;
+        case MAGENTA_BLACK:
+            wattroff (win, A_BOLD | COLOR_PAIR(MAGENTA_BLACK));
+            break;
+        case CYAN_BLACK:
+            wattroff (win, A_BOLD | COLOR_PAIR(CYAN_BLACK));
+            break;
+        case WHITE_BLACK:
+            wattroff (win, A_BOLD | COLOR_PAIR(WHITE_BLACK));
+            break;
+    }
+}
+
+
+/*
+    Print bold, colored Ncurses title with mvwprintw()
+    and int color variable
+*/
+void mv_print_title (int color, 
+                     WINDOW* win,
+                     int row,
+                     int col, 
+                     char *title)
+{
+    set_bold_color (win, color);
+
+    mvwprintw (win, row, col, "%s", title);
+    wrefresh  (win);
+    getch ();
+
+    unset_bold_color (win, color);
 }
