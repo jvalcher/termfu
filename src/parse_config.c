@@ -3,13 +3,12 @@
     Parse configuration file
 */
 
-#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <unistd.h>
 #include <stdbool.h>
-#include <ncursesw/ncurses.h>
+#include <ncurses.h>
 
 #include "parse_config.h"
 #include "data.h"

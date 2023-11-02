@@ -3,7 +3,6 @@
    gdb-tuiffic
  */
 
-#include <stdio.h>
 #include <string.h>
 #include <locale.h>
 #include <ncurses.h>
@@ -11,6 +10,8 @@
 #include "data.h"
 #include "parse_config.h"
 #include "render_screen.h"
+#include "run_plugin.h"
+#include "plugins/_plugins.h"
 #include "utilities.h"
 
 
@@ -21,46 +22,33 @@ static layouts_t* allocate_layouts_struct (void);
 
 int main (void) 
 {
-    // initialize Ncurses, create color pairs
+    int li;
+    int ch;
+
+    // initialize Ncurses
     initscr ();
-    create_colors ();
+    create_colors ();   // create color pairs
+    cbreak ();          // disable need to press Enter after key choice
+    noecho ();          // do not display pressed character
 
-    // create data structures to hold parsed CONFIG_FILE data (parse_config.h)
+    // parse CONFIG_FILE data into layouts_t struct
     layouts_t *layouts = allocate_layouts_struct ();
-
-    // parse configuration file
     parse_config (layouts);
 
-    // render screen
-    int li = 0;                 // index of first layout
+    // render first layout
+    li = 0;
     render_screen (li, layouts);
 
     //
     //  Main loop
-    //  ---------
-    //  q   - quit
     //
-    int ch;
-    cbreak ();      // disable need to press Enter after key choice
-    noecho ();      // do not display pressed character
-
-        // read key presses
+        // read key
     while ((ch = getch()) != ERR) {
 
-        switch (ch) {
-
-            // quit
-            case 'q':
-                goto exit;
-
-            // render screen
-            default:
-                render_screen (li, layouts);
-                break;
-        }
+        // run plugin associated with key in CONFIG_FILE
+        run_plugin (ch, li, layouts);
     }
 
-exit:
     endwin ();
     return 0;
 }
@@ -68,7 +56,7 @@ exit:
 
 
 /*
-   Create font_background color pairs
+   Create Ncurses FONT_BACKGROUND color pairs
 */
 static void create_colors ()
 {
@@ -90,7 +78,7 @@ static void create_colors ()
 
 
 /*
-    Allocate memory for configuration structs
+    Allocate memory for layouts_t struct
 */
 static layouts_t* allocate_layouts_struct (void)
 {

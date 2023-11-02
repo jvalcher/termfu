@@ -123,6 +123,7 @@ typedef struct windows {
 
     WINDOW         *win;
     char            key;
+    bool            is_focused;
     int             rows;                   
     int             cols;                   
     int             y;                      
@@ -172,6 +173,7 @@ typedef struct layouts {
 
 
 /////////////////////////////////
+
 
 
 

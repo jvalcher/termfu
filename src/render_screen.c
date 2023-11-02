@@ -32,18 +32,15 @@ static WINDOW* create_new_window (int rows, int cols, int y, int x);
 /*
     Render screen
 */
-void render_screen ( int i, 
-                     layouts_t *layouts)
+void render_screen (int i, 
+                    layouts_t *layouts)
 {
-    int header_title_len = 12 + MAX_CONFIG_LABEL_LEN;
-    char header_title [header_title_len];
-
     // get screen dimensions
     int scr_rows = getmaxy (stdscr);
     int scr_cols = getmaxx (stdscr);
 
     // set header offset
-    header_offset = layouts->hdr_key_rows [i];
+    header_offset = layouts->hdr_key_rows [i] + 1;
 
     // create layout
     create_layout (scr_rows - header_offset, scr_cols, i, layouts);
@@ -53,9 +50,9 @@ void render_screen ( int i,
 
     // render title
     WINDOW *header = create_new_window (header_offset, COLS, 0, 0);
-    char* title = "termIDE -- ";
-    mv_print_title (GREEN_BLACK, header, 0, 3, title);
-    mv_print_title (YELLOW_BLACK, header, 0, 2 + strlen(title), layouts->labels[i]);
+    char* title = "termIDE : ";
+    mv_print_title (GREEN_BLACK, header, 1, 2, title);
+    mv_print_title (YELLOW_BLACK, header, 1, 2 + strlen(title), layouts->labels[i]);
     refresh  ();
     wrefresh (header);
 
@@ -264,9 +261,10 @@ static void create_layout ( int win_rows,
 
                 // create window
                 curr_window = allocate_window ();
-                curr_window->next = NULL;
+                curr_window->is_focused = false;
 
                 // set head window or link previous
+                curr_window->next = NULL;
                 if (y == 0 && x == 0) {
                     layouts->windows [li] = curr_window; // head
                 } else {
@@ -387,9 +385,9 @@ static WINDOW *render_window (
     }
 
     // render border
-    wattron (win, COLOR_PAIR(BORDER_COLOR));
+    wattron (win, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
     wborder (win, 0,0,0,0,0,0,0,0);
-    wattroff (win, COLOR_PAIR(BORDER_COLOR));
+    wattroff (win, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
     refresh ();
     wrefresh (win);
 
@@ -564,9 +562,9 @@ void fix_corners (windows_t *win)
         //      wborder (win, ls, rs, ts, bs, tl, tr, bl, br)
         //
         WINDOW *w = win->win;
-        wattron (w, COLOR_PAIR(BORDER_COLOR));
+        wattron (w, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
         wborder (w, 0, 0, 0, 0, tl, tr, bl, br);
-        wattroff (w, COLOR_PAIR(BORDER_COLOR));
+        wattroff (w, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
         refresh ();
         wrefresh (w);
 

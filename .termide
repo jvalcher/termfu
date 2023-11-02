@@ -1,9 +1,10 @@
 
 [ layout : gdb_debug_1 ]
+
 >p
 Bld : b :(b)uilds
 Lay : l :(l)ayouts
-Qut : q :(q)uit
+Bak : q :(q)uit
 Run : r :(r)un
 Nxt : n :(n)ext
 Stp : s :(s)tep
@@ -16,13 +17,15 @@ Asm : a :(a)ssembly
 Reg : e :r(e)gisters
 Prm : p :(p)rompt
 Wat : w :(w)atch
-Loc : l :(l)ocal vars
+LcV : l :(l)ocal vars
 Out : o :(o)utput
+
 >h
 b l q
 r n s c f k
+
 >w
-b f a 
-w f a
-l f a
-e p o 
+bffaa 
+wffaa
+lffaa
+eppoo

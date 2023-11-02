@@ -35,7 +35,5 @@
 #define MAX_BUILDS  20
 
 
-int run_plugin (char key);
-
 
 #endif

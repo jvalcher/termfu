@@ -76,6 +76,7 @@ A stress-free terminal development environment
   - codes == three alphabet characters == 52³ == 140,608
   - build from source in plugins/ or use library files
 
+
   - source organization
     - plugins/
       - \_inc/
@@ -139,6 +140,20 @@ A stress-free terminal development environment
   - windows
     - scrolling
     - focus changes border color
+
+    - nested window actions
+
+      - (b)reakpoints
+        - b -> focus window
+          - arrow keys -> scrolling
+          - / + line number + Enter  -> add breakpoint
+
+      - (w)atches
+        - w -> focus
+        - arrow keys -> scrolling
+        - / + variable + Enter  -> add watch
+          - while typing, matches highlighted in source window
+          - tab -> skip to next match, change word in front of '/'
 
   - breakpoints
     - can set in source window
