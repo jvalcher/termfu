@@ -1,3 +1,4 @@
+
 /////////////////////////////////
 //
 //  Sections:
@@ -35,7 +36,7 @@
 
     - plugin_function[i]() called in main.c
 */
-extern int key_function_index [];
+extern uint8_t key_function_index [];
 
 
 
@@ -96,15 +97,18 @@ extern int key_function_index [];
     ---------
     Store plugin, key, title combinations for a single layout
 
-    layouts->plugins[i]
+    layouts->plugins
 
-    code       - code string  (Bld, Stp, ...)
-    key        - keyboard shortcut character  (b, s, ...)
-    title      - title string  ( (s)tep, (r)un, ...)
-    next       - next plugin_t struct
+    num        - number of plugins
+    key_rows   - number of header rows for shortcut titles
+    codes      - code strings  (Bld, Stp, ...)
+    keys       - keyboard shortcut characters  (b, s, ...)
+    titles     - title strings  ( (s)tep, (r)un, ...)
+    next       - next plugins struct
 */
 typedef struct plugin {
 
+    int            key_rows;
     char           code [4];
     char           key;
     char           title [MAX_TITLE_LEN];

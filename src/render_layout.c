@@ -1,45 +1,80 @@
 
 /*
-   Render Ncurses screen
+   Render Ncurses layout (not including window data)
 */
 
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <locale.h>
 #include <stdbool.h>
 #include <ctype.h>
 #include <ncurses.h>
 
 #include "data.h"
-#include "render_screen.h"
+#include "render_layout.h"
 #include "parse_config.h"
 #include "utilities.h"
 
-int header_offset;          // temporary, will be set by config file
 
+/*
+    Plugin codes
+    -----------
+    - Indexes match corresponding function's index in plugin_function[] array  (run_plugin.c)
+    - Ordered alphabetically for binary search in bind_keys_to_plugin()
+    - Used to bind function index to shortcut key in key_function_index[]  (data.h)
+*/
+char *plugin_code [] = {
+    
+    "EMP",
+    "Asm",
+    "Bak",
+    "Bld",
+    "Brk",
+    "Con",
+    "Fin",
+    "Kil",
+    "Lay",
+    "LcV",
+    "Nxt",
+    "Out",
+    "Prm",
+    "Prn",
+    "Reg",
+    "Run",
+    "Src",
+    "Stp",
+    "Wat"
+};
 
-static void create_layout (int win_rows, int win_cols, int li, layouts_t *layouts);
-static windows_t *allocate_window (void);
-static WINDOW *render_window (int rows, int cols, int pos_y, int pos_x);
-static void render_main_title (WINDOW* header, char *title, char *layout);
-static void render_header_title (WINDOW* header, int row, int col, char *title);
-static void render_window_title (windows_t *window, char *title);
-void fix_corners (windows_t *win);
-static WINDOW* create_new_window (int rows, int cols, int y, int x);
-//static WINDOW* create_sub_window (WINDOW *parent, int rows, int cols, int y, int x);
+int   key_function_index [53];
+char *prog_title = "termIDE";
+int   scr_rows;
+int   scr_cols;
+int   header_offset;
+
+static void    create_layout        (int, int, int, layouts_t*);
+static void    bind_keys_to_plugins (int, layouts_t*);
+static WINDOW *create_new_window    (int, int, int, int);
+static void    render_main_title    (WINDOW*, char*, char*);
+static void    render_borders       (window_t*);
+static void    fix_corners          (window_t*);
+static void    render_header_titles (int, layouts_t*, WINDOW*);
+static void    render_window_titles (int, layouts_t*);
+
 
 
 /*
-    Render screen
+    Render layouts
 */
-void render_screen (int i, 
+void render_layout (int i, 
                     layouts_t *layouts)
 {
     // get screen dimensions
-    int scr_rows = getmaxy (stdscr);
-    int scr_cols = getmaxx (stdscr);
+    scr_rows = getmaxy (stdscr);
+    scr_cols = getmaxx (stdscr);
 
     // set header offset
     header_offset = layouts->hdr_key_rows [i] + 1;
@@ -47,87 +82,48 @@ void render_screen (int i,
     // create layout
     create_layout (scr_rows - header_offset, scr_cols, i, layouts);
 
-    // print layout  (DEBUG)
+    // bind key shortcuts to plugin functions
+    bind_keys_to_plugins (i, layouts);
+
+#ifdef LAYOUT
+    // print layout, shortcuts info  (DEBUG)
     print_layouts (PRINT_LAYOUTS, layouts);
+#endif
 
     // create header
     WINDOW *header = create_new_window (header_offset, COLS, 0, 0);
 
-        // render header "termIDE : <layout name>" title
-    char* title = "termIDE";
-    render_main_title (header, title, layouts->labels[i]);
-    refresh  ();
-    wrefresh (header);
+    // render header "<program name> : <layout name>" title
+    render_main_title (header, prog_title, layouts->labels[i]);
 
-    // render borders
-    windows_t *curr_window = layouts->windows [i];
-    do {
-        curr_window->win = render_window (
-                        curr_window->rows,
-                        curr_window->cols,
-                        curr_window->y + header_offset,
-                        curr_window->x);
-        curr_window = curr_window->next;
+    // render window borders
+    render_borders (layouts->windows[i]);
 
-    } while (curr_window != NULL);
-
-    // fix border corners
+    // fix window border corners from overlapping
     fix_corners (layouts->windows [i]);
 
     // render header titles
-    int row = 0;
-    int ch;
-    int header_title_indent = 0;
-    int title_str_len = scr_cols - (strlen (title) + 4);
-    char *titles_str = (char *) malloc (sizeof (char) * title_str_len);
-    memset (titles_str, '\0', title_str_len);
-    titles_str [0] = ' ';
-        //
-    for (int j = 0; j < strlen (layouts->hdr_key_strs[i]); j++) {
-
-        ch = layouts->hdr_key_strs [i][j];
-        
-        // render row of plugin titles
-        if (ch == '\n') {
-            header_title_indent = scr_cols - strlen (titles_str) - 2;
-            render_header_title (header, row, header_title_indent, titles_str);
-            memset (titles_str, '\0', title_str_len);
-            row += 1;
-            continue;
-        }
-
-        // get title
-        for (int k = 0; k < NUM_PLUGINS; k++) {
-            if (ch == layouts->plugins[i]->keys[k][0]) {
-                title = (char *)layouts->plugins[i]->titles[k];
-                break;
-            } 
-        }
-
-        // concatenate title string
-        strcat (titles_str, title);
-        strcat (titles_str, "  ");
-    }
-    wrefresh (header);
-    free (titles_str);
+    render_header_titles (i, layouts, header);
 
     // render window titles
-    curr_window = layouts->windows [i];
-    do {
+    render_window_titles (i, layouts);
+}
 
-        // get title
-        for (int j = 0; j < NUM_PLUGINS; j++) {
-            if (curr_window->key == layouts->plugins[i]->keys[j][0])
-                title = (char *)layouts->plugins[i]->titles[j];
-        }
 
-        // render title
-        render_window_title (curr_window, title);
 
-        // next window
-        curr_window = curr_window->next;
-
-    } while (curr_window != NULL);
+/*
+    Allocate memory for new window_t struct
+*/
+window_t *allocate_window (void)
+{
+    window_t *window = (window_t *) malloc (sizeof (window_t));
+    if (window) {
+        return window;
+    } else {
+        endwin ();
+        pfem ("Unable to allocate memory for window_t struct");
+        exit (EXIT_FAILURE);
+    }
 }
 
 
@@ -146,10 +142,10 @@ void render_screen (int i,
         layouts  == layouts_t struct
 
 */
-static void create_layout ( int win_rows,
-                            int win_cols,
-                            int li,
-                            layouts_t *layouts)
+static void create_layout (int win_rows,
+                           int win_cols,
+                           int li,
+                           layouts_t *layouts)
 {
     // create matrices for number of rows, columns per segment
     //
@@ -242,10 +238,10 @@ static void create_layout ( int win_rows,
     //
     int used_segm_matrix [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0};
 
-    // create windows_t pointers for arranging
+    // create window_t pointers for arranging
     // layouts->windows linked list
-    windows_t *curr_window = NULL;
-    windows_t *prev_window = NULL;
+    window_t *curr_window = NULL;
+    window_t *prev_window = NULL;
 
     // get layout matrix
     char **layout_matrix = (char **) layouts->win_matrices [li];
@@ -345,62 +341,12 @@ static void create_layout ( int win_rows,
 
 
 /*
-    Allocate memory for new windows_t struct
-*/
-static windows_t *allocate_window (void)
-{
-    windows_t *window = (windows_t *) malloc (sizeof (windows_t));
-    if (window) {
-        return window;
-    } else {
-        endwin ();
-        pfem ("Unable to allocate memory for windows_t struct");
-        exit (EXIT_FAILURE);
-    }
-}
-
-
-/*
-    Create sub window
-    -------------------
-    rows, cols      - height, width
-    pos_y, pos_x    - window position in terms of top left corner
-*/
-static WINDOW *render_window (
-        int rows, 
-        int cols, 
-        int y, 
-        int x) 
-{
-    //int screen_width     = getmaxx (stdscr);
-    //int screen_height    = getmaxy (stdscr);    
-
-    // create window object
-    WINDOW *win = create_new_window (rows, cols, y, x);
-    if (win == NULL) {
-        endwin();
-        pfem  ("Unable to create window\n");
-        exit (EXIT_FAILURE);
-    }
-
-    // render border
-    wattron (win, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
-    wborder (win, 0,0,0,0,0,0,0,0);
-    wattroff (win, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
-    refresh ();
-    wrefresh (win);
-
-    return win;
-}
-
-
-/*
-    Render header title
+    Render header titles
 */
 static void render_header_title (WINDOW* header,
-                                 int row,
-                                 int col, 
-                                 char *title)
+                                  int row,
+                                  int col, 
+                                  char *title)
 {
     int key_color_toggle = false;
 
@@ -428,45 +374,122 @@ static void render_header_title (WINDOW* header,
 
 
 
+/*
+    Render header
+*/
+static void render_header_titles (int li,
+                                  layouts_t *layouts,
+                                  WINDOW *header)
+{
+    int row = 0;
+    int ch;
+    plugin_t* head_plugin = layouts->plugins[li];
+    plugin_t* curr_plugin;
+
+    // 
+    char *curr_title;
+    int   header_title_indent = 0;
+    int   title_str_len = scr_cols - (strlen (prog_title) + 4);
+    char *titles_str = (char *) malloc (sizeof (char) * title_str_len);
+
+        // clear titles string
+    memset (titles_str, '\0', title_str_len);
+    titles_str [0] = ' ';
+
+    for (int j = 0; j < strlen (layouts->hdr_key_strs[li]); j++) {
+
+        ch = layouts->hdr_key_strs [li][j];
+        
+        // render row of plugin titles
+        if (ch == '\n') {
+            header_title_indent = scr_cols - strlen (titles_str) - 2;
+            render_header_title (header, row, header_title_indent, titles_str);
+            memset (titles_str, '\0', title_str_len);
+            row += 1;
+            continue;
+        }
+
+        // get header title
+        for (int k = 0; k < sizeof(plugin_code); k++) {
+            if (ch == layouts->plugins[li]->key) {
+                curr_title = (char *)layouts->plugins[li]->title[k];
+                break;
+            } 
+        }
+
+        // get title
+        curr_plugin = head_plugin;
+        do {
+            if (ch == curr_plugin->key) {
+                curr_title = (char *)curr_plugin->title;
+                goto title_found;
+            }
+            curr_plugin = curr_plugin->next;
+        } while (curr_plugin != NULL);
+        title_found:
+
+        // concatenate title string
+        strcat (titles_str, curr_title);
+        strcat (titles_str, "  ");
+    }
+    wrefresh (header);
+    free (titles_str);
+}
+
 
 
 /*
-    Render window title
+    Render window titles
 */
-static void render_window_title (windows_t *window,
-                                 char *title)
+void render_window_titles (int li,
+                           layouts_t *layouts)
 {
-    int key_color_toggle = false;
+    char *title;
+    window_t *curr_window = layouts->windows[li];
+    plugin_t* head_plugin = layouts->plugins[li];
 
-    // get Ncurses WINDOW
-    WINDOW* win = window->win;
+    do {
 
-    // calculate indent
-    int title_length = strlen (title);
-    int title_indent = (window->cols - title_length) / 2;
+        // get title
+        plugin_t* curr_plugin = head_plugin;
+        do {
+            if (curr_window->key == curr_plugin->key)
+                title = (char *)curr_plugin->title;
+            curr_plugin = curr_plugin->next;
+        } while (curr_plugin != NULL);
 
-    // print title
-    wattron (win, COLOR_PAIR(WINDOW_TITLE_COLOR));
-    for (int i = 0; i < title_length + 1; i++) {
+        // render title
+        int key_color_toggle = false;
+        WINDOW* win = curr_window->win;
 
-        mvwprintw (win, 0, title_indent - 1 + i, "%c", title[i]);
-        wrefresh  (win);
+            // calculate indent
+        int title_length = strlen (title);
+        int title_indent = (curr_window->cols - title_length) / 2;
 
-        // turn off key character color
-        if (key_color_toggle) {
-            //wattroff (win, A_BOLD | COLOR_PAIR(YELLOW_BLACK));
-            wattron (win, COLOR_PAIR(WINDOW_TITLE_COLOR));
-            key_color_toggle = false;
+            // print title
+        wattron (win, COLOR_PAIR(WINDOW_TITLE_COLOR));
+        for (int i = 0; i < title_length + 1; i++) {
+
+            mvwprintw (win, 0, title_indent - 1 + i, "%c", title[i]);
+            wrefresh  (win);
+
+            // turn off key character color
+            if (key_color_toggle) {
+                wattron (win, COLOR_PAIR(WINDOW_TITLE_COLOR));
+                key_color_toggle = false;
+            }
+
+            // set key shortcut color  (c)
+            if (title[i] == '(') {
+                wattron (win, COLOR_PAIR(TITLE_KEY_COLOR));
+                key_color_toggle = true;
+            }
         }
 
-        if (title[i] == '(') {
-            //wattroff (win, COLOR_PAIR(TITLE_COLOR));
-            wattron (win, COLOR_PAIR(TITLE_KEY_COLOR));
-            key_color_toggle = true;
-        }
+        // next window
+        curr_window = curr_window->next;
 
-
-    }
+    } while (curr_window != NULL);
 }
 
 
@@ -480,9 +503,8 @@ static void render_window_title (windows_t *window,
         y, x    - terminal screen coordinates
 
 */
-static int fix_corner_char (
-            int y, 
-            int x)
+static int fix_corner_char (int y, 
+                            int x)
 {
     int i;
     int ch;
@@ -511,9 +533,9 @@ static int fix_corner_char (
 
     // check for surrounding border characters
     //
-    //      t         │       {t, r, b, l}
-    //    l c r     ─ c  -->  {1, 0, 0, 1}
-    //      b                             
+    //      t           │                     
+    //    l c r       ─ c   -->   {t, r, b, l}
+    //      b                     {1, 0, 0, 1}  
     //
     int borders [4] = {0};
     int horiz_line  = ACS_HLINE & A_CHARTEXT;
@@ -582,9 +604,9 @@ static int fix_corner_char (
          ─┐ -->  ─┤
           │       │
    
-    Passed head of windows_t linked list in layouts_t
+    Passed head of window_t linked list in layouts_t
 */
-void fix_corners (windows_t *win)
+static void fix_corners (window_t *win)
 {
     int of = header_offset;
 
@@ -644,11 +666,10 @@ static void check_window (WINDOW *win)
 /*
     Create new window relative to stdscr
 */
-static WINDOW* create_new_window (
-        int rows,
-        int cols,
-        int y,
-        int x)
+static WINDOW* create_new_window (int rows,
+                                  int cols,
+                                  int y,
+                                  int x)
 {
     WINDOW *win = newwin (rows, cols, y, x);
     check_window (win);
@@ -690,18 +711,124 @@ static void render_main_title (WINDOW* header,
 
 
 /*
-    Create subwindow relative to parent
+    Create sub window
+    -------------------
+    rows, cols      - height, width
+    pos_y, pos_x    - window position in terms of top left corner
 */
-/*
-static WINDOW* create_sub_window (
-        WINDOW *parent,
-        int rows,
-        int cols,
-        int y,
-        int x)
+WINDOW *render_window (int rows, 
+                              int cols, 
+                              int y, 
+                              int x) 
 {
-    WINDOW *swin = derwin (parent, rows, cols, y, x);
-    check_window (swin);
-    return swin;
+    //int screen_width     = getmaxx (stdscr);
+    //int screen_height    = getmaxy (stdscr);    
+
+    // create window object
+    WINDOW *win = create_new_window (rows, cols, y, x);
+    if (win == NULL) {
+        endwin();
+        pfem  ("Unable to create window\n");
+        exit (EXIT_FAILURE);
+    }
+
+    // render border
+    wattron (win, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
+    wborder (win, 0,0,0,0,0,0,0,0);
+    wattroff (win, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
+    refresh ();
+    wrefresh (win);
+
+    return win;
 }
+
+
+
+/*
+    Render window borders
 */
+static void render_borders (window_t *curr_window)
+{
+    do {
+        curr_window->win = render_window (
+                        curr_window->rows,
+                        curr_window->cols,
+                        curr_window->y + header_offset,
+                        curr_window->x);
+        curr_window = curr_window->next;
+
+    } while (curr_window != NULL);
+}
+
+
+
+/*
+    Bind shortcut keys to plugins functions
+    ------------
+    - Binary search for matching plugin code string in `plugin_code` array
+    - Set function index in key_function_index[];
+    - Keep track of indexes used in used_key[] and num_used_keys
+*/
+static void bind_keys_to_plugins (int li,
+                                  layouts_t* layouts)
+{
+    int  start_index;
+    int  end_index;
+    int  mid_index;
+    int  plugin_index;
+    int  cmp;
+    char key;
+    char code[4];
+    plugin_t* curr_plugin = layouts->plugins[li];
+
+    do {
+
+        // get shortuct key, code
+        key = curr_plugin->key;
+        strncpy (code, curr_plugin->code, strlen(code) + 1);
+
+        // find plugin_code[] index
+        start_index = 0;
+        end_index = (sizeof(plugin_code) / sizeof(plugin_code[0])) - 1;
+        plugin_index = -1;
+        while (start_index <= end_index) {
+            mid_index = start_index + (end_index - start_index) / 2;
+            cmp = strcmp (plugin_code [mid_index], code);
+            if (cmp == 0) {
+                plugin_index = mid_index;
+                goto index_found;
+            } else if (cmp < 0) {
+                start_index = mid_index + 1;
+            } else {
+                end_index = mid_index - 1;
+            }
+        }
+        index_found:
+
+        // plugin code string not found
+        if (plugin_index == -1) {
+            endwin ();
+            pfem ("Unknown plugin code \"%s\"\n", code);
+            exit (EXIT_FAILURE);
+        }
+
+        // Set key_function_index[]
+        //
+        //      {0,a-z,A-Z}  -->  {0-52}
+        //
+        if (key >= 'a' && key <= 'z') {
+            key_function_index [key - 'a' + 1] = plugin_index;
+        }
+        else if (key >= 'A' && key <= 'Z') {
+            key_function_index [key - 'A' + 27] = plugin_index;
+        }
+        else {
+            endwin ();
+            pfem ("\'%c\' key not found \n", key);
+            exit (EXIT_FAILURE);
+        }
+
+        curr_plugin = curr_plugin->next;
+
+    } while (curr_plugin != NULL);
+}

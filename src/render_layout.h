@@ -39,7 +39,7 @@ extern char *win_codes[];
 //   i       - layouts_t index
 //   layouts - layouts_t struct
 // 
-void render_screen (int i, layouts_t *layouts);
+void render_layout (int i, layouts_t *layouts);
 
 
 #endif

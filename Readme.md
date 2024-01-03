@@ -65,17 +65,53 @@ A stress-free terminal development environment
 
 ## To do
 
+
 - config file name can be ".termide*" 
 
   - plugin or title to indentify file being used
 
 
+- debug macro change
 
-- basic plugin functionality
+  ```
+  #ifdef DEBUG
+  #define dprintf(...) fprintf(stderr, __VA_ARGS__)
+  #else
+  #define dprintf(...) ((void)0)
+  #endif
+  ```
+
+
+- Undo/redo
+
+  - On everything
+  - All events combined in D_LL whether gdb or other actions
+
+
+- software builds
+
+  - list bash commands under each [build_01] config heading
+  - runs first build in config file by default
+
+
+- print available commands in current window
+  - `?`
+
+
+- syntax highlighting
+  - vim - .termide file
+  - source code
+
+
+
+-------
+PLUGINS
+-------
+
+- misc functionality
 
   - codes == three alphabet characters == 52³ == 140,608
   - build from source in plugins/ or use library files
-
 
   - source organization
     - plugins/
@@ -117,25 +153,33 @@ A stress-free terminal development environment
         w s s
         r o m
 
+  - separate functionality, config file ($HOME/.config) that preserves custom plugin
+    functionality while allowing updates
+
+  - selected item output
+    - utility function to display selected element info in separate window
+    - select:
+      - breakpoint, variable, array, etc.
+    - output to:
+      - existing window
+        - switch to different window with arrow keys
+      - popup window
 
 
-- plugin creator layout
+- plugin ideas
+
+  - gdb
+  - memory viewer
+    - color coded stack, heap, data, memory
+  - other debuggers (python, rust, node, ...)
+  - bash
+  - top
+  - vim
+  - plugin creator layout
+  - fancy notcurses app (?)
 
 
-
-- debug macro change
-
-  ```
-  #ifdef DEBUG
-  #define dprintf(...) fprintf(stderr, __VA_ARGS__)
-  #else
-  #define dprintf(...) ((void)0)
-  #endif
-  ```
-
-
-
-- gdb plugins
+- IMPLEMENTATION - gdb
 
   - windows
     - scrolling
@@ -147,6 +191,8 @@ A stress-free terminal development environment
         - b -> focus window
           - arrow keys -> scrolling
           - / + line number + Enter  -> add breakpoint
+            - ctrl + >/< -> jump to next/prev delimiter or type in delimiter 
+              - ' ', ')', ']', ...
 
       - (w)atches
         - w -> focus
@@ -155,32 +201,60 @@ A stress-free terminal development environment
           - while typing, matches highlighted in source window
           - tab -> skip to next match, change word in front of '/'
 
-  - breakpoints
-    - can set in source window
-
-  - source code
-    - window popup that lists all source files to choose from
-    - syntax highlighting  (onedark?)
+  - source code regularly checks for source code changes
+    - window notification
 
   - normal or reverse mode toggle
 
+  - persistent custom variable definitions in .gdbinit, .termIDE, ...?
+
+  - WINDOW - break, catchpoints
+    - can set in source window
+    - labeled with b1, c2
+
+  - WINDOW - variables
+    - numbered for easy selection
+    - no wrapping but truncated so that single value visible
+      - select + `Enter` -> 
+        - see: "selected item output" above
+    - j/k scrolling
+    - local + watched variables
+      - sorted together by default
+      - can shift values up/down
+    - highlight changed values
+    - select + `Enter`
+
+  - WINDOW - single array, formatted
+    - handles static and dynamic
+    - persistent array selections in .termIDE
+
+  - WINDOW - source code
+    - window popup that lists all source files to choose from
+    - add break, watch, catchpoint at current line
+    - points labeled with id number  
+      - b1, w2, c3
+      - replace line number to save space (?)
+    - add syntax highlighting
+
+  - run macro functions
+
+      [layout:gdb1]
+      ...
+      >gdb_macros
+      g:my_command i 10
+
+  - definition popup or other window 
+    - functions and variables under cursor
+    - edit selection by pressing '/'
+    - autocomplete with tab
+    - maintains current highlight in source window
 
 
-- software builds
-
-  - list bash commands under each [build_01] config heading
-  - runs first build in config file by default
 
 
 
-- Undo/redo
 
-  - On everything
-  - All events combined in D_LL whether gdb or other actions
-
-
-
-- bash
+- IMPLEMENTATION - bash
 
   - mkfifo option
     - NOT for this, use pty
@@ -209,16 +283,5 @@ A stress-free terminal development environment
       ```
 
 
-- plugins
-
-  - vim
-
-  - top
-
-  - memory viewer
-    - color coded stack, heap, data, memory
-
-  - Tetris
-    - Notcurses
 
 

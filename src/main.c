@@ -5,25 +5,28 @@
 
 #include <string.h>
 #include <locale.h>
+#include <signal.h>
 #include <ncurses.h>
 
 #include "data.h"
 #include "parse_config.h"
-#include "render_screen.h"
+#include "render_layout.h"
 #include "run_plugin.h"
-#include "plugins/_plugins.h"
 #include "utilities.h"
 
 
 static void create_colors ();
 static layouts_t* allocate_layouts_struct (void);
-
+void sigint_exit (int sig_num);
 
 
 int main (void) 
 {
     int li;
     int ch;
+
+    // exit gracefully on SIGINT
+    signal (SIGINT, sigint_exit);
 
     // initialize Ncurses
     initscr ();
@@ -37,7 +40,7 @@ int main (void)
 
     // render first layout
     li = 0;
-    render_screen (li, layouts);
+    render_layout (li, layouts);
 
     //
     //  Main loop
@@ -46,7 +49,7 @@ int main (void)
     while ((ch = getch()) != ERR) {
 
         // run plugin associated with key in CONFIG_FILE
-        run_plugin (ch, li, layouts);
+        //run_plugin (ch, li, layouts);
     }
 
     endwin ();
@@ -94,3 +97,14 @@ static layouts_t* allocate_layouts_struct (void)
     }
 }
 
+
+
+/*
+    Intercept SIGINT (i.e. Ctrl-c) and exit Ncurses gracefully
+*/
+void sigint_exit (int sig_num)
+{
+    endwin();
+    pfem ("Program exited (SIGINT)\n");
+    exit (EXIT_FAILURE);
+}

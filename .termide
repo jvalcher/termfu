@@ -2,7 +2,7 @@
 [ layout : gdb_debug_1 ]
 
 >p
-Bld : b :(b)uilds
+Bld : u :b(u)ilds
 Lay : l :(l)ayouts
 Bak : q :(q)uit
 Run : r :(r)un

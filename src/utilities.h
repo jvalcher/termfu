@@ -19,7 +19,7 @@
 #include <stdlib.h>
 
 #include "parse_config.h"
-#include "render_screen.h"
+#include "render_layout.h"
 
 
 

@@ -106,7 +106,6 @@ void mv_print_title (int color,
 
     mvwprintw (win, row, col, "%s", title);
     wrefresh  (win);
-    getch ();
 
     unset_bold_color (win, color);
 }
