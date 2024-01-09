@@ -20,7 +20,7 @@ B_FILE_PROD=	termide
 C_FILES=	$(wildcard ./src/*.c)
 O_FILES=	$(patsubst ./src/%.c, ./obj/%.o, $(C_FILES))
 CP_FILES=	$(wildcard ./src/plugins/*.c)
-OP_FILES=	$(wildcard ./src/plugins/*.c, ./obj/%.o, $(CP_FILES))
+OP_FILES=	$(patsubst ./src/plugins/%.c, ./obj/%.o, $(CP_FILES))
 D_FILES= 	$(patsubst ./src/%.c, ./obj/%.d, $(C_FILES))
 
 .PHONY: all dev colors

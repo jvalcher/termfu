@@ -29,9 +29,11 @@
 #define arrlen(a) (sizeof(a) / sizeof *(a))
 
 
+
 /*
-    Print formatted message to stderr
+    pfem()
     -----------
+    Print formatted error message
 
     pfem ("Unknown character \"%c\" \n", ch);
     -->
@@ -65,24 +67,55 @@
     fprintf (stderr, __VA_ARGS__); \
 } while (0)
 
-
+/*
+    pfeme()
+    --------
+    Print formatted error message -- pfme() -- and exit Ncurses
+*/
+#define pfeme(...) do { \
+\
+    endwin (); \
+    fprintf (stderr, "\
+\033[1;31m%s\033[1;0m \
+\033[1;32m%s\033[1;0m() : \
+\033[1;36m%s\033[1;0m : \
+\033[1;33m%d\033[1;0m\n       ", \
+    "ERROR:", \
+    __func__, \
+    __FILE__, \
+    __LINE__); \
+\
+    fprintf (stderr, __VA_ARGS__); \
+    exit (EXIT_FAILURE); \
+} while (0)
 
 /*  
-    Print formatted error message only 
+    pfemo()
     -------------
+    Print formatted error message only, no exit
 
-    pfem ("Unknown character \"%c\" \n", ch);
-
-    pfem  ("My error message");
-    pfemo ("var1 == 5");
+    pfem  ("Unknown character \"%c\" \n", ch);
+    pfemo ("My error message");
 
     ERROR: src_file.c : func () :10
+           Unknown character "c"
            My error message
-           var1 == 5
 */
 #define pfemo(...) do { \
     fprintf (stderr, "       "); \
     fprintf (stderr, __VA_ARGS__); \
+} while (0)
+
+/* 
+    pfemoe()
+    ----------
+    Print formatted error message only -- pfemo() -- and exit Ncurses
+*/
+#define pfemoe(...) do { \
+    endwin (); \
+    fprintf (stderr, "       "); \
+    fprintf (stderr, __VA_ARGS__); \
+    exit (EXIT_FAILURE); \
 } while (0)
 
 
@@ -125,6 +158,14 @@ void mv_print_title (int     color,
 */
 void set_bold_color (WINDOW* win, int color);
 void unset_bold_color (WINDOW* win, int color);
+
+
+
+/* 
+    Convert key shortcut character to plugin function index
+*/
+int key_to_index (int key);
+
 
 
 

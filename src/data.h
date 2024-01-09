@@ -24,16 +24,18 @@
  ****************/
 
 /*
-    Keys bound to function indexes in plugin_function[] for current layout  (run_plugin.c)
+    Shortcut keys bound to plugin function indexes
     -------------
-    - Declared, initialized in render_layout.c
+    - Declared in render_layout.c and initialized 
+      with bind_keys_to_plugins()
+    - plugin[i]() called in main() loop  (main.c)  via
+      run_plugin()  (run_plugin.c)
 
-        {0,a-z,A-Z}  -->  {0-52}
+        {0,a-z,A-Z}  ->  {0-52}
 
-        {4} == 12  -->  plugin_function[12]()
-        {6} == 0   -->  unassigned
+        {4} == 12  ->  plugin[12]()
+        {6} == 0   ->  unassigned
 
-    - plugin_function[i]() called in main.c
 */
 extern int key_function_index [];
 
@@ -57,13 +59,16 @@ extern int key_function_index [];
 #define WHITE_BLACK     26
 #define WHITE_BLUE      27
 
-#define BORDER_COLOR        BLUE_BLACK
-#define MAIN_TITLE_COLOR    GREEN_BLACK
-#define LAYOUT_TITLE_COLOR  MAGENTA_BLACK
-#define HEADER_TITLE_COLOR  GREEN_BLACK
-#define TITLE_KEY_COLOR     YELLOW_BLACK
-#define WINDOW_TITLE_COLOR  CYAN_BLACK
+#define BORDER_COLOR           BLUE_BLACK
+#define MAIN_TITLE_COLOR       GREEN_BLACK
+#define LAYOUT_TITLE_COLOR     MAGENTA_BLACK
+#define WINDOW_TITLE_COLOR     CYAN_BLACK
+#define HEADER_TITLE_COLOR     GREEN_BLACK
+#define TITLE_KEY_COLOR        YELLOW_BLACK
 
+#define FOCUS_BORDER_COLOR       YELLOW_BLACK
+#define FOCUS_HEADER_TITLE_COLOR TITLE_KEY_COLOR
+#define FOCUS_TITLE_KEY_COLOR    HEADER_TITLE_COLOR
 
 
 
@@ -76,8 +81,8 @@ extern int key_function_index [];
 
     layouts_t
         ...
-        plugins_t
-        windows_t
+        plugin_t
+        window_t
 
  *****************************/
 
@@ -91,8 +96,9 @@ extern int key_function_index [];
 #define MAX_SHORTCUTS           52      // a-z, A-Z
 
 
+
 /*
-    plugins_t
+    plugin_t
     ---------
     Store plugin, key, title combinations for a single layout
 
@@ -113,6 +119,7 @@ typedef struct plugin {
 } plugin_t;
 
 
+
 /*
     windows_t
     --------
@@ -121,7 +128,7 @@ typedef struct plugin {
     
     layouts->windows
   
-    win     - ncurses WINDOW* object
+    win     - Ncurses WINDOW* object
     key     - window segment key
     rows    - height in rows
     cols    - width in columns
@@ -129,18 +136,19 @@ typedef struct plugin {
     x       - top left corner x coordinate
     next    - pointer to next windows_t object in layout
 */  
-typedef struct windows {
+typedef struct window {
 
-    WINDOW         *win;
-    char            key;
-    bool            is_focused;
-    int             rows;                   
-    int             cols;                   
-    int             y;                      
-    int             x;                      
-    struct windows *next;           
+    WINDOW        *win;
+    char           key;
+    bool           is_focused;
+    int            rows;                   
+    int            cols;                   
+    int            y;                      
+    int            x;                      
+    struct window *next;           
 
 } window_t;
+
 
 
 /*
@@ -156,11 +164,12 @@ typedef struct windows {
     scr_height      - screen height
     scr_width       - screen width
     labels          - array of layout label strings
-    hdr_key_strs    - array of header plugin key strings
+    hdr_key_strs    - array of header plugin key strings  ("ssb\nssw\nccr\n")
     hdr_key_rows    - array of number of header rows needed for key strings
     win_matrices    - array of window key segment* matrices
     row_ratios      - array of y segment ratios for layout matrices
     col_ratios      - array of x segment ratios for layout matrices
+    headers         - array of WINDOW headers
     plugins         - array of plugins_t linked lists
     windows         - array of windows_t linked lists
 */
@@ -175,6 +184,7 @@ typedef struct layouts {
     char     *win_matrices [MAX_LAYOUTS];
     int       row_ratios   [MAX_LAYOUTS];
     int       col_ratios   [MAX_LAYOUTS];
+    WINDOW   *headers      [MAX_LAYOUTS];
     plugin_t *plugins      [MAX_LAYOUTS];
     window_t *windows      [MAX_LAYOUTS];
 
@@ -188,15 +198,12 @@ typedef struct layouts {
 ***************/
 
 
-//  Number of layouts to print with: 
-//
-//      src/parse_config.c : print_layouts()
-//
-//  Usage:
+//  Number of layouts to print with print_layouts()  (parse_config.c)
 //
 //      $ make layouts
 //
-    //  TODO: convert to command-line flag argument
+//  TODO: convert to command-line flag
+//
 #define PRINT_LAYOUTS   1       
 
 

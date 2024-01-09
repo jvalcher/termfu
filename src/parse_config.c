@@ -93,14 +93,9 @@ static FILE* open_config_file (void)
 
     // if no config file found, exit
     if (file == NULL) {
-
-        endwin ();
-
-        pfem  ("Unable to find config file:\n");
-        pfemo ("%s/.termide\n", cwd_path);
-        pfemo ("%s/.termide\n", home_path);
-
-        exit (EXIT_FAILURE);
+        pfem   ("Unable to find config file:\n");
+        pfemo  ("%s/.termide\n", cwd_path);
+        pfemoe ("%s/.termide\n", home_path);
     }
 
     return file;
@@ -151,9 +146,7 @@ static plugin_t *allocate_plugin (void)
     if (plugin) {
         return plugin;
     } else {
-        endwin ();
-        pfem ("Unable to allocate memory for plugin_t struct");
-        exit (EXIT_FAILURE);
+        pfeme ("Unable to allocate memory for plugin_t struct");
     }
 }
 
@@ -372,10 +365,8 @@ static void create_layout (FILE* file,
         layout_matrix [i] = (char *) malloc (x_ratio * sizeof (char));
     }
     if (layout_matrix == NULL) {
-        endwin ();
-        pfem ("Unable to create layout_matrix for %s\n", 
+        pfeme ("Unable to create layout_matrix for %s\n", 
                     layouts->labels [i]);
-        exit (EXIT_FAILURE);
     }
 
         // add keys
@@ -403,23 +394,12 @@ static void create_layout (FILE* file,
 */
 #ifdef LAYOUT
 
-/*
-    Convert {0..52} values to {0,a..z,A..Z}
-*/
-int index_to_key (int n)
-{
-    if (n >= 1 && n <= 26)
-        return n + 'a' - 1;
-    else if (n >= 27 && n <= 52)
-        return n + 'A' - 27;
-    else
-        return -1;
-}
+
 
 /*
     Print:
         - Data for first <n> layouts
-        - Current plugin key bindings
+        - Current layout's plugin key bindings
     ---------
     Called in render_layout.c -> render_layout()
 
@@ -524,9 +504,9 @@ void print_layouts (int n,
         int ch;
         mv_print_title (GREEN_BLACK, stdscr, row++, 1, "Key binding : function index");
             //
-        for (k = 0; k < 2; k++) {
+        for (k = 0; k < 4; k++) {
             col = 1;
-            for (l = 0; l < 26; l++) {
+            for (l = 0; l < 13; l++) {
 
                 // convert index to key shortcut
                 if (index >= 1 && index <= 26)

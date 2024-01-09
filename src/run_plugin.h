@@ -11,9 +11,8 @@
     - Called in main.c
 */
     //
-typedef int (*plugin_func_t) (void);
     //
-extern plugin_func_t  plugin [];
+int run_plugin (int key, int li, layouts_t *layouts);
 
 
 #endif

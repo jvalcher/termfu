@@ -28,11 +28,12 @@ int main (void)
     // exit gracefully on SIGINT
     signal (SIGINT, sigint_exit);
 
-    // initialize Ncurses
-    initscr ();
+    // initialize, configure Ncurses
+    initscr ();         // initialize Ncurses
     create_colors ();   // create color pairs
     cbreak ();          // disable need to press Enter after key choice
     noecho ();          // do not display pressed character
+    curs_set(0);        // hide cursor
 
     // parse CONFIG_FILE data into layouts_t struct
     layouts_t *layouts = allocate_layouts_struct ();
@@ -48,8 +49,8 @@ int main (void)
         // read key
     while ((ch = getch()) != ERR) {
 
-        // run plugin associated with key in CONFIG_FILE
-        //run_plugin (ch, li, layouts);
+        // run plugin
+        run_plugin (ch, li, layouts);
     }
 
     endwin ();
@@ -89,9 +90,7 @@ static layouts_t* allocate_layouts_struct (void)
     ((layouts_t *) config_ptr)->num = 0;
 
     if (config_ptr == NULL) {
-        endwin ();
-        pfem ("layouts_t allocation failed\n");
-        exit (EXIT_FAILURE);
+        pfeme ("layouts_t allocation failed\n");
     } else {
         return config_ptr;
     }
@@ -100,11 +99,9 @@ static layouts_t* allocate_layouts_struct (void)
 
 
 /*
-    Intercept SIGINT (i.e. Ctrl-c) and exit Ncurses gracefully
+    Intercept SIGINT (Ctrl-c) and exit Ncurses gracefully
 */
 void sigint_exit (int sig_num)
 {
-    endwin();
-    pfem ("Program exited (SIGINT)\n");
-    exit (EXIT_FAILURE);
+    pfeme ("Program exited (SIGINT)\n");
 }

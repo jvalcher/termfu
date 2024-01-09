@@ -1,26 +1,63 @@
 
 #include "_plugin_utils.h"
+#include "../data.h"
 #include "../run_plugin.h"
 
 
-/*
-    Plugin codes
+/* 
+    Header plugins
 */
+int gdb_assembly (int li, layouts_t *layouts) {return 1;}
+int gdb_breakpoints(int li, layouts_t *layouts) {return 1;}
+int gdb_watches (int li, layouts_t *layouts) {return 1;}
+int gdb_local_vars (int li, layouts_t *layouts) {return 1;}
+int gdb_registers (int li, layouts_t *layouts) {return 1;}
+int gdb_prompt (int li, layouts_t *layouts) {return 1;}
+int gdb_output (int li, layouts_t *layouts) {return 1;}
 
-    // GDB
-int gdb_assembly (void) {};
-int gdb_breakpoints(void) {};
-int gdb_watches (void) {};
-int gdb_local_vars (void) {};
-int gdb_src_file (void) {};
-int gdb_registers (void) {};
-int gdb_prompt (void) {};
-int gdb_output (void) {};
-int gdb_run (void) {};
-int gdb_next (void) {};
-int gdb_step (void) {};
-int gdb_continue (void) {};
-int gdb_finish (void) {};
-int gdb_print (void) {};
-int gdb_kill (void) {};
+
+
+/*
+    Window plugins
+*/
+int gdb_run (int li, layouts_t *layouts) 
+{
+    pulse_window_string ("Run", li, layouts);
+    return 1;
+}
+int gdb_next (int li, layouts_t *layouts) 
+{
+    pulse_window_string ("Nxt", li, layouts);
+    return 1;
+}
+int gdb_step (int li, layouts_t *layouts) 
+{
+    pulse_window_string ("Stp", li, layouts);
+    return 1;
+}
+int gdb_continue (int li, layouts_t *layouts) 
+{
+    pulse_window_string ("Con", li, layouts);
+    return 1;
+}
+int gdb_finish (int li, layouts_t *layouts) 
+{
+    pulse_window_string ("Fin", li, layouts);
+    return 1;
+}
+int gdb_print (int li, layouts_t *layouts) 
+{
+    pulse_window_string ("Prn", li, layouts);
+    return 1;
+}
+int gdb_kill (int li, layouts_t *layouts) 
+{
+    pulse_window_string ("Kil", li, layouts);
+    return 1;
+}
+int gdb_src_file (int li, layouts_t *layouts) 
+{
+    pulse_window_string ("Src", li, layouts);
+    return 1;
+}
 
