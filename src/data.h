@@ -19,6 +19,16 @@
 #include <stdint.h>
 
 
+
+/*
+    Name of binary passed to termIDE
+    -------
+    - Set in main()  (main.c)
+*/
+extern char *binary_name;      // binary name argument passed to termIDE
+
+
+
 /****************
   # Key bindings
  ****************/
@@ -93,6 +103,8 @@ extern int key_function_index [];
 #define MAX_LAYOUTS             10
 #define MAX_WINDOWS             10      // per layout
 #define MAX_TITLE_LEN           20
+#define MAX_ROW_SEGMENTS        10      // per layout
+#define MAX_COL_SEGMENTS        10
 #define MAX_SHORTCUTS           52      // a-z, A-Z
 
 
@@ -154,43 +166,37 @@ typedef struct window {
 /*
     layouts_t
     ---------
-    Main layout configuration struct for: 
+    - Main layout configuration struct for: 
         - rendering layouts
         - binding keys to plugin codes
-
-    Created in parse_config.c from external CONFIG_FILE
+    - Stored in linked list
+    - Created in parse_config.c from external CONFIG_FILE
   
-    num             - number of layouts
-    scr_height      - screen height
-    scr_width       - screen width
-    labels          - array of layout label strings
-    hdr_key_strs    - array of header plugin key strings  ("ssb\nssw\nccr\n")
-    hdr_key_rows    - array of number of header rows needed for key strings
-    win_matrices    - array of window key segment* matrices
-    row_ratios      - array of y segment ratios for layout matrices
-    col_ratios      - array of x segment ratios for layout matrices
-    headers         - array of WINDOW headers
-    plugins         - array of plugins_t linked lists
-    windows         - array of windows_t linked lists
+    label             - layout label string
+    hdr_key_str       - header plugin key string  ("ssb\nssw\nccr\n")
+    num_hdr_key_rows  - number of header rows needed for key strings
+    win_matrix        - window key segment* matrix
+    row_ratio         - y segment ratio for layout matrix
+    col_ratio         - x segment ratio for layout matrix
+    header            - header's Ncurses WINDOW element
+    plugins           - plugin_t linked lists
+    windows           - window_t linked lists
+    next              - next layout_t struct
 */
-typedef struct layouts {
+typedef struct layout {
 
-    int       num;
-    int       scr_height;
-    int       scr_width;
-    char      labels       [MAX_LAYOUTS][MAX_CONFIG_LABEL_LEN];
-    char      hdr_key_strs [MAX_LAYOUTS][MAX_KEY_STR_LEN];
-    int       hdr_key_rows [MAX_LAYOUTS];
-    char     *win_matrices [MAX_LAYOUTS];
-    int       row_ratios   [MAX_LAYOUTS];
-    int       col_ratios   [MAX_LAYOUTS];
-    WINDOW   *headers      [MAX_LAYOUTS];
-    plugin_t *plugins      [MAX_LAYOUTS];
-    window_t *windows      [MAX_LAYOUTS];
+    char           label [MAX_CONFIG_LABEL_LEN];
+    char           hdr_key_str [MAX_KEY_STR_LEN];
+    int            num_hdr_key_rows;
+    char          *win_matrix;
+    int            row_ratio;
+    int            col_ratio;
+    WINDOW        *header;
+    plugin_t      *plugins;
+    window_t      *windows;
+    struct layout *next;
 
-} layouts_t;
-
-
+} layout_t;
 
 
 /**************

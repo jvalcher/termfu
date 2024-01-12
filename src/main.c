@@ -16,14 +16,21 @@
 
 
 static void create_colors ();
-static layouts_t* allocate_layouts_struct (void);
 void sigint_exit (int sig_num);
 
+char *binary_name;      // binary name argument passed to termIDE
+int num_layouts;
 
-int main (void) 
+
+int main (int argc, char *argv[]) 
 {
-    int li;
     int ch;
+    layout_t* first_layout;
+    layout_t* curr_layout;
+
+    // set program name
+    if (argc > 1)
+        binary_name = argv [1];
 
     // exit gracefully on SIGINT
     signal (SIGINT, sigint_exit);
@@ -35,13 +42,13 @@ int main (void)
     noecho ();          // do not display pressed character
     curs_set(0);        // hide cursor
 
-    // parse CONFIG_FILE data into layouts_t struct
-    layouts_t *layouts = allocate_layouts_struct ();
-    parse_config (layouts);
+    // parse CONFIG_FILE data into layouts_t structs  (data.h)
+    num_layouts  = 0;
+    first_layout = parse_config ();
+    curr_layout  = first_layout;
 
     // render first layout
-    li = 0;
-    render_layout (li, layouts);
+    render_layout (curr_layout);
 
     //
     //  Main loop
@@ -50,7 +57,7 @@ int main (void)
     while ((ch = getch()) != ERR) {
 
         // run plugin
-        run_plugin (ch, li, layouts);
+        run_plugin (ch, curr_layout);
     }
 
     endwin ();
@@ -65,34 +72,15 @@ int main (void)
 static void create_colors ()
 {
     if (has_colors()) {
-
         start_color();
-
-        init_pair(RED_BLACK, COLOR_RED, COLOR_BLACK);
-        init_pair(GREEN_BLACK, COLOR_GREEN, COLOR_BLACK);
-        init_pair(YELLOW_BLACK, COLOR_YELLOW, COLOR_BLACK);
-        init_pair(BLUE_BLACK, COLOR_BLUE, COLOR_BLACK);
-        init_pair(MAGENTA_BLACK, COLOR_MAGENTA, COLOR_BLACK);
-        init_pair(CYAN_BLACK, COLOR_CYAN, COLOR_BLACK);
-        init_pair(WHITE_BLACK, COLOR_WHITE, COLOR_BLACK);
-        init_pair(WHITE_BLUE, COLOR_WHITE, COLOR_BLUE);
-    }
-}
-
-
-
-/*
-    Allocate memory for layouts_t struct
-*/
-static layouts_t* allocate_layouts_struct (void)
-{
-    void *config_ptr = (layouts_t*) malloc (sizeof (layouts_t));
-    ((layouts_t *) config_ptr)->num = 0;
-
-    if (config_ptr == NULL) {
-        pfeme ("layouts_t allocation failed\n");
-    } else {
-        return config_ptr;
+        init_pair(RED_BLACK, COLOR_RED, COLOR_BLACK);           // RED_BLACK
+        init_pair(GREEN_BLACK, COLOR_GREEN, COLOR_BLACK);       // GREEN_BLACK
+        init_pair(YELLOW_BLACK, COLOR_YELLOW, COLOR_BLACK);     // YELLOW_BLACK
+        init_pair(BLUE_BLACK, COLOR_BLUE, COLOR_BLACK);         // BLUE_BLACK
+        init_pair(MAGENTA_BLACK, COLOR_MAGENTA, COLOR_BLACK);   // MAGENTA_BLACK
+        init_pair(CYAN_BLACK, COLOR_CYAN, COLOR_BLACK);         // CYAN_BLACK
+        init_pair(WHITE_BLACK, COLOR_WHITE, COLOR_BLACK);       // WHITE_BLACK
+        init_pair(WHITE_BLUE, COLOR_WHITE, COLOR_BLUE);         // WHITE_BLUE
     }
 }
 

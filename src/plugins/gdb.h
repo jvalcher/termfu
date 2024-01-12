@@ -36,22 +36,22 @@ GDB Plugin
     gdb_kill            Kil     Kill
 
 */
-int gdb_assembly    (int li, layouts_t *layouts);
-int gdb_breakpoints (int li, layouts_t *layouts);
-int gdb_watches     (int li, layouts_t *layouts);
-int gdb_local_vars  (int li, layouts_t *layouts);
-int gdb_src_file    (int li, layouts_t *layouts);
-int gdb_registers   (int li, layouts_t *layouts);
-int gdb_prompt      (int li, layouts_t *layouts);
-int gdb_output      (int li, layouts_t *layouts);
-int gdb_prompt      (int li, layouts_t *layouts);
-int gdb_run         (int li, layouts_t *layouts);
-int gdb_next        (int li, layouts_t *layouts);
-int gdb_step        (int li, layouts_t *layouts);
-int gdb_continue    (int li, layouts_t *layouts);
-int gdb_finish      (int li, layouts_t *layouts);
-int gdb_print       (int li, layouts_t *layouts);
-int gdb_kill        (int li, layouts_t *layouts);
+int gdb_assembly    (layout_t *layout);
+int gdb_breakpoints (layout_t *layout);
+int gdb_watches     (layout_t *layout);
+int gdb_local_vars  (layout_t *layout);
+int gdb_src_file    (layout_t *layout);
+int gdb_registers   (layout_t *layout);
+int gdb_prompt      (layout_t *layout);
+int gdb_output      (layout_t *layout);
+int gdb_prompt      (layout_t *layout);
+int gdb_run         (layout_t *layout);
+int gdb_next        (layout_t *layout);
+int gdb_step        (layout_t *layout);
+int gdb_continue    (layout_t *layout);
+int gdb_finish      (layout_t *layout);
+int gdb_print       (layout_t *layout);
+int gdb_kill        (layout_t *layout);
 
 
 

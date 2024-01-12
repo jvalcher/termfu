@@ -69,10 +69,9 @@ void find_window_string (WINDOW *window,
     Nxt -> (n)ext
 */
 char *get_code_title (char *code,
-                      int li,
-                      layouts_t *layouts)
+                      layout_t *layout)
 {
-    plugin_t *curr_plugin = layouts->plugins[li];
+    plugin_t *curr_plugin = layout->plugins;
     do {
         if (strcmp (code, curr_plugin->code) == 0) {
             return (char*) curr_plugin->title;
@@ -91,8 +90,7 @@ char *get_code_title (char *code,
       to indicate usage
 */
 void pulse_window_string (char *code,
-                          int li,
-                          layouts_t *layouts)
+                          layout_t *layout)
 {
     int y, x, i;
     bool key_color_toggle;
@@ -100,13 +98,13 @@ void pulse_window_string (char *code,
     WINDOW *window;
 
     // get header title string for current layout
-    title = get_code_title (code, li, layouts);
+    title = get_code_title (code, layout);
     if (title == NULL)  {
-        pfeme ("Unable to find title for layout %d", li);
+        pfeme ("Unable to find \"%s\" title for layout \"%s\"", code, layout->label);
     }
 
     // find string coordinates (y,x)
-    window = layouts->headers[li];
+    window = layout->header;
     find_window_string (window, title, &y, &x);
 
     // switch colors
@@ -130,7 +128,7 @@ void pulse_window_string (char *code,
         wrefresh  (window);
 
         // sleep quarter second
-        usleep (250000);
+        usleep (100000);
 
         // switch colors back
         wattron (window, COLOR_PAIR(HEADER_TITLE_COLOR));

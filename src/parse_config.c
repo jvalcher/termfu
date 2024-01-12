@@ -14,23 +14,19 @@
 #include "data.h"
 #include "utilities.h"
 
-
-
-
 static FILE* open_config_file (void);
 static void get_category_and_label (FILE* file, char *category, char *label);
-static void create_layout (FILE* file, layouts_t *layouts, char *label);
+static layout_t* create_layout (FILE* file, char *label);
 
 
 /*
-    Parse CONFIG_FILE data into passed layouts_t object
+    Parse CONFIG_FILE data into passed layout_t object
 
         [<category>:<label>]
         <value>
 */
-void parse_config (layouts_t *layouts)
+layout_t* parse_config (void)
 {
-
     // open configuration file
     FILE *file = open_config_file ();
 
@@ -38,6 +34,9 @@ void parse_config (layouts_t *layouts)
     char ch;
     char category [MAX_CONFIG_CATEG_LEN];
     char label    [MAX_CONFIG_LABEL_LEN];
+    bool first_layout = true;
+    layout_t *head_layout = NULL;
+    layout_t *curr_layout = NULL;
 
     while ((ch = fgetc (file)) != EOF) {
 
@@ -46,8 +45,14 @@ void parse_config (layouts_t *layouts)
             get_category_and_label (file, category, label);
 
         // create layout
-        if (strcmp (category, "layout") == 0)
-            create_layout (file, layouts, label);
+        if (strcmp (category, "layout") == 0) {
+            curr_layout = create_layout (file, label);
+            if (first_layout) {
+                head_layout = curr_layout;
+                first_layout = false;
+            }
+            curr_layout = curr_layout->next;
+        }
 
         category [0] = '\0';
         label [0] = '\0';
@@ -56,11 +61,9 @@ void parse_config (layouts_t *layouts)
     // close configuration file
     fclose (file);
 
-    // set screen height, width to 0 to trigger layout
-    // creation in render_screen.c
-    layouts->scr_height = 0;
-    layouts->scr_width  = 0;
+    return head_layout;
 }
+
 
 
 /*
@@ -138,6 +141,22 @@ static void get_category_and_label (FILE *file,
 
 
 /*
+    Allocate memory for layout_t struct
+*/
+static layout_t* allocate_layout (void)
+{
+    void *config_ptr = (layout_t*) malloc (sizeof (layout_t));
+
+    if (config_ptr == NULL) {
+        pfeme ("layout_t allocation failed\n");
+    } else {
+        return config_ptr;
+    }
+}
+
+
+
+/*
     Allocate memory for new windows_t struct
 */
 static plugin_t *allocate_plugin (void)
@@ -155,8 +174,7 @@ static plugin_t *allocate_plugin (void)
 /*
     Create new layout
 */
-static void create_layout (FILE* file,
-                           layouts_t *layouts,
+static layout_t* create_layout (FILE* file,
                            char *label)
 {
     int ch, next_ch;
@@ -166,15 +184,14 @@ static void create_layout (FILE* file,
     bool is_key = false;
     char keys [MAX_KEY_STR_LEN] = {0};
     int i = 0;
+    layout_t* layout = NULL;
 
-    // increment number of layouts
-    layouts->num += 1;
-
-    // get layout index
-    int li = layouts->num - 1;
+    // allocate new layout_t struct
+    layout = allocate_layout ();
+    layout->next = NULL;
 
     // add layout label
-    strncpy (layouts->labels [li], label, strlen (label));
+    strncpy (layout->label, label, strlen (label));
 
     //
     // Parse configuration
@@ -222,7 +239,7 @@ static void create_layout (FILE* file,
                         curr_plugin = curr_plugin->next;
                     } else {
                         curr_plugin = allocate_plugin();
-                        layouts->plugins[li] = curr_plugin;
+                        layout->plugins = curr_plugin;
                         curr_plugin_exists = true;
                     }
                     curr_plugin->next = NULL;
@@ -266,7 +283,7 @@ static void create_layout (FILE* file,
 
             // zero out number of header rows
             if (section == 'h')
-                layouts->hdr_key_rows[li] = 0;
+                layout->num_hdr_key_rows = 0;
 
             // create header, window key string
             //
@@ -294,16 +311,16 @@ static void create_layout (FILE* file,
                          i != 0) {
 
                     if (section == 'h')
-                        layouts->hdr_key_rows[li] += 1;
+                        layout->num_hdr_key_rows += 1;
                     keys [i++] = ch;
                     num_chars += 1;
                 } 
             }
             keys [i] = '\0';
 
-                // add string to layouts
+                // add string to layout
             if (section == 'h') {
-                strncpy ((char *)layouts->hdr_key_strs[li], keys, num_chars + 1);
+                strncpy ((char *)layout->hdr_key_str, keys, num_chars + 1);
             } else {
                 strncpy (win_keys, keys, num_chars + 1);
             }
@@ -324,8 +341,8 @@ static void create_layout (FILE* file,
 
     // calculate terminal screen or pane window segment ratio
     //
-    //  * * *     layouts->row_ratios [li] == 2
-    //  * * * --> layouts->col_ratios [li] == 3
+    //  * * *     layout->row_ratio == 2
+    //  * * * --> layout->col_ratio == 3
     //
     //  A "segment" refers to the space needed for each window symbol character
     //  in terms of the current terminal's dimensions.
@@ -348,9 +365,9 @@ static void create_layout (FILE* file,
         }
     }
 
-        // add ratio to layouts
-    layouts->row_ratios [li] = y_ratio;
-    layouts->col_ratios [li] = x_ratio;
+        // add ratio to layout
+    layout->row_ratio = y_ratio;
+    layout->col_ratio = x_ratio;
 
 
     // create window matrix
@@ -366,7 +383,7 @@ static void create_layout (FILE* file,
     }
     if (layout_matrix == NULL) {
         pfeme ("Unable to create layout_matrix for %s\n", 
-                    layouts->labels [i]);
+                    layout->label);
     }
 
         // add keys
@@ -383,42 +400,39 @@ static void create_layout (FILE* file,
         }
     }
 
-        // add matrix to layouts
-    layouts->win_matrices [li] = (char *) layout_matrix;
+        // add matrix to layout
+    layout->win_matrix = (char *) layout_matrix;
+
+    // return next layout
+    return layout;
 }
 
 
 
+#ifdef LAYOUT
 /*
     Print layout, plugin information for debugging
-*/
-#ifdef LAYOUT
-
-
-
-/*
-    Print:
-        - Data for first <n> layouts
-        - Current layout's plugin key bindings
     ---------
-    Called in render_layout.c -> render_layout()
+    - Data for first <n> layout
+    - Current layout's plugin key bindings
+    - Called in render_layout.c -> render_layout()
 
     Run with:
 
         $ make layouts
 */
 void print_layouts (int n, 
-                    layouts_t *layouts)
+                    layout_t *layout)
 {
-    // print layouts data
-    int i, k, l;
+    // print layout data
+    int k, l;
     int col;
     static int row = 1;
 
-    for (i = 0; i < n; i++) {
+    do {
 
         // labels, ratios
-        mv_print_title (BLUE_BLACK, stdscr, row, 1, layouts->labels [i]);
+        mv_print_title (BLUE_BLACK, stdscr, row, 1, layout->label);
 
         // screen dimensions
         row += 1;
@@ -431,25 +445,25 @@ void print_layouts (int n,
         // header keys
         row += 2;
         mv_print_title (GREEN_BLACK, stdscr, row, 1, "Header plugin keys");
-        mvprintw (++row, 0, "%s", (char*)layouts->hdr_key_strs[i]);
+        mvprintw (++row, 0, "%s", (char*)layout->hdr_key_str);
 
         // window ratios
-        row += layouts->hdr_key_rows[i];
+        row += layout->num_hdr_key_rows;
         mv_print_title (GREEN_BLACK, stdscr, ++row, 1, "Window segment ratios");
         mvprintw (++row, 1, "row: %d",
-                layouts->row_ratios [i]);
+                layout->row_ratio);
         mvprintw (++row, 1, "col: %d",
-                layouts->col_ratios [i]);
+                layout->col_ratio);
 
         // window matrix
-        char **matrix = (char **) layouts->win_matrices [i];
+        char **matrix = (char **) layout->win_matrix;
         row += 2;
             // symbols
         mv_print_title (GREEN_BLACK, stdscr, row, 1, "Window segment matrix");
         row += 1;
-        for (k = 0; k < layouts->row_ratios [i]; k++) {
+        for (k = 0; k < layout->row_ratio; k++) {
             col = 1;
-            for (l = 0; l < layouts->col_ratios [i]; l++) {
+            for (l = 0; l < layout->col_ratio; l++) {
                 mvprintw (row, col, "%c", matrix [k][l]);
                 col += 1;
             }
@@ -460,13 +474,13 @@ void print_layouts (int n,
         row += 1;
         mv_print_title (GREEN_BLACK, stdscr, row, 1, "Segment rows x cols");
         row += 1;
-        for (k = 0; k < layouts->row_ratios [i]; k++) {
+        for (k = 0; k < layout->row_ratio; k++) {
             col = 1;
-            for (l = 0; l < layouts->col_ratios [i]; l++) {
+            for (l = 0; l < layout->col_ratio; l++) {
                 mvprintw (row, col, "(%c) %dx%d", 
                         matrix [k][l], 
-                        layouts->windows[i]->rows,
-                        layouts->windows[i]->cols);
+                        layout->windows->rows,
+                        layout->windows->cols);
                 col += 12;
             }
             row += 1;
@@ -479,7 +493,7 @@ void print_layouts (int n,
         int column_rows = 10;
         int total_rows = 0;
         mv_print_title (GREEN_BLACK, stdscr, row, 1, "Plugins");
-        plugin_t* curr_plugin = layouts->plugins[i];
+        plugin_t* curr_plugin = layout->plugins;
         do {
             total_rows += 1;
             if (total_rows > column_rows) {
@@ -519,8 +533,11 @@ void print_layouts (int n,
             }
             row += 1;
         }
-    }
 
-    getch ();
+        layout = layout->next;
+
+        getch ();
+
+    } while (layout != NULL);
 }
 #endif

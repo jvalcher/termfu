@@ -20,8 +20,7 @@
     - Indexes set in key_function_index[]  (data.h)  by bind_keys_to_plugins()  (render_layout.c)
     - Functions called in main() loop  (main.c)
 */
-typedef int (*plugin_func_t) (int li, 
-                              layouts_t *layouts);
+typedef int (*plugin_func_t) (layout_t *layout);
     //
 plugin_func_t plugin[] = {
 
@@ -58,8 +57,7 @@ plugin_func_t plugin[] = {
 
 */
 int run_plugin (int input_key,
-                int li,
-                layouts_t *layouts)
+                layout_t *layout)
 {
     int plugin_index;
     int function_index;
@@ -69,7 +67,7 @@ int run_plugin (int input_key,
     function_index = key_function_index [plugin_index];
 
     // run plugin
-    if (plugin[function_index](li, layouts) == -1) {
+    if (plugin[function_index](layout) == -1) {
         pfeme ("Unable to run function index %d with key \"%c\"\n", 
                 function_index, input_key);
     }

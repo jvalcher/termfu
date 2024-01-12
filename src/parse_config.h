@@ -34,7 +34,7 @@
         saw
         sar
 */  
-void parse_config (layouts_t* layouts);
+layout_t* parse_config (void);
 
 
 
@@ -53,7 +53,7 @@ void parse_config (layouts_t* layouts);
 
 */
 void print_layouts (int n, 
-                    layouts_t* layouts);
+                    layout_t* layout);
 
 
 

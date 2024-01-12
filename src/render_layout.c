@@ -55,62 +55,61 @@ int   scr_rows;
 int   scr_cols;
 int   header_offset;
 
-static void    create_layout        (int, int, int, layouts_t*);
-static void    bind_keys_to_plugins (int, layouts_t*);
+static void    create_layout        (int, int, layout_t*);
+static void    bind_keys_to_plugins (layout_t*);
 static WINDOW *create_new_window    (int, int, int, int);
 static void    render_main_title    (WINDOW*, char*, char*);
 static void    render_borders       (window_t*);
 static void    fix_corners          (window_t*);
-static void    render_header_titles (int, layouts_t*, WINDOW*);
-static void    render_window_titles (int, layouts_t*);
+static void    render_header_titles (layout_t*, WINDOW*);
+static void    render_window_titles (layout_t*);
 
 
 
 /*
     Render layouts
 */
-void render_layout (int li, 
-                    layouts_t *layouts)
+void render_layout (layout_t *layout)
 {
     // Get screen dimensions
     scr_rows = getmaxy (stdscr);
     scr_cols = getmaxx (stdscr);
 
     // Set header offset
-    header_offset = layouts->hdr_key_rows [li] + 1;
+    header_offset = layout->num_hdr_key_rows + 1;
 
     // Calculate current layout's dimensions based on screen size
-    create_layout (scr_rows - header_offset, scr_cols, li, layouts);
+    create_layout (scr_rows - header_offset, scr_cols, layout);
 
     // Bind plugin key shortcuts in current layout to plugin function indexes
-    // in key_function_index[] (data.h)
-    bind_keys_to_plugins (li, layouts);
+    // in key_function_index[]  (data.h)
+    bind_keys_to_plugins (layout);
 
     // Print each layout's info and shortcuts  (debugging)
     //
     //      $ make layouts
     //
     #ifdef LAYOUT
-    print_layouts (PRINT_LAYOUTS, layouts);
+    print_layouts (PRINT_LAYOUTS, layout);
     #endif
 
     // Create header window
-    layouts->headers[li] = create_new_window (header_offset, COLS, 0, 0);
+    layout->header = create_new_window (header_offset, COLS, 0, 0);
 
     // Render main header title (<program name> : <layout name>)
-    render_main_title (layouts->headers[li], prog_title, layouts->labels[li]);
+    render_main_title (layout->header, prog_title, layout->label);
 
     // Render plugin window borders
-    render_borders (layouts->windows[li]);
+    render_borders (layout->windows);
 
     // Fix incorrect window border corners caused by overlapping
-    fix_corners (layouts->windows [li]);
+    fix_corners (layout->windows);
 
     // Render header plugin titles
-    render_header_titles (li, layouts, layouts->headers[li]);
+    render_header_titles (layout, layout->header);
 
     // Render window plugin titles
-    render_window_titles (li, layouts);
+    render_window_titles (layout);
 }
 
 
@@ -119,19 +118,18 @@ void render_layout (int li,
     Create layout
     ------------
     Calculate position, dimensions of plugin windows
-    Allocate memory for window_t structs in layouts->windows  (data.h)
+    Allocate memory for window_t structs in layout->windows  (data.h)
 
     Parameters:
 
         win_rows   - main window height
         win_cols   - main window width
-        li         - layouts_t struct index
-        layouts    - layouts_t struct
+        li         - layout_t struct index
+        layout    - layout_t struct
 */
 static void create_layout (int win_rows,
                            int win_cols,
-                           int li,
-                           layouts_t *layouts)
+                           layout_t *layout)
 {
     // create matrices for number of rows, columns per segment
     //
@@ -160,8 +158,8 @@ static void create_layout (int win_rows,
     //      28  28  27
     //
     int y, x;
-    int row_ratio = layouts->row_ratios [li];
-    int col_ratio = layouts->col_ratios [li];
+    int row_ratio = layout->row_ratio;
+    int col_ratio = layout->col_ratio;
     int floor_segm_rows = win_rows / row_ratio;  // floor row amount per segment
     int floor_segm_cols = win_cols / col_ratio;
     int segm_rows [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0};
@@ -222,12 +220,12 @@ static void create_layout (int win_rows,
     int used_segm_matrix [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0};
 
     // create window_t pointers for arranging
-    // layouts->windows linked list
+    // layout->windows linked list
     window_t *curr_window = NULL;
     window_t *prev_window = NULL;
 
     // get layout matrix
-    char **layout_matrix = (char **) layouts->win_matrices [li];
+    char **layout_matrix = (char **) layout->win_matrix;
 
     // create windows
     char ch;
@@ -248,7 +246,7 @@ static void create_layout (int win_rows,
                 // set head window or link previous
                 curr_window->next = NULL;
                 if (y == 0 && x == 0) {
-                    layouts->windows [li] = curr_window; // head
+                    layout->windows = curr_window; // head
                 } else {
                     prev_window->next = curr_window;    // link previous
                 }
@@ -335,8 +333,7 @@ static void create_layout (int win_rows,
 
     - plugin_function[i]() called in main.c
 */
-static void bind_keys_to_plugins (int li,
-                                  layouts_t* layouts)
+static void bind_keys_to_plugins (layout_t* layout)
 {
     int  start_index;
     int  end_index;
@@ -345,7 +342,7 @@ static void bind_keys_to_plugins (int li,
     int  cmp;
     char key;
     char code[4];
-    plugin_t* curr_plugin = layouts->plugins[li];
+    plugin_t* curr_plugin = layout->plugins;
 
     do {
 
@@ -459,9 +456,6 @@ static WINDOW *render_window (int rows,
                               int y, 
                               int x) 
 {
-    //int screen_width     = getmaxx (stdscr);
-    //int screen_height    = getmaxy (stdscr);    
-
     // create window object
     WINDOW *win = create_new_window (rows, cols, y, x);
     if (win == NULL)
@@ -607,7 +601,7 @@ static int fix_corner_char (int y,
          ─┐ -->  ─┤
           │       │
    
-    Passed head of window_t linked list in layouts_t
+    Passed head of window_t linked list in layout_t
 */
 static void fix_corners (window_t *win)
 {
@@ -657,14 +651,13 @@ static void fix_corners (window_t *win)
 /*
     Render header titles
 */
-static void render_header_titles (int li,
-                                  layouts_t *layouts,
+static void render_header_titles (layout_t *layout,
                                   WINDOW *header)
 {
     int row = 0;
     int ch;
     bool key_color_toggle;
-    plugin_t* head_plugin = layouts->plugins[li];
+    plugin_t* head_plugin = layout->plugins;
     plugin_t* curr_plugin;
 
     char *curr_title;
@@ -676,9 +669,9 @@ static void render_header_titles (int li,
     memset (titles_str, '\0', title_str_len);
     titles_str [0] = ' ';
 
-    for (int j = 0; j < strlen (layouts->hdr_key_strs[li]); j++) {
+    for (int j = 0; j < strlen (layout->hdr_key_str); j++) {
 
-        ch = layouts->hdr_key_strs [li][j];
+        ch = layout->hdr_key_str [j];
         
         // render row of plugin titles
         if (ch == '\n') {
@@ -714,8 +707,8 @@ static void render_header_titles (int li,
 
         // get header title
         for (int k = 0; k < sizeof(plugin_code); k++) {
-            if (ch == layouts->plugins[li]->key) {
-                curr_title = (char *) layouts->plugins[li]->title;
+            if (ch == layout->plugins->key) {
+                curr_title = (char *) layout->plugins->title;
                 break;
             } 
         }
@@ -744,12 +737,11 @@ static void render_header_titles (int li,
 /*
     Render window titles
 */
-static void render_window_titles (int li,
-                           layouts_t *layouts)
+static void render_window_titles (layout_t *layout)
 {
     char *title;
-    window_t *curr_window = layouts->windows[li];
-    plugin_t* head_plugin = layouts->plugins[li];
+    window_t *curr_window = layout->windows;
+    plugin_t* head_plugin = layout->plugins;
 
     do {
 

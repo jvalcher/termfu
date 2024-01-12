@@ -12,11 +12,11 @@ termIDE
     termide_layouts     Lay     Display layouts
     termide_builds      Bld     Display builds
 */
-int empty_func      (int li, layouts_t *layouts);
+int empty_func      (layout_t *layout);
     //
-int termide_back    (int li, layouts_t *layouts);
-int termide_layouts (int li, layouts_t *layouts);
-int termide_builds  (int li, layouts_t *layouts);
+int termide_back    (layout_t *layout);
+int termide_layouts (layout_t *layout);
+int termide_builds  (layout_t *layout);
 
 
 

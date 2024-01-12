@@ -12,7 +12,7 @@
 */
     //
     //
-int run_plugin (int key, int li, layouts_t *layouts);
+int run_plugin (int key, layout_t *layout);
 
 
 #endif

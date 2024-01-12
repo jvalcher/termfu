@@ -11,7 +11,7 @@
     - Allows 0 to stand for "unassigned" in key_function_index[]  (data.h)
     - Not called
 */
-int empty_func (int li, layouts_t *layouts) 
+int empty_func (layout_t *layout) 
 {
     return 1;
 };
@@ -23,10 +23,9 @@ int empty_func (int li, layouts_t *layouts)
         - unfocus window
         - quit termIDE
 */
-int termide_back (int li,
-                  layouts_t *layouts)
+int termide_back (layout_t *layout)
 {
-    pulse_window_string ("Bak", li, layouts);
+    pulse_window_string ("Bak", layout);
 
     // close Ncurses
     endwin ();
@@ -38,19 +37,17 @@ int termide_back (int li,
 /*
     Open window listing available layouts
 */
-int termide_layouts (int li, 
-                     layouts_t *layouts) 
+int termide_layouts (layout_t *layout) 
 {
-    pulse_window_string ("Lay", li, layouts);
+    pulse_window_string ("Lay", layout);
 
     return 1;
 }
 
 
 
-int termide_builds (int li,
-                    layouts_t *layouts) 
+int termide_builds (layout_t *layout) 
 {
-    pulse_window_string ("Bld", li, layouts);
+    pulse_window_string ("Bld", layout);
     return 1;
 };
