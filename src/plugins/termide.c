@@ -25,8 +25,6 @@ int empty_func (layout_t *layout)
 */
 int termide_back (layout_t *layout)
 {
-    pulse_window_string ("Bak", layout);
-
     // close Ncurses
     endwin ();
     exit (EXIT_SUCCESS);
@@ -39,8 +37,6 @@ int termide_back (layout_t *layout)
 */
 int termide_layouts (layout_t *layout) 
 {
-    pulse_window_string ("Lay", layout);
-
     return 1;
 }
 
@@ -48,6 +44,5 @@ int termide_layouts (layout_t *layout)
 
 int termide_builds (layout_t *layout) 
 {
-    pulse_window_string ("Bld", layout);
     return 1;
 };

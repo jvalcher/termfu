@@ -13,6 +13,8 @@
 #include "parse_config.h"
 
 
+extern char *plugin_code [];
+
 // Render main window
 //
 //   layout - layouts_t struct

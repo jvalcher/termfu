@@ -5,13 +5,17 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "run_plugin.h"
 #include "data.h"
+#include "render_layout.h"
 #include "utilities.h"
 
 #include "plugins/termide.h"
 #include "plugins/gdb.h"
+
+
 /*
     Function pointer array
     ----------
@@ -45,32 +49,228 @@ plugin_func_t plugin[] = {
     (plugin_func_t) gdb_watches         // "Wat"
 };
 
+#define MIN_PULSE_LEN .1
+
+static void pulse_window_string_on (char *code, layout_t *layout);
+static void pulse_window_string_off (char *code, layout_t *layout, double diff);
+
 
 
 /*
-    Run plugin
-    --------
-    Match key input to plugin code as set in CONFIG_FILE (see data.h)
     Run plugin function
-
-        input_key   - key pressed
-
+    --------
+    - Match key input (main.c) to plugin code (render_layout.c) 
+      set in CONFIG_FILE (parse_config.c, data.h)
+    - Run code's corresponding plugin function (plugins/...) via its pointer (above)
+    - "Pulse" corresponding header title string's color
+        - Minimum time of MIN_PULSE_LEN
+        - Otherwise color switches back after plugin function call
 */
 int run_plugin (int input_key,
                 layout_t *layout)
 {
-    int plugin_index;
-    int function_index;
+    int     result;
+    int     plugin_index;
+    int     function_index;
+    char   *code;
+    struct  timeval start, end;
+    double  diff;
 
     // get plugin function index
     plugin_index = key_to_index (input_key);
     function_index = key_function_index [plugin_index];
+    code = plugin_code [function_index];
+
+    // switch header title string color
+    gettimeofday(&start, NULL);
+    pulse_window_string_on (code, layout);
 
     // run plugin
-    if (plugin[function_index](layout) == -1) {
+    result = plugin [function_index] (layout);
+    if (result == -1) {
         pfeme ("Unable to run function index %d with key \"%c\"\n", 
                 function_index, input_key);
     }
 
+    // switch color back
+    gettimeofday(&end, NULL);
+    diff = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
+    pulse_window_string_off (code, layout, diff);
+
     return 1;
+}
+
+
+
+/*
+    Find string in Ncurses WINDOW 
+    -----------
+    - Set y,x to coordinates if found
+    - Otherwise set both to -1
+*/
+void find_window_string (WINDOW *window,
+                         char *string,
+                         int *y,
+                         int *x)
+{
+    int i, j, 
+        m, n,
+        ch,
+        c = 0, 
+        rows, cols;
+    bool found = false;
+
+    // get number of rows, columns
+    getmaxyx (window, rows, cols);
+
+    // find string
+    for (i = 0; i < rows; i++) {
+        for (j = 0; j < cols; j++) {
+            ch = mvwinch(window, i, j);
+            if ((char) ch == string [c]) {
+                if (c == 0) {
+                    m = i;
+                    n = j;
+                }
+                c += 1;
+                if (c == strlen (string)) {
+                    found = true;
+                    break;
+                }
+            } else {
+                c = 0;
+            }
+        }
+        if (found) break;
+    }
+
+    // set y,x to coordinates or -1
+    if (found) {
+        *y = m;
+        *x = n;
+    } else {
+        *y = -1;
+        *x = -1;
+    }
+
+}
+
+
+
+/*
+    Get title string from plugin code for current layout
+    ----------
+    Nxt -> (n)ext
+*/
+char *get_code_title (char *code,
+                      layout_t *layout)
+{
+    plugin_t *curr_plugin = layout->plugins;
+    do {
+        if (strcmp (code, curr_plugin->code) == 0) {
+            return (char*) curr_plugin->title;
+        }
+        curr_plugin = curr_plugin->next;
+    } while (curr_plugin != NULL);
+    return NULL;
+}
+
+
+
+/*
+    Switch string's colors in Ncurses WINDOW element for quarter second
+    ------------
+    - Used at beginning of plugin functions with title string in header 
+      to indicate usage
+*/
+static void pulse_window_string_on (char *code,
+                                    layout_t *layout)
+{
+    int y, x, i;
+    bool key_color_toggle;
+    char *title;
+    WINDOW *window;
+
+    // get header title string for current layout
+    title = get_code_title (code, layout);
+    if (title == NULL)  {
+        pfeme ("Unable to find \"%s\" title for layout \"%s\"", code, layout->label);
+    }
+
+    // find string coordinates (y,x)
+    window = layout->header;
+    find_window_string (window, title, &y, &x);
+
+    // switch colors
+    if (y != -1) {
+
+        key_color_toggle = false;
+
+        // reverse colors
+        wattron (window, COLOR_PAIR(FOCUS_HEADER_TITLE_COLOR));
+        for (i = 0; i < strlen (title) + 1; i++) {
+            mvwprintw (window, y, x + i, "%c", title [i]);
+            if (key_color_toggle) {
+                wattron (window, COLOR_PAIR(FOCUS_HEADER_TITLE_COLOR));
+                key_color_toggle = false;
+            }
+            if (title [i] == '(') {
+                wattron (window, COLOR_PAIR(FOCUS_TITLE_KEY_COLOR));
+                key_color_toggle = true;
+            }
+        }
+        wrefresh (window);
+
+    }
+}
+
+
+
+/*
+    Reverse code string colors back to normal
+*/
+static void pulse_window_string_off (char *code,
+                                     layout_t *layout,
+                                     double diff)
+{
+    int y, x, i;
+    bool key_color_toggle;
+    char *title;
+    WINDOW *window;
+
+    // get header title string for current layout
+    title = get_code_title (code, layout);
+    if (title == NULL)  {
+        pfeme ("Unable to find \"%s\" title for layout \"%s\"", code, layout->label);
+    }
+
+    // find string coordinates (y,x)
+    window = layout->header;
+    find_window_string (window, title, &y, &x);
+
+    // switch colors
+    if (y != -1) {
+
+        key_color_toggle = false;
+
+        // sleep if plugin function call took less than MIN_PULSE_LEN seconds
+        // to make sure text pulse visible
+        if (diff < MIN_PULSE_LEN)
+            usleep (100000);
+
+        // switch colors back
+        wattron (window, COLOR_PAIR(HEADER_TITLE_COLOR));
+        for (i = 0; i < strlen(title) + 1; i++) {
+            mvwprintw (window, y, x + i, "%c", title[i]);
+            if (key_color_toggle) {
+                wattron (window, COLOR_PAIR(HEADER_TITLE_COLOR));
+                key_color_toggle = false;
+            }
+            if (title[i] == '(') {
+                wattron (window, COLOR_PAIR(TITLE_KEY_COLOR));
+                key_color_toggle = true;
+            }
+        }
+        wrefresh  (window);
+    }
 }

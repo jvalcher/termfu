@@ -13,7 +13,9 @@
     - Used at beginning of plugin functions with title string in header 
       to indicate usage
 */
-void pulse_window_string (char *code, layout_t *layout);
+void pulse_window_string_on  (char *code, layout_t *layout);
+    //
+void pulse_window_string_off (char *code, layout_t *layout);
 
 
 
@@ -32,6 +34,8 @@ void find_window_string (WINDOW *window, char *string, int *y, int *x);
     Nxt -> (n)ext
 */
 char *get_code_title (char *code, layout_t *layout);
+
+
 
 
 
