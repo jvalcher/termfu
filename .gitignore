@@ -7,7 +7,6 @@ tags
 core
 
 .gdb*
-!.gdb-tuiffic
 
 obj/*
 !obj/.gitkeep

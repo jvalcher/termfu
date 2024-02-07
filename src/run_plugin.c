@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/time.h>
 
 #include "run_plugin.h"
 #include "data.h"
@@ -17,10 +18,40 @@
 
 
 /*
+    Plugin codes
+    -----------
+    - Indexes match corresponding function's index in plugin_function[] array  (run_plugin.c)
+    - Ordered alphabetically for binary search in bind_keys_to_plugin()
+    - Used to bind function index to shortcut key in key_function_index[]  (data.h)
+*/
+char *plugin_code [] = {
+    
+    "EMP",
+    "Asm",
+    "Bak",
+    "Bld",
+    "Brk",
+    "Con",
+    "Fin",
+    "Kil",
+    "Lay",
+    "LcV",
+    "Nxt",
+    "Out",
+    "Prm",
+    "Prn",
+    "Reg",
+    "Run",
+    "Src",
+    "Stp",
+    "Wat"
+};
+
+/*
     Function pointer array
     ----------
-    - Indexes match corresponding plugin code string in plugin_code[]  (render_layout.c)
-        - Ordered alphabetically by plugin code
+    - Indexes match corresponding plugin code string in plugin_code[]
+        - Ordered alphabetically by code
     - Indexes set in key_function_index[]  (data.h)  by bind_keys_to_plugins()  (render_layout.c)
     - Functions called in main() loop  (main.c)
 */
@@ -49,24 +80,24 @@ plugin_func_t plugin[] = {
     (plugin_func_t) gdb_watches         // "Wat"
 };
 
-#define MIN_PULSE_LEN .1
+#define MIN_PULSE_LEN  .06
 
-static void pulse_window_string_on (char *code, layout_t *layout);
-static void pulse_window_string_off (char *code, layout_t *layout, double diff);
+static void pulse_window_string_on  (char*, layout_t*);
+static void pulse_window_string_off (char*, layout_t*, double);
 
 
 
 /*
     Run plugin function
     --------
-    - Match key input (main.c) to plugin code (render_layout.c) 
+    - Match key input (main.c) to plugin code (render_layout.c) in current layout
       set in CONFIG_FILE (parse_config.c, data.h)
-    - Run code's corresponding plugin function (plugins/...) via its pointer (above)
-    - "Pulse" corresponding header title string's color
-        - Minimum time of MIN_PULSE_LEN
-        - Otherwise color switches back after plugin function call
+    - Run plugin code's corresponding function (plugins/...) via its pointer (above)
+    - Pulse corresponding header title string's colors
+        - Minimum time of MIN_PULSE_LEN seconds
+        - Otherwise color switches back after plugin function returns
 */
-int run_plugin (int input_key,
+int run_plugin (int       input_key,
                 layout_t *layout)
 {
     int     result;
@@ -74,15 +105,15 @@ int run_plugin (int input_key,
     int     function_index;
     char   *code;
     struct  timeval start, end;
-    double  diff;
+    double  func_time;
 
-    // get plugin function index
-    plugin_index = key_to_index (input_key);
+    // get plugin function index and code
+    plugin_index   = key_to_index (input_key);
     function_index = key_function_index [plugin_index];
-    code = plugin_code [function_index];
+    code           = plugin_code [function_index];
 
-    // switch header title string color
-    gettimeofday(&start, NULL);
+    // switch header string color
+    gettimeofday (&start, NULL);
     pulse_window_string_on (code, layout);
 
     // run plugin
@@ -93,9 +124,9 @@ int run_plugin (int input_key,
     }
 
     // switch color back
-    gettimeofday(&end, NULL);
-    diff = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
-    pulse_window_string_off (code, layout, diff);
+    gettimeofday (&end, NULL);
+    func_time = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
+    pulse_window_string_off (code, layout, func_time);
 
     return 1;
 }
@@ -109,15 +140,15 @@ int run_plugin (int input_key,
     - Otherwise set both to -1
 */
 void find_window_string (WINDOW *window,
-                         char *string,
-                         int *y,
-                         int *x)
+                         char   *string,
+                         int    *y,
+                         int    *x)
 {
-    int i, j, 
-        m, n,
-        ch,
-        c = 0, 
-        rows, cols;
+    int  i, j, 
+         m, n,
+         ch,
+         si = 0, 
+         rows, cols;
     bool found = false;
 
     // get number of rows, columns
@@ -126,19 +157,19 @@ void find_window_string (WINDOW *window,
     // find string
     for (i = 0; i < rows; i++) {
         for (j = 0; j < cols; j++) {
-            ch = mvwinch(window, i, j);
-            if ((char) ch == string [c]) {
-                if (c == 0) {
+            ch = mvwinch (window, i, j);
+            if ((char) ch == string [si]) {
+                if (si == 0) {
                     m = i;
                     n = j;
                 }
-                c += 1;
-                if (c == strlen (string)) {
+                si += 1;
+                if (si == strlen (string)) {
                     found = true;
                     break;
                 }
             } else {
-                c = 0;
+                si = 0;
             }
         }
         if (found) break;
@@ -162,7 +193,7 @@ void find_window_string (WINDOW *window,
     ----------
     Nxt -> (n)ext
 */
-char *get_code_title (char *code,
+char *get_code_title (char     *code,
                       layout_t *layout)
 {
     plugin_t *curr_plugin = layout->plugins;
@@ -178,12 +209,9 @@ char *get_code_title (char *code,
 
 
 /*
-    Switch string's colors in Ncurses WINDOW element for quarter second
-    ------------
-    - Used at beginning of plugin functions with title string in header 
-      to indicate usage
+    Switch plugin header string's colors in Ncurses WINDOW element to indicate usage
 */
-static void pulse_window_string_on (char *code,
+static void pulse_window_string_on (char     *code,
                                     layout_t *layout)
 {
     int y, x, i;
@@ -227,11 +255,12 @@ static void pulse_window_string_on (char *code,
 
 
 /*
-    Reverse code string colors back to normal
+    Reverse code string colors back to normal after plugin function returns or 
+    after MIN_PULSE_LEN seconds
 */
-static void pulse_window_string_off (char *code,
+static void pulse_window_string_off (char     *code,
                                      layout_t *layout,
-                                     double diff)
+                                     double    func_time)
 {
     int y, x, i;
     bool key_color_toggle;
@@ -254,13 +283,13 @@ static void pulse_window_string_off (char *code,
         key_color_toggle = false;
 
         // sleep if plugin function call took less than MIN_PULSE_LEN seconds
-        // to make sure text pulse visible
-        if (diff < MIN_PULSE_LEN)
-            usleep (100000);
+        // to make sure color pulse is visible
+        if (func_time < MIN_PULSE_LEN)
+            usleep (MIN_PULSE_LEN * 1000000);
 
         // switch colors back
         wattron (window, COLOR_PAIR(HEADER_TITLE_COLOR));
-        for (i = 0; i < strlen(title) + 1; i++) {
+        for (i = 0; i < strlen (title) + 1; i++) {
             mvwprintw (window, y, x + i, "%c", title[i]);
             if (key_color_toggle) {
                 wattron (window, COLOR_PAIR(HEADER_TITLE_COLOR));

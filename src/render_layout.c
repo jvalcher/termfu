@@ -14,40 +14,10 @@
 #include <ncurses.h>
 
 #include "data.h"
+#include "run_plugin.h"
 #include "render_layout.h"
 #include "parse_config.h"
 #include "utilities.h"
-
-
-/*
-    Plugin codes
-    -----------
-    - Indexes match corresponding function's index in plugin_function[] array  (run_plugin.c)
-    - Ordered alphabetically for binary search in bind_keys_to_plugin()
-    - Used to bind function index to shortcut key in key_function_index[]  (data.h)
-*/
-char *plugin_code [] = {
-    
-    "EMP",
-    "Asm",
-    "Bak",
-    "Bld",
-    "Brk",
-    "Con",
-    "Fin",
-    "Kil",
-    "Lay",
-    "LcV",
-    "Nxt",
-    "Out",
-    "Prm",
-    "Prn",
-    "Reg",
-    "Run",
-    "Src",
-    "Stp",
-    "Wat"
-};
 
 int   key_function_index [53];
 char *prog_title = "termIDE";

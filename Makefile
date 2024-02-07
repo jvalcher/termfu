@@ -1,10 +1,9 @@
 
 # Commands:
-	# make				- build production binary termide
-	# make dev			- build development binary termide-dev, run it
-	# make layouts		- print layout information before program continues  (src/data.h - PRINT_LAYOUTS)
+	# make      		- build production binary  (termide)
+	# make dev			- build development binary (termide-dev), run it
+	# make layouts		- print layout information (see LAYOUT in src/render_layout.c)
 	# make colors		- check if current terminal can display colors
-	# make num_plugins	- print number of plugins for setting NUM_PLUGINS in src/data.h
 
 CC=				gcc
 FLAGS=			-Wall -MMD -I ./src/plugins
@@ -25,31 +24,42 @@ D_FILES= 	$(patsubst ./src/%.c, ./obj/%.d, $(C_FILES))
 
 .PHONY: all dev colors
 
-
-# build
-
+# all
 all: FLAGS += $(PROD_FLAGS)
 all: clean $(B_FILE_PROD)
+	@echo ""
 
+# dev
 dev: FLAGS += $(DEV_FLAGS)
 dev: clean $(B_FILE_DEV)
+	@echo ""
 	./$(B_FILE_DEV)
+	@echo ""
 
+# layouts
 layouts: FLAGS += $(LAY_FLAGS)
 layouts: clean $(B_FILE_DEV)
+	@echo ""
 	./$(B_FILE_DEV)
 
+# create binaries
+#
 $(B_FILE_PROD): $(OP_FILES) $(O_FILES)
+	@echo ""
 	$(CC) -o $@ $^ $(NCURSES_LIBS)
 
 $(B_FILE_DEV):  $(OP_FILES) $(O_FILES)
+	@echo ""
 	$(CC) -o $@ $^ $(NCURSES_LIBS)
 
+# create objects
+#
 obj/%.o: src/%.c
 	$(CC) $(FLAGS) $(NCURSES_CFLAGS) -c -o $@ $<
 
 obj/%.o: src/plugins/%.c
 	$(CC) $(FLAGS) $(NCURSES_CFLAGS) -c -o $@ $<
+
 
 -include $(D_FILES)
 
@@ -57,15 +67,12 @@ clean:
 	rm -f ./obj/*
 	rm -f ./termide
 	rm -f ./termide-dev
+	@echo ""
 
 
-# misc make commands
+# misc makes
 
 colors:
 	@./scripts/run ./scripts/colors_test.c
 	@rm ./scripts/colors_test
 
-num_plugins:
-	@gcc -g src/plugins/plugins.c
-	@./a.out
-	@rm ./a.out

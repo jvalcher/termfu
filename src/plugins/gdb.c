@@ -1,18 +1,7 @@
+
 /*
-    GDB plugins
-    ---------
-
-    Contents:
-
-        - Header plugins
-        - Window plugins
+    GDB plugin functions
 */
-
-
-#include "_plugin_utils.h"
-#include "../data.h"
-#include "../run_plugin.h"
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,11 +9,19 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
+#include "../data.h"
+#include "../run_plugin.h"
+
 
 
 /*
+    --------------
     Header plugins
+    --------------
 */
+
+
+
 int gdb_run (layout_t *layout) 
 {
     return 1;
@@ -61,8 +58,12 @@ int gdb_src_file (layout_t *layout)
 
 
 /* 
-    # Window plugins
+    --------------
+    Window plugins
+    --------------
 */
+
+
 
 int gdb_assembly (layout_t *layout) 
 {
@@ -98,6 +99,4 @@ int gdb_output (layout_t *layout)
 {
     return 1;
 }
-
-
 

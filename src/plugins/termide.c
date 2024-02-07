@@ -3,7 +3,6 @@
 #include <ncurses.h>
 
 #include "../utilities.h"
-#include "_plugin_utils.h"
 
 /*
     Placeholder function at plugin_function[0]  (run_plugin.c)
