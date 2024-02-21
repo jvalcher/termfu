@@ -25,8 +25,12 @@ Sections:
 
 ```
 >p  plugin code, key binding, title string
->h  header title strings layout
+>h  determines order and layout of plugin title strings in header
 >w  window layout
+    - each keybinding (u, l, q, etc.) corresponds to a "window segment"
+    - the size of each window is determined by how many segments it has for its
+      width and height
+    - segment sizes are calculated based on the current terminal's dimensions
 ```
 
 Plugin (`>p`) formatting:
@@ -55,9 +59,11 @@ Prm : p :(p)rompt
 Wat : w :(w)atch
 LcV : v :local (v)ars
 Out : o :(o)utput
+
 >h
 ulq
 rnscfk
+
 >w
 bffaa 
 wffaa
@@ -67,7 +73,7 @@ eoopp
 
 #### Resulting layout...
 
-<img src='./misc/screenshots/layout.png' height='250px'>
+<img src='./misc/screenshots/layout.png' height='500px'>
 
 
 ## Build
