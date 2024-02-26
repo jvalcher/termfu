@@ -10,7 +10,6 @@ core
 
 obj/*
 !obj/.gitkeep
-prototypes
 
 build.log
 .vim-bookmarks

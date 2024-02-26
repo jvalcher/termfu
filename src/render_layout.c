@@ -462,6 +462,64 @@ static void render_borders (window_t *curr_window)
 
 
 /*
+    Fix broken border corners caused by overlapping in create_layout()
+   
+          │       │
+         ─┐ -->  ─┤
+          │       │
+   
+    - Passed head of window_t linked list in layout_t
+    - Uses fix_corner_char()
+*/
+    //
+    static int fix_corner_char (int y, int x);
+    //
+static void fix_corners (window_t *win)
+{
+    int of = header_offset;
+
+    do {
+        int y     = win->y;
+        int x     = win->x;
+        int rows  = win->rows;
+        int cols  = win->cols;
+        int tl = 0;
+        int tr = 0;
+        int bl = 0;
+        int br = 0;
+
+        // top left
+        tl = fix_corner_char (y + of, x);
+
+        // top right
+        tr = fix_corner_char (y + of, x + (cols - 1));
+
+        // bottom left
+        bl = fix_corner_char (y + (rows - 1) + of, x);
+
+        // bottom right
+        br = fix_corner_char (y + (rows - 1) + of, x + (cols - 1));
+
+        // set corners
+        //
+        //      wborder (win, ls, rs, ts, bs, tl, tr, bl, br)
+        //
+        WINDOW *w = win->win;
+        wattron  (w, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
+        wborder  (w, 0, 0, 0, 0, tl, tr, bl, br);
+        wattroff (w, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
+        refresh  ();
+        wrefresh (w);
+
+        // next window
+        win = win->next;
+
+    } while (win != NULL);
+}
+
+
+
+/*
     Fix single ncurses border corner character
     ---------------
     Returns correct corner character int
@@ -560,60 +618,6 @@ static int fix_corner_char (int y,
 
     else 
         return 0;
-}
-
-
-
-/*
-    Fix broken border corners caused by overlapping in create_layout()
-   
-          │       │
-         ─┐ -->  ─┤
-          │       │
-   
-    Passed head of window_t linked list in layout_t
-*/
-static void fix_corners (window_t *win)
-{
-    int of = header_offset;
-
-    do {
-        int y     = win->y;
-        int x     = win->x;
-        int rows  = win->rows;
-        int cols  = win->cols;
-        int tl = 0;
-        int tr = 0;
-        int bl = 0;
-        int br = 0;
-
-        // top left
-        tl = fix_corner_char (y + of, x);
-
-        // top right
-        tr = fix_corner_char (y + of, x + (cols - 1));
-
-        // bottom left
-        bl = fix_corner_char (y + (rows - 1) + of, x);
-
-        // bottom right
-        br = fix_corner_char (y + (rows - 1) + of, x + (cols - 1));
-
-        // set corners
-        //
-        //      wborder (win, ls, rs, ts, bs, tl, tr, bl, br)
-        //
-        WINDOW *w = win->win;
-        wattron  (w, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
-        wborder  (w, 0, 0, 0, 0, tl, tr, bl, br);
-        wattroff (w, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
-        refresh  ();
-        wrefresh (w);
-
-        // next window
-        win = win->next;
-
-    } while (win != NULL);
 }
 
 
@@ -756,6 +760,4 @@ static void render_window_titles (layout_t *layout)
 
     } while (curr_window != NULL);
 }
-
-
 
