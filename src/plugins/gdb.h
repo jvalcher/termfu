@@ -2,6 +2,7 @@
 #ifndef GDB_H
 #define GDB_H
 
+#include "../data.h"
 
 /*
 
@@ -36,22 +37,22 @@ GDB Plugin
     gdb_kill            Kil     Kill
 
 */
-int gdb_assembly    (layout_t *layout);
-int gdb_breakpoints (layout_t *layout);
-int gdb_watches     (layout_t *layout);
-int gdb_local_vars  (layout_t *layout);
-int gdb_src_file    (layout_t *layout);
-int gdb_registers   (layout_t *layout);
-int gdb_prompt      (layout_t *layout);
-int gdb_output      (layout_t *layout);
-int gdb_prompt      (layout_t *layout);
-int gdb_run         (layout_t *layout);
-int gdb_next        (layout_t *layout);
-int gdb_step        (layout_t *layout);
-int gdb_continue    (layout_t *layout);
-int gdb_finish      (layout_t *layout);
-int gdb_print       (layout_t *layout);
-int gdb_kill        (layout_t *layout);
+int gdb_assembly    (plugin_t *plugin);
+int gdb_breakpoints (plugin_t *plugin);
+int gdb_watches     (plugin_t *plugin);
+int gdb_local_vars  (plugin_t *plugin);
+int gdb_src_file    (plugin_t *plugin);
+int gdb_registers   (plugin_t *plugin);
+int gdb_prompt      (plugin_t *plugin);
+int gdb_output      (plugin_t *plugin);
+int gdb_prompt      (plugin_t *plugin);
+int gdb_run         (plugin_t *plugin);
+int gdb_next        (plugin_t *plugin);
+int gdb_step        (plugin_t *plugin);
+int gdb_continue    (plugin_t *plugin);
+int gdb_finish      (plugin_t *plugin);
+int gdb_print       (plugin_t *plugin);
+int gdb_kill        (plugin_t *plugin);
 
 
 

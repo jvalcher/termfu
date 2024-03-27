@@ -3,6 +3,7 @@
    gdb-tuiffic
  */
 
+#include <stdlib.h>
 #include <string.h>
 #include <locale.h>
 #include <signal.h>
@@ -11,6 +12,7 @@
 #include "data.h"
 #include "parse_config.h"
 #include "render_layout.h"
+#include "run_debugger.h"
 #include "run_plugin.h"
 #include "utilities.h"
 
@@ -19,21 +21,23 @@ static void create_colors ();
 void sigint_exit (int sig_num);
 
 char *binary_name;      // binary name argument passed to termIDE
-int num_layouts;
 
 
 int main (int argc, char *argv[]) 
 {
-    int ch;
-    layout_t* first_layout;
-    layout_t* curr_layout;
+    layout_t      *first_layout,
+                  *curr_layout;
+    int            ch,
+                   debug_in_pipe;
 
     // set program name
-    if (argc > 1)
+    if (argc > 1) {
         binary_name = argv [1];
-
-    // exit gracefully on SIGINT
-    signal (SIGINT, sigint_exit);
+        printf ("%s\n", binary_name);
+    } else {
+        pfem ("Usage:  termide a.out\n");
+        exit (EXIT_FAILURE);
+    }
 
     // initialize, configure Ncurses
     initscr ();         // initialize Ncurses
@@ -42,15 +46,19 @@ int main (int argc, char *argv[])
     noecho ();          // do not display pressed character
     curs_set(0);        // hide cursor
 
+    // exit gracefully on SIGINT
+    signal (SIGINT, sigint_exit);
+
     // parse CONFIG_FILE data into layouts_t structs  (data.h)
-    num_layouts  = 0;
     first_layout = parse_config ();
     curr_layout  = first_layout;
 
     // render first layout
     render_layout (curr_layout);
 
-    //
+    // start debugger, load binary
+    run_debugger (curr_layout, binary_name); 
+
     //  Main loop
     //
         // read key
@@ -60,6 +68,7 @@ int main (int argc, char *argv[])
         run_plugin (ch, curr_layout);
     }
 
+    curs_set (1);
     endwin ();
     return 0;
 }
@@ -67,7 +76,7 @@ int main (int argc, char *argv[])
 
 
 /*
-   Create Ncurses FONT_BACKGROUND color pairs
+   Create Ncurses <FONT_BACKGROUND> color pairs
 */
 static void create_colors ()
 {
@@ -87,7 +96,7 @@ static void create_colors ()
 
 
 /*
-    Intercept SIGINT (Ctrl-c) and exit Ncurses gracefully
+    Intercept SIGINT (Ctrl-c) -> exit Ncurses, program
 */
 void sigint_exit (int sig_num)
 {

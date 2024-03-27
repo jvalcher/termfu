@@ -33,14 +33,14 @@ all: clean $(B_FILE_PROD)
 dev: FLAGS += $(DEV_FLAGS)
 dev: clean $(B_FILE_DEV)
 	@echo ""
-	./$(B_FILE_DEV)
+	./$(B_FILE_DEV) hello
 	@echo ""
 
 # layouts
 layouts: FLAGS += $(LAY_FLAGS)
 layouts: clean $(B_FILE_DEV)
 	@echo ""
-	./$(B_FILE_DEV)
+	./$(B_FILE_DEV) hello
 
 # create binaries
 #

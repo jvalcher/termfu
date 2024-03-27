@@ -74,6 +74,7 @@
 */
 #define pfeme(...) do { \
 \
+    curs_set (1); \
     endwin (); \
     fprintf (stderr, "\
 \033[1;31m%s\033[1;0m \
@@ -167,6 +168,13 @@ void unset_bold_color (WINDOW* win, int color);
 int key_to_index (int key);
 
 
+
+/*
+    Set debugger based on file type of file_name passed as argv[1]
+    ------
+    Sets debug_state_t -> debugger to macro  (data.h)
+*/
+void set_debugger (debug_state_t *debug_state, char *file_name);
 
 
 #endif

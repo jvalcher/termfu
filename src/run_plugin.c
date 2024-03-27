@@ -3,6 +3,7 @@
     Run plugin
 */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -13,77 +14,16 @@
 #include "render_layout.h"
 #include "utilities.h"
 
+#include "plugins/_plugins.h"
 #include "plugins/termide.h"
 #include "plugins/gdb.h"
 
 
-/*
-    Plugin codes
-    -----------
-    - Indexes match corresponding function's index in plugin_function[] array  (run_plugin.c)
-    - Ordered alphabetically for binary search in bind_keys_to_plugin()
-    - Used to bind function index to shortcut key in key_function_index[]  (data.h)
-*/
-char *plugin_code [] = {
-    
-    "EMP",
-    "Asm",
-    "Bak",
-    "Bld",
-    "Brk",
-    "Con",
-    "Fin",
-    "Kil",
-    "Lay",
-    "LcV",
-    "Nxt",
-    "Out",
-    "Prm",
-    "Prn",
-    "Reg",
-    "Run",
-    "Src",
-    "Stp",
-    "Wat"
-};
 
-/*
-    Function pointer array
-    ----------
-    - Indexes match corresponding plugin code string in plugin_code[]
-        - Ordered alphabetically by code
-    - Indexes set in key_function_index[]  (data.h)  by bind_keys_to_plugins()  (render_layout.c)
-    - Functions called in main() loop  (main.c)
-*/
-typedef int (*plugin_func_t) (layout_t *layout);
-    //
-plugin_func_t plugin[] = {
-
-    (plugin_func_t) empty_func,         // "EMP"
-    (plugin_func_t) gdb_assembly,       // "Asm"
-    (plugin_func_t) termide_back,       // "Bak"
-    (plugin_func_t) termide_builds,     // "Bld"
-    (plugin_func_t) gdb_breakpoints,    // "Brk"
-    (plugin_func_t) gdb_continue,       // "Con"
-    (plugin_func_t) gdb_finish,         // "Fin"
-    (plugin_func_t) gdb_kill,           // "Kil"
-    (plugin_func_t) termide_layouts,    // "Lay"
-    (plugin_func_t) gdb_local_vars,     // "LcV"
-    (plugin_func_t) gdb_next,           // "Nxt"
-    (plugin_func_t) gdb_output,         // "Out"
-    (plugin_func_t) gdb_prompt,         // "Prm"
-    (plugin_func_t) gdb_print,          // "Prn"
-    (plugin_func_t) gdb_registers,      // "Reg"
-    (plugin_func_t) gdb_run,            // "Run"
-    (plugin_func_t) gdb_src_file,       // "Src"
-    (plugin_func_t) gdb_step,           // "Stp"
-    (plugin_func_t) gdb_watches         // "Wat"
-};
-
-#define MIN_PULSE_LEN  .06
-
-static void pulse_window_string_on  (char*, layout_t*);
-static void pulse_window_string_off (char*, layout_t*, double);
+plugin_t    *get_plugin (int key, layout_t *layout);
+static void  pulse_header_string_on  (char*, WINDOW*, int*, int*);
+static void  pulse_header_string_off (char*, WINDOW*, int*, int*, double);
+static bool  check_is_window (int, plugin_t*);
 
 
 
@@ -97,38 +37,61 @@ static void pulse_window_string_off (char*, layout_t*, double);
         - Minimum time of MIN_PULSE_LEN seconds
         - Otherwise color switches back after plugin function returns
 */
-int run_plugin (int       input_key,
-                layout_t *layout)
+int run_plugin (int            input_key,
+                layout_t      *layout)
 {
-    int     result;
-    int     plugin_index;
-    int     function_index;
+    int     result,
+            plugin_index,
+            func_index,
+            y, x;
     char   *code;
     struct  timeval start, end;
     double  func_time;
+    plugin_t* plugin;
 
-    // get plugin function index and code
-    plugin_index   = key_to_index (input_key);
-    function_index = key_function_index [plugin_index];
-    code           = plugin_code [function_index];
+    plugin_index = key_to_index (input_key);
+    func_index   = key_function_index [plugin_index];
+    code         = plugin_code [func_index];
+    plugin       = get_plugin (input_key, layout);
 
     // switch header string color
-    gettimeofday (&start, NULL);
-    pulse_window_string_on (code, layout);
-
-    // run plugin
-    result = plugin [function_index] (layout);
-    if (result == -1) {
-        pfeme ("Unable to run function index %d with key \"%c\"\n", 
-                function_index, input_key);
+    if (plugin->window == NULL) {
+        gettimeofday (&start, NULL);
+        pulse_header_string_on (plugin->title, layout->header, &y, &x);
     }
 
-    // switch color back
-    gettimeofday (&end, NULL);
-    func_time = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
-    pulse_window_string_off (code, layout, func_time);
+    // run plugin
+    if (plugin_func_arr [func_index] (plugin) == -1) {
+        pfeme ("Unable to run function index %d with key \"%c\"\n", 
+                func_index, input_key);
+    }
+
+    // switch header string color back
+    if (plugin->window == NULL) {
+        gettimeofday (&end, NULL);
+        func_time = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
+        pulse_header_string_off (plugin->title, layout->header, &y, &x, func_time);
+    }
 
     return 1;
+}
+
+
+
+/*
+    Get plugin associated with input key
+*/
+plugin_t *get_plugin (int key,
+                  layout_t *layout)
+{
+    plugin_t *curr_plugin = layout->plugins;
+    do {
+        if (key == curr_plugin->key) {
+            return curr_plugin;
+        }
+        curr_plugin = curr_plugin->next;
+    } while (curr_plugin != NULL);
+    return NULL;
 }
 
 
@@ -189,65 +152,37 @@ void find_window_string (WINDOW *window,
 
 
 /*
-    Get title string from plugin code for current layout
-    ----------
-    Nxt -> (n)ext
-*/
-char *get_code_title (char     *code,
-                      layout_t *layout)
-{
-    plugin_t *curr_plugin = layout->plugins;
-    do {
-        if (strcmp (code, curr_plugin->code) == 0) {
-            return (char*) curr_plugin->title;
-        }
-        curr_plugin = curr_plugin->next;
-    } while (curr_plugin != NULL);
-    return NULL;
-}
-
-
-
-/*
     Switch plugin header string's colors in Ncurses WINDOW element to indicate usage
 */
-static void pulse_window_string_on (char     *code,
-                                    layout_t *layout)
+static void pulse_header_string_on (char   *title,
+                                    WINDOW *header,
+                                    int *y,
+                                    int *x)
 {
-    int y, x, i;
+    int i;
     bool key_color_toggle;
-    char *title;
-    WINDOW *window;
 
-    // get header title string for current layout
-    title = get_code_title (code, layout);
-    if (title == NULL)  {
-        pfeme ("Unable to find \"%s\" title for layout \"%s\"", code, layout->label);
-    }
-
-    // find string coordinates (y,x)
-    window = layout->header;
-    find_window_string (window, title, &y, &x);
+    find_window_string (header, title, y, x);
 
     // switch colors
-    if (y != -1) {
+    if (*y != -1) {
 
         key_color_toggle = false;
 
         // reverse colors
-        wattron (window, COLOR_PAIR(FOCUS_HEADER_TITLE_COLOR));
+        wattron (header, COLOR_PAIR(FOCUS_HEADER_TITLE_COLOR));
         for (i = 0; i < strlen (title) + 1; i++) {
-            mvwprintw (window, y, x + i, "%c", title [i]);
+            mvwprintw (header, *y, *x + i, "%c", title [i]);
             if (key_color_toggle) {
-                wattron (window, COLOR_PAIR(FOCUS_HEADER_TITLE_COLOR));
+                wattron (header, COLOR_PAIR(FOCUS_HEADER_TITLE_COLOR));
                 key_color_toggle = false;
             }
             if (title [i] == '(') {
-                wattron (window, COLOR_PAIR(FOCUS_TITLE_KEY_COLOR));
+                wattron (header, COLOR_PAIR(FOCUS_TITLE_KEY_COLOR));
                 key_color_toggle = true;
             }
         }
-        wrefresh (window);
+        wrefresh (header);
 
     }
 }
@@ -258,27 +193,17 @@ static void pulse_window_string_on (char     *code,
     Reverse code string colors back to normal after plugin function returns or 
     after MIN_PULSE_LEN seconds
 */
-static void pulse_window_string_off (char     *code,
-                                     layout_t *layout,
-                                     double    func_time)
+static void pulse_header_string_off (char   *title,
+                                     WINDOW *header,
+                                     int *y,
+                                     int *x,
+                                     double  func_time)
 {
-    int y, x, i;
+    int  i;
     bool key_color_toggle;
-    char *title;
-    WINDOW *window;
-
-    // get header title string for current layout
-    title = get_code_title (code, layout);
-    if (title == NULL)  {
-        pfeme ("Unable to find \"%s\" title for layout \"%s\"", code, layout->label);
-    }
-
-    // find string coordinates (y,x)
-    window = layout->header;
-    find_window_string (window, title, &y, &x);
 
     // switch colors
-    if (y != -1) {
+    if (*y != -1) {
 
         key_color_toggle = false;
 
@@ -288,18 +213,34 @@ static void pulse_window_string_off (char     *code,
             usleep (MIN_PULSE_LEN * 1000000);
 
         // switch colors back
-        wattron (window, COLOR_PAIR(HEADER_TITLE_COLOR));
+        wattron (header, COLOR_PAIR(HEADER_TITLE_COLOR));
         for (i = 0; i < strlen (title) + 1; i++) {
-            mvwprintw (window, y, x + i, "%c", title[i]);
+            mvwprintw (header, *y, *x + i, "%c", title[i]);
             if (key_color_toggle) {
-                wattron (window, COLOR_PAIR(HEADER_TITLE_COLOR));
+                wattron (header, COLOR_PAIR(HEADER_TITLE_COLOR));
                 key_color_toggle = false;
             }
             if (title[i] == '(') {
-                wattron (window, COLOR_PAIR(TITLE_KEY_COLOR));
+                wattron (header, COLOR_PAIR(TITLE_KEY_COLOR));
                 key_color_toggle = true;
             }
         }
-        wrefresh  (window);
+        wrefresh  (header);
     }
+}
+
+
+
+/*
+    Check if key corresponds to a plugin_t struct with
+    a window_t struct attached
+*/
+bool check_is_window (int key, plugin_t *plugins) {
+    plugin_t *curr_plugin = plugins;
+    do {
+        if (key == curr_plugin->key) {
+            return true;
+        }
+    } while (curr_plugin != NULL);
+    return false;
 }

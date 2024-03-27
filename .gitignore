@@ -5,6 +5,7 @@ core
 ncurses.h
 tags
 core
+hello*
 
 .gdb*
 

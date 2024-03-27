@@ -47,6 +47,8 @@ extern char *binary_name;      // binary name argument passed to termIDE
         {6} == 0   ->  unassigned
 
 */
+#define MIN_PULSE_LEN  .06
+    //
 extern int key_function_index [];
 
 
@@ -110,6 +112,59 @@ extern int key_function_index [];
 
 
 /*
+    windows_t
+    --------
+    - Position, size data for single Ncurses window 
+    - All windows in each layout stored in linked list
+    
+        layouts->windows
+
+    key           - window segment key
+
+    win           - Ncurses WINDOW* object
+    win_rows      - height in rows
+    win_cols      - width in columns
+    win_y         - top left corner y coordinate
+    win_x         - top left corner x coordinate
+    win_mid_line  - middle row of window
+    win_next      - pointer to next window_t object in layout
+
+	file_path          - current src/data file's absolute path
+    file_ptr           - FILE pointer
+    file_first_char    - first character (col) displayed of lines
+    file_rows          - number of file rows
+    file_max_cols      - columns in longest file line
+    file_min_mid       - mininimum mid line (beginning of file)
+    file_max_mid       - maximum mid line (end of file)
+    file_offsets       - byte offsets for each line of file
+*/  
+typedef struct window {
+
+    char               key;
+
+    WINDOW            *win;
+    bool               win_is_focused;
+    int                win_rows;                   
+    int                win_cols;                   
+    int                win_y;                      
+    int                win_x;                      
+    int                win_border [8];
+    int                win_mid_line;
+    struct window     *win_next;           
+
+    char               file_path [256];
+    FILE              *file_ptr;
+    int                file_first_char;
+    int                file_rows;
+    int                file_max_cols;
+    int                file_min_mid;
+    int                file_max_mid;
+    unsigned long int *file_offsets;
+
+} window_t;
+
+
+/*
     plugin_t
     ---------
     Store plugin, key, title combinations for a single layout
@@ -119,6 +174,7 @@ extern int key_function_index [];
     code       - code string  (Bld, Stp, ...)
     key        - keyboard shortcut character  (b, s, ...)
     title      - title string  ( (s)tep, (r)un, ...)
+    window     - pointer to window_t struct if available
     next       - next plugin_t struct
 */
 typedef struct plugin {
@@ -126,6 +182,7 @@ typedef struct plugin {
     char           code [4];
     char           key;
     char           title [MAX_TITLE_LEN];
+    window_t*      window;
     struct plugin *next;
 
 } plugin_t;
@@ -133,38 +190,30 @@ typedef struct plugin {
 
 
 /*
-    windows_t
-    --------
-    - Position, size data for single Ncurses window 
-    - All windows in each layout stored in linked list
-    
-    layouts->windows
-  
-    win     - Ncurses WINDOW* object
-    key     - window segment key
-    rows    - height in rows
-    cols    - width in columns
-    y       - top left corner y coordinate
-    x       - top left corner x coordinate
-    next    - pointer to next windows_t object in layout
-*/  
-typedef struct window {
+    debug_state_t
+    ------
+    debugger          - debugger macro identifier
+    input_pipe        - debugger input pipe
+    src_file_changed  - source file has changed
+*/
+    //
+#define DEBUGGER_UNKNOWN   0
+#define DEBUGGER_GDB       1
+    //
+typedef struct debug_state {
 
-    WINDOW        *win;
-    char           key;
-    bool           is_focused;
-    int            rows;                   
-    int            cols;                   
-    int            y;                      
-    int            x;                      
-    struct window *next;           
+    int    debugger;
+    int    input_pipe;
+    int    output_pipe;
+    char   src_path [256];
+    bool   src_file_changed;
 
-} window_t;
+} debug_state_t;
 
 
 
 /*
-    layouts_t
+    layout_t
     ---------
     - Main layout configuration struct for: 
         - rendering layouts
@@ -194,6 +243,7 @@ typedef struct layout {
     WINDOW        *header;
     plugin_t      *plugins;
     window_t      *windows;
+    debug_state_t *debug_state;
     struct layout *next;
 
 } layout_t;
@@ -204,13 +254,6 @@ typedef struct layout {
 ***************/
 
 
-//  Number of layouts to print with print_layouts()  (parse_config.c)
-//
-//      $ make layouts
-//
-//  TODO: convert to command-line flag
-//
-#define PRINT_LAYOUTS   1       
 
 
 

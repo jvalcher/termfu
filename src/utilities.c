@@ -1,6 +1,7 @@
 #include <ncurses.h>
 #include <stdarg.h>
 
+#include "data.h"
 #include "utilities.h"
 
 
@@ -113,7 +114,7 @@ void mv_print_title (int color,
 
 
 /* 
-    Convert key shortcut character to plugin function index
+    Convert key stroke character to plugin function index
 */
 int key_to_index (int key)
 {
@@ -126,6 +127,5 @@ int key_to_index (int key)
         return -1;
     }
 }
-
 
 

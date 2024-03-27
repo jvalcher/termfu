@@ -1,0 +1,4 @@
+#!/bin/bash
+
+gcc -g -Wall -Wextra $(ncursesw5-config --cflags) scroll.c $(ncursesw5-config --libs) && ./a.out
+
