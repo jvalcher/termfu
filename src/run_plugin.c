@@ -8,56 +8,72 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <pthread.h>
 
 #include "run_plugin.h"
 #include "data.h"
-#include "render_layout.h"
 #include "utilities.h"
-
+#include "bind_keys_windows.h"
 #include "plugins/_plugins.h"
-#include "plugins/termide.h"
-#include "plugins/gdb.h"
 
 
+#define PULSE_LEN  .06
 
-plugin_t    *get_plugin (int key, layout_t *layout);
-static void  pulse_header_string_on  (char*, WINDOW*, int*, int*);
-static void  pulse_header_string_off (char*, WINDOW*, int*, int*, double);
-static bool  check_is_window (int, plugin_t*);
+static int   key_to_index (int);
+plugin_t    *get_plugin (int, layout_t*);
+static void  pulse_header_title_string (WINDOW*, char*);
+static void  toggle_select_window (window_t*, char*);
+void        *pulse_thread (void*) ;
 
+window_t *curr_win;
+char      curr_title [MAX_TITLE_LEN];
+typedef struct thread_data {
+    WINDOW *win;
+    char    title [MAX_TITLE_LEN];
+} tdata_t;
+tdata_t tdata;
 
 
 /*
     Run plugin function
     --------
-    - Match key input (main.c) to plugin code (render_layout.c) in current layout
-      set in CONFIG_FILE (parse_config.c, data.h)
-    - Run plugin code's corresponding function (plugins/...) via its pointer (above)
-    - Pulse corresponding header title string's colors
-        - Minimum time of MIN_PULSE_LEN seconds
-        - Otherwise color switches back after plugin function returns
+    - Match key input to plugin code in current layout  (key_bindings.h)
+    - Run plugin code's corresponding function via its pointer  (plugins/_plugins.c) 
+    - Pulse corresponding header title string's colors for PULSE_LEN
 */
-int run_plugin (int            input_key,
-                layout_t      *layout)
+int run_plugin (int       input_key,
+                layout_t *layout)
 {
-    int     result,
-            plugin_index,
-            func_index,
-            y, x;
-    char   *code;
-    struct  timeval start, end;
-    double  func_time;
-    plugin_t* plugin;
+    int       plugin_index,
+              func_index,
+              result;
+    struct    timeval start;
+    plugin_t *plugin;
+    pthread_t thread;
+    bool      thread_created = false;
 
+    // get plugin information
     plugin_index = key_to_index (input_key);
     func_index   = key_function_index [plugin_index];
-    code         = plugin_code [func_index];
     plugin       = get_plugin (input_key, layout);
 
-    // switch header string color
-    if (plugin->window == NULL) {
-        gettimeofday (&start, NULL);
-        pulse_header_string_on (plugin->title, layout->header, &y, &x);
+    // unselect curr_win if set
+    if (curr_win != NULL && curr_win != plugin->window) {
+        toggle_select_window (curr_win, curr_title);
+    }
+
+    // toggle window color or pulse header title string color
+    if (plugin->window) {
+        strncpy (curr_title, plugin->title, MAX_TITLE_LEN - 1);
+        toggle_select_window (plugin->window, plugin->title);
+    } else {
+        strncpy (tdata.title, plugin->title, MAX_TITLE_LEN - 1);
+        tdata.win = layout->header;
+        result = pthread_create (&thread, NULL, pulse_thread, (void*)&tdata);
+        if (result != 0) {
+            pfeme ("Thread create error");
+        }
+        thread_created = true;
     }
 
     // run plugin
@@ -66,14 +82,15 @@ int run_plugin (int            input_key,
                 func_index, input_key);
     }
 
-    // switch header string color back
-    if (plugin->window == NULL) {
-        gettimeofday (&end, NULL);
-        func_time = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
-        pulse_header_string_off (plugin->title, layout->header, &y, &x, func_time);
+    // join pulse thread
+    if (thread_created) {
+        result = pthread_join(thread, NULL);
+        if (result != 0) {
+            pfeme ("Thread create error");
+        }
     }
 
-    return 1;
+    return 0;
 }
 
 
@@ -94,6 +111,17 @@ plugin_t *get_plugin (int key,
     return NULL;
 }
 
+
+/*
+   Pulse thread
+*/
+void *pulse_thread (void *args) 
+{
+    tdata_t *data =  (tdata_t*) args;
+    pulse_header_title_string (data->win, data->title);
+    pthread_exit (NULL);
+    return NULL;
+}
 
 
 /*
@@ -152,95 +180,139 @@ void find_window_string (WINDOW *window,
 
 
 /*
-    Switch plugin header string's colors in Ncurses WINDOW element to indicate usage
+    Toggle select window
+    -------------------
+    win   = window_t struct pointer
+    title = window title string
 */
-static void pulse_header_string_on (char   *title,
-                                    WINDOW *header,
-                                    int *y,
-                                    int *x)
+static void 
+toggle_select_window (window_t *win,
+                      char     *title) 
 {
-    int i;
+    int i, x, y;
     bool key_color_toggle;
+    bool selected = win->selected;
 
-    find_window_string (header, title, y, x);
+    // find window string
+    find_window_string (win->win, title, &y, &x);
 
-    // switch colors
-    if (*y != -1) {
+    // toggle window title color
+    if (y != -1) {
 
         key_color_toggle = false;
 
-        // reverse colors
-        wattron (header, COLOR_PAIR(FOCUS_HEADER_TITLE_COLOR));
+        // unselect window
+        if (selected) {
+
+            wattron (win->win, COLOR_PAIR(WINDOW_TITLE_COLOR));
+            wattroff (win->win, A_UNDERLINE);
+            for (i = 0; i < strlen (title) + 1; i++) {
+                mvwprintw (win->win, y, x + i, "%c", title[i]);
+                if (key_color_toggle) {
+                    wattron (win->win, COLOR_PAIR(WINDOW_TITLE_COLOR));
+                    key_color_toggle = false;
+                }
+                if (title[i] == '(') {
+                    wattron (win->win, COLOR_PAIR(TITLE_KEY_COLOR));
+                    key_color_toggle = true;
+                }
+            }
+            curr_win = NULL;
+
+        // select window
+        } else {
+
+            wattron (win->win, COLOR_PAIR(FOCUS_WINDOW_TITLE_COLOR) | A_UNDERLINE);
+            for (i = 0; i < strlen (title) + 1; i++) {
+                mvwprintw (win->win, y, x + i, "%c", title [i]);
+                if (key_color_toggle) {
+                    wattron (win->win, COLOR_PAIR(FOCUS_WINDOW_TITLE_COLOR));
+                    key_color_toggle = false;
+                }
+                if (title [i] == '(') {
+                    wattron (win->win, COLOR_PAIR(FOCUS_WINDOW_TITLE_KEY_COLOR));
+                    key_color_toggle = true;
+                }
+            }
+            curr_win = win;
+        }
+    }
+
+    wrefresh  (win->win);
+
+    // toggle selected value
+    win->selected = win->selected ? false : true;
+}
+
+
+
+/*
+    Switch plugin header string's colors in Ncurses WINDOW element to indicate usage
+*/
+static void 
+pulse_header_title_string (WINDOW *win,
+                           char   *title)
+{
+    int i, x, y;
+    bool key_color_toggle;
+
+    find_window_string (win, title, &y, &x);
+
+    if (y != -1) {
+
+
+        // pulse on
+        key_color_toggle = false;
+        wattron (win, COLOR_PAIR(FOCUS_HEADER_TITLE_COLOR));
         for (i = 0; i < strlen (title) + 1; i++) {
-            mvwprintw (header, *y, *x + i, "%c", title [i]);
+            mvwprintw (win, y, x + i, "%c", title [i]);
             if (key_color_toggle) {
-                wattron (header, COLOR_PAIR(FOCUS_HEADER_TITLE_COLOR));
+                wattron (win, COLOR_PAIR(FOCUS_HEADER_TITLE_COLOR));
                 key_color_toggle = false;
             }
             if (title [i] == '(') {
-                wattron (header, COLOR_PAIR(FOCUS_TITLE_KEY_COLOR));
+                wattron (win, COLOR_PAIR(FOCUS_TITLE_KEY_COLOR));
                 key_color_toggle = true;
             }
         }
-        wrefresh (header);
+        wrefresh (win);
 
-    }
-}
+        // pause before pulse off
+        usleep (PULSE_LEN * 2000000);
 
-
-
-/*
-    Reverse code string colors back to normal after plugin function returns or 
-    after MIN_PULSE_LEN seconds
-*/
-static void pulse_header_string_off (char   *title,
-                                     WINDOW *header,
-                                     int *y,
-                                     int *x,
-                                     double  func_time)
-{
-    int  i;
-    bool key_color_toggle;
-
-    // switch colors
-    if (*y != -1) {
-
+        // pulse off
         key_color_toggle = false;
-
-        // sleep if plugin function call took less than MIN_PULSE_LEN seconds
-        // to make sure color pulse is visible
-        if (func_time < MIN_PULSE_LEN)
-            usleep (MIN_PULSE_LEN * 1000000);
-
-        // switch colors back
-        wattron (header, COLOR_PAIR(HEADER_TITLE_COLOR));
+        wattron (win, COLOR_PAIR(HEADER_TITLE_COLOR));
         for (i = 0; i < strlen (title) + 1; i++) {
-            mvwprintw (header, *y, *x + i, "%c", title[i]);
+            mvwprintw (win, y, x + i, "%c", title[i]);
             if (key_color_toggle) {
-                wattron (header, COLOR_PAIR(HEADER_TITLE_COLOR));
+                wattron (win, COLOR_PAIR(HEADER_TITLE_COLOR));
                 key_color_toggle = false;
             }
             if (title[i] == '(') {
-                wattron (header, COLOR_PAIR(TITLE_KEY_COLOR));
+                wattron (win, COLOR_PAIR(TITLE_KEY_COLOR));
                 key_color_toggle = true;
             }
         }
-        wrefresh  (header);
+        wrefresh (win);
     }
 }
 
 
 
-/*
-    Check if key corresponds to a plugin_t struct with
-    a window_t struct attached
+/* 
+    Convert key stroke character to plugin function index
 */
-bool check_is_window (int key, plugin_t *plugins) {
-    plugin_t *curr_plugin = plugins;
-    do {
-        if (key == curr_plugin->key) {
-            return true;
-        }
-    } while (curr_plugin != NULL);
-    return false;
+static int key_to_index (int key)
+{
+    if (key >= 'a' && key <= 'z') {
+        return key - 'a' + 1;
+    }
+    else if (key >= 'A' && key <= 'Z') {
+        return key - 'A' + 27;
+    } else {
+        return -1;
+    }
 }
+
+

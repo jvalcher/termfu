@@ -29,30 +29,6 @@ extern char *binary_name;      // binary name argument passed to termIDE
 
 
 
-/****************
-  # Key bindings
- ****************/
-
-/*
-    Shortcut keys bound to plugin function indexes
-    -------------
-    - Declared in render_layout.c and initialized 
-      with bind_keys_to_plugins()
-    - plugin[i]() called in main() loop  (main.c)  via
-      run_plugin()  (run_plugin.c)
-
-        {0,a-z,A-Z}  ->  {0-52}
-
-        {4} == 12  ->  plugin[12]()
-        {6} == 0   ->  unassigned
-
-*/
-#define MIN_PULSE_LEN  .06
-    //
-extern int key_function_index [];
-
-
-
 /**************************
   # Color pair identifiers
  **************************/
@@ -71,16 +47,24 @@ extern int key_function_index [];
 #define WHITE_BLACK     26
 #define WHITE_BLUE      27
 
-#define BORDER_COLOR           BLUE_BLACK
+// shared
 #define MAIN_TITLE_COLOR       GREEN_BLACK
 #define LAYOUT_TITLE_COLOR     MAGENTA_BLACK
-#define WINDOW_TITLE_COLOR     CYAN_BLACK
-#define HEADER_TITLE_COLOR     GREEN_BLACK
 #define TITLE_KEY_COLOR        YELLOW_BLACK
 
-#define FOCUS_BORDER_COLOR       YELLOW_BLACK
-#define FOCUS_HEADER_TITLE_COLOR TITLE_KEY_COLOR
-#define FOCUS_TITLE_KEY_COLOR    HEADER_TITLE_COLOR
+// header
+#define HEADER_TITLE_COLOR       GREEN_BLACK
+#define FOCUS_TITLE_KEY_COLOR    GREEN_BLACK
+#define FOCUS_HEADER_TITLE_COLOR YELLOW_BLACK
+
+// window
+#define WINDOW_TITLE_COLOR              CYAN_BLACK
+#define BORDER_COLOR                    BLUE_BLACK
+#define FOCUS_WINDOW_TITLE_COLOR        YELLOW_BLACK
+#define FOCUS_BORDER_COLOR              YELLOW_BLACK
+#define FOCUS_WINDOW_TITLE_KEY_COLOR    BLUE_BLACK
+
+
 
 
 
@@ -140,10 +124,10 @@ extern int key_function_index [];
 */  
 typedef struct window {
 
-    char               key;
-
     WINDOW            *win;
-    bool               win_is_focused;
+    char               key;
+    bool               selected;
+
     int                win_rows;                   
     int                win_cols;                   
     int                win_y;                      
@@ -223,6 +207,7 @@ typedef struct debug_state {
   
     label             - layout label string
     hdr_key_str       - header plugin key string  ("ssb\nssw\nccr\n")
+    win_key_str       - window plugin key string  ("ssb\nssw\nccr\n")
     num_hdr_key_rows  - number of header rows needed for key strings
     win_matrix        - window key segment* matrix
     row_ratio         - y segment ratio for layout matrix
@@ -236,6 +221,7 @@ typedef struct layout {
 
     char           label [MAX_CONFIG_LABEL_LEN];
     char           hdr_key_str [MAX_KEY_STR_LEN];
+    char           win_key_str [MAX_KEY_STR_LEN];
     int            num_hdr_key_rows;
     char          *win_matrix;
     int            row_ratio;

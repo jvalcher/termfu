@@ -9,7 +9,7 @@ CC=				gcc
 FLAGS=			-Wall -MMD -I ./src/plugins
 PROD_FLAGS=		-O3
 DEV_FLAGS=		-g
-LAY_FLAGS=		-D LAYOUT -g
+LAY_FLAGS=		-D LAYOUT_DEBUG -g
 NCURSES_CFLAGS 	:= $(shell ncurses5-config --cflags)
 NCURSES_LIBS 	:= $(shell ncurses5-config --libs)
 

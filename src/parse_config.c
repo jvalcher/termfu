@@ -178,7 +178,7 @@ static layout_t* create_layout (FILE* file,
                            char *label)
 {
     int ch, next_ch;
-    char win_keys [MAX_KEY_STR_LEN] = {0};
+    char *win_keys;
     char section = 0;
     int num_chars = 0;
     bool is_key = false;
@@ -272,7 +272,6 @@ static layout_t* create_layout (FILE* file,
             // unget '>' or '['
             ungetc (ch, file);
         }
-        // end plugin parse
 
 
         // parse header or window section
@@ -322,19 +321,17 @@ static layout_t* create_layout (FILE* file,
             if (section == 'h') {
                 strncpy ((char *)layout->hdr_key_str, keys, num_chars + 1);
             } else {
-                strncpy (win_keys, keys, num_chars + 1);
+                strncpy ((char *)layout->win_key_str, keys, num_chars + 1);
+                win_keys = layout->win_key_str;
             }
 
-            // unget '>' or '['
+                // unget '>' or '['
             ungetc (ch, file);
 
             num_chars = 0;
         }
-        // end header, window section
-
         section = 0;
     }
-    // end config section parse
 
     // unget '>' or '['
     ungetc (ch, file);
@@ -350,7 +347,7 @@ static layout_t* create_layout (FILE* file,
     //   e.g. ssbb
     //        ssww
     //        ccrr --> The 's' window will take up half of the screen's
-    //                 columns (width) and two thirds of the rows (height).
+    //                 column segments (width) and two thirds of the row segments (height).
     //
     int y_ratio   = 0;
     int x_ratio   = 0;
@@ -370,7 +367,7 @@ static layout_t* create_layout (FILE* file,
     layout->col_ratio = x_ratio;
 
 
-    // create window matrix
+    // allocate window matrix
     //
     //     {{s,s,b},
     //      {s,s,w},
@@ -403,13 +400,12 @@ static layout_t* create_layout (FILE* file,
         // add matrix to layout
     layout->win_matrix = (char *) layout_matrix;
 
-    // return next layout
     return layout;
 }
 
 
 
-#ifdef LAYOUT
+#ifdef LAYOUT_DEBUG
 /*
     Print layout, plugin information for debugging
     ---------

@@ -10,24 +10,18 @@
 #include <stdint.h>
 #include <locale.h>
 #include <stdbool.h>
-#include <ctype.h>
 #include <ncurses.h>
 
 #include "data.h"
-#include "run_plugin.h"
 #include "render_layout.h"
-#include "parse_config.h"
 #include "utilities.h"
-#include "plugins/_plugins.h"
 
 char *prog_title = "termIDE";
-int   key_function_index [53];
 int   scr_rows;
 int   scr_cols;
 int   header_offset;
 
 static void    create_layout        (int, int, layout_t*);
-static void    bind_keys_windows_to_plugins (layout_t*);
 static WINDOW *create_new_window    (int, int, int, int);
 static void    render_main_title    (WINDOW*, char*, char*);
 static void    render_borders       (window_t*);
@@ -51,10 +45,6 @@ void render_layout (layout_t *layout)
 
     // Calculate current layout's window dimensions
     create_layout (scr_rows - header_offset, scr_cols, layout);
-
-    // Bind plugin key shortcuts in current layout to plugin function indexes
-    // in key_function_index[]  (data.h)
-    bind_keys_windows_to_plugins (layout);
 
     // Print each layout's info and shortcuts for debugging  ($ make layouts)
     #ifdef LAYOUT
@@ -211,7 +201,7 @@ static void create_layout (int win_rows,
                     pfeme ("Unable to allocate memory for window_t struct");
 
                 // set focus
-                curr_window->win_is_focused = false;
+                curr_window->selected = false;
 
                 // set head window or link previous
                 curr_window->win_next = NULL;
@@ -287,99 +277,6 @@ static void create_layout (int win_rows,
             }
         }
     }
-}
-
-
-
-/*
-    Bind shortcut keys, window_t structs to plugin_t structs
-    ------------
-    - Set function index in key_function_index[]  (data.h)
-
-        {0,a-z,A-Z}  -->  {0-52}
-
-        key  == 'c'    (index 3)
-        code == 'Con'  (plugin_code/plugin_func index 5)
-
-        key_function_index [3] = 5   -->  
-            plugin_function[5]()  (run_plugin.c)
-
-        [6] = 0   -->  unassigned
-
-        - key stroke converted to index by key_to_index() in run_plugin.c
-*/
-static void bind_keys_windows_to_plugins (layout_t* layout)
-{
-    int  start_index;
-    int  end_index;
-    int  mid_index;
-    int  plugin_index;
-    int  cmp;
-    char key;
-    char code[4];
-    extern int plugin_code_size;    // plugins/_plugins.c
-    plugin_t* curr_plugin;
-    bool is_window;
-    window_t* curr_window;
-
-    curr_plugin = layout->plugins;
-    do {
-
-        // get shortuct key, code
-        key = curr_plugin->key;
-        strncpy (code, curr_plugin->code, strlen (plugin_code[0]) + 1);
-
-        // find plugin_code[] index matching current plugin's code string
-        start_index = 0;
-        end_index = (plugin_code_size / sizeof(plugin_code[0])) - 1;
-        plugin_index = -1;
-            //
-        while (start_index <= end_index) {
-            mid_index = start_index + (end_index - start_index) / 2;
-            cmp = strcmp (plugin_code [mid_index], code);
-            if (cmp == 0) {
-                plugin_index = mid_index;
-                goto index_found;
-            } else if (cmp < 0) {
-                start_index = mid_index + 1;
-            } else {
-                end_index = mid_index - 1;
-            }
-        }
-        index_found:
-
-            // plugin code string not found
-        if (plugin_index == -1)
-            pfeme ("Unknown plugin code \"%s\"\n", code);
-
-        // Set key_function_index[key] to plugin_index
-        //
-        //      {0,a-z,A-Z}  -->  {0-52}
-        //
-        if (key >= 'a' && key <= 'z') {
-            key_function_index [key - 'a' + 1] = plugin_index;
-        }
-        else if (key >= 'A' && key <= 'Z') {
-            key_function_index [key - 'A' + 27] = plugin_index;
-        }
-        else {
-            pfeme ("\'%c\' key not found \n", key);
-        }
-
-        // add window_t pointer if available
-        curr_plugin->window = NULL;
-        curr_window = layout->windows;
-        do {
-            if (curr_plugin->key == curr_window->key) {
-                curr_plugin->window = curr_window;
-            }
-            curr_window = curr_window->win_next;
-        } while (curr_window != NULL);
-
-        // next plugin
-        curr_plugin = curr_plugin->next;
-
-    } while (curr_plugin != NULL);
 }
 
 

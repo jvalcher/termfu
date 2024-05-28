@@ -113,19 +113,3 @@ void mv_print_title (int color,
 
 
 
-/* 
-    Convert key stroke character to plugin function index
-*/
-int key_to_index (int key)
-{
-    if (key >= 'a' && key <= 'z') {
-        return key - 'a' + 1;
-    }
-    else if (key >= 'A' && key <= 'Z') {
-        return key - 'A' + 27;
-    } else {
-        return -1;
-    }
-}
-
-

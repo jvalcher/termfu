@@ -4,8 +4,6 @@
  */
 
 #include <stdlib.h>
-#include <string.h>
-#include <locale.h>
 #include <signal.h>
 #include <ncurses.h>
 
@@ -15,28 +13,25 @@
 #include "run_debugger.h"
 #include "run_plugin.h"
 #include "utilities.h"
+#include "bind_keys_windows.h"
 
 
 static void create_colors ();
 void sigint_exit (int sig_num);
-
 char *binary_name;      // binary name argument passed to termIDE
 
 
 int main (int argc, char *argv[]) 
 {
-    layout_t      *first_layout,
-                  *curr_layout;
-    int            ch,
-                   debug_in_pipe;
+    layout_t *curr_layout;
+    int       ch;
 
     // set program name
     if (argc > 1) {
         binary_name = argv [1];
         printf ("%s\n", binary_name);
     } else {
-        pfem ("Usage:  termide a.out\n");
-        exit (EXIT_FAILURE);
+        pfeme ("Usage:  termide a.out\n");
     }
 
     // initialize, configure Ncurses
@@ -50,11 +45,13 @@ int main (int argc, char *argv[])
     signal (SIGINT, sigint_exit);
 
     // parse CONFIG_FILE data into layouts_t structs  (data.h)
-    first_layout = parse_config ();
-    curr_layout  = first_layout;
+    curr_layout = parse_config ();
 
-    // render first layout
+    // render first layout in config file
     render_layout (curr_layout);
+
+    // Bind keys, windows to plugin_t structs
+    bind_keys_windows_to_plugins (curr_layout);
 
     // start debugger, load binary
     run_debugger (curr_layout, binary_name); 

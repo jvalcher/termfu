@@ -162,13 +162,6 @@ void unset_bold_color (WINDOW* win, int color);
 
 
 
-/* 
-    Convert key shortcut character to plugin function index
-*/
-int key_to_index (int key);
-
-
-
 /*
     Set debugger based on file type of file_name passed as argv[1]
     ------
