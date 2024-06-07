@@ -40,8 +40,8 @@ Plugin (`>p`) formatting:
 #### Example configuration file...
 
 ```
-[ layout : gdb_debug_1 ]
->p
+[ shortcuts ]
+
 Bld : u :b(u)ilds
 Lay : l :(l)ayouts
 Bak : q :(q)uit
@@ -60,10 +60,11 @@ Wat : w :(w)atch
 LcV : v :local (v)ars
 Out : o :(o)utput
 
+[ layout : gdb_debug_1 ]
+
 >h
 ulq
 rnscfk
-
 >w
 bffaa 
 wffaa
@@ -91,12 +92,25 @@ $ make dev
 
 - [x] Render layout from configuration file
 - [x] Attach keyboard shortcuts to plugin functions
-- [x] Add header string color pulse to indicate usage
-- [ ] Create debugger process
-- [ ] Create debugger plugin functions (GDB)
-  - [ ] Prompt/output window
-- [ ] Hook up debugger output to layout windows
-- [ ] Add window functionality (select, scroll, help, ...)
-- [ ] Add multiple-layout functionality
-- [ ] Add help window for current context (main, window, ...)
-- [ ] Add other CLI debuggers (pdb, node inspect, ...)
+- [x] Add title string color pulse, switch to indicate usage
+- [ ] Add debugger, plugins functionality
+  - Plugin commands
+    - Change "plugins" to "shortctus" in config file
+    - Make commands generic between debuggers
+  - Read output to files
+  - Parse output
+  - Update windows
+- [ ] Add window functionality
+  - Scroll
+  - Debugger-specific
+- [ ] Add help menus
+  - Main
+  - Window
+- [ ] Add switch-layout functionality
+- [ ] Add other debuggers
+  - pdb
+  - node inspect
+- [ ] Update README.md
+- [ ] Add DEVELOP.md
+  - Code changes must be reflected here
+
