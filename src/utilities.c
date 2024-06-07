@@ -1,5 +1,5 @@
 #include <ncurses.h>
-#include <stdarg.h>
+#include <unistd.h>
 
 #include "data.h"
 #include "utilities.h"

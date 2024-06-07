@@ -13,7 +13,7 @@
     - Called in main.c
 */
 int run_plugin (int key, 
-                layout_t *layout);
+                state_t *state);
 
 
 #endif

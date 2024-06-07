@@ -7,71 +7,59 @@
 #include <ncurses.h>
 #include <stdlib.h>
 
+#include "data.h"
+
 /*
     TODO:  
-    - implement right, left scroll
-    - mvwaddnstr from (line + offset) to n
-        - border line offset
-            - y = 1, 2, ...  
-            - x = 1 -> (cols - 2)
-    - allocate int array for each line's offset to use in fseek
+    -----
+    - Check if current file_offsets is large enough to store new file offsets
 */
 
 
-typedef struct window_info {
+void get_num_file_rows_cols (window_t* win);
+void display_lines (window_t* win, int key);
 
-    WINDOW* win;
-    int win_rows;
-    int win_cols;
-
-    const char* file_name;
-    FILE* file;
-    int mid_line;
-    int first_char;
-    int min_mid;
-    int max_mid;
-    int file_rows;
-    int file_max_cols;
-    unsigned long int *offsets;
-
-} window_info;
-
-void get_num_file_rows_cols (window_info* win_info);
-void display_lines (window_info* win_info, int key);
 
 
 int main (void) 
 {
-    window_info wi;
     int   i,
           ch,
           begin_y,
           begin_x;
 
+    // allocate
+    data_t *data = (data_t*) malloc (sizeof (data_t));
+    window_t *window = (window_t*) malloc (sizeof (window_t));
+    debug_state_t *dstate = (debug_state_t*) malloc (sizeof (debug_state_t));
+
+    data->window = window;
+    data->debug_state = dstate;
+
     // open source file
-    wi.file_name = "file.txt";
-    wi.file = fopen(wi.file_name, "r");
-    if (wi.file == NULL) {
+    strncpy (window->file_path, "./file.txt", sizeof (window->file_path) - 1);
+    window->file_ptr = fopen(window->file_path, "r");
+    if (window->file_ptr == NULL) {
         perror ("Failed to open source file");
         return 1;
     }
 
     // get number of file rows and max line length
-    get_num_file_rows_cols(&wi);
+    get_num_file_rows_cols (window);
 
     // get file line offsets
         // allocate array
-    wi.offsets = malloc ((size_t) wi.file_rows * sizeof(long int));
-    if (wi.offsets == NULL) {
+    window->file_offsets = malloc ((size_t) window->file_rows * sizeof(long int));
+    if (window->file_offsets == NULL) {
         perror ("Failed to allocate offsets array");
         return 1;
     }
         // add offsets to array
-    wi.offsets [0] = 0;
-    for (i = 1; i < wi.file_rows; i++) {
-        while ((ch = fgetc (wi.file)) != '\n' && ch != EOF) {}
+    window->file_offsets [0] = 0;
+    for (i = 1; i < window->file_rows; i++) {
+        while ((ch = fgetc (window->file_ptr)) != '\n' && ch != EOF) {}
         if (ch == '\n')
-            wi.offsets [i] = ftell (wi.file);
+            window->file_offsets [i] = ftell (window->file_ptr);
     }
 
     // Initialize ncurses
@@ -82,66 +70,70 @@ int main (void)
     refresh();
 
     // create window
-    wi.win_rows = 12;
-    wi.win_cols = 48;
+    window->win_rows = 12;
+    window->win_cols = 48;
     begin_y = 2;
     begin_x = 2;
-    wi.win = newwin (wi.win_rows, wi.win_cols, begin_y, begin_x);
-    box (wi.win, 0, 0);
+    window->win = newwin (window->win_rows, window->win_cols, begin_y, begin_x);
+    box (window->win, 0, 0);
     keypad(stdscr, TRUE);
-    wrefresh (wi.win);
+    wrefresh (window->win);
 
-    // calculate window values
-    wi.win_rows -= 2;
-    wi.win_cols -= 2;
-    wi.min_mid = (wi.win_rows / 2) + 1;
-    wi.max_mid = wi.file_rows - ((wi.win_rows - 1) / 2);
-    wi.mid_line = wi.min_mid;
-    wi.first_char = 0;
+    // calculate output window values
+    window->win_rows -= 2;
+    window->win_cols -= 2;
+    window->file_min_mid = (window->win_rows / 2) + 1;
+    window->file_max_mid = window->file_rows - ((window->win_rows - 1) / 2);
+    window->win_mid_line = window->file_min_mid;
+    window->file_first_char = 0;
     
     // display starting lines
-    display_lines(&wi, 0);
+    display_lines(window, 0);
 
     // scroll loop
     while ((ch = getch()) != 'q') { // Press 'q' to quit
         switch (ch) {
             case KEY_UP:
-                display_lines(&wi, KEY_UP);
+                display_lines(window, KEY_UP);
                 break;
             case KEY_DOWN:
-                display_lines(&wi, KEY_DOWN);
+                display_lines(window, KEY_DOWN);
                 break;
             case KEY_RIGHT:
-                display_lines(&wi, KEY_RIGHT);
+                display_lines(window, KEY_RIGHT);
                 break;
             case KEY_LEFT:
-                display_lines(&wi, KEY_LEFT);
+                display_lines(window, KEY_LEFT);
                 break;
         }
     }
 
-    keypad (wi.win, FALSE);
+    keypad (window->win, FALSE);
     curs_set(1);
     endwin ();
-    fclose (wi.file);
-    free   (wi.offsets);
+
+    free (data->window->file_offsets);
+    free (data->window);
+    free (data->debug_state);
+    free (data);
+
     return 0;
 }
 
 
-void get_num_file_rows_cols (window_info* win_info) {
-    win_info->file_rows = 0;
-    win_info->file_max_cols = 0;
+void get_num_file_rows_cols (window_t *win) {
+    win->file_rows = 0;
+    win->file_max_cols = 0;
     char  line [512];
     int line_len;
-    while (fgets(line, sizeof(line), win_info->file) != NULL) {
+    while (fgets(line, sizeof(line), win->file_ptr) != NULL) {
         line_len = strlen(line);
-        if (win_info->file_max_cols < line_len) {
-            win_info->file_max_cols = line_len + 1;
+        if (win->file_max_cols < line_len) {
+            win->file_max_cols = line_len + 1;
         }
-        win_info->file_rows += 1;
+        win->file_rows += 1;
     }
-    rewind (win_info->file);
+    rewind (win->file_ptr);
 }
 
 
@@ -153,7 +145,7 @@ void get_num_file_rows_cols (window_info* win_info) {
         KEY_RIGHT
         KEY_LEFT
 */
-void display_lines (window_info* wi, int key) 
+void display_lines (window_t *win, int key) 
 {
     char line[256];
     int  row = 1,
@@ -164,9 +156,9 @@ void display_lines (window_info* wi, int key)
          i, j;
 
     // clear window
-    for (i = 1; i <= wi->win_rows; i++) {
-        for (j = 1; j <= wi->win_cols; j++) {
-            mvwaddch (wi->win, i, j, ' ');
+    for (i = 1; i <= win->win_rows; i++) {
+        for (j = 1; j <= win->win_cols; j++) {
+            mvwaddch (win->win, i, j, ' ');
         }
     }
 
@@ -175,48 +167,48 @@ void display_lines (window_info* wi, int key)
         case 0:
             break;
         case KEY_UP:
-            wi->mid_line = (wi->mid_line <= wi->min_mid) ? wi->min_mid : wi->mid_line - 1;
+            win->win_mid_line = (win->win_mid_line <= win->file_min_mid) ? win->file_min_mid : win->win_mid_line - 1;
             break;
         case KEY_DOWN:
-            wi->mid_line = (wi->mid_line >= wi->max_mid) ? wi->max_mid : wi->mid_line + 1;
+            win->win_mid_line = (win->win_mid_line >= win->file_max_mid) ? win->file_max_mid : win->win_mid_line + 1;
             break;
         case KEY_RIGHT:
-            wi->first_char = ((wi->file_max_cols - wi->first_char) > wi->win_cols)
-                ? wi->first_char + 1
-                : wi->file_max_cols - wi->win_cols;
+            win->file_first_char = ((win->file_max_cols - win->file_first_char) > win->win_cols)
+                ? win->file_first_char + 1
+                : win->file_max_cols - win->win_cols;
             break;
         case KEY_LEFT:
-            wi->first_char = (wi->first_char == 0) ? 0 : wi->first_char - 1;
+            win->file_first_char = (win->file_first_char == 0) ? 0 : win->file_first_char - 1;
             break;
     }
 
     // calculate first line
-    print_line = wi->mid_line - (wi->win_rows / 2);
+    print_line = win->win_mid_line - (win->win_rows / 2);
 
     // print lines
-    for (i = 0; i < wi->win_rows; i++) {
+    for (i = 0; i < win->win_rows; i++) {
 
         // seek to beginning of line
-        fseek (wi->file, wi->offsets[print_line++ - 1], SEEK_SET);
+        fseek (win->file_ptr, win->file_offsets[print_line++ - 1], SEEK_SET);
 
         // get line
-        fgets (line, sizeof (line), wi->file);
+        fgets (line, sizeof (line), win->file_ptr);
         line_len = strlen (line);
 
         // if line characters visible
-        if (wi->first_char <= line_len) {
+        if (win->file_first_char <= line_len) {
 
             // remove newline
             if (line [line_len - 1] == '\n')
                 line_len -= 1;
 
             // calculate line length
-            line_len = ((line_len - wi->first_char) <= wi->win_cols) 
-                        ? line_len - wi->first_char
-                        : wi->win_cols;
+            line_len = ((line_len - win->file_first_char) <= win->win_cols) 
+                        ? line_len - win->file_first_char
+                        : win->win_cols;
 
             // set line start index
-            line_index = wi->first_char;
+            line_index = win->file_first_char;
         } 
 
         // if no characters visible
@@ -227,14 +219,14 @@ void display_lines (window_info* wi, int key)
         }
 
         // print line
-        mvwaddnstr (wi->win, row++, col, (const char *)(line + line_index), line_len);
+        mvwaddnstr (win->win, row++, col, (const char *)(line + line_index), line_len);
 
         // break if end of file
-        if (print_line > wi->file_rows) break;
+        if (print_line > win->file_rows) break;
     }
 
     // Update screen
-    refresh();
-    wrefresh(wi->win);
+    //refresh();
+    wrefresh(win->win);
 }
 

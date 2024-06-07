@@ -17,7 +17,7 @@
 //
 //   layout - layouts_t struct
 // 
-void render_layout (layout_t *layout);
+void render_layout (char *label, state_t *state);
 
 
 #endif

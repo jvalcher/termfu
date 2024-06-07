@@ -1,0 +1,26 @@
+src/main.c: In function ‘main’:
+src/main.c:26:11: warning: unused variable ‘first_layout’ [-Wunused-variable]
+   26 |     char *first_layout;
+      |           ^~~~~~~~~~~~
+src/render_layout.c: In function ‘render_header_titles’:
+src/render_layout.c:367:16: warning: unused variable ‘plugin_code_size’ [-Wunused-variable]
+  367 |     extern int plugin_code_size;    // plugins/_plugins.c
+      |                ^~~~~~~~~~~~~~~~
+src/run_plugin.c: In function ‘run_plugin’:
+src/run_plugin.c:53:16: warning: variable ‘pulse_thread_created’ set but not used [-Wunused-but-set-variable]
+   53 |     bool       pulse_thread_created = false;
+      |                ^~~~~~~~~~~~~~~~~~~~
+src/run_plugin.c:50:16: warning: variable ‘layout’ set but not used [-Wunused-but-set-variable]
+   50 |     layout_t  *layout;
+      |                ^~~~~~
+src/start_debugger.c: In function ‘start_debugger’:
+src/start_debugger.c:27:14: warning: unused variable ‘debug_out_pid’ [-Wunused-variable]
+   27 |              debug_out_pid;
+      |              ^~~~~~~~~~~~~
+src/start_debugger.c:23:14: warning: unused variable ‘bytes_read’ [-Wunused-variable]
+   23 |     size_t   bytes_read;
+      |              ^~~~~~~~~~
+src/start_debugger.c:22:14: warning: unused variable ‘debug_out_buffer’ [-Wunused-variable]
+   22 |     char     debug_out_buffer [256];
+      |              ^~~~~~~~~~~~~~~~
+make: *** [Makefile:36: dev] Segmentation fault

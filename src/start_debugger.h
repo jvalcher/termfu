@@ -5,7 +5,7 @@
 #include "data.h"
 
 
-void run_debugger (layout_t *layout, char *prog_name);
+void start_debugger (debug_state_t *dstate);
 
 
 #endif

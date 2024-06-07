@@ -12,7 +12,7 @@ int   key_function_index [53];
 /*
     Bind shortcut keys, window_t structs to plugin_t structs
 */
-void bind_keys_windows_to_plugins (layout_t* layout)
+void bind_keys_windows_to_plugins (state_t *state)
 {
     int  start_index;
     int  end_index;
@@ -20,17 +20,14 @@ void bind_keys_windows_to_plugins (layout_t* layout)
     int  plugin_index;
     int  cmp;
     char key;
-    char code[4];
     extern int plugin_code_size;    // plugins/_plugins.c
     plugin_t* curr_plugin;
     window_t* curr_window;
 
-    curr_plugin = layout->plugins;
+    curr_plugin = state->plugins;
     do {
 
-        // get shortuct key, code
         key = curr_plugin->key;
-        strncpy (code, curr_plugin->code, strlen (plugin_code[0]) + 1);
 
         // find plugin_code[] index matching current plugin's code string
         start_index = 0;
@@ -39,7 +36,7 @@ void bind_keys_windows_to_plugins (layout_t* layout)
             //
         while (start_index <= end_index) {
             mid_index = start_index + (end_index - start_index) / 2;
-            cmp = strcmp (plugin_code [mid_index], code);
+            cmp = strcmp (plugin_code [mid_index], curr_plugin->code);
             if (cmp == 0) {
                 plugin_index = mid_index;
                 goto index_found;
@@ -51,9 +48,9 @@ void bind_keys_windows_to_plugins (layout_t* layout)
         }
         index_found:
 
-            // plugin code string not found
+        // plugin code string not found
         if (plugin_index == -1)
-            pfeme ("Unknown plugin code \"%s\"\n", code);
+            pfeme ("Unknown plugin code \"%s\"\n", curr_plugin->code);
 
         // Set key_function_index[key] to plugin_index
         //
@@ -69,9 +66,9 @@ void bind_keys_windows_to_plugins (layout_t* layout)
             pfeme ("\'%c\' key not found \n", key);
         }
 
-        // add window_t pointer if available
+        // add window_t pointer if a window plugin
         curr_plugin->window = NULL;
-        curr_window = layout->windows;
+        curr_window = state->curr_layout->windows;
         do {
             if (curr_plugin->key == curr_window->key) {
                 curr_plugin->window = curr_window;
@@ -79,7 +76,6 @@ void bind_keys_windows_to_plugins (layout_t* layout)
             curr_window = curr_window->win_next;
         } while (curr_window != NULL);
 
-        // next plugin
         curr_plugin = curr_plugin->next;
 
     } while (curr_plugin != NULL);

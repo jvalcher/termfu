@@ -37,22 +37,22 @@ GDB Plugin
     gdb_kill            Kil     Kill
 
 */
-int gdb_assembly    (plugin_t *plugin);
-int gdb_breakpoints (plugin_t *plugin);
-int gdb_watches     (plugin_t *plugin);
-int gdb_local_vars  (plugin_t *plugin);
-int gdb_src_file    (plugin_t *plugin);
-int gdb_registers   (plugin_t *plugin);
-int gdb_prompt      (plugin_t *plugin);
-int gdb_output      (plugin_t *plugin);
-int gdb_prompt      (plugin_t *plugin);
-int gdb_run         (plugin_t *plugin);
-int gdb_next        (plugin_t *plugin);
-int gdb_step        (plugin_t *plugin);
-int gdb_continue    (plugin_t *plugin);
-int gdb_finish      (plugin_t *plugin);
-int gdb_print       (plugin_t *plugin);
-int gdb_kill        (plugin_t *plugin);
+int gdb_assembly    (debug_state_t *dstate);
+int gdb_breakpoints (debug_state_t *dstate);
+int gdb_watches     (debug_state_t *dstate);
+int gdb_local_vars  (debug_state_t *dstate);
+int gdb_src_file    (debug_state_t *dstate);
+int gdb_registers   (debug_state_t *dstate);
+int gdb_prompt      (debug_state_t *dstate);
+int gdb_output      (debug_state_t *dstate);
+int gdb_prompt      (debug_state_t *dstate);
+int gdb_run         (debug_state_t *dstate);
+int gdb_next        (debug_state_t *dstate);
+int gdb_step        (debug_state_t *dstate);
+int gdb_continue    (debug_state_t *dstate);
+int gdb_finish      (debug_state_t *dstate);
+int gdb_print       (debug_state_t *dstate);
+int gdb_kill        (debug_state_t *dstate);
 
 
 

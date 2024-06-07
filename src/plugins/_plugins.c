@@ -1,6 +1,4 @@
 
-#include "../data.h"
-
 #include "_plugins.h"
 #include "termide.h"
 #include "gdb.h"
@@ -35,8 +33,6 @@ char *plugin_code [] = {
     "Stp",
     "Wat"
 };
-
-// for extern definitions
 int plugin_code_size = sizeof (plugin_code);
 
 
@@ -45,8 +41,8 @@ int plugin_code_size = sizeof (plugin_code);
     ----------
     - Indexes match corresponding plugin code string in plugin_code[]
         - Ordered alphabetically by code
-    - Indexes set in key_function_index[]  (data.h)  by bind_keys_to_plugins()  (render_layout.c)
-    - Functions called in main() loop  (main.c)
+    - Indexes set by bind_keys_to_plugins()  (bind_keys_windows.c)
+    - Functions called by run_plugin() in main() loop  (main.c)
 */
 plugin_func_t plugin_func_arr[] = {
 

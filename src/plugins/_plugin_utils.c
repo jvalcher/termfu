@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ncurses.h>
+#include <unistd.h>
 
 #include "../data.h"
 #include "../utilities.h"
@@ -131,4 +132,5 @@ void display_lines (window_t *win, int key)
     refresh();
     wrefresh(win->win);
 }
+
 

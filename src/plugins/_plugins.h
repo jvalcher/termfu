@@ -13,7 +13,7 @@ extern char *plugin_code [];
 /*
     Plugin function pointers
 */
-typedef int (*plugin_func_t) (plugin_t *plugin);
+typedef int (*plugin_func_t) (debug_state_t *dstate);
     //
 extern plugin_func_t plugin_func_arr [];
 

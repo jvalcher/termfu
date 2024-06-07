@@ -33,7 +33,7 @@
 /*
     pfem()
     -----------
-    Print formatted error message
+    Print formatted location and error message
 
     pfem ("Unknown character \"%c\" \n", ch);
     -->
@@ -70,7 +70,7 @@
 /*
     pfeme()
     --------
-    Print formatted error message -- pfme() -- and exit Ncurses
+    Print formatted error message, exit Ncurses, exit program
 */
 #define pfeme(...) do { \
 \
@@ -81,10 +81,7 @@
 \033[1;32m%s\033[1;0m() : \
 \033[1;36m%s\033[1;0m : \
 \033[1;33m%d\033[1;0m\n       ", \
-    "ERROR:", \
-    __func__, \
-    __FILE__, \
-    __LINE__); \
+    "ERROR:", __func__, __FILE__, __LINE__); \
 \
     fprintf (stderr, __VA_ARGS__); \
     exit (EXIT_FAILURE); \
@@ -93,14 +90,15 @@
 /*  
     pfemo()
     -------------
-    Print formatted error message only, no exit
+    Print formatted error message only
 
-    pfem  ("Unknown character \"%c\" \n", ch);
-    pfemo ("My error message");
+    Example:
+        pfem  ("Unknown character \"%c\" \n", ch);
+        pfemo ("Check README.md for more details");
 
-    ERROR: src_file.c : func () :10
-           Unknown character "c"
-           My error message
+        ERROR: src_file.c : func () :10
+               Unknown character "c"
+               Check README.md for more details
 */
 #define pfemo(...) do { \
     fprintf (stderr, "       "); \
@@ -110,9 +108,10 @@
 /* 
     pfemoe()
     ----------
-    Print formatted error message only -- pfemo() -- and exit Ncurses
+    Print formatted error message only, exit Ncurses, exit program
 */
 #define pfemoe(...) do { \
+    curs_set (1); \
     endwin (); \
     fprintf (stderr, "       "); \
     fprintf (stderr, __VA_ARGS__); \
@@ -161,13 +160,6 @@ void set_bold_color (WINDOW* win, int color);
 void unset_bold_color (WINDOW* win, int color);
 
 
-
-/*
-    Set debugger based on file type of file_name passed as argv[1]
-    ------
-    Sets debug_state_t -> debugger to macro  (data.h)
-*/
-void set_debugger (debug_state_t *debug_state, char *file_name);
 
 
 #endif

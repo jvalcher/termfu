@@ -94,8 +94,9 @@ $ make dev
 - [x] Add header string color pulse to indicate usage
 - [ ] Create debugger process
 - [ ] Create debugger plugin functions (GDB)
+  - [ ] Prompt/output window
 - [ ] Hook up debugger output to layout windows
 - [ ] Add window functionality (select, scroll, help, ...)
 - [ ] Add multiple-layout functionality
-- [ ] Add build functionality
+- [ ] Add help window for current context (main, window, ...)
 - [ ] Add other CLI debuggers (pdb, node inspect, ...)
