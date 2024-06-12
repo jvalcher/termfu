@@ -36,6 +36,15 @@ char *debugger_quit  = "^exit";
 
 void start_debugger_reader (debug_state_t *dstate)
 {
+    char    debug_out_buffer  [256],
+            ch, nch;
+    size_t  bytes_read;
+    int     i;
+    FILE   *out_file_ptr;
+    bool    running,
+            is_newline,
+            is_output;
+
 
     debug_out_pid = fork ();
     if (debug_out_pid == -1) {
@@ -45,15 +54,6 @@ void start_debugger_reader (debug_state_t *dstate)
 
     // debugger output process
     if (debug_out_pid == 0) {
-
-        char    debug_out_buffer  [256],
-                ch, nch;
-        size_t  bytes_read;
-        int     i;
-        FILE   *out_file_ptr;
-        bool    running,
-                is_newline,
-                is_output;
 
         close (debug_in_pipe [PIPE_READ]);
         close (debug_in_pipe [PIPE_WRITE]);
@@ -109,7 +109,9 @@ void start_debugger_reader (debug_state_t *dstate)
         }
 
         //fclose (out_file_ptr);
+        exit (0);
     }
+
 }
 
 
@@ -247,17 +249,18 @@ int main (int argc, char *argv[])
             case 'q':
                 gdb_exit (dstate);
                 running = false;
+                break;
         }
         // TODO: close semaphore
     }
 
-    kill(debugger_pid, SIGTERM);
-    kill(debug_out_pid, SIGTERM);
-    waitpid(debugger_pid, NULL, 0);
-    waitpid(debug_out_pid, NULL, 0);
-
     free (dstate);
     free (data);
+
+    /*
+    usleep (.5 * 2000000);
+    kill(debug_out_pid, SIGTERM);
+    */
 
     return 0;
 }
