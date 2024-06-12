@@ -90,6 +90,8 @@ $ make dev
 
 ## To do
 
+-> Last task: Read output buffer to file, hook up scrolling, ...
+
 - [x] Render layout from configuration file
 - [x] Attach keyboard shortcuts to plugin functions
 - [x] Add title string color pulse, switch to indicate usage

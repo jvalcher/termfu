@@ -4,7 +4,6 @@
 #include <unistd.h>
 
 #include "data.h"
-#include "utils.h"
 
 char *flush_cmd  = "call fflush (0)\n";
 char *set_tty = "-inferior-tty-set /dev/pts/6\n";
@@ -49,11 +48,13 @@ int gdb_run (debug_state_t *state)
     char    *set_tty  = "-inferior-tty-set ";
     char    *gdb_run  = "-exec-run\n";
 
+    /*
     // set program stdout to current tty
     char *tty_device = ttyname(STDIN_FILENO);
     bytes += write (state->input_pipe, set_tty,  strlen (set_tty));
     bytes += write (state->input_pipe, tty_device,  strlen (tty_device));
     bytes += write (state->input_pipe, "\n",  strlen ("\n"));
+    */
 
     // run program
     bytes += write (state->input_pipe, gdb_run, strlen (gdb_run));
@@ -104,7 +105,7 @@ int gdb_exit (debug_state_t *state)
     ssize_t bytes;
     char *exit_cmd = "-gdb-exit\n";
 
-    bytes = write (state->input_pipe, exit_cmd, strlen (exit_cmd));
+    bytes =  write (state->input_pipe, exit_cmd, strlen (exit_cmd));
 
     return (int)bytes;
 }

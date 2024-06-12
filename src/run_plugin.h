@@ -16,4 +16,6 @@ int run_plugin (int key,
                 state_t *state);
 
 
+void read_debugger_output (debug_state_t* dstate);
+
 #endif

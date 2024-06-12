@@ -73,7 +73,7 @@ void bind_keys_windows_to_plugins (state_t *state)
             if (curr_plugin->key == curr_window->key) {
                 curr_plugin->window = curr_window;
             }
-            curr_window = curr_window->win_next;
+            curr_window = curr_window->next;
         } while (curr_window != NULL);
 
         curr_plugin = curr_plugin->next;

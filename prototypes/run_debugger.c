@@ -9,7 +9,6 @@
 #include <sys/wait.h>
 
 #include "data.h"
-#include "utils.h"
 #include "gdb.h"
 
 #define DEBUGGER_UNKNOWN   0
@@ -31,30 +30,101 @@ pid_t  debugger_pid,
        ret_pid;
 
 
-char *gdb_cmd[] = {"gdb", "--quiet", "--interpreter=mi", NULL, NULL};
-char *debugger_quit        = "^exit";
+char *gdb_cmd[]      = {"gdb", "--quiet", "--interpreter=mi", NULL, NULL};
+char *debugger_quit  = "^exit";
 
 
-void start_debugger (debug_state_t *state)
+void start_debugger_reader (debug_state_t *dstate)
 {
-    char  **cmd;
-    char    debug_out_buffer [256];
-    size_t  bytes_read;
 
-    // set command
-    switch (state->debugger) {
-        case (DEBUGGER_GDB):
-            cmd = gdb_cmd;
-            cmd [3] = state->prog_path;
-            break;
+    debug_out_pid = fork ();
+    if (debug_out_pid == -1) {
+        perror ("Debugger output fork");
+        exit (FORK_FAILED);
     }
 
-    // create debugger pipes
-    if (pipe (debug_in_pipe)  == -1 || 
-        pipe (debug_out_pipe) == -1) 
-    {
-        perror("Debugger pipe");
-        exit (PIPE_FAILED);
+    // debugger output process
+    if (debug_out_pid == 0) {
+
+        char    debug_out_buffer  [256],
+                ch, nch;
+        size_t  bytes_read;
+        int     i;
+        FILE   *out_file_ptr;
+        bool    running,
+                is_newline,
+                is_output;
+
+        close (debug_in_pipe [PIPE_READ]);
+        close (debug_in_pipe [PIPE_WRITE]);
+        close (debug_out_pipe [PIPE_WRITE]);
+
+        //out_file_ptr = fopen("debug_out.log", "w");
+
+        // read pipe output
+        running = true;
+        while (running) 
+        {
+            bytes_read = read (debug_out_pipe [PIPE_READ], 
+                               debug_out_buffer, 
+                               sizeof (debug_out_buffer) - 1);
+
+            debug_out_buffer [bytes_read] = '\0';
+
+            printf ("%s", debug_out_buffer);
+
+            /*
+            // parse output into file
+            i = 0;
+            is_output = false;
+            is_newline = true;
+            do {
+                ch = debug_out_buffer[i++];
+                if (is_newline && ch != '\n') {
+                    is_newline = false;
+                    if (ch == '~') {
+                        is_output = true;
+                    }
+                    --bytes_read;
+                    continue;
+                }
+                if (ch == '\n') {
+                    is_newline = true;
+                    is_output = false;
+                    --bytes_read;
+                    continue;
+                }
+                if (is_output) {
+                    --bytes_read;
+                    //fprintf (out_file_ptr, "%c", ch);
+                    printf ("%c", ch);
+                }
+            } while (bytes_read > 0);
+            */
+
+            // exit
+            if (strstr (debug_out_buffer, dstate->exit_str) != NULL) {
+                running = false;
+            }
+        }
+
+        //fclose (out_file_ptr);
+    }
+}
+
+
+void start_debugger_process (debug_state_t *dstate)
+{
+    char  **cmd;
+
+    // set command
+    switch (dstate->debugger) {
+
+        // GDB
+        case (DEBUGGER_GDB):
+            cmd = gdb_cmd;
+            cmd [3] = dstate->prog_path;
+            break;
     }
 
     // create debugger process
@@ -65,16 +135,6 @@ void start_debugger (debug_state_t *state)
         exit (FORK_FAILED);
     }
 
-    // create debugger output process (in parent process)
-    if (debugger_pid > 0) {
-        debug_out_pid = fork ();
-        if (debug_out_pid == -1) {
-            perror ("Debugger output fork");
-            exit (FORK_FAILED);
-        }
-    }
-
-        // debugger process
     if (debugger_pid == 0) {
 
         dup2  (debug_in_pipe [PIPE_READ], STDIN_FILENO);
@@ -90,43 +150,24 @@ void start_debugger (debug_state_t *state)
         exit (DEBUG_LAUNCH_FAILED);
     }
 
-        // debugger output process
-    if (debug_out_pid == 0) {
+}
 
-        close (debug_in_pipe [PIPE_READ]);
-        close (debug_in_pipe [PIPE_WRITE]);
-        close (debug_out_pipe [PIPE_WRITE]);
 
-        FILE *out_file = fopen("debug_out.log", "a");
-
-        // read pipe output
-        while (1) 
-        {
-            bytes_read = read (debug_out_pipe [PIPE_READ], 
-                               debug_out_buffer, 
-                               sizeof (debug_out_buffer) - 1);
-            debug_out_buffer [bytes_read] = '\0';
-
-            // stdout
-            printf ("%s", debug_out_buffer);
-
-            // file
-            //fprintf (out_file, "%s", debug_out_buffer);
-
-            // update Ncurses windows
-
-            // release semaphore if buffer includes "output finished" string
-            if (strstr (debug_out_buffer, state->out_done_str) != NULL) {
-                //sem_post(data->debug_state->sem_lock);
-            }
-
-            // exit
-            if (strstr (debug_out_buffer, state->exit_str) != NULL) {
-                break;
-            }
-        }
-        kill (debugger_pid, SIGTERM);
+void start_debugger (debug_state_t *dstate)
+{
+    // create debugger pipes
+    if (pipe (debug_in_pipe)  == -1 || 
+        pipe (debug_out_pipe) == -1) 
+    {
+        perror("Debugger pipe");
+        exit (PIPE_FAILED);
     }
+
+    dstate->input_pipe  = debug_in_pipe [PIPE_WRITE];
+
+    start_debugger_process (dstate);
+
+    start_debugger_reader (dstate);
 }
 
 
@@ -155,21 +196,18 @@ int main (int argc, char *argv[])
     // allocate structs
     data = (data_t*) malloc (sizeof (data_t)); 
     dstate = (debug_state_t*) malloc (sizeof (debug_state_t));
-
-    // set debug state
     data->debug_state = dstate;
+
     dstate->prog_path = prog;
     dstate->debugger = DEBUGGER_GDB;
     dstate->break_point = break_loc;
     dstate->out_done_str = "(gdb)";
     dstate->exit_str = "^exit";
+    dstate->output_indicator = '~';
     //dstate->sem_lock = create_semaphore();
 
     // run debugger
     start_debugger(dstate);
-
-    // set debugger input pipe
-    dstate->input_pipe = debug_in_pipe [PIPE_WRITE];
 
     // run commands
     bool running = true;
@@ -209,15 +247,17 @@ int main (int argc, char *argv[])
             case 'q':
                 gdb_exit (dstate);
                 running = false;
-                break;
         }
-
         // TODO: close semaphore
-
-        // TODO: update all window data
     }
 
-    free(dstate);
+    kill(debugger_pid, SIGTERM);
+    kill(debug_out_pid, SIGTERM);
+    waitpid(debugger_pid, NULL, 0);
+    waitpid(debug_out_pid, NULL, 0);
+
+    free (dstate);
+    free (data);
 
     return 0;
 }

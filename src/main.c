@@ -30,6 +30,11 @@ int main (int argc, char *argv[])
         state->debug_state->prog_path = argv [1];
     else 
         pfeme ("Usage:  termide a.out\n");
+    
+    // TODO: manual data
+    char *static_break = "main";
+    state->debug_state->break_point = static_break;
+    state->debug_state->debugger = DEBUGGER_GDB;
 
     initialize_ncurses();
     signal (SIGINT, sigint_exit);
@@ -38,7 +43,7 @@ int main (int argc, char *argv[])
     bind_keys_windows_to_plugins (state);
     start_debugger (state->debug_state); 
 
-    while ((ch = getch()) != ERR)
+    while ((ch = getch()) != ERR && state->debug_state->running)
         run_plugin (ch, state);
 
     curs_set (1);

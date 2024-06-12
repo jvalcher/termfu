@@ -12,10 +12,13 @@ typedef struct debug_state {
 
     int    debugger;
     int    input_pipe;
+    int    output_pipe;
     char  *prog_path;
     char  *break_point;
     char  *out_done_str;
     char  *exit_str;
+    FILE  *out_file_ptr;
+    char   output_indicator;
 
 } debug_state_t;
 

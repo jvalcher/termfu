@@ -10,7 +10,7 @@
     - Allows 0 to stand for "unassigned" in key_function_index[]  (data.h)
     - Not called
 */
-int empty_func (plugin_t *plugin) 
+int empty_func (debug_state_t *dstate) 
 {
     return 0;
 };
@@ -23,7 +23,7 @@ int empty_func (plugin_t *plugin)
         - unfocus window
         - quit termIDE
 */
-int termide_back (plugin_t *plugin)
+int termide_back (debug_state_t *dstate)
 {
     // back
 
@@ -38,14 +38,14 @@ int termide_back (plugin_t *plugin)
 /*
     Open window listing available layouts
 */
-int termide_layouts (plugin_t *plugin) 
+int termide_layouts (debug_state_t *dstate) 
 {
     return 0;
 }
 
 
 
-int termide_builds (plugin_t *plugin) 
+int termide_builds (debug_state_t *dstate) 
 {
     return 0;
 };

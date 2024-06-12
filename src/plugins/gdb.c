@@ -1,16 +1,15 @@
 
 /*
-    GDB plugin functions
+    GDB commands
 */
 
 #include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
 
-#include "_plugin_utils.h"
 #include "../data.h"
 
-
+ssize_t bytes;
 
 
 /*
@@ -20,81 +19,57 @@
 */
 int gdb_run (debug_state_t *dstate)
 {
-    ssize_t  bytes    = 0;
     char    *set_tty  = "-inferior-tty-set ";
     char    *gdb_run  = "-exec-run\n";
 
-    // TOCONT: here
-
     // set program stdout to current tty
     char *tty_device = ttyname(STDIN_FILENO);
-    bytes += write (dstate->input_pipe, set_tty,  strlen (set_tty));
-    bytes += write (dstate->input_pipe, tty_device,  strlen (tty_device));
-    bytes += write (dstate->input_pipe, "\n",  strlen ("\n"));
+    write (dstate->input_pipe, set_tty,  strlen (set_tty));
+    write (dstate->input_pipe, tty_device,  strlen (tty_device));
+    write (dstate->input_pipe, "\n", 1);
 
-    // run program
-    bytes += write (dstate->input_pipe, gdb_run, strlen (gdb_run));
-
-    // set output file path
-    dstate->out_file_path = "/tmp/termide_gdb_run.out";
-
+    write (dstate->input_pipe, gdb_run, strlen (gdb_run));
+    write (dstate->input_pipe, dstate->prog_path, strlen (dstate->prog_path));
+    write (dstate->input_pipe, "\n", strlen ("\n"));
     return (int)bytes;
 }
 
 
 int gdb_set_breakpoint (debug_state_t *dstate)
 {
-    ssize_t bytes       = 0;
-    char *set_break_cmd = "-break-insert ",
-         *break_loc     = dstate->break_point;
-
+    char *set_break_cmd = "-break-insert ";
+    dstate->break_point = "main";
     bytes += write (dstate->input_pipe, set_break_cmd, strlen (set_break_cmd));
-    bytes += write (dstate->input_pipe, break_loc, strlen (break_loc));
-    bytes += write (dstate->input_pipe, "\n", strlen ("\n"));
-
-    dstate->out_file_path = "/tmp/termide_gdb_set_breakpoint.out";
-
+    bytes += write (dstate->input_pipe, dstate->break_point, strlen (dstate->break_point));
+    bytes += write (dstate->input_pipe, "\n", 1);
     return (int)bytes;
 }
 
 
 int gdb_next (debug_state_t *dstate)
 {
-    ssize_t bytes;
     char *next_cmd = "-exec-next\n";
-
     bytes = write (dstate->input_pipe, next_cmd, strlen (next_cmd));
-
-    dstate->out_file_path = "/tmp/termide_gdb_next.out";
-
     return (int)bytes;
 }
 
 
 int gdb_continue (debug_state_t *dstate)
 {
-    ssize_t bytes;
     char *cont_cmd = "-exec-continue\n";
-
     bytes = write (dstate->input_pipe, cont_cmd, strlen (cont_cmd));
-
-    dstate->out_file_path = "/tmp/termide_gdb_continue.out";
-
     return (int)bytes;
 }
 
 
 int gdb_exit (debug_state_t *dstate)
 {
-    ssize_t bytes;
     char *exit_cmd = "-gdb-exit\n";
-
     bytes = write (dstate->input_pipe, exit_cmd, strlen (exit_cmd));
-
-    dstate->out_file_path = "/tmp/termide_gdb_exit.out";
-
+    dstate->running = false;
     return (int)bytes;
 }
+
 
 int gdb_step (debug_state_t *dstate) 
 {
@@ -166,13 +141,9 @@ int gdb_output (debug_state_t *dstate)
 
 int gdb_get_local_vars (debug_state_t *dstate)
 {
-    ssize_t bytes;
-    char *exit_cmd = "info locals\n";
-
-    bytes = write (dstate->input_pipe, exit_cmd, strlen (exit_cmd));
-
+    char *info_locals_cmd = "info locals\n";
+    bytes = write (dstate->input_pipe, info_locals_cmd, strlen (info_locals_cmd));
     dstate->out_file_path = "/tmp/termide_gdb_get_local_vars.out";
-
     return (int)bytes;
 }
 
@@ -181,3 +152,29 @@ int gdb_get_local_vars (debug_state_t *dstate)
     Update window data
 */
 
+
+
+/*
+    Parse GDB output
+*/
+void gdb_parse_output (debug_state_t *dstate)
+{
+    char line [4096];
+
+    fprintf(dstate->out_parsed_file_ptr, "\n");
+
+    rewind (dstate->out_file_ptr);
+    while (fgets (line, sizeof(line), dstate->out_file_ptr) != NULL) {
+
+        // program and standard GDB output
+        if (line[0] != '@' && line[0] != '&' && line[0] != '^') {
+            fprintf(dstate->out_parsed_file_ptr, "%s", (line + 1));
+            break;
+        }
+    }
+
+    // print prompt
+    fprintf(dstate->out_parsed_file_ptr, "\n(gdb) ");
+
+    fclose (dstate->out_file_ptr);
+}

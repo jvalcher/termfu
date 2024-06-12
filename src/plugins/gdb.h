@@ -55,5 +55,6 @@ int gdb_print       (debug_state_t *dstate);
 int gdb_kill        (debug_state_t *dstate);
 
 
+void gdb_parse_output (debug_state_t *dstate);
 
 #endif

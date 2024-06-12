@@ -111,13 +111,13 @@ extern char *prog_name;
     win             - Ncurses WINDOW* object
     key             - window segment key
     selected        - is current window selected
+    next            - pointer to next window_t object in layout
 
     win_rows        - height in rows
     win_cols        - width in columns
     win_y           - top left corner y coordinate
     win_x           - top left corner x coordinate
     win_mid_line    - middle row of window
-    win_next        - pointer to next window_t object in layout
 
 	file_path       - current src/data file's absolute path
     file_ptr        - FILE pointer
@@ -133,6 +133,8 @@ typedef struct window {
     WINDOW            *win;
     char               key;
     bool               selected;
+    struct window     *win_content;
+    struct window     *next;           
 
     int                win_rows;                   
     int                win_cols;                   
@@ -140,7 +142,6 @@ typedef struct window {
     int                win_x;                      
     int                win_border [8];
     int                win_mid_line;
-    struct window     *win_next;           
 
     char               file_path [256];
     FILE              *file_ptr;
@@ -250,9 +251,13 @@ typedef struct debug_state {
     int    output_pipe;
     char  *prog_path;
     char  *out_file_path;
+    FILE  *out_file_ptr;
+    char  *out_parsed_file_path;
+    FILE  *out_parsed_file_ptr;
     char  *break_point;
     char  *out_done_str;
     char  *exit_str;
+    bool   running;
 
 } debug_state_t;
 

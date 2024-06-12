@@ -4,8 +4,8 @@
 
 #include <semaphore.h>
 
-sem_t *create_semaphore (void);
+//sem_t *create_semaphore (void);
 
-void wait_lock_debug_process (sem_t *lock);
+//void wait_lock_debug_process (sem_t *lock);
 
 #endif

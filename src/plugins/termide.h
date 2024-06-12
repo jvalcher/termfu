@@ -2,6 +2,8 @@
 #ifndef TERMIDE_H
 #define TERMIDE_H
 
+#include "../data.h"
+
 /*
 termIDE
 -------
@@ -12,11 +14,11 @@ termIDE
     termide_layouts     Lay     Display layouts
     termide_builds      Bld     Display builds
 */
-int empty_func      (layout_t *layout);
+int empty_func      (debug_state_t *dstate);
     //
-int termide_back    (layout_t *layout);
-int termide_layouts (layout_t *layout);
-int termide_builds  (layout_t *layout);
+int termide_back    (debug_state_t *dstate);
+int termide_layouts (debug_state_t *dstate);
+int termide_builds  (debug_state_t *dstate);
 
 
 

@@ -41,14 +41,15 @@ void calculate_win_file_display_values (window_t *win)
 
 
 /*
-    Display file lines shifted according to key, i.e. scrolling
+    Scroll window data
+    ---------
 
         KEY_UP
         KEY_DOWN
         KEY_RIGHT
         KEY_LEFT
 */
-void display_lines (window_t *win, int key) 
+void scroll_window_data (window_t *win, int key) 
 {
     char line[256];
     int  row = 1,

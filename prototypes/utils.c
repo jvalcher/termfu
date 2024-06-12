@@ -22,9 +22,5 @@ sem_t *create_semaphore (void)
 
 void wait_lock_debug_process (sem_t *lock)
 {
-    if (sem_open(lock) == -1) {
-        fprintf (stderr, "Debug semaphore lock");
-        exit (EXIT_FAILURE);
-    }
 }
 

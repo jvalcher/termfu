@@ -125,14 +125,21 @@ static void get_category_and_label (FILE *file,
     do {
         // category
         i = 0;
-        while ((ch = fgetc (file)) != ':'  &&
-                    i < MAX_CONFIG_CATEG_LEN - 1) {
+        while (((ch = fgetc (file)) != ':'  &&
+                                 ch != ']') &&
+                                  i <  MAX_CONFIG_CATEG_LEN - 1) {
             if (ch != ' ')
                 category [i++] = ch;
         }
         category [i] = '\0'; 
 
-        // label (if present)
+        // if no label, break
+        if (ch == ']') {
+            label = "\0";
+            break;
+        }
+
+        // label
         i = 0;
         while ((ch = fgetc (file)) != ']' &&
                     i < MAX_CONFIG_LABEL_LEN - 1) {

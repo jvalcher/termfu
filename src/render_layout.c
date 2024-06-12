@@ -37,7 +37,7 @@ static void print_layouts (int n, layout_t *layout);
 */
 void render_layout (char *label, state_t *state)
 {
-    layout_t *layout = NULL;
+    layout_t *layout = state->layouts;
 
     scr_rows = getmaxy (stdscr);
     scr_cols = getmaxx (stdscr);
@@ -64,7 +64,6 @@ void render_layout (char *label, state_t *state)
 */
 static void find_layout (char *label, state_t *state, layout_t *layout)
 {
-    layout = state->layouts;
     do {
         if (strcmp (label, "first") == 0 || strcmp (label, layout->label) == 0) {
             state->curr_layout = layout;
@@ -213,11 +212,11 @@ static void calculate_layout (int win_rows,
                 curr_window->selected = false;
 
                 // set head window or link previous
-                curr_window->win_next = NULL;
+                curr_window->next = NULL;
                 if (y == 0 && x == 0) {
                     layout->windows = curr_window; // head
                 } else {
-                    prev_window->win_next = curr_window;    // link previous
+                    prev_window->next = curr_window;    // link previous
                 }
 
                 // add key from matrix
@@ -301,7 +300,6 @@ static WINDOW* create_new_window (int rows,
     WINDOW *win = newwin (rows, cols, y, x);
     if (win == NULL)
         pfeme ("Unable to create window\n");
-
     return win;
 }
 
@@ -338,6 +336,7 @@ static void render_header (layout_t *layout, plugin_t *plugins)
         // header plugin titles
     render_header_titles (layout, plugins);
 
+    refresh();
     wrefresh (layout->header);
 }
 
@@ -392,7 +391,6 @@ static void render_header_titles (layout_t *layout,
                     key_color_toggle = true;
                 }
             }
-            wrefresh  (header);
 
             memset (titles_str, '\0', title_str_len);
             row += 1;
@@ -439,9 +437,9 @@ static WINDOW *render_window (int rows,
     wattron (win, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
     wborder (win, 0,0,0,0,0,0,0,0);
     wattroff (win, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
+
     refresh ();
     wrefresh (win);
-
     return win;
 }
 
@@ -464,7 +462,7 @@ static void render_windows (layout_t *layout, plugin_t *plugins)
                         curr_window->win_cols,
                         curr_window->win_y + header_offset,
                         curr_window->win_x);
-        curr_window = curr_window->win_next;
+        curr_window = curr_window->next;
 
     } while (curr_window != NULL);
 
@@ -522,6 +520,7 @@ static void fix_corners (window_t *win)
         wattron  (win->win, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
         wborder  (win->win, 0, 0, 0, 0, tl, tr, bl, br);
         wattroff (win->win, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
+
         refresh  ();
         wrefresh (win->win);
 
@@ -536,7 +535,7 @@ static void fix_corners (window_t *win)
         win->win_border [7] = br;
 
         // next window
-        win = win->win_next;
+        win = win->next;
 
     } while (win != NULL);
 }
@@ -694,10 +693,13 @@ static void render_window_titles (layout_t *layout,
             }
         }
 
-        // next window
-        curr_window = curr_window->win_next;
+        refresh();
+        wrefresh(win);
+
+        curr_window = curr_window->next;
 
     } while (curr_window != NULL);
+
 }
 
 
