@@ -36,10 +36,11 @@ char *debugger_quit  = "^exit";
 
 void start_debugger_reader (debug_state_t *dstate)
 {
-    char    debug_out_buffer  [256],
-            ch, nch;
+    char    output_buffer [256],
+            debug_out_buffer [256],
+            program_out_buffer [256];
     size_t  bytes_read;
-    int     i;
+    int     i, j;
     FILE   *out_file_ptr;
     bool    running,
             is_newline,
@@ -66,44 +67,21 @@ void start_debugger_reader (debug_state_t *dstate)
         while (running) 
         {
             bytes_read = read (debug_out_pipe [PIPE_READ], 
-                               debug_out_buffer, 
-                               sizeof (debug_out_buffer) - 1);
+                               output_buffer, 
+                               sizeof (output_buffer) - 1);
+            output_buffer [bytes_read] = '\0';
 
-            debug_out_buffer [bytes_read] = '\0';
+            //printf ("%d\n", bytes_read);
+            //printf ("%s", output_buffer);
 
+            memset (debug_out_buffer, '\0', bytes_read);
+            memset (program_out_buffer, '\0', bytes_read);
+            gdb_parse_output (output_buffer, debug_out_buffer, program_out_buffer);
             printf ("%s", debug_out_buffer);
-
-            /*
-            // parse output into file
-            i = 0;
-            is_output = false;
-            is_newline = true;
-            do {
-                ch = debug_out_buffer[i++];
-                if (is_newline && ch != '\n') {
-                    is_newline = false;
-                    if (ch == '~') {
-                        is_output = true;
-                    }
-                    --bytes_read;
-                    continue;
-                }
-                if (ch == '\n') {
-                    is_newline = true;
-                    is_output = false;
-                    --bytes_read;
-                    continue;
-                }
-                if (is_output) {
-                    --bytes_read;
-                    //fprintf (out_file_ptr, "%c", ch);
-                    printf ("%c", ch);
-                }
-            } while (bytes_read > 0);
-            */
+            printf ("%s", program_out_buffer);
 
             // exit
-            if (strstr (debug_out_buffer, dstate->exit_str) != NULL) {
+            if (strstr (output_buffer, dstate->exit_str) != NULL) {
                 running = false;
             }
         }

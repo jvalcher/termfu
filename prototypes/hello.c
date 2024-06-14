@@ -15,7 +15,7 @@ int main (void)
     data1.var1 = age;
 
     printf ("Program started\n");
-    printf ("Hello, Jeffrey\n");
+    printf ("%s\n", data1.greet);
     printf ("Program ended\n");
 
     return EXIT_SUCCESS;
