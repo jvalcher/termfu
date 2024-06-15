@@ -236,15 +236,12 @@ typedef struct plugin {
     out_done_str    - string that indicates output is finished
     exit_str        - string that indicates debugger process exited
 */
-    //
-#define PIPE_READ     0
-#define PIPE_WRITE    1
-    //
-#define DEBUGGER_UNKNOWN   0
-#define DEBUGGER_GDB       1
-    //
+enum {
+    UNKNOWN, GDB
+};
 typedef struct debug_state {
 
+    bool   running;
     int    debugger;
     pid_t  debugger_pid;
     int    input_pipe;
@@ -257,7 +254,6 @@ typedef struct debug_state {
     char  *break_point;
     char  *out_done_str;
     char  *exit_str;
-    bool   running;
 
 } debug_state_t;
 
