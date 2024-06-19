@@ -5,34 +5,22 @@
 #include "utilities.h"
 
 
-// print int matrix
-void print_int_matrix ( char *label,
-                        int start_row, 
-                        int matrix[MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS], 
-                        int y, 
-                        int x) 
+
+/*
+   Close ncurses
+*/
+void close_ncurses (void)
 {
-    int col = 4;
-    int row = start_row;
-
-    mvprintw (row, col, "%s", label);
-    row += 1;
-    mvprintw (row, col, "--------");
-    row += 1;
-
-    for (int i = 0; i < y; i++) {
-        col = 4;
-        for (int j = 0; j < x; j++) {
-            mvprintw (row, col, "%d", matrix [i][j]);
-            col += 4;
-        }
-        row += 1;
-    }
+#ifndef DEBUG
+    curs_set (1);
+    endwin ();
+#endif
 }
 
 
+
 /*
-    Clear file, open for appending
+    Clear file, open for appending by its path
 */
 FILE *clear_and_open_file_for_append (char *path)
 {
@@ -44,83 +32,109 @@ FILE *clear_and_open_file_for_append (char *path)
 
 
 /*
-    Set color attribute with variable
+    Set Ncurses attribute with variable instead of constant
 */
-void set_bold_color (WINDOW* win, int color)
+void set_nc_attribute (WINDOW* win, int attr)
 {
-    switch (color) {
+    switch (attr) {
+
+        // colors (data.h)
         case RED_BLACK:
-            wattron (win, A_BOLD | COLOR_PAIR(RED_BLACK));
+            wattron (win, COLOR_PAIR(RED_BLACK));
             break;
         case GREEN_BLACK:
-            wattron (win, A_BOLD | COLOR_PAIR(GREEN_BLACK));
+            wattron (win, COLOR_PAIR(GREEN_BLACK));
             break;
         case YELLOW_BLACK:
-            wattron (win, A_BOLD | COLOR_PAIR(YELLOW_BLACK));
+            wattron (win, COLOR_PAIR(YELLOW_BLACK));
             break;
         case BLUE_BLACK:
-            wattron (win, A_BOLD | COLOR_PAIR(BLUE_BLACK));
+            wattron (win, COLOR_PAIR(BLUE_BLACK));
             break;
         case MAGENTA_BLACK:
-            wattron (win, A_BOLD | COLOR_PAIR(MAGENTA_BLACK));
+            wattron (win, COLOR_PAIR(MAGENTA_BLACK));
             break;
         case CYAN_BLACK:
-            wattron (win, A_BOLD | COLOR_PAIR(CYAN_BLACK));
+            wattron (win, COLOR_PAIR(CYAN_BLACK));
             break;
         case WHITE_BLACK:
-            wattron (win, A_BOLD | COLOR_PAIR(WHITE_BLACK));
+            wattron (win, COLOR_PAIR(WHITE_BLACK));
+            break;
+
+        // other
+        case A_BOLD:
+            wattron (win, A_BOLD);
+            break;
+        case A_UNDERLINE:
+            wattron (win, A_UNDERLINE);
             break;
     }
 }
 
 
+
 /*
-    Unset color attribute with variable
+    Unset Ncurses attribute with variable instead of constant
 */
-void unset_bold_color (WINDOW* win, int color)
+void unset_nc_attribute (WINDOW* win, int attr)
 {
-    switch (color) {
+    switch (attr) {
+
+        // colors (data.h)
         case RED_BLACK:
-            wattroff (win, A_BOLD | COLOR_PAIR(RED_BLACK));
+            wattroff (win, COLOR_PAIR(RED_BLACK));
             break;
         case GREEN_BLACK:
-            wattroff (win, A_BOLD | COLOR_PAIR(GREEN_BLACK));
+            wattroff (win, COLOR_PAIR(GREEN_BLACK));
             break;
         case YELLOW_BLACK:
-            wattroff (win, A_BOLD | COLOR_PAIR(YELLOW_BLACK));
+            wattroff (win, COLOR_PAIR(YELLOW_BLACK));
             break;
         case BLUE_BLACK:
-            wattroff (win, A_BOLD | COLOR_PAIR(BLUE_BLACK));
+            wattroff (win, COLOR_PAIR(BLUE_BLACK));
             break;
         case MAGENTA_BLACK:
-            wattroff (win, A_BOLD | COLOR_PAIR(MAGENTA_BLACK));
+            wattroff (win, COLOR_PAIR(MAGENTA_BLACK));
             break;
         case CYAN_BLACK:
-            wattroff (win, A_BOLD | COLOR_PAIR(CYAN_BLACK));
+            wattroff (win, COLOR_PAIR(CYAN_BLACK));
             break;
         case WHITE_BLACK:
-            wattroff (win, A_BOLD | COLOR_PAIR(WHITE_BLACK));
+            wattroff (win, COLOR_PAIR(WHITE_BLACK));
+            break;
+
+        // other
+        case A_BOLD:
+            wattroff (win, A_BOLD);
+            break;
+        case A_UNDERLINE:
+            wattroff (win, A_UNDERLINE);
             break;
     }
 }
 
 
-/*
-    Print bold, colored Ncurses title with mvwprintw()
-    and int color variable
-*/
-void mv_print_title (int color, 
-                     WINDOW* win,
-                     int row,
-                     int col, 
-                     char *title)
-{
-    set_bold_color (win, color);
 
-    mvwprintw (win, row, col, "%s", title);
+/*
+    Print colored string in Ncurses window
+    ---------
+    - Setting an Ncurses color (apparently) requires a constant color value
+    - This function allows the use of a color variable from data.h
+
+    - Usage:
+        int my_color = MAGENTA_BLACK;
+        print_nc_str (my_color, win, y, x, "%s", msg);
+*/
+void print_nc_str (int     color, 
+                   WINDOW *win,
+                   int     row,
+                   int     col, 
+                   char   *str)
+{
+    set_nc_attribute (win, color);
+    mvwprintw (win, row, col, "%s", str);
+    unset_nc_attribute (win, color);
     wrefresh  (win);
-
-    unset_bold_color (win, color);
 }
 
 

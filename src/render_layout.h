@@ -13,10 +13,9 @@
 #include "parse_config.h"
 
 
-// Render main window
-//
-//   layout - layouts_t struct
-// 
+extern char *first_layout;
+
+
 void render_layout (char *label, state_t *state);
 
 

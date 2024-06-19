@@ -52,20 +52,17 @@ void run_plugin (int      key,
         state->curr_plugin = get_plugin (key, state->plugins);
         state->curr_window = state->curr_plugin->window;
 
-        /*
-        if (key < 'A' || (key > 'Z' && key < 'a') || key > 'z')
-            run_non_plugin_key (key, state);
-        */
-
         if (state->curr_plugin->window)
             select_window (state->curr_plugin->title, state->curr_window);
-
         else
             pulse_header_title (state);
 
         insert_output_start_marker (state);
         plugin_func [func_index]   (state);
         insert_output_end_marker   (state);
+
+        if (state->curr_plugin->window)
+            deselect_window (state->curr_plugin->title, state->curr_window);
     }
 }
 

@@ -24,19 +24,14 @@ int main(void)
 
         printw("\nTerminal colors enabled\n\n");
 
-        printw("\n---------------\n");
-        printw("\nTERMINAL COLORS ENABLED\n\n");
-        printw("\n---------------\n");
-
         printw("Available\n");
         printw("---------\n");
         printw("%d colors\n", COLORS);
-        printw("%d color pairs\n", COLOR_PAIRS);
+        printw("%d color pairs\n\n\n", COLOR_PAIRS);
         refresh();
 
-        printw("\n\nBackground");
+        printw("Background");
         printw("\n------------\n");
-
         printw("Reversed... ");
         refresh();
         init_pair(10, 0, 7);
@@ -45,19 +40,8 @@ int main(void)
         napms(1000);
         init_pair(11, 7, 0);
         bkgd(COLOR_PAIR(11));
-        printw("back to normal\n");
+        printw("back to normal\n\n\n");
         refresh();
-
-        printw("\".\" dot background... skipped\n\n\n");
-        /*  "." dots background
-        printw("\".\" background... ");
-        bkgd('.');
-        refresh();
-        napms(1000);
-        bkgd(' ' | COLOR_PAIR(11));
-        printw("\tback to normal\n\n\n");
-        refresh();
-        */
 
         printw("Notify\n");
         printw("------------\n");
@@ -96,9 +80,8 @@ int main(void)
             init_color(34, 1000, 750, 750);
             PRINT_COLOR(34, 0, "pink: 100, 75, 75");
         } else {
-            printw("can_change_color() returned false: \nTerminal unable to mix colors\n");
+            printw("Terminal unable to mix colors\n\n\n");
         }
-
 
     // terminal colors not enabled
     } else {
@@ -106,7 +89,7 @@ int main(void)
         refresh();
     }
 
-    printw("\n\nPress any key to quit\n");
+    printw("Press any key to quit\n");
     refresh();
     getch();
     endwin();

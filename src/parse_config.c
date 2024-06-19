@@ -102,9 +102,9 @@ static FILE* open_config_file (void)
 
     // if no config file found, exit
     if (file == NULL) {
-        pfem   ("Unable to find config file:\n");
-        pfemo  ("%s/.termide\n", cwd_path);
-        pfemoe ("%s/.termide\n", home_path);
+        pfem  ("Unable to find config file:\n");
+        pem  ("%s/.termide\n", cwd_path);
+        peme ("%s/.termide\n", home_path);
     }
 
     return file;
@@ -389,7 +389,7 @@ static layout_t* create_layout (FILE* file,
         }
     }
 
-    layout->win_matrix = (char *) layout_matrix;
+    layout->win_matrix = layout_matrix;
 
     return layout;
 }

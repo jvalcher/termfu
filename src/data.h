@@ -182,7 +182,7 @@ typedef struct layout {
     char           hdr_key_str [MAX_KEY_STR_LEN];
     char           win_key_str [MAX_KEY_STR_LEN];
     int            num_hdr_key_rows;
-    char          *win_matrix;
+    char         **win_matrix;
     int            row_ratio;
     int            col_ratio;
     window_t      *windows;
@@ -244,19 +244,19 @@ enum { READER_RECEIVING, READER_DONE, READER_EXIT };
 
 typedef struct debug_state {
 
-    bool   running;
-    int    debugger;
-    pid_t  debugger_pid;
-    int    input_pipe;
-    int    output_pipe;
-    char  *prog_path;
-    char  *out_file_path;
-    FILE  *out_file_ptr;
-    char  *out_parsed_file_path;
-    FILE  *out_parsed_file_ptr;
-    char  *break_point;
-    char  *out_done_str;
-    char  *exit_str;
+    int     debugger;
+    char  **cmd;
+    pid_t   debugger_pid;
+    int     input_pipe;
+    int     output_pipe;
+    char   *prog_path;
+    char   *out_file_path;
+    FILE   *out_file_ptr;
+    char   *out_parsed_file_path;
+    FILE   *out_parsed_file_ptr;
+    char   *break_point;
+    char   *out_done_str;
+    char   *exit_str;
 
 } debug_state_t;
 
@@ -292,6 +292,8 @@ typedef struct win_keys {
    debug_state    - Current debugger state
 */
 typedef struct state {
+
+    bool            running;
 
     layout_t       *curr_layout;
     window_t       *curr_window;

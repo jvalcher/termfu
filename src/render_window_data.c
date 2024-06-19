@@ -19,13 +19,19 @@
         KEY_RIGHT
         KEY_LEFT
 
-        - TODO: 
-            - plugin bindings
-            - page up, down
-            - home, end
+    - TODO: 
+        KEY_HOME 
+        KEY_NPAGE       - next page, page down
+        KEY_PPAGE       - previous page, page up 
+        KEY_END
 */
 void render_window_data (window_t *win, int key) 
 {
+    // open output file
+    win->file_ptr = fopen (win->file_path, "r");
+
+#ifndef DEBUG
+
     char line[256];
     int  row = 1,
          col = 1,
@@ -33,9 +39,6 @@ void render_window_data (window_t *win, int key)
          line_len,
          line_index,
          i, j;
-
-    // open file for reading
-    win->file_ptr = fopen (win->file_path, "r");
 
     // clear window
     for (i = 1; i <= win->win_rows; i++) {
@@ -107,8 +110,21 @@ void render_window_data (window_t *win, int key)
         if (print_line > win->file_rows) 
             break;
     }
-
     //refresh();
     wrefresh(win->win);
+
+#endif
+
+
+#ifdef DEBUG
+
+    int ch;
+    while ((ch = fgetc (win->file_ptr)) != EOF) {
+        putchar (ch);
+    }
+
+#endif
+
+
     fclose (win->file_ptr);
 }

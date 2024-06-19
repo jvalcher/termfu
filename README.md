@@ -8,6 +8,8 @@ A multi-language terminal debugger for GNU/Linux
 
 ## To do
 
+### Bookmark == "CURRENT"
+
 -> Last task: Read output buffer to file, hook up scrolling, ...
 
 - [x] Render layout from configuration file
@@ -16,26 +18,25 @@ A multi-language terminal debugger for GNU/Linux
 
 - [x] Add title string color pulse, switch to indicate usage
 
+- [x] Clean out utilities.c
+
 - [ ] Add debugger, plugins functionality
-  - [*] Make commands generic between debuggers (interface)
-  - [ ] Add window updating to reader process
-    - create win_update_t linked list  { WINDOW, code, path }
-    - receives signal from reader process to get code in win_update.code
-    - matches code in linked list
-    - updates WINDOW from data in path
-  - [ ] Read output to files
-  - [ ] Parse output
-  - [ ] Update windows
+  - [x] Add plugin function interface
+  - [x] Add select window coloring
+  - [ ] Add DEBUG macros and functionality (no Ncurses, only data)
+  - [ ] Parse debugger output to files
+    - [ ] debugger
+    - [ ] program
+    - [ ] window data
+  - [ ] Update window data
+  - [ ] Add window functionality
+    - [ ] Scroll
+    - [ ] Debugger-specific
+  - [ ] Add popup windows
   - [ ] Make window data persistent
-  - [ ] Look into better error handling (errno, ...)
-  - [ ] Clean out utilities.c
-  - [ ] Combine commits
-
-- [ ] Add DEBUG macros and functionality (no Ncurses, only data)
-
-- [ ] Add window functionality
-  - [ ] Scroll
-  - [ ] Debugger-specific
+  - [ ] Format window data
+    - [ ] source file -> source-highlight
+  - [ ] Combine commits, merge
 
 - [ ] Add help menus
   - [ ] Main
@@ -43,21 +44,32 @@ A multi-language terminal debugger for GNU/Linux
 
 - [ ] Add switch-layout functionality
 
+- [ ] Figure out, cull refresh(), wrefresh() calls
+
+- [ ] Add cli flags
+
+- [ ] Incorporate errno messages into pfem
+
 - [ ] Add other debuggers
   - [ ] pdb
   - [ ] node --inspect
 
 - [ ] Update, fix comments
 
-- [ ] Update, fix README.md
-
 - [ ] Add PLUGINS.md
 
-- [ ] Add CONTRIBUTING.md
+- [ ] Research open source repo management
+  - [ ] Add CONTRIBUTING.md
+  - [ ] Add CHANGES.md
+  - [ ] Add LICENSE.md
+  - [ ] Update, fix README.md
 
-- [ ] Add CHANGES.md
+- [ ] Add issues
+  - [ ] Convert processes to threads where possible
+  - [ ] Convert corner fixes to bitwise operations
 
-- [ ] Add LICENSE.md
+- [ ] Make repo public
+
 
 
 

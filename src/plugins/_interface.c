@@ -81,9 +81,13 @@ void parse_output (int  *rstate,
 
 void quit (state_t *state)
 {
-    curs_set (1);
-    endwin ();
-    exit (EXIT_SUCCESS);
+    switch (state->debug_state->debugger) {
+        case (DEBUGGER_GDB):
+            gdb_exit (state);
+            break;
+    }
+
+    state->running = false;
 }
 
 
@@ -94,50 +98,6 @@ void back (state_t *state)
         // push/pop  curr_window linked list
     if (state->curr_plugin->window)
         deselect_window (state->curr_plugin->title, state->curr_plugin->window);
-}
-
-
-
-void run_other_win_key (int key, state_t *state)
-{
-    window_t *win = state->curr_window;
-    win_keys_t *k = state->win_keys;
-
-    if (key == k->scroll_up) {
-        render_window_data (win, KEY_UP);
-    }
-    else if (key == k->scroll_down) {
-        render_window_data (win, KEY_DOWN);
-    }
-    else if (key == k->scroll_left) {
-        render_window_data (win, KEY_LEFT);
-    }
-    else if (key == k->scroll_right) {
-        render_window_data (win, KEY_RIGHT);
-    }
-    else if (key == k->back) {
-        back (state);
-    }
-    else if (key == k->quit) {
-        quit (state); 
-    }
-    else {
-        // TODO: pg up/down, home, end
-        switch (key) {
-            case KEY_UP:
-                render_window_data (win, KEY_UP);
-                break;
-            case KEY_DOWN:
-                render_window_data (win, KEY_DOWN);
-                break;
-            case KEY_RIGHT:
-                render_window_data (win, KEY_RIGHT);
-                break;
-            case KEY_LEFT:
-                render_window_data (win, KEY_LEFT);
-                break;
-        }
-    }
 }
 
 
@@ -173,6 +133,49 @@ void scroll_right (state_t *state)
 {
     if (state->curr_window) {
         render_window_data (state->curr_window, KEY_RIGHT);
+    }
+}
+
+
+
+void run_other_win_key (int key, state_t *state)
+{
+    window_t *win = state->curr_window;
+    win_keys_t *k = state->win_keys;
+
+    // Use k->back in window while loop as exit condition
+
+    if (key == k->scroll_up) {
+        render_window_data (win, KEY_UP);
+    } 
+    else if (key == k->scroll_down) {
+        render_window_data (win, KEY_DOWN);
+    } 
+    else if (key == k->scroll_left) {
+        render_window_data (win, KEY_LEFT);
+    } 
+    else if (key == k->scroll_right) {
+        render_window_data (win, KEY_RIGHT);
+    } 
+    else if (key == k->quit) {
+        quit (state); 
+    } 
+    else {
+        // TODO: pg up/down, home, end
+        switch (key) {
+            case KEY_UP:
+                render_window_data (win, KEY_UP);
+                break;
+            case KEY_DOWN:
+                render_window_data (win, KEY_DOWN);
+                break;
+            case KEY_RIGHT:
+                render_window_data (win, KEY_RIGHT);
+                break;
+            case KEY_LEFT:
+                render_window_data (win, KEY_LEFT);
+                break;
+        }
     }
 }
 
@@ -265,6 +268,10 @@ void until (state_t *state) {}
  ***************/
 
 
+// TODO:
+static void open_popup_window (state_t *state) {}
+
+
 
 // TODO:
     // add "builds" section to config file
@@ -278,10 +285,9 @@ void pwin_layouts (state_t *state) {}
 
 
 
-/********
-  Window
- ********/
-
+/*********
+  Windows
+ *********/
 
 
 void win_assembly (state_t *state)
@@ -292,6 +298,7 @@ void win_assembly (state_t *state)
             break;
     }
 }
+
 
 
 void win_breakpoints (state_t *state)
@@ -310,17 +317,6 @@ void win_local_vars (state_t *state)
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB):
             gdb_win_local_vars (state);
-            break;
-    }
-}
-
-
-
-void win_registers (state_t *state)
-{
-    switch (state->debug_state->debugger) {
-        case (DEBUGGER_GDB):
-            gdb_win_registers (state);
             break;
     }
 }
@@ -349,6 +345,17 @@ void win_prompt (state_t *state)
 
 
 
+void win_registers (state_t *state)
+{
+    switch (state->debug_state->debugger) {
+        case (DEBUGGER_GDB):
+            gdb_win_registers (state);
+            break;
+    }
+}
+
+
+
 void win_src_file (state_t *state)
 {
     switch (state->debug_state->debugger) {
@@ -368,4 +375,12 @@ void win_watches (state_t *state)
             break;
     }
 }
+
+
+
+/********************
+  Update window data
+ ********************/
+
+
 

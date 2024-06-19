@@ -10,11 +10,13 @@
 
 #include "gdb.h"
 #include "_utilities.h"
+#include "_interface.h"
 #include "../data.h"
 #include "../utilities.h"
 
 
 ssize_t bytes;
+int ch;
 
 
 /*
@@ -47,10 +49,10 @@ void gdb_run (state_t *state)
 
 void gdb_pwin_set_breakpoint (state_t *state)
 {
-    // TODO: 
-        // popup window 
-        // set breakpoint to line number, function name
     char *break_cmd = "-break-insert ";
+
+    // TODO: 
+        // popup window to enter breakpoint line number, string
     char *breakpoint = "main";
 
     bytes  = write (INPUT_PIPE, break_cmd, strlen (break_cmd));
@@ -114,85 +116,115 @@ void gdb_exit (state_t *state)
     bytes += write (INPUT_PIPE, rdr_quit, strlen (rdr_quit));
 
     CHECK_BYTES(bytes);
-
-    // exit main loop
-    state->debug_state->running = false;
 }
 
 
 
-/* 
-    --------------
-    Window plugins
-    --------------
-*/
+/****************
+  Window plugins
+ ****************/
 
-void gdb_run_non_plugin_key (state_t *state)
+
+void gdb_win_assembly (state_t *state)
 {
-}
-
-
-void gdb_win_prog_output (state_t *state)
-{
-    while (1) {
+    while ((ch = getchar()) != state->win_keys->back) {
+        run_other_win_key (ch, state);
     }
 }
 
 
 
-void gdb_win_assembly (state_t *state)
+void gdb_win_prog_output (state_t *state)
 {
+    while ((ch = getchar()) != state->win_keys->back) {
+        run_other_win_key (ch, state);
+    }
 }
 
 
 
 void gdb_win_breakpoints(state_t *state)
 {
+    while ((ch = getchar()) != state->win_keys->back) {
+        run_other_win_key (ch, state);
+    }
 }
 
 
 
 void gdb_win_watches (state_t *state)
 {
+    while ((ch = getchar()) != state->win_keys->back) {
+        run_other_win_key (ch, state);
+    }
 }
 
 
 
 void gdb_win_local_vars (state_t *state)
 {
+    while ((ch = getchar()) != state->win_keys->back) {
+        run_other_win_key (ch, state);
+    }
 }
 
 
 
 void gdb_win_prompt (state_t *state)
 {
+    while ((ch = getchar()) != state->win_keys->back) {
+        run_other_win_key (ch, state);
+    }
 }
 
 
 
 void gdb_win_src_file (state_t *state)
 {
+    while ((ch = getchar()) != state->win_keys->back) {
+        run_other_win_key (ch, state);
+    }
 }
 
 
 
 void gdb_win_registers (state_t *state)
 {
+    while ((ch = getchar()) != state->win_keys->back) {
+        run_other_win_key (ch, state);
+    }
 }
 
 
 
-/*********************
-  Non-plugin commands
- *********************/
+/********************
+  Update window data
+ ********************/
 
+// CURRENT: How to update window data after commands?
+    // update_window_data (code)
+        // thoughts
+            // commands update prompt, program output
+            // updates get program data
+        // point curr_plugin to plugin with correct code, path for correct marks
+    // clean up debug_state variables
 
-void gdb_get_local_vars (state_t *state)
+void gdb_update_local_vars (state_t *state)
 {
     char *info_locals_cmd = "info locals\n";
     bytes = write (INPUT_PIPE, info_locals_cmd, strlen (info_locals_cmd));
     CHECK_BYTES(bytes);
 }
+
+
+
+
+
+
+
+/*****************
+  Debugger output
+ *****************/
 
 
 

@@ -25,6 +25,7 @@ void  gdb_step              (state_t*);
 void  gdb_continue          (state_t*);
 void  gdb_finish            (state_t*);
 void  gdb_kill              (state_t*);
+void  gdb_exit              (state_t*);
 
 /*
     Windows

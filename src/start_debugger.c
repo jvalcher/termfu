@@ -11,70 +11,73 @@
 #include "start_debugger.h"
 #include "data.h"
 #include "utilities.h"
-#include "render_window_data.h"
 #include "plugins/_interface.h"
+#include "render_window_data.h"
+
+static debug_state_t *allocate_debug_state          (void);
+static void           create_debugger_pipes         (debug_state_t*);
+static void           set_debugger                  (debug_state_t*);
+static void           start_debugger_proc           (debug_state_t*);
+static void           start_debugger_reader_proc    (state_t*);
+static void           update_window                 (plugin_t*, char*, char*);
+static void           update_window_data            (plugin_t*, char*, char*);
 
 #define PIPE_READ   0
 #define PIPE_WRITE  1
-
 int debug_in_pipe  [2],
     debug_out_pipe [2];
 
-typedef struct win_update {
-    char    code[4];
-    WINDOW *win;
-    char   *path;
-    struct win_update *next;
-} win_update_t;
-
-static void create_debugger_pipes (debug_state_t *dstate);
-static void set_debugger (debug_state_t *dstate);
-static void start_debugger_proc (debug_state_t *dstate);
-static void start_debugger_reader_proc (state_t *state);
-static void update_window (plugin_t *plugins, char *code, char *debug_out_path);
-
-// TODO: add to interface
-char *gdb_cmd[]      = {"gdb", "--quiet", "--interpreter=mi", NULL, NULL};
-char *debugger_quit  = "^exit";
+// TODO: get this via plugins/_interface
+# define GDB_PROG_INDEX  3
+char *gdb_cmd[] = {"gdb", "--quiet", "--interpreter=mi", NULL, NULL};
 
 
-/*
-    Start debugger
-*/
+
 void start_debugger (state_t *state)
 {
-    debug_state_t *dstate = state->debug_state;
+    state->debug_state = allocate_debug_state ();
 
-    create_debugger_pipes (dstate);
+    set_debugger (state->debug_state);
 
-    set_debugger (dstate);
+    create_debugger_pipes (state->debug_state);
 
-    start_debugger_proc (dstate);
+    start_debugger_proc (state->debug_state);
 
     start_debugger_reader_proc (state);
 }
 
 
 
+static debug_state_t *allocate_debug_state (void)
+{
+    debug_state_t *dstate = (debug_state_t*) malloc (sizeof (debug_state_t));
+    if (dstate == NULL) {
+        pfeme ("debug_state_t allocation error\n");
+    }
+    return dstate;
+}
+
+
+
+static void set_debugger (debug_state_t *dstate)
+{
+    // TODO: Get file type -> set debugger
+    dstate->debugger = DEBUGGER_GDB;
+}
+
+
+
 static void create_debugger_pipes (debug_state_t *dstate)
 {
-    // create debugger pipes
     if (pipe (debug_in_pipe)  == -1 || 
         pipe (debug_out_pipe) == -1) 
     {
         perror("Debugger pipe");
         exit (EXIT_FAILURE);
     }
+
     dstate->input_pipe  = debug_in_pipe [PIPE_WRITE];
     dstate->output_pipe = debug_out_pipe [PIPE_READ];
-}
-
-
-
-// TODO: Get file type -> set debugger
-static void set_debugger (debug_state_t *dstate)
-{
-    dstate->debugger = DEBUGGER_GDB;
 }
 
 
@@ -92,15 +95,13 @@ static void start_debugger_proc (debug_state_t *dstate)
 
     // set command
     switch (dstate->debugger) {
-
-        // GDB
         case (DEBUGGER_GDB):
-            cmd = gdb_cmd;
-            cmd [3] = dstate->prog_path;
+            cmd = gdb_cmd;      // TODO: see globals
+            cmd [GDB_PROG_INDEX] = dstate->prog_path;
             break;
     }
 
-    // create debugger process
+    // fork
     debugger_pid = fork ();
     if (debugger_pid  == -1)
     {
@@ -108,6 +109,7 @@ static void start_debugger_proc (debug_state_t *dstate)
         exit (EXIT_FAILURE);
     }
 
+    // start debugger
     if (debugger_pid == 0) {
 
         dup2  (debug_in_pipe  [PIPE_READ], STDIN_FILENO);
@@ -119,8 +121,7 @@ static void start_debugger_proc (debug_state_t *dstate)
 
         execvp (cmd[0], cmd);
 
-        perror ("Debugger process");
-        exit (EXIT_FAILURE);
+        pfeme ("Debugger start failed");
     }
 
 }
@@ -142,7 +143,7 @@ static void start_debugger_reader_proc (state_t *state)
         exit (EXIT_FAILURE);
     }
 
-    // debugger output process
+    // start debugger reader
     if (debug_out_pid == 0) {
 
         int     rstate;
@@ -157,30 +158,35 @@ static void start_debugger_reader_proc (state_t *state)
         close (debug_in_pipe [PIPE_WRITE]);
         close (debug_out_pipe [PIPE_WRITE]);
 
-        // read pipe output
+        // start reader loop
         running = true;
         while (running) 
         {
+            // read debugger pipe output
             bytes_read = read (debug_out_pipe [PIPE_READ], output_buffer, sizeof (output_buffer) - 1);
             output_buffer [bytes_read] = '\0';
 
+            // parse output
             parse_output (&rstate, dstate->debugger, output_buffer, debug_out_path, program_out_path, code);
 
             // TODO: Handle program output
 
+            // reader state actions
             switch (rstate) {
+
                 case READER_RECEIVING:
                     break;
+
                 case READER_DONE:
-                    update_window (state->plugins, code, debug_out_path);
+                    update_window_data (state->plugins, code, debug_out_path);
                     break;
+
                 case READER_EXIT:
                     running = false;
                     break;
             }
         }
-
-        exit (0);
+        exit (EXIT_SUCCESS);
     }
 
 }
@@ -188,9 +194,13 @@ static void start_debugger_reader_proc (state_t *state)
 
 
 /*
-    Update Ncurses plugin WINDOW data
+    Update and render plugin's Ncurses WINDOW data
+    -------------
+    - Locates plugin based on code and updates rendering info
+    - Renders data with render_window_data()
+    - Used in debugger reader process
 */
-static void update_window (plugin_t *plugins, char *code, char *debug_out_path)
+static void update_window_data (plugin_t *plugins, char *code, char *debug_out_path)
 {
     int i, ch;
     plugin_t *plugin;

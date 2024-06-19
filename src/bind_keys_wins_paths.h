@@ -35,7 +35,7 @@ extern int key_function_index [];
 
     - Key converted to function index by key_to_index() in run_plugin.c
 */
-void bind_keys_windows_to_plugins (state_t *state);
+void bind_keys_wins_paths (state_t *state);
 
 
 

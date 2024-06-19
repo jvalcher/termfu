@@ -64,12 +64,12 @@ Plugin
 char *plugin_code [] = {
     
     "EMP",
+
     "Asm",
     "Bak",
     "Bld",
     "Brk",
     "Con",
-    "Qut",
     "Fin",
     "Kil",
     "Lay",
@@ -77,6 +77,7 @@ char *plugin_code [] = {
     "Nxt",
     "Out",
     "Prm",
+    "Qut",
     "Reg",
     "Run",
     "ScD",
@@ -100,12 +101,12 @@ int plugin_code_size = sizeof (plugin_code);
 plugin_func_t plugin_func [] = {
 
     (plugin_func_t) empty_func,         // "EMP"
+
     (plugin_func_t) win_assembly,       // "Asm"
     (plugin_func_t) back,               // "Bak"
     (plugin_func_t) pwin_builds,        // "Bld"
     (plugin_func_t) win_breakpoints,    // "Brk"
     (plugin_func_t) cont,               // "Con"
-    (plugin_func_t) quit,               // "Qut"
     (plugin_func_t) finish,             // "Fin"
     (plugin_func_t) kill_prog,          // "Kil"
     (plugin_func_t) pwin_layouts,       // "Lay"
@@ -113,6 +114,7 @@ plugin_func_t plugin_func [] = {
     (plugin_func_t) next,               // "Nxt"
     (plugin_func_t) win_prog_output,    // "Out"
     (plugin_func_t) win_prompt,         // "Prm"
+    (plugin_func_t) quit,               // "Qut"
     (plugin_func_t) win_registers,      // "Reg"
     (plugin_func_t) run,                // "Run"
     (plugin_func_t) scroll_down,        // "ScD"
