@@ -6,8 +6,13 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <ctype.h>
 
+#include "gdb.h"
+#include "_utilities.h"
 #include "../data.h"
+#include "../utilities.h"
+
 
 ssize_t bytes;
 
@@ -17,80 +22,103 @@ ssize_t bytes;
     Header plugins
     --------------
 */
-int gdb_run (debug_state_t *dstate)
+void gdb_run (state_t *state)
 {
-    char    *set_tty  = "-inferior-tty-set ";
-    char    *gdb_run  = "-exec-run\n";
+    char *tty_dev,
+         *tty_cmd   = "-inferior-tty-set ",
+         *run_cmd   = "-exec-run\n",
+         *prog_path = state->debug_state->prog_path;
 
     // set program stdout to current tty
-    char *tty_device = ttyname(STDIN_FILENO);
-    write (dstate->input_pipe, set_tty,  strlen (set_tty));
-    write (dstate->input_pipe, tty_device,  strlen (tty_device));
-    write (dstate->input_pipe, "\n", 1);
+    if ((tty_dev = ttyname(STDIN_FILENO)) == NULL) {
+        pfeme ("Failed to set tty");
+    }
+    bytes  = write (INPUT_PIPE, tty_cmd,  strlen (tty_cmd));
+    bytes += write (INPUT_PIPE, tty_dev,  strlen (tty_dev));
+    bytes += write (INPUT_PIPE, "\n", 1);
 
-    write (dstate->input_pipe, gdb_run, strlen (gdb_run));
-    write (dstate->input_pipe, dstate->prog_path, strlen (dstate->prog_path));
-    write (dstate->input_pipe, "\n", strlen ("\n"));
-    return (int)bytes;
+    // run prog_path
+    bytes += write (INPUT_PIPE, gdb_run, strlen (run_cmd));
+    bytes += write (INPUT_PIPE, prog_path, strlen (prog_path));
+    bytes += write (INPUT_PIPE, "\n", strlen ("\n"));
+    CHECK_BYTES(bytes);
 }
 
 
-int gdb_set_breakpoint (debug_state_t *dstate)
+void gdb_pwin_set_breakpoint (state_t *state)
 {
-    char *set_break_cmd = "-break-insert ";
-    dstate->break_point = "main";
-    bytes += write (dstate->input_pipe, set_break_cmd, strlen (set_break_cmd));
-    bytes += write (dstate->input_pipe, dstate->break_point, strlen (dstate->break_point));
-    bytes += write (dstate->input_pipe, "\n", 1);
-    return (int)bytes;
+    // TODO: 
+        // popup window 
+        // set breakpoint to line number, function name
+    char *break_cmd = "-break-insert ";
+    char *breakpoint = "main";
+
+    bytes  = write (INPUT_PIPE, break_cmd, strlen (break_cmd));
+    bytes += write (INPUT_PIPE, breakpoint, strlen (breakpoint));
+    bytes += write (INPUT_PIPE, "\n", 1);
+    CHECK_BYTES(bytes);
 }
 
 
-int gdb_next (debug_state_t *dstate)
+void gdb_next (state_t *state)
 {
     char *next_cmd = "-exec-next\n";
-    bytes = write (dstate->input_pipe, next_cmd, strlen (next_cmd));
-    return (int)bytes;
+    bytes = write (INPUT_PIPE, next_cmd, strlen (next_cmd));
+    CHECK_BYTES(bytes);
 }
 
 
-int gdb_continue (debug_state_t *dstate)
+void gdb_step (state_t *state) 
+{
+    char *step_cmd = "-exec-step\n";
+    bytes = write (INPUT_PIPE, step_cmd, strlen (step_cmd));
+    CHECK_BYTES(bytes);
+}
+
+
+void gdb_continue (state_t *state)
 {
     char *cont_cmd = "-exec-continue\n";
-    bytes = write (dstate->input_pipe, cont_cmd, strlen (cont_cmd));
-    return (int)bytes;
+    bytes = write (INPUT_PIPE, cont_cmd, strlen (cont_cmd));
+    CHECK_BYTES(bytes);
 }
 
 
-int gdb_exit (debug_state_t *dstate)
+void gdb_finish (state_t *state) 
 {
-    char *exit_cmd = "-gdb-exit\n";
-    bytes = write (dstate->input_pipe, exit_cmd, strlen (exit_cmd));
-    dstate->running = false;
-    return (int)bytes;
+    char *fin_cmd = "-exec-finish\n";
+    bytes = write (INPUT_PIPE, fin_cmd, strlen (fin_cmd));
+    CHECK_BYTES(bytes);
 }
 
 
-int gdb_step (debug_state_t *dstate) 
+
+void gdb_kill (state_t *state)
 {
-    return 0;
+    char *kill_cmd = "-exec-abort\n";
+    bytes = write (INPUT_PIPE, kill_cmd, strlen (kill_cmd));
+    CHECK_BYTES(bytes);
 }
-int gdb_finish (debug_state_t *dstate) 
+
+
+
+void gdb_exit (state_t *state)
 {
-    return 0;
+    char *dbg_quit = "-gdb-exit\n";
+    char *rdr_quit = "echo >EXIT\n";
+
+    // exit debugger process
+    bytes = write (INPUT_PIPE, dbg_quit, strlen (dbg_quit));
+
+    // exit debugger reader process
+    bytes += write (INPUT_PIPE, rdr_quit, strlen (rdr_quit));
+
+    CHECK_BYTES(bytes);
+
+    // exit main loop
+    state->debug_state->running = false;
 }
-int gdb_print (debug_state_t *dstate) 
-{
-    return 0;
-}
-int gdb_kill (debug_state_t *dstate) 
-{
-    return 0;
-}
-int gdb_src_file (debug_state_t *dstate) 
-{
-    return 0;
-}
+
 
 
 /* 
@@ -98,83 +126,263 @@ int gdb_src_file (debug_state_t *dstate)
     Window plugins
     --------------
 */
-int gdb_assembly (debug_state_t *dstate) 
-{
-    return 0;
-}
 
-int gdb_breakpoints(debug_state_t *dstate) 
+void gdb_run_non_plugin_key (state_t *state)
 {
-    return 0;
-}
-
-int gdb_watches (debug_state_t *dstate) 
-{
-    return 0;
-}
-
-int gdb_local_vars (debug_state_t *dstate) 
-{
-    return 0;
-}
-
-int gdb_registers (debug_state_t *dstate) 
-{
-    return 0;
-}
-
-int gdb_prompt (debug_state_t *dstate) 
-{
-    return 0;
-}
-
-int gdb_output (debug_state_t *dstate) 
-{
-    return 0;
 }
 
 
-/*
-   Non-plugin commands
-*/
+void gdb_win_prog_output (state_t *state)
+{
+    while (1) {
+    }
+}
 
 
-int gdb_get_local_vars (debug_state_t *dstate)
+
+void gdb_win_assembly (state_t *state)
+{
+}
+
+
+
+void gdb_win_breakpoints(state_t *state)
+{
+}
+
+
+
+void gdb_win_watches (state_t *state)
+{
+}
+
+
+
+void gdb_win_local_vars (state_t *state)
+{
+}
+
+
+
+void gdb_win_prompt (state_t *state)
+{
+}
+
+
+
+void gdb_win_src_file (state_t *state)
+{
+}
+
+
+
+void gdb_win_registers (state_t *state)
+{
+}
+
+
+
+/*********************
+  Non-plugin commands
+ *********************/
+
+
+void gdb_get_local_vars (state_t *state)
 {
     char *info_locals_cmd = "info locals\n";
-    bytes = write (dstate->input_pipe, info_locals_cmd, strlen (info_locals_cmd));
-    dstate->out_file_path = "/tmp/termide_gdb_get_local_vars.out";
-    return (int)bytes;
+    bytes = write (INPUT_PIPE, info_locals_cmd, strlen (info_locals_cmd));
+    CHECK_BYTES(bytes);
 }
 
 
-/*
-    Update window data
-*/
-
-
 
 /*
-    Parse GDB output
+    Insert start mark, plugin output file path into debugger output
+    -------
+
+        >START:<output_file_path>:
+
+    - Called in run_plugin()
+    - Read, parsed in debugger reader process
 */
-void gdb_parse_output (debug_state_t *dstate)
+void gdb_insert_output_start_marker (state_t *state)
 {
-    char line [4096];
+    char *start = "echo >START:";
+    char *path = state->curr_plugin->data_file_path;
 
-    fprintf(dstate->out_parsed_file_ptr, "\n");
+    bytes  = write (INPUT_PIPE, start, strlen (start));
+    bytes += write (INPUT_PIPE, path, strlen (path));
+    bytes += write (INPUT_PIPE, ":\n", 1);
+    CHECK_BYTES(bytes);
+}
 
-    rewind (dstate->out_file_ptr);
-    while (fgets (line, sizeof(line), dstate->out_file_ptr) != NULL) {
 
-        // program and standard GDB output
-        if (line[0] != '@' && line[0] != '&' && line[0] != '^') {
-            fprintf(dstate->out_parsed_file_ptr, "%s", (line + 1));
-            break;
+
+/*
+    Insert end mark, plugin code into debugger output
+    -------
+
+        >END:<plugin_code>:
+
+    - Called in run_plugin()
+    - Read, parsed in debugger reader process
+*/
+void gdb_insert_output_end_marker (state_t *state)
+{
+    char *end = "echo >END:";
+    char *code = state->curr_plugin->code;
+
+    bytes  = write (INPUT_PIPE, end, strlen (end));
+    bytes += write (INPUT_PIPE, code, strlen (code));
+    bytes += write (INPUT_PIPE, ":\n", 1);
+    CHECK_BYTES(bytes);
+}
+
+
+
+/*
+    Parse debugger output
+    ----------
+    - Called in start_debugger_reader_proc()
+*/
+void gdb_parse_output (int *rstate, char *in_buffer, char *debug_out_path, char *program_out_path, char *code)
+{
+    bool  is_gdb_output,
+          is_prog_output,
+          is_newline,
+          is_new_string;
+    FILE *debug_out_ptr,
+         *program_out_ptr;
+    char *buff_ptr;
+    int   i;
+
+    buff_ptr = in_buffer;
+    
+    debug_out_ptr   = fopen (debug_out_path, "a");
+    program_out_ptr = fopen (program_out_path, "a");
+
+    *rstate = READER_RECEIVING;
+    is_gdb_output = false,
+    is_prog_output = false,
+    is_newline = true,
+    is_new_string = false;
+
+    while (*buff_ptr != '\0') {
+
+        // set type of output for new line
+        if (is_newline && *buff_ptr != '\n') {
+            is_newline = false;
+            if (*buff_ptr == '~') {
+                is_gdb_output = true;
+                ++buff_ptr;
+            } 
+            else if (isalpha (*buff_ptr)) {
+                is_prog_output = true;
+            }
+        }
+
+        // end of line
+        else if (*buff_ptr == '\n') {
+            is_newline = true;
+
+            // gdb
+            if (is_gdb_output) {
+                is_gdb_output = false;
+                fputc (*buff_ptr++, debug_out_ptr);
+            }
+
+            // program
+            else if (is_prog_output) {
+                is_prog_output = false;
+                fputc (*buff_ptr++, program_out_ptr);
+            }
+
+            else {
+                ++buff_ptr;
+            }
+        }
+
+        // gdb output
+        else if (is_gdb_output) {
+
+            //  if  \\\t,\n,\_  or  \\\n  -> skip
+            if (*buff_ptr == '\\' && (isalpha(*(buff_ptr + 1)) || *(buff_ptr + 1) == '\n') ) {
+                buff_ptr += 2;
+            }
+
+            //  if  \\\"  ->  \"
+            else if (*buff_ptr == '\\' && *(buff_ptr + 1) == '\"' ) {
+                buff_ptr += 1;
+                fputc (*buff_ptr++, debug_out_ptr);
+            }
+
+            //  if  \"  ->  skip
+            else if (*buff_ptr == '\"') {
+                buff_ptr += 1;
+            }
+
+            // Markers set in run_plugin(), used in start_debugger_reader_proc()
+            //
+            //  if  ">START:<path>:" marker  -> set debug out path
+            else if ( *buff_ptr    == '>' && 
+                     *(buff_ptr + 1) == 'S' && 
+                     *(buff_ptr + 2) == 'T' && 
+                     *(buff_ptr + 3) == 'A' && 
+                     *(buff_ptr + 3) == 'R' && 
+                     *(buff_ptr + 4) == 'T') {
+
+                buff_ptr += 7;
+                i = 0;
+                while (*buff_ptr != ':') {
+                    debug_out_path [i++] = *buff_ptr++;
+                }
+                debug_out_path [i] = '\0';
+                *rstate = READER_RECEIVING;
+                debug_out_ptr = clear_and_open_file_for_append (debug_out_path);
+            } 
+
+            // if  ">END:<code>:" marker  -> set code, set rstate to done
+            else if ( *buff_ptr      == '>' && 
+                     *(buff_ptr + 1) == 'E' && 
+                     *(buff_ptr + 2) == 'N' && 
+                     *(buff_ptr + 3) == 'D') {
+
+                buff_ptr += 5;
+                i = 0;
+                while (*buff_ptr != ':') {
+                    code [i++] = *buff_ptr++;
+                }
+                code [i] = '\0';
+                *rstate = READER_DONE;
+            }
+
+            // if  ">EXIT" marker  -> set exit rstate
+            else if ( *buff_ptr      == '>' && 
+                     *(buff_ptr + 1) == 'E' && 
+                     *(buff_ptr + 2) == 'X' && 
+                     *(buff_ptr + 3) == 'I' && 
+                     *(buff_ptr + 4) == 'T') {
+
+                *rstate = READER_EXIT;
+                break;
+            }
+
+            else {
+                fputc (*buff_ptr++, debug_out_ptr);
+            }
+        }
+
+        // program output
+        else if (is_prog_output) {
+            fputc (*buff_ptr++, program_out_ptr);
+        }
+
+        else {
+            ++buff_ptr;
         }
     }
 
-    // print prompt
-    fprintf(dstate->out_parsed_file_ptr, "\n(gdb) ");
-
-    fclose (dstate->out_file_ptr);
+    fclose (debug_out_ptr);
+    fclose (program_out_ptr);
 }
+

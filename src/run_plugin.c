@@ -12,13 +12,21 @@
 
 #include "run_plugin.h"
 #include "data.h"
+#include "plugins/_interface.h"
 #include "utilities.h"
 #include "bind_keys_windows.h"
 #include "plugins/_plugins.h"
-#include "plugins/gdb.h"
 
-window_t *curr_win;
-char curr_title [MAX_TITLE_LEN];
+static int       key_to_index               (int);
+static plugin_t *get_plugin                 (int, plugin_t*);
+static void      pulse_header_title         (state_t*);
+static void     *start_pulse_header_thread  (void *args);
+       void      select_window              (char*, window_t*);
+       void      deselect_window            (char*, window_t*);
+static void      find_window_string         (WINDOW*, char*, int*, int*);
+
+char      curr_title [MAX_TITLE_LEN];
+window_t *curr_win = NULL;
 
 typedef struct thread_data {
     WINDOW *win;
@@ -30,42 +38,35 @@ typedef struct thread_data {
 /*
     Run plugin function
     --------
-    - Match key input to plugin code in current layout  (key_bindings.h)
-    - Run plugin code's corresponding function via its pointer  (plugins/_plugins.c) 
-    - Pulse corresponding header title string's colors for PULSE_LEN
-
-    - Functions:                                                                */
-        static int       key_to_index               (int);
-        static plugin_t *get_plugin                 (int, plugin_t*);
-        static void      change_title_string_color  (state_t*, plugin_t*);
-        static void      toggle_select_window       (window_t*, char*);
-               void      read_debugger_output       (debug_state_t*);
-        static void      update_window_data         (state_t *state);   /*
+    - Match key input to plugin code in current layout
+    - Indicate usage via the plugin's title string in the header or its window
+    - Run plugin code's function via its pointer
 */
-int run_plugin (int      input_key,
-                state_t *state)
+void run_plugin (int      key,
+                 state_t *state)
 {
-    int        plugin_index,
-               func_index;
-    plugin_t  *plugin;
-    FILE      *output_file;
+    int plugin_index   = key_to_index (key);
+    if (plugin_index != -1) {
+        
+        int func_index     = key_function_index [plugin_index];
+        state->curr_plugin = get_plugin (key, state->plugins);
+        state->curr_window = state->curr_plugin->window;
 
-    plugin_index = key_to_index (input_key);
-    func_index   = key_function_index [plugin_index];
-    plugin       = get_plugin (input_key, state->plugins);
+        /*
+        if (key < 'A' || (key > 'Z' && key < 'a') || key > 'z')
+            run_non_plugin_key (key, state);
+        */
 
-    change_title_string_color (state, plugin);
+        if (state->curr_plugin->window)
+            select_window (state->curr_plugin->title, state->curr_window);
 
-    if (plugin_func_arr [func_index] (state->debug_state) == -1) {
-        pfeme ("Unable to run function index %d with key \"%c\"\n", 
-                func_index, input_key);
+        else
+            pulse_header_title (state);
+
+        insert_output_start_marker (state);
+        plugin_func [func_index]   (state);
+        insert_output_end_marker   (state);
     }
-
-    read_debugger_output (state->debug_state);
-
-    gdb_parse_output (state->debug_state);
-
-    return 0;
 }
 
 
@@ -106,55 +107,24 @@ static plugin_t *get_plugin (int key,
 
 
 /*
-    Change title string color
-    -----------
-    - Indicate plugin function call
-        - header -> pulse color
-        - window -> toggle color, underline
-
-    - Functions:                                                                */
-        static void *pulse_header_title_string (void*);   /*
-*/
-void change_title_string_color (state_t *state, 
-                                plugin_t *plugin)
+    Pulse header title string color
+    --------
+    - Indicator for plugin function being called
+*/        
+void pulse_header_title (state_t *state)
 {
-    int       result;
-    pthread_t thread;
-    tdata_t   tdata;
-
-    // unselect curr_win if set
-    if (curr_win != NULL && curr_win != plugin->window) {
-        toggle_select_window (curr_win, curr_title);
-    }
-
-    // toggle window color
-    if (plugin->window) {
-        strncpy (curr_title, plugin->title, MAX_TITLE_LEN - 1);
-        toggle_select_window (plugin->window, plugin->title);
-    } 
-
-    // pulse header title string color
-    else {
-        strncpy (tdata.title, plugin->title, MAX_TITLE_LEN - 1);
-        tdata.win = state->curr_layout->header;
-        result = pthread_create (&thread, NULL, pulse_header_title_string, (void*)&tdata);
-        if (result != 0) {
-            pfeme ("Thread create error");
-        }
+    tdata_t    tdata;
+    strncpy (tdata.title, plugin->title, MAX_TITLE_LEN - 1);
+    tdata.win = state->curr_layout->header;
+    result = pthread_create (&thread, NULL, start_pulse_header_thread, (void*)&tdata);
+    if (result != 0) {
+        pfeme ("Thread create error");
     }
 }
 
 
-/*
-    Pulse header title string color
-    --------
-    - Indicator for plugin function being called
-    - Thread function
 
-    - Functions:                                                            */
-        static void find_window_string (WINDOW*, char*, int*, int*);  /*
-*/        
-static void *pulse_header_title_string (void *args) 
+static void *start_pulse_header_thread (void *args) 
 {
     float pulse_len;
     tdata_t *data =  (tdata_t*) args;
@@ -167,112 +137,104 @@ static void *pulse_header_title_string (void *args)
 
     find_window_string (win, title, &y, &x);
 
-    if (y != -1) {
-
-        // pulse on
-        key_color_toggle = false;
-        wattron (win, COLOR_PAIR(FOCUS_HEADER_TITLE_COLOR));
-        for (i = 0; i < strlen (title) + 1; i++) {
-            mvwprintw (win, y, x + i, "%c", title [i]);
-            if (key_color_toggle) {
-                wattron (win, COLOR_PAIR(FOCUS_HEADER_TITLE_COLOR));
-                key_color_toggle = false;
-            }
-            if (title [i] == '(') {
-                wattron (win, COLOR_PAIR(FOCUS_TITLE_KEY_COLOR));
-                key_color_toggle = true;
-            }
+    // pulse on
+    key_color_toggle = false;
+    wattron (win, COLOR_PAIR(FOCUS_HEADER_TITLE_COLOR));
+    for (i = 0; i < strlen (title) + 1; i++) {
+        mvwprintw (win, y, x + i, "%c", title [i]);
+        if (key_color_toggle) {
+            wattron (win, COLOR_PAIR(FOCUS_HEADER_TITLE_COLOR));
+            key_color_toggle = false;
         }
-        wrefresh (win);
-
-        // pause before pulse off
-        usleep (pulse_len * 2000000);
-
-        // pulse off
-        key_color_toggle = false;
-        wattron (win, COLOR_PAIR(HEADER_TITLE_COLOR));
-        for (i = 0; i < strlen (title) + 1; i++) {
-            mvwprintw (win, y, x + i, "%c", title[i]);
-            if (key_color_toggle) {
-                wattron (win, COLOR_PAIR(HEADER_TITLE_COLOR));
-                key_color_toggle = false;
-            }
-            if (title[i] == '(') {
-                wattron (win, COLOR_PAIR(TITLE_KEY_COLOR));
-                key_color_toggle = true;
-            }
+        if (title [i] == '(') {
+            wattron (win, COLOR_PAIR(FOCUS_TITLE_KEY_COLOR));
+            key_color_toggle = true;
         }
-        wrefresh (win);
     }
+    wrefresh (win);
+
+    // pause before pulse off
+    usleep (pulse_len * 2000000);
+
+    // pulse off
+    key_color_toggle = false;
+    wattron (win, COLOR_PAIR(HEADER_TITLE_COLOR));
+    for (i = 0; i < strlen (title) + 1; i++) {
+        mvwprintw (win, y, x + i, "%c", title[i]);
+        if (key_color_toggle) {
+            wattron (win, COLOR_PAIR(HEADER_TITLE_COLOR));
+            key_color_toggle = false;
+        }
+        if (title[i] == '(') {
+            wattron (win, COLOR_PAIR(TITLE_KEY_COLOR));
+            key_color_toggle = true;
+        }
+    }
+    wrefresh (win);
 
     pthread_exit (NULL);
-    return NULL;
 }
 
 
 
-/*
-    Toggle window title string color, underline
-    -------------------
-    - Indicate window selection
-
-    - Functions:                                                                */
-        static void find_window_string (WINDOW*, char*, int*, int*);   /*
-*/
-static void toggle_select_window (window_t *win,
-                                  char     *title) 
+void select_window (char *title, window_t *win)
 {
     int i, x, y;
     bool key_color_toggle;
-    bool selected = win->selected;
 
-    // find window string
+    if (curr_win)
+        deselect_window (title, curr_win);
+    curr_win = win;
+
     find_window_string (win->win, title, &y, &x);
 
-    // toggle window title color
-    if (y != -1) {
+    win->selected = true;
 
-        key_color_toggle = false;
+    key_color_toggle = false;
+    wattron (win->win, COLOR_PAIR(FOCUS_WINDOW_TITLE_COLOR) | A_UNDERLINE);
 
-        // unselect window
-        if (selected) {
-
-            wattron (win->win, COLOR_PAIR(WINDOW_TITLE_COLOR));
-            wattroff (win->win, A_UNDERLINE);
-            for (i = 0; i < strlen (title) + 1; i++) {
-                mvwprintw (win->win, y, x + i, "%c", title[i]);
-                if (key_color_toggle) {
-                    wattron (win->win, COLOR_PAIR(WINDOW_TITLE_COLOR));
-                    key_color_toggle = false;
-                }
-                if (title[i] == '(') {
-                    wattron (win->win, COLOR_PAIR(TITLE_KEY_COLOR));
-                    key_color_toggle = true;
-                }
-            }
-            curr_win = NULL;
-
-        // select window
-        } else {
-
-            wattron (win->win, COLOR_PAIR(FOCUS_WINDOW_TITLE_COLOR) | A_UNDERLINE);
-            for (i = 0; i < strlen (title) + 1; i++) {
-                mvwprintw (win->win, y, x + i, "%c", title [i]);
-                if (key_color_toggle) {
-                    wattron (win->win, COLOR_PAIR(FOCUS_WINDOW_TITLE_COLOR));
-                    key_color_toggle = false;
-                }
-                if (title [i] == '(') {
-                    wattron (win->win, COLOR_PAIR(FOCUS_WINDOW_TITLE_KEY_COLOR));
-                    key_color_toggle = true;
-                }
-            }
-            curr_win = win;
+    for (i = 0; i < strlen (title) + 1; i++) {
+        mvwprintw (win->win, y, x + i, "%c", title [i]);
+        if (key_color_toggle) {
+            wattron (win->win, COLOR_PAIR(FOCUS_WINDOW_TITLE_COLOR));
+            key_color_toggle = false;
+        }
+        if (title [i] == '(') {
+            wattron (win->win, COLOR_PAIR(FOCUS_WINDOW_TITLE_KEY_COLOR));
+            key_color_toggle = true;
         }
     }
     wrefresh  (win->win);
+}
 
-    win->selected = win->selected ? false : true;
+
+
+void deselect_window (char *title, window_t *win)
+{
+    int i, x, y;
+    bool key_color_toggle;
+    window_t *win = plugin->window;
+
+    find_window_string (win->win, plugin->title, &y, &x);
+
+    win->selected = false;
+
+    key_color_toggle = false;
+    wattron (win->win, COLOR_PAIR(WINDOW_TITLE_COLOR));
+    wattroff (win->win, A_UNDERLINE);
+
+    for (i = 0; i < strlen (title) + 1; i++) {
+        mvwprintw (win->win, y, x + i, "%c", title[i]);
+        if (key_color_toggle) {
+            wattron (win->win, COLOR_PAIR(WINDOW_TITLE_COLOR));
+            key_color_toggle = false;
+        }
+        if (title[i] == '(') {
+            wattron (win->win, COLOR_PAIR(TITLE_KEY_COLOR));
+            key_color_toggle = true;
+        }
+    }
+    wrefresh  (win->win);
 }
 
 
@@ -280,12 +242,7 @@ static void toggle_select_window (window_t *win,
 /*
     Find string in Ncurses WINDOW 
     -----------
-    - Set y,x to coordinates if found
-    - Otherwise both set to -1
-
-    - Used by:
-        pulse_header_title_string()
-        toggle_select_window()
+    - Set y,x to coordinates
 */
 static void find_window_string (WINDOW *window,
                                 char   *string,
@@ -328,30 +285,8 @@ static void find_window_string (WINDOW *window,
         *y = m;
         *x = n;
     } else {
-        *y = -1;
-        *x = -1;
+        pfeme ("Unable to find window string \"%s\"", string);
     }
 
-}
-
-
-
-/*
-    Reader debugger output
-*/
-void read_debugger_output (debug_state_t *dstate)
-{
-    size_t  bytes_read;
-    char    debug_out_buffer [256];
-    debug_out_buffer[0] = '\0';
-    dstate->out_file_ptr = fopen (dstate->out_file_path, "w");
-
-    while ((bytes_read = read (dstate->output_pipe, 
-                               debug_out_buffer, 
-                               sizeof (debug_out_buffer) - 1)) > 0) {
-        debug_out_buffer [bytes_read] = '\0';
-        fprintf (dstate->out_file_ptr, "%s", debug_out_buffer);
-    }
-    // file closed in parser
 }
 

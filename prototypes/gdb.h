@@ -4,7 +4,9 @@
 
 #include "data.h"
 
-void gdb_parse_output (char *in_buffer, char *debug_out_buffer, char *program_out_buffer);
+void gdb_parse_output (char *in_buffer, char *debug_out_path, char *program_out_path);
+
+int gdb_send_output_done_str (debug_state_t *dstate);
 
 int gdb_load_prog       (debug_state_t *state);
 int gdb_run             (debug_state_t *state);

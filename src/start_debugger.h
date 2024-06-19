@@ -5,7 +5,7 @@
 #include "data.h"
 
 
-void start_debugger (debug_state_t *dstate);
+void start_debugger (state_t *state);
 
 
 #endif

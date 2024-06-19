@@ -1,0 +1,98 @@
+=thread-group-added,id="i1"
+~"Reading symbols from ./hello...\n"
+=breakpoint-created,bkpt={number="1",type="breakpoint",disp="keep",enabled="y",addr="0x0000000000001155",func="main",file="./hello.c",fullname="/home/jvalcher/Git/termide/prototypes/hello.c",line="11",thread-groups=["i1"],times="0",original-location="main"}
+(gdb)
+&"r\n"
+~"Starting program: /home/jvalcher/Git/termide/prototypes/hello \n"
+=thread-group-started,id="i1",pid="50822"
+=thread-created,id="1",group-id="i1"
+=breakpoint-modified,bkpt={number="1",type="breakpoint",disp="keep",enabled="y",addr="0x0000555555555155",func="main",file="./hello.c",fullname="/home/jvalcher/Git/termide/prototypes/hello.c",line="11",thread-groups=["i1"],times="0",original-location="main"}
+=library-loaded,id="/lib64/ld-linux-x86-64.so.2",target-name="/lib64/ld-linux-x86-64.so.2",host-name="/lib64/ld-linux-x86-64.so.2",symbols-loaded="0",thread-group="i1",ranges=[{from="0x00007ffff7fc5090",to="0x00007ffff7fee315"}]
+^running
+*running,thread-id="all"
+(gdb)
+=library-loaded,id="/lib/x86_64-linux-gnu/libc.so.6",target-name="/lib/x86_64-linux-gnu/libc.so.6",host-name="/lib/x86_64-linux-gnu/libc.so.6",symbols-loaded="0",thread-group="i1",ranges=[{from="0x00007ffff7c28700",to="0x00007ffff7dba93d"}]
+~"[Thread debugging using libthread_db enabled]\n"
+~"Using host libthread_db library \"/lib/x86_64-linux-gnu/libthread_db.so.1\".\n"
+=breakpoint-modified,bkpt={number="1",type="breakpoint",disp="keep",enabled="y",addr="0x0000555555555155",func="main",file="./hello.c",fullname="/home/jvalcher/Git/termide/prototypes/hello.c",line="11",thread-groups=["i1"],times="1",original-location="main"}
+~"\n"
+~"Breakpoint 1, main () at ./hello.c:11\n"
+~"11\t    char *hello = \"Hello, Jeffrey!\";\n"
+*stopped,reason="breakpoint-hit",disp="keep",bkptno="1",frame={addr="0x0000555555555155",func="main",args=[],file="./hello.c",fullname="/home/jvalcher/Git/termide/prototypes/hello.c",line="11",arch="i386:x86-64"},thread-id="1",stopped-threads="all",core="4"
+(gdb)
+&"c\n"
+~"Continuing.\n"
+^running
+*running,thread-id="all"
+(gdb)
+Program started
+Hello, Jeffrey!
+Program ended
+~"[Inferior 1 (process 50822) exited normally]\n"
+=thread-exited,id="1",group-id="i1"
+=thread-group-exited,id="i1",exit-code="0"
+*stopped,reason="exited-normally"
+(gdb)
+&"q\n"
+~"\n"
+(gdb)
+&"info bre\n"
+~"Num     Type           Disp Enb Address            What\n"
+~"1       breakpoint     keep y   0x0000555555555155 in main at ./hello.c:11\n"
+~"2       breakpoint     keep y   0x0000555555555175 in main at ./hello.c:17\n"
+^done
+(gdb)
+~"\n"
+(gdb)
+&"info locals\n"
+~"hello = 0x555555556004 \"Hello, Jeffrey!\"\n"
+~"age = 37\n"
+~"data1 = {greet = 0x555555556004 \"Hello, Jeffrey!\", var1 = 37}\n"
+^done
+(gdb)
+~"\n"
+(gdb)
+&"info registers\n"
+~"rax            0x25                37\n"
+~"rbx            0x0                 0\n"
+~"rcx            0x555555557dc0      93824992247232\n"
+~"rdx            0x7fffffffcc18      140737488342040\n"
+~"rsi            0x7fffffffcc08      140737488342024\n"
+~"rdi            0x1                 1\n"
+~"rbp            0x7fffffffcaf0      0x7fffffffcaf0\n"
+~"rsp            0x7fffffffcad0      0x7fffffffcad0\n"
+~"r8             0x7ffff7e1bf10      140737352154896\n"
+~"r9             0x7ffff7fc9040      140737353912384\n"
+~"r10            0x7ffff7fc3908      140737353890056\n"
+~"r11            0x7ffff7fde660      140737353999968\n"
+~"r12            0x7fffffffcc08      140737488342024\n"
+~"r13            0x555555555149      93824992235849\n"
+~"r14            0x555555557dc0      93824992247232\n"
+~"r15            0x7ffff7ffd040      140737354125376\n"
+~"rip            0x555555555175      0x555555555175 <main+44>\n"
+~"eflags         0x202               [ IF ]\n"
+~"cs             0x33                51\n"
+~"ss             0x2b                43\n"
+~"ds             0x0                 0\n"
+~"es             0x0                 0\n"
+~"fs             0x0                 0\n"
+~"gs             0x0                 0\n"
+~"k0             0x40000400          1073742848\n"
+~"k1             0x2220010           35782672\n"
+~"k2             0x0                 0\n"
+~"k3             0x0                 0\n"
+~"k4             0x0                 0\n"
+~"k5             0x0                 0\n"
+~"k6             0x0                 0\n"
+~"k7             0x0                 0\n"
+~"fs_base        0x7ffff7f91740      140737353684800\n"
+~"gs_base        0x0                 0\n"
+^done
+(gdb)
+~"\n"
+(gdb)
+&"print hello\n"
+~"$1 = 37\n"
+~"$2 = 0x555555556004 \"Hello, Jeffrey!\"\n"
+^done
+(gdb)

@@ -1,55 +1,30 @@
-#include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
-#include <ncurses.h>
-#include <unistd.h>
 
-#include "../data.h"
-#include "../utilities.h"
+#include "render_window_data.h"
+#include "data.h"
 
-
-void calculate_win_file_display_values (window_t *win)
-{
-    char  line [512];
-
-    // open source file
-    win->file_ptr = fopen(win->file_path, "r");
-    if (win->file_ptr == NULL) {
-        pfeme ("Failed to open source file");
-    }
-
-    // calculate file values
-    win->file_min_mid = ((win->win_rows - 2) / 2) + 1;
-    win->file_max_mid = (win->file_rows - 2) - ((win->win_rows - 1) / 2);
-    win->win_mid_line = win->file_min_mid;
-    win->file_first_char = 0;
-
-    // get file rows, max columns
-    win->file_rows = 0;
-    win->file_max_cols = 0;
-    int line_len;
-    while (fgets(line, sizeof(line), win->file_ptr) != NULL) {
-        line_len = strlen (line);
-        if (win->file_max_cols < line_len) {
-            win->file_max_cols = line_len + 1;
-        }
-        win->file_rows += 1;
-    }
-    rewind (win->file_ptr);
-}
-    
 
 
 /*
-    Scroll window data
+    Display file lines in Ncurses WINDOW shifted according to key, i.e.
     ---------
+    - Text rendered inside WINDOW border
+        - i.e. starting from column 1, row 1 -- not 0,0
+    - Set key to 0 to display from first line
+
+    - Keys:
 
         KEY_UP
         KEY_DOWN
         KEY_RIGHT
         KEY_LEFT
+
+        - TODO: 
+            - plugin bindings
+            - page up, down
+            - home, end
 */
-void scroll_window_data (window_t *win, int key) 
+void render_window_data (window_t *win, int key) 
 {
     char line[256];
     int  row = 1,
@@ -58,6 +33,9 @@ void scroll_window_data (window_t *win, int key)
          line_len,
          line_index,
          i, j;
+
+    // open file for reading
+    win->file_ptr = fopen (win->file_path, "r");
 
     // clear window
     for (i = 1; i <= win->win_rows; i++) {
@@ -68,7 +46,7 @@ void scroll_window_data (window_t *win, int key)
 
     // shift mid_line, first_char
     switch (key) {
-        case 0:
+        case FIRST_OPEN:
             break;
         case KEY_UP:
             win->win_mid_line = (win->win_mid_line <= win->file_min_mid) ? win->file_min_mid : win->win_mid_line - 1;
@@ -86,10 +64,10 @@ void scroll_window_data (window_t *win, int key)
             break;
     }
 
-    // calculate first line
+    // get starting line
     print_line = win->win_mid_line - (win->win_rows / 2);
 
-    // print lines
+    // print lines to window
     for (i = 0; i < win->win_rows; i++) {
 
         // seek to beginning of line
@@ -126,12 +104,11 @@ void scroll_window_data (window_t *win, int key)
         mvwaddnstr (win->win, row++, col, (const char *)(line + line_index), line_len);
 
         // break if end of file
-        if (print_line > win->file_rows) break;
+        if (print_line > win->file_rows) 
+            break;
     }
 
-    // Update screen
-    refresh();
+    //refresh();
     wrefresh(win->win);
+    fclose (win->file_ptr);
 }
-
-

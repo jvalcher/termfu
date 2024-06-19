@@ -32,6 +32,18 @@ void print_int_matrix ( char *label,
 
 
 /*
+    Clear file, open for appending
+*/
+FILE *clear_and_open_file_for_append (char *path)
+{
+    FILE *fp = fopen (path, "w");
+    fclose (fp);
+    return fopen (path, "a");
+}
+
+
+
+/*
     Set color attribute with variable
 */
 void set_bold_color (WINDOW* win, int color)

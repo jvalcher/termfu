@@ -1,6 +1,6 @@
  
-#ifndef data_h
-#define data_h
+#ifndef _data_h
+#define _data_h
 
 
 #include <ncurses.h>
@@ -96,7 +96,6 @@ extern char *prog_name;
  ***********/
 
 
-
 /*
     window_t
     --------
@@ -133,7 +132,6 @@ typedef struct window {
     WINDOW            *win;
     char               key;
     bool               selected;
-    struct window     *win_content;
     struct window     *next;           
 
     int                win_rows;                   
@@ -169,12 +167,12 @@ typedef struct window {
     label             - layout label string
     header            - Ncurses WINDOW object for header
     hdr_key_str       - header plugin key string  ("ssb\nssw\nccr\n")
-    windows           - window_t linked list
     win_key_str       - window plugin key string  ("ssb\nssw\nccr\n")
     num_hdr_key_rows  - number of header rows needed for key strings
     win_matrix        - window key segment* matrix
     row_ratio         - y segment ratio for layout matrix
     col_ratio         - x segment ratio for layout matrix
+    windows           - window_t linked list
     next              - next layout_t struct   (TODO: remove?, re-render for new layout?)
 */
 typedef struct layout {
@@ -182,12 +180,12 @@ typedef struct layout {
     char           label [MAX_CONFIG_LABEL_LEN];
     WINDOW        *header;
     char           hdr_key_str [MAX_KEY_STR_LEN];
-    window_t      *windows;
     char           win_key_str [MAX_KEY_STR_LEN];
     int            num_hdr_key_rows;
     char          *win_matrix;
     int            row_ratio;
     int            col_ratio;
+    window_t      *windows;
     struct layout *next;
 
 } layout_t;
@@ -213,6 +211,7 @@ typedef struct plugin {
     char           code [4];
     char           key;
     char           title [MAX_TITLE_LEN];
+    char          *data_file_path;
     window_t*      window;
     struct plugin *next;
 
@@ -227,7 +226,7 @@ typedef struct plugin {
 
         state->debug_state
 
-    debugger        - debugger macro identifier (DEBUGGER_GDB)
+    debugger        - debugger enum identifier
     input_pipe      - debugger process input pipe
     output_pipe     - debugger process output pipe
     prog_path       - program path
@@ -236,9 +235,13 @@ typedef struct plugin {
     out_done_str    - string that indicates output is finished
     exit_str        - string that indicates debugger process exited
 */
-enum {
-    UNKNOWN, GDB
-};
+
+// Debugger
+enum { DEBUGGER_UNKNOWN, DEBUGGER_GDB };
+
+// Debugger reader process state
+enum { READER_RECEIVING, READER_DONE, READER_EXIT };
+
 typedef struct debug_state {
 
     bool   running;
@@ -260,9 +263,28 @@ typedef struct debug_state {
 
 
 /*
+   win_cmds_t
+   --------
+   - Keys that can be or are exclusive to window use
+   - Set in bind_keys_windows_to_plugins()
+*/
+typedef struct win_keys {
+
+    int back;
+    int quit;
+    int scroll_down;
+    int scroll_up;
+    int scroll_left;
+    int scroll_right;
+
+} win_keys_t;
+
+
+
+/*
    state_t
    -----
-   - termIDE state
+   - Collection of all states
 
    curr_layout    - Current layout
    layouts        - Linked list of layout_t structs
@@ -272,10 +294,15 @@ typedef struct debug_state {
 typedef struct state {
 
     layout_t       *curr_layout;
+    window_t       *curr_window;
+    plugin_t       *curr_plugin;
+
     layout_t       *layouts;
     plugin_t       *plugins;
     debug_state_t  *debug_state;
+    win_keys_t     *win_keys;
 
 } state_t;
+
 
 #endif

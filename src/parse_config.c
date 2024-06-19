@@ -32,24 +32,26 @@ void parse_config (state_t *state)
 {
     FILE *file = open_config_file ();
 
-    char ch;
-    char category [MAX_CONFIG_CATEG_LEN];
-    char label    [MAX_CONFIG_LABEL_LEN];
-    bool first_layout = true;
-    layout_t *curr_layout = NULL;
+    char      ch;
+    bool      first_layout;
+    layout_t *curr_layout;
+    char      category [MAX_CONFIG_CATEG_LEN];
+    char      label    [MAX_CONFIG_LABEL_LEN];
 
+    first_layout = true;
+    curr_layout = NULL;
     while ((ch = fgetc (file)) != EOF) {
 
-        // get category and label of new setting
+        // get category and label of section
         if (ch == '[') 
             get_category_and_label (file, category, label);
 
-        // create all plugins
+        // plugins
         if (strcmp (category, "plugins") == 0) {
             create_plugins (file, state);
         }
 
-        // create layout
+        // layout
         if (strcmp (category, "layout") == 0) {
 
             curr_layout = create_layout (file, state, label);
@@ -160,6 +162,7 @@ static void get_category_and_label (FILE *file,
         [ plugins ]
         Bld: b : (b)uild
         Src: f : source (f)ile
+        ...
 */
 static void create_plugins (FILE *file, state_t *state)
 {
@@ -213,7 +216,7 @@ static void create_plugins (FILE *file, state_t *state)
         }
     }
 
-    // unget '['
+    // unget '[', EOF
     ungetc (ch, file);
 }
 
@@ -264,7 +267,6 @@ static layout_t* create_layout (FILE* file,
             i = 0;
             num_chars = 0;
 
-            // zero out number of header rows
             if (section == 'h')
                 layout->num_hdr_key_rows = 0;
 
@@ -319,14 +321,15 @@ static layout_t* create_layout (FILE* file,
     }
 
     // unget '>' or '['
-    ungetc (ch, file);
+    //ungetc (ch, file);
+
 
     // Calculate window segment ratio
     // --------
     // A "segment" refers to the space needed for each window symbol character
     // in terms of the terminal's rows and columns. The following calculations
     // remain the same regardless of the current screen/pane's dimensions. They
-    // are used by render_layout() to create the header and windows.
+    // are used by render_layout() to create the Ncurses header and windows.
     //     
     //     ssbb
     //     ssww
@@ -336,9 +339,10 @@ static layout_t* create_layout (FILE* file,
     // 
     // Here we are calculating the total ratio for all the keys.
     //
-    //     * * *     
-    //     * * * --> layout->col_ratio == 3
-    //               layout->row_ratio == 2
+    //     ****     
+    //     ****     
+    //     **** --> col_ratio == 4
+    //              row_ratio == 3
     //
     int y_ratio   = 0;
     int x_ratio   = 0;
@@ -385,7 +389,6 @@ static layout_t* create_layout (FILE* file,
         }
     }
 
-    // add to layout
     layout->win_matrix = (char *) layout_matrix;
 
     return layout;

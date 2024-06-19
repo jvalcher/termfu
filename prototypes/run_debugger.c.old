@@ -40,7 +40,6 @@ char *code_file_path = "./curr_code.log";
 
 char *debug_out_path = "./debug.out";
 char *program_out_path = "./program.out";
-char *win_update_code = "./win_update.code";
 
 void start_debugger_process (debug_state_t *dstate);
 void start_debugger_reader (debug_state_t *dstate);
@@ -222,6 +221,16 @@ void start_debugger_process (debug_state_t *dstate)
 
 void start_debugger_reader (debug_state_t *dstate)
 {
+    char    output_buffer [4096],
+            //debug_out_buffer [256],
+            //program_out_buffer [256],
+            code [4];
+    size_t  bytes_read;
+    int     i, j;
+    FILE   *out_file_ptr;
+    bool    running;
+    FILE   *program_out_ptr,
+           *debug_out_ptr;
 
     debug_out_pid = fork ();
     if (debug_out_pid == -1) {
@@ -231,17 +240,6 @@ void start_debugger_reader (debug_state_t *dstate)
 
     // debugger output process
     if (debug_out_pid == 0) {
-
-        char    output_buffer [4096],
-                //debug_out_buffer [256],
-                //program_out_buffer [256],
-                code [4];
-        size_t  bytes_read;
-        int     i, j;
-        FILE   *out_file_ptr;
-        bool    running;
-        FILE   *program_out_ptr,
-               *debug_out_ptr;
 
         // close unneeded debugger pipes
         close (debug_in_pipe [PIPE_READ]);

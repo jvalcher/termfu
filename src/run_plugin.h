@@ -5,17 +5,9 @@
 #include "data.h"
 
 
+void  run_plugin       (int, state_t*);
+void  select_window    (char*, window_t*);
+void  deselect_window  (char*, window_t*);
 
-/*
-    Plugin function array
-    ----------
-    - Functions defined in plugins/...
-    - Called in main.c
-*/
-int run_plugin (int key, 
-                state_t *state);
-
-
-void read_debugger_output (debug_state_t* dstate);
 
 #endif

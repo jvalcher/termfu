@@ -2,59 +2,46 @@
 #ifndef GDB_H
 #define GDB_H
 
+/************************
+  GDB debugger functions
+ ************************/
+
 #include "../data.h"
 
+
 /*
-
-------
-GDB Plugin
-------
-
-      Function         Code
-     ----------       ------
-
-    - Window-related actions
-        - e.g. focus, scroll, search, list, add, delete, ...
-
-    gdb_assembly        Asm     Assembly code
-    gdb_breakpoints     Brk     Breakpoints
-    gdb_watches         Wat     Watched variables
-    gdb_local_vars      LcV     Local variables
-    gdb_src_file        Src     Source file(s)
-    gdb_registers       Reg     Registers
-    gdb_prompt          Prn     Print values
-    gdb_output          Out     Output
-    gdb_prompt          Prm     Command prompt
-
-    - Navigation
-
-    gdb_run             Run     (Re)run program
-    gdb_next            Nxt     Next
-    gdb_step            Stp     Step
-    gdb_continue        Con     Continue
-    gdb_finish          Fin     Finish
-    gdb_print           Prn     Print value
-    gdb_kill            Kil     Kill
-
+   Non-plugin
 */
-int gdb_assembly    (debug_state_t *dstate);
-int gdb_breakpoints (debug_state_t *dstate);
-int gdb_watches     (debug_state_t *dstate);
-int gdb_local_vars  (debug_state_t *dstate);
-int gdb_src_file    (debug_state_t *dstate);
-int gdb_registers   (debug_state_t *dstate);
-int gdb_prompt      (debug_state_t *dstate);
-int gdb_output      (debug_state_t *dstate);
-int gdb_prompt      (debug_state_t *dstate);
-int gdb_run         (debug_state_t *dstate);
-int gdb_next        (debug_state_t *dstate);
-int gdb_step        (debug_state_t *dstate);
-int gdb_continue    (debug_state_t *dstate);
-int gdb_finish      (debug_state_t *dstate);
-int gdb_print       (debug_state_t *dstate);
-int gdb_kill        (debug_state_t *dstate);
+void  gdb_parse_output               (int*, char*, char*, char*, char*);
+void  gdb_insert_output_start_marker (state_t*);
+void  gdb_insert_output_end_marker   (state_t*);
 
+/*
+    Header
+*/
+void  gdb_run               (state_t*);
+void  gdb_next              (state_t*);
+void  gdb_step              (state_t*);
+void  gdb_continue          (state_t*);
+void  gdb_finish            (state_t*);
+void  gdb_kill              (state_t*);
 
-void gdb_parse_output (debug_state_t *dstate);
+/*
+    Windows
+*/
+void  gdb_win_assembly      (state_t*);
+void  gdb_win_breakpoints   (state_t*);
+void  gdb_win_watches       (state_t*);
+void  gdb_win_local_vars    (state_t*);
+void  gdb_win_src_file      (state_t*);
+void  gdb_win_registers     (state_t*);
+void  gdb_win_prompt        (state_t*);
+void  gdb_win_prog_output   (state_t*);
+
+/*
+    Popup windows
+*/
+void  gdb_pwin_set_break    (state_t*);
+
 
 #endif

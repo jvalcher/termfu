@@ -207,12 +207,12 @@ static void calculate_layout (int win_rows,
                 curr_window = (window_t *) malloc (sizeof (window_t));
                 if (curr_window == NULL)
                     pfeme ("Unable to allocate memory for window_t struct");
-
-                // set focus
                 curr_window->selected = false;
+                curr_window->file_offsets = NULL;
+                curr_window->file_ptr = NULL;
+                curr_window->next = NULL;
 
                 // set head window or link previous
-                curr_window->next = NULL;
                 if (y == 0 && x == 0) {
                     layout->windows = curr_window; // head
                 } else {

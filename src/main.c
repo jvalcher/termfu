@@ -34,14 +34,19 @@ int main (int argc, char *argv[])
     // TODO: manual data
     char *static_break = "main";
     state->debug_state->break_point = static_break;
-    state->debug_state->debugger = DEBUGGER_GDB;
+    state->debug_state->debugger = GDB;
 
     initialize_ncurses();
+
     signal (SIGINT, sigint_exit);
+
     parse_config (state);
+
     render_layout ("first", state);
+
     bind_keys_windows_to_plugins (state);
-    start_debugger (state->debug_state); 
+
+    start_debugger (state); 
 
     while ((ch = getch()) != ERR && state->debug_state->running)
         run_plugin (ch, state);

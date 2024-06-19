@@ -43,25 +43,11 @@ gdb_watches         "Wat"
 */
 
 
-int create_output_start_marker (debug_state_t *dstate, char *path)
+
+
+int gdb_send_output_done_str (debug_state_t *dstate)
 {
     ssize_t  bytes    = 0;
-    char *start = "echo >START:";
-
-    // send output done string for debugger reader thread
-    bytes += write (dstate->input_pipe, start, strlen (start));
-    bytes += write (dstate->input_pipe, path, strlen (path));
-    bytes += write (dstate->input_pipe, ":\n", 1);
-
-    return (int)bytes;
-}
-
-
-
-int create_output_end_marker (debug_state_t *dstate)
-{
-    ssize_t  bytes    = 0;
-    char *echo = "echo >END:";
 
     // send output done string for debugger reader thread
     bytes += write (dstate->input_pipe, dstate->out_done_str, strlen (dstate->out_done_str));
@@ -162,130 +148,96 @@ int gdb_get_local_vars (debug_state_t *state)
 
 
 
-FILE *clear_and_open_file_for_append (char *path)
-{
-    FILE *fp = fopen (path, "w");
-    fclose (fp);
-    return fopen (path, "a");
-}
-
-
 /*
     Parse GDB output
 */
-void gdb_parse_output (char *in_buffer, char *debug_out_path, char *program_out_path)
+void gdb_parse_output (char code[4], char *in_buffer)
 {
-    bool  is_gdb_output,
-          is_prog_output,
-          is_newline,
-          is_new_string;
+    int  ch,
+         prev_d_ch,
+         prev_p_ch;
+    int  i = 0,
+         d = 0,
+         p = 0;
+    bool is_gdb_output = false,
+         is_prog_output = false,
+         is_newline = true,
+         is_new_string = false;
     FILE *debug_out_ptr,
          *program_out_ptr;
-    char *buff_ptr;
-    int   i;
 
-    buff_ptr = in_buffer;
+    ch = '\0';
+    prev_d_ch = '\0';
+    prev_p_ch = '\0';
+
     
-    debug_out_ptr   = fopen (debug_out_path, "a");
+    // open output files
+    char *program_out_path = "./program.out";
     program_out_ptr = fopen (program_out_path, "a");
+        //
+    // if (code == ...) { path = ... }
+    char *debug_out_path = "./debug.out";
+    debug_out_ptr = fopen (debug_out_path, "a");
 
-    is_gdb_output = false,
-    is_prog_output = false,
-    is_newline = true,
-    is_new_string = false;
 
-    while (*buff_ptr != '\0') {
+    while (1) {
+
+        ch = in_buffer[i++];
 
         // set type of output for new line
-        if (is_newline && *buff_ptr != '\n') {
+        if (is_newline && ch != '\n') {
             is_newline = false;
-            if (*buff_ptr == '~') {
+            if (ch == '~') {
                 is_gdb_output = true;
-                ++buff_ptr;
+                is_new_string = true;
             } 
-            else if (isalpha (*buff_ptr)) {
+            if (isalpha (ch)) {
                 is_prog_output = true;
+                --i;
             }
         }
 
         // end of line
-        else if (*buff_ptr == '\n') {
+        else if (ch == '\n') {
             is_newline = true;
 
             // gdb
             if (is_gdb_output) {
                 is_gdb_output = false;
-                fputc (*buff_ptr++, debug_out_ptr);
+                if (prev_d_ch == '\"') {     // remove trailing "
+                    fseek (debug_out_ptr, -1, SEEK_CUR);
+                }
+                fputc (ch, debug_out_ptr);
             }
 
             // program
-            else if (is_prog_output) {
+            if (is_prog_output) {
                 is_prog_output = false;
-                fputc (*buff_ptr++, program_out_ptr);
-            }
-
-            else {
-                ++buff_ptr;
+                fputc (ch, program_out_ptr);
             }
         }
 
         // gdb output
         else if (is_gdb_output) {
-
-            //  if  \\\t,\n,\_  or  \\\n  -> skip
-            if (*buff_ptr == '\\' && (isalpha(*(buff_ptr + 1)) || *(buff_ptr + 1) == '\n') ) {
-                buff_ptr += 2;
-            }
-
-            //  if  \\\"  ->  \"
-            else if (*buff_ptr == '\\' && *(buff_ptr + 1) == '\"' ) {
-                buff_ptr += 1;
-                fputc (*buff_ptr++, debug_out_ptr);
-            }
-
-            //  if  \"  ->  skip
-            else if (*buff_ptr == '\"') {
-                buff_ptr += 1;
-            }
-
-            //  if  >START  -> set debug out path
-            else if ( *buff_ptr    == '>' && 
-                     *(buff_ptr + 1) == 'S' && 
-                     *(buff_ptr + 2) == 'T' && 
-                     *(buff_ptr + 3) == 'A' && 
-                     *(buff_ptr + 3) == 'R' && 
-                     *(buff_ptr + 4) == 'T') {
-                buff_ptr += 7;
-                i = 0;
-                while (*buff_ptr != ':') {
-                    debug_out_path [i++] = *buff_ptr++;
+            if (is_new_string) {            // remove leading "
+                is_new_string = false;
+                if (ch == '\"') {
+                    continue;
                 }
-                debug_out_path [i] = '\0';
-                debug_out_ptr = clear_and_open_file_for_append (debug_out_path);
-            } 
-
-            // if  >END   -> send signal
-            else if ( *buff_ptr      == '>' && 
-                     *(buff_ptr + 1) == 'E' && 
-                     *(buff_ptr + 2) == 'N' && 
-                     *(buff_ptr + 3) == 'D') {
-                buff_ptr += 4;
-                puts ("END");
-                break;
             }
-
-            else {
-                fputc (*buff_ptr++, debug_out_ptr);
-            }
+            fputc (ch, debug_out_ptr);
+            prev_d_ch = ch;
         }
 
         // program output
         else if (is_prog_output) {
-            fputc (*buff_ptr++, program_out_ptr);
+            fputc (ch, program_out_ptr);
+            prev_p_ch = ch;
         }
 
-        else {
-            ++buff_ptr;
+        // end of buffer
+        else if (ch == '\0') {
+            break;
         }
     }
 

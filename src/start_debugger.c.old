@@ -1,0 +1,175 @@
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <termio.h>
+#include <fcntl.h>
+#include <stdbool.h>
+#include <sys/wait.h>
+
+#include "start_debugger.h"
+#include "data.h"
+
+#define PIPE_READ   0
+#define PIPE_WRITE  1
+
+int debug_in_pipe  [2],
+    debug_out_pipe [2];
+
+
+static void create_debugger_pipes (debug_state_t *dstate);
+static void set_debugger (debug_state_t *dstate);
+static void start_debugger_proc (debug_state_t *dstate);
+static void start_debugger_reader_proc (debug_state_t *dstate);
+
+// TODO: add to interface
+char *gdb_cmd[]      = {"gdb", "--quiet", "--interpreter=mi", NULL, NULL};
+char *debugger_quit  = "^exit";
+
+
+/*
+    Start debugger
+*/
+void start_debugger (state_t *state)
+{
+    debug_state_t *dstate = state->debug_state;
+
+    create_debugger_pipes (dstate);
+
+    set_debugger (dstate);
+
+    start_debugger_proc (dstate);
+
+    start_debugger_reader_proc (dstate);
+}
+
+
+
+static void create_debugger_pipes (debug_state_t *dstate)
+{
+    // create debugger pipes
+    if (pipe (debug_in_pipe)  == -1 || 
+        pipe (debug_out_pipe) == -1) 
+    {
+        perror("Debugger pipe");
+        exit (EXIT_FAILURE);
+    }
+    dstate->input_pipe  = debug_in_pipe [PIPE_WRITE];
+    dstate->output_pipe = debug_out_pipe [PIPE_READ];
+}
+
+
+
+// TODO: Get file type -> set debugger
+static void set_debugger (debug_state_t *dstate)
+{
+    dstate->debugger = GDB;
+}
+
+
+
+/*
+    Start debugger process
+*/
+static void start_debugger_proc (debug_state_t *dstate)
+{
+    char  **cmd;
+    pid_t  debugger_pid;
+
+    // set to running
+    dstate->running = true;
+
+    // set command
+    switch (dstate->debugger) {
+
+        // GDB
+        case (GDB):
+            cmd = gdb_cmd;
+            cmd [3] = dstate->prog_path;
+            break;
+    }
+
+    // create debugger process
+    debugger_pid = fork ();
+    if (debugger_pid  == -1)
+    {
+        perror ("Debugger fork");
+        exit (EXIT_FAILURE);
+    }
+
+    if (debugger_pid == 0) {
+
+        dup2  (debug_in_pipe  [PIPE_READ], STDIN_FILENO);
+        close (debug_in_pipe  [PIPE_READ]);
+        close (debug_in_pipe  [PIPE_WRITE]);
+        dup2  (debug_out_pipe [PIPE_WRITE], STDOUT_FILENO);
+        close (debug_out_pipe [PIPE_WRITE]);
+        close (debug_out_pipe [PIPE_READ]);
+
+        execvp (cmd[0], cmd);
+
+        perror ("Debugger process");
+        exit (EXIT_FAILURE);
+    }
+
+}
+
+
+
+/*
+    Start debugger reading process
+*/
+static void start_debugger_reader_proc (debug_state_t *dstate)
+{
+    pid_t   debug_out_pid;
+    char    output_buffer [256],
+            debug_out_buffer [256],
+            program_out_buffer [256];
+    size_t  bytes_read;
+    bool    running = true;
+
+    // fork
+    debug_out_pid = fork ();
+    if (debug_out_pid == -1) {
+        perror ("Debugger output fork");
+        exit (EXIT_FAILURE);
+    }
+
+    // debugger output process
+    if (debug_out_pid == 0) {
+
+        close (debug_in_pipe [PIPE_READ]);
+        close (debug_in_pipe [PIPE_WRITE]);
+        close (debug_out_pipe [PIPE_WRITE]);
+
+        // read pipe output
+        while (running) 
+        {
+            bytes_read = read (debug_out_pipe [PIPE_READ], 
+                               output_buffer, 
+                               sizeof (output_buffer) - 1);
+
+            output_buffer [bytes_read] = '\0';
+
+            memset (debug_out_buffer, '\0', bytes_read);
+            memset (program_out_buffer, '\0', bytes_read);
+
+            //parse_output (dstate, output_buffer, debug_out_buffer, program_out_buffer);
+
+            // output done string  (e.g. "(gdb)")
+            if (strstr (output_buffer, dstate->out_done_str) != NULL) {
+                // release block
+            }
+
+            // exit
+            if (strstr (output_buffer, dstate->exit_str) != NULL) {
+                running = false;
+            }
+        }
+
+        exit (0);
+    }
+
+}
+

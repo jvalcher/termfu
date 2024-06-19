@@ -4,17 +4,27 @@
 
 #include "../data.h"
 
+
 /*
-    Array of plugin code strings
+    Plugin codes
 */
 extern char *plugin_code [];
+
 
 
 /*
     Plugin function pointers
 */
-typedef int (*plugin_func_t) (debug_state_t *dstate);
+typedef void (*plugin_func_t) (state_t *state);
     //
-extern plugin_func_t plugin_func_arr [];
+extern plugin_func_t plugin_func [];
+
+
+
+/*
+    Window data file paths
+*/
+extern char *win_file_path [];
+
 
 #endif

@@ -2,4 +2,4 @@
 
 #gcc -g -Wall -Wextra $(ncursesw5-config --cflags) ./run_debugger.c ./gdb.c $(ncursesw5-config --libs) && ./a.out ./hello
 
-gcc -g ./gdb.c ./run_debugger.c  -o termide_proto && ./termide_proto ./hello
+gcc -g ./gdb.c ./run_debugger.c  -o termide_proto -lpthread && ./termide_proto ./hello

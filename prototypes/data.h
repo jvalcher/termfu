@@ -2,10 +2,8 @@
 #define DATA_H
 
 #include <ncurses.h>
-#include <semaphore.h>
 
-
-#define DEBUG_SEMAPHORE  "/debug_semaphore"
+#define CODE_LEN  3
 
 
 typedef struct debug_state {
@@ -13,12 +11,14 @@ typedef struct debug_state {
     int    debugger;
     int    input_pipe;
     int    output_pipe;
+    int    win_code_pipe;
     char  *prog_path;
     char  *break_point;
     char  *out_done_str;
     char  *exit_str;
     FILE  *out_file_ptr;
-    char   output_indicator;
+    int    code_mem_id;
+    void  *shmem;            // code -> output file path
 
 } debug_state_t;
 

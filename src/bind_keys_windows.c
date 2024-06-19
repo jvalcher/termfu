@@ -5,12 +5,16 @@
 #include "utilities.h"
 #include "plugins/_plugins.h"
 
+#define ARR_SIZE  53
 
-int   key_function_index [53];
+win_keys_t *allocate_win_keys (void);
+
+int key_function_index [ARR_SIZE];
+
 
 
 /*
-    Bind shortcut keys, window_t structs to plugin_t structs
+    Bind shortcut keys, window_t structs, window data file paths to plugin_t structs
 */
 void bind_keys_windows_to_plugins (state_t *state)
 {
@@ -21,15 +25,22 @@ void bind_keys_windows_to_plugins (state_t *state)
     int  cmp;
     char key;
     extern int plugin_code_size;    // plugins/_plugins.c
-    plugin_t* curr_plugin;
-    window_t* curr_window;
+    plugin_t   *curr_plugin;
+    window_t   *curr_window;
+    win_keys_t *win_keys;
+
+    for (int i = 0; i < ARR_SIZE; i++)
+        key_function_index [i] = 0;
+
+    win_keys = allocate_win_keys();
+    state->win_keys = win_keys;
 
     curr_plugin = state->plugins;
     do {
 
+        // find index of plugin_code[] matching current plugin's code,
+        //
         key = curr_plugin->key;
-
-        // find plugin_code[] index matching current plugin's code string
         start_index = 0;
         end_index = (plugin_code_size / sizeof(plugin_code[0])) - 1;
         plugin_index = -1;
@@ -47,14 +58,17 @@ void bind_keys_windows_to_plugins (state_t *state)
             }
         }
         index_found:
-
-        // plugin code string not found
+            //
         if (plugin_index == -1)
             pfeme ("Unknown plugin code \"%s\"\n", curr_plugin->code);
 
-        // Set key_function_index[key] to plugin_index
+
+        // Convert key to index in key_function_index[index], set to plugin_index
+        // ---------
         //
         //      {0,a-z,A-Z}  -->  {0-52}
+        //      
+        // - User key press converted to this index by run_plugin()
         //
         if (key >= 'a' && key <= 'z') {
             key_function_index [key - 'a' + 1] = plugin_index;
@@ -66,15 +80,45 @@ void bind_keys_windows_to_plugins (state_t *state)
             pfeme ("\'%c\' key not found \n", key);
         }
 
-        // add window_t pointer if a window plugin
+
+        // Add to plugin:
+        // - window_t pointer and data file path
+        // - data file path
+        //
         curr_plugin->window = NULL;
         curr_window = state->curr_layout->windows;
         do {
             if (curr_plugin->key == curr_window->key) {
                 curr_plugin->window = curr_window;
+                curr_plugin->data_file_path = win_file_path [plugin_index];
             }
             curr_window = curr_window->next;
         } while (curr_window != NULL);
+
+
+        // Assign window plugin key to win_keys_t
+        // -------
+        // - Used in run_non_plugin_key()
+        //
+        if (strcmp (curr_plugin->code, "Bak") == 0) {
+            win_keys->back = (int) curr_plugin->key;
+        } 
+        else if (strcmp (curr_plugin->code, "Qut") == 0) {
+            win_keys->quit = (int) curr_plugin->key;
+        } 
+        else if (strcmp (curr_plugin->code, "ScU") == 0) {
+            win_keys->scroll_up = (int) curr_plugin->key;
+        } 
+        else if (strcmp (curr_plugin->code, "ScD") == 0) {
+            win_keys->scroll_down = (int) curr_plugin->key;
+        } 
+        else if (strcmp (curr_plugin->code, "ScL") == 0) {
+            win_keys->scroll_left = (int) curr_plugin->key;
+        } 
+        else if (strcmp (curr_plugin->code, "ScR") == 0) {
+            win_keys->scroll_right = (int) curr_plugin->key;
+        } 
+
 
         curr_plugin = curr_plugin->next;
 
@@ -83,3 +127,11 @@ void bind_keys_windows_to_plugins (state_t *state)
 
 
 
+win_keys_t *allocate_win_keys (void)
+{
+    win_keys_t *wk = (win_keys_t*) malloc (sizeof (win_keys_t));
+    if (wk == NULL) {
+        pfeme ("win_cmds_t allocation error\n");
+    }
+    return wk;
+}

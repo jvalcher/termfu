@@ -31,6 +31,50 @@
 
 
 /*
+    Print integer matrix [y][x] values
+    ---------
+    start_row   - row to start printing (ncurses)
+*/
+void print_int_matrix ( char *label,
+                        int start_row, 
+                        int matrix [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS], 
+                        int y, 
+                        int x);
+
+
+
+/*
+    Print bold, colored Ncurses string with mvwprintw()
+    ---------
+    - Takes int color variable instead of integer constant or macro
+    - Uses color pairs in src/data.h
+
+    - Usage:
+        mv_print_title (GREEN_BLACK, win, 3, 2, "Layout: %s", layout_str);
+*/
+void mv_print_title (int     color, 
+                     WINDOW *win,
+                     int     row,
+                     int     col, 
+                     char   *str);
+
+
+
+/*
+   Clear file, open for appending
+*/
+FILE *clear_and_open_file_for_append (char *path);
+
+
+
+
+/****************
+  Error handling
+ ****************/
+
+
+
+/*
     pfem()
     -----------
     Print formatted location and error message
@@ -67,6 +111,8 @@
     fprintf (stderr, __VA_ARGS__); \
 } while (0)
 
+
+
 /*
     pfeme()
     --------
@@ -87,6 +133,8 @@
     exit (EXIT_FAILURE); \
 } while (0)
 
+
+
 /*  
     pfemo()
     -------------
@@ -105,6 +153,8 @@
     fprintf (stderr, __VA_ARGS__); \
 } while (0)
 
+
+
 /* 
     pfemoe()
     ----------
@@ -120,44 +170,7 @@
 
 
 
-/*
-    Print integer matrix [y][x] values
-    ---------
-    start_row   - row to start printing (ncurses)
-*/
-void print_int_matrix ( char *label,
-                        int start_row, 
-                        int matrix [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS], 
-                        int y, 
-                        int x);
 
-
-
-/*
-    Print bold, colored Ncurses string with mvwprintw()
-    ---------
-    Takes int color variable instead of integer constant or macro
-
-    Uses color pairs in src/data.h
-
-    Usage:
-
-        mv_print_title (GREEN_BLACK, win, 3, 2, "Layout: %s", layout_str);
-*/
-void mv_print_title (int     color, 
-                     WINDOW *win,
-                     int     row,
-                     int     col, 
-                     char   *str);
-
-
-/*
-    Set, unset color using int variable
-    -----------
-    wattron/off() require the use of integer constants or macros
-*/
-void set_bold_color (WINDOW* win, int color);
-void unset_bold_color (WINDOW* win, int color);
 
 
 

@@ -86,7 +86,8 @@ int main (void)
     window->file_max_mid = window->file_rows - ((window->win_rows - 1) / 2);
     window->win_mid_line = window->file_min_mid;
     window->file_first_char = 0;
-    
+
+
     // display starting lines
     display_lines(window, 0);
 
