@@ -19,8 +19,8 @@
  ****************/
 
 
-void insert_output_start_marker (state_t*);
-void insert_output_end_marker   (state_t*);
+void insert_output_start_marker (char*, state_t*);
+void insert_output_end_marker   (char*, state_t*);
 void parse_output               (int*, int, char*, char*, char*, char*);
 void run_other_win_key          (int, state_t*);
 

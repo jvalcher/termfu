@@ -18,8 +18,6 @@ A multi-language terminal debugger for GNU/Linux
 
 - [x] Add title string color pulse, switch to indicate usage
 
-- [x] Clean out utilities.c
-
 - [ ] Add debugger, plugins functionality
   - [x] Add plugin function interface
   - [x] Add select window coloring
@@ -47,6 +45,8 @@ A multi-language terminal debugger for GNU/Linux
 - [ ] Figure out, cull refresh(), wrefresh() calls
 
 - [ ] Add cli flags
+
+- [ ] Organize Makefile dependencies for better compile time
 
 - [ ] Incorporate errno messages into pfem
 
@@ -84,7 +84,7 @@ Unique, three-character, case-sensitive "plugin" codes are each associated with 
 ### Example configuration...
 
 ```
-[ plugins ]
+[ keys ]
 
 Qut : q : (q)uit
 Bak : b : (p)rev

@@ -1,19 +1,20 @@
 
-[ plugins ]
+[ keys ]
 
 Bld : u : b(u)ilds
 Lay : l : (l)ayouts
-Bak : q : (q)uit
+Bak : b : (b)ack
+Qut : q : (q)uit
 Run : r : (r)un
 Nxt : n : (n)ext
 Stp : s : (s)tep
 Con : c : (c)ontinue
-Fin : i : f(i)nish
+Fin : F : (F)inish
 Kil : k : (k)ill
-Brk : b : (b)reakpoints
-Src : f : source (f)ile
+Brk : B : (B)reakpoints
+Src : S : (S)ource file
 Asm : a : (a)ssembly
-Reg : e : r(e)gisters
+Reg : R : (R)egisters
 Prm : p : (p)rompt
 Wat : w : (w)atch
 LcV : v : local (v)ars
@@ -22,11 +23,11 @@ Out : o : (o)utput
 
 [ layout : gdb_debug_1 ]
 >h
-ulq
-rnsck
+ulbq
+rnscFk
 >w
-bffaa 
-wffaa
-vffaa
-eoopp
+BFFaa 
+wFFaa
+vFFaa
+Roopp
 

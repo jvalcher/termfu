@@ -17,7 +17,7 @@
 static FILE      *open_config_file       (void);
 static void       get_category_and_label (FILE*, char*, char*);
 static void       create_plugins         (FILE*, state_t*);
-static layout_t  *create_layout          (FILE*, state_t*, char*);
+static layout_t  *create_layout          (FILE*, char*);
 static layout_t  *allocate_layout        (void);
 static plugin_t  *allocate_plugin        (void);
 
@@ -47,20 +47,23 @@ void parse_config (state_t *state)
             get_category_and_label (file, category, label);
 
         // plugins
-        if (strcmp (category, "plugins") == 0) {
+        if (strcmp (category, "keys") == 0) {
             create_plugins (file, state);
         }
 
         // layout
         if (strcmp (category, "layout") == 0) {
 
-            curr_layout = create_layout (file, state, label);
+            state->curr_layout = create_layout (file, label);
 
             if (first_layout) {
-                state->layouts = curr_layout;
+                state->layouts = state->curr_layout;
+                curr_layout = state->curr_layout;
                 first_layout = false;
+            } else {
+                curr_layout->next = state->curr_layout;
+                state->curr_layout->next = NULL;
             }
-            curr_layout = curr_layout->next;
         }
 
         category [0] = '\0';
@@ -226,7 +229,6 @@ static void create_plugins (FILE *file, state_t *state)
     Create new layout
 */
 static layout_t* create_layout (FILE* file,
-                                state_t *state, 
                                 char *label)
 {
     int ch, next_ch;
@@ -347,12 +349,12 @@ static layout_t* create_layout (FILE* file,
     int y_ratio   = 0;
     int x_ratio   = 0;
     bool  x_count = true;
-    for (i = 0; i < strlen (win_keys); i++) {
-        if (win_keys [i] == '\n') {
+    for (size_t m = 0; m < strlen (win_keys); m++) {
+        if (win_keys [m] == '\n') {
             y_ratio += 1;
             x_count = false;
         }
-        if (x_count == true && isalpha(win_keys[i])) {
+        if (x_count == true && isalpha(win_keys[m])) {
             x_ratio += 1;
         }
     }
@@ -378,14 +380,14 @@ static layout_t* create_layout (FILE* file,
     // add keys to matrix
     int row = 0;
     int col = 0;
-    for (i = 0; i < strlen (win_keys); i++) {
-        layout_matrix [row][col] = win_keys [i];
+    for (size_t m = 0; m < strlen (win_keys); m++) {
+        layout_matrix [row][col] = win_keys [m];
         if (col < x_ratio - 1) {
             col += 1;
         } else {
             col  = 0;
             row += 1;
-            i   += 1;     // skip '\n'
+            m   += 1;     // skip '\n'
         }
     }
 

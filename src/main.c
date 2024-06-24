@@ -1,5 +1,8 @@
 #include <signal.h>
 #include <ncurses.h>
+#include <termio.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include "data.h"
 #include "utilities.h"
@@ -13,23 +16,21 @@
 static state_t  *allocate_state         (void);
 static void      parse_cli_arguments    (int, char *argv[], state_t*);
 static void      initialize_ncurses     (void);
-static void      set_signals            (void);
+static void      set_signal_semaphore   (state_t*);
 static void      handle_sigint_exit     (int);
+static char      getchr                 (void);
 
 
 
 int main (int argc, char *argv[]) 
 {
-    int   ch;
-    state_t *state;
-
-    state = allocate_state();
+    state_t *state = allocate_state();
 
     parse_cli_arguments (argc, argv, state);
 
     initialize_ncurses();
 
-    set_signals();
+    set_signal_semaphore (state);
 
     parse_config (state);
 
@@ -39,10 +40,15 @@ int main (int argc, char *argv[])
 
     start_debugger (state); 
 
-    while ((ch = getch()) != ERR && state->running)
+    state->running = true;
+
+    while (state->running) {
+        int ch = getchr();
         run_plugin (ch, state);
+    }
 
     close_ncurses();
+
     return 0;
 }
 
@@ -62,22 +68,36 @@ static state_t *allocate_state (void)
 
 
 
+static debug_state_t *allocate_debug_state (void)
+{
+    debug_state_t *dstate = (debug_state_t*) malloc (sizeof (debug_state_t));
+    if (dstate == NULL) {
+        pfeme ("debug_state_t allocation error\n");
+    }
+    return dstate;
+}
+
+
+
 /*
     Parse command-line arguments
 */
 static void parse_cli_arguments (int argc,
-                             char *argv[],
-                             state_t *state)
+                                 char *argv[],
+                                 state_t *state)
 {
+    state->debug_state = allocate_debug_state ();
+
     // TODO: add flag options
         // -h  - help
         // -f  - config file path
         // -d  - manually choose debugger
         // -l  - set initial layout
-    if (argc > 1) 
+    if (argc > 1) {
         state->debug_state->prog_path = argv [1];
-    else 
+    } else {
         pfeme ("Usage:  termide a.out\n");
+    }
 }
 
 
@@ -101,8 +121,9 @@ void initialize_ncurses (void)
 /*
     Set signals
 */
-static void set_signals (void)
+static void set_signal_semaphore (state_t *state)
 {
+    // ctrl + c
     signal (SIGINT, handle_sigint_exit);
 }
 
@@ -113,8 +134,45 @@ static void set_signals (void)
 */
 void handle_sigint_exit (int sig_num)
 {
+    (void) sig_num;
+    // TODO: send >EXIT et al. to processes
     pfeme ("Program exited (SIGINT)\n");
 }
 
 
 
+static char getchr (void)
+{
+#ifndef DEBUG
+
+        return getch();
+
+#endif
+
+#ifdef DEBUG
+
+    int ch,
+        stdout_fd,
+        dev_null_fd;
+    static struct termios oldt, newt;
+
+    dev_null_fd = open ("/dev/null", O_WRONLY);
+    stdout_fd   = dup (STDOUT_FILENO);
+
+    // disable need to hit enter after key press
+    tcgetattr (STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);          
+    tcsetattr (STDIN_FILENO, TCSANOW, &newt);
+    dup2 (dev_null_fd, STDOUT_FILENO);
+        //
+    ch = getchar();
+        //
+    dup2 (stdout_fd, STDOUT_FILENO);
+    tcsetattr (STDIN_FILENO, TCSANOW, &oldt);
+
+    close (dev_null_fd);
+    return ch;
+
+#endif
+}

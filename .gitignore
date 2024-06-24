@@ -4,8 +4,8 @@ termide-dev
 core
 ncurses.h
 tags
-core
 hello*
+debug_*
 
 .gdb*
 
@@ -13,5 +13,7 @@ obj/*
 !obj/.gitkeep
 
 build.log
-.vim-bookmarks
 tags
+
+tests/parse_debugger_out/d/debug.out
+tests/parse_debugger_out/d/progr.out

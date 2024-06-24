@@ -25,12 +25,17 @@
 
 #define arrlen(a) (sizeof(a) / sizeof *(a))
 
+#define CHECK_BYTES(b)  if ((b) == 0) pfeme ("No bytes written")
+
+#define INPUT_PIPE      state->debug_state->input_pipe
+
 
 
 void   close_ncurses                    (void);
 FILE  *clear_and_open_file_for_append   (char *path);
 void   set_nc_attribute                 (WINDOW*, int);
 void   unset_nc_attribute               (WINDOW*, int);
+char  *get_code_path                    (char*, plugin_t*);
 
 
 

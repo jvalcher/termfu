@@ -19,17 +19,21 @@
 // main functions
 static void    set_layout             (char*, state_t*, layout_t*);
 static void    calculate_layout       (layout_t*);
-static void    render_header          (state_t*);
-static void    render_windows         (state_t*);
 
-// helper functions
-static void    render_header_titles   (state_t*);
-static WINDOW* allocate_window        (int, int, int, int);
-static WINDOW *render_window          (int, int, int, int);
-static void    render_titles          (state_t*);
-static void    fix_corners            (window_t*);
-static int     fix_corner_char        (int, int);
-static void    print_layout_info      (layout_t*);
+#ifndef DEBUG
+    static void    render_header          (state_t*);
+    static void    render_windows         (state_t*);
+    static void    render_header_titles   (state_t*);
+    static WINDOW* allocate_window        (int, int, int, int);
+    static WINDOW *render_window          (int, int, int, int);
+    static void    render_titles          (state_t*);
+    static void    fix_corners            (window_t*);
+    static int     fix_corner_char        (int, int);
+#endif
+
+#ifdef DEBUG
+    static void    print_layout_info      (state_t*);
+#endif
 
 char *prog_name    = "termIDE";
 char *first_layout = "&F";
@@ -65,7 +69,7 @@ void render_layout (char *label, state_t *state)
 
 /****************
   Main functions
- ****************
+ ****************/
 
 
 /*
@@ -223,8 +227,8 @@ static void calculate_layout (layout_t *layout)
                     pfeme ("Unable to allocate memory for window_t struct");
                 curr_window->selected = false;
                 curr_window->file_offsets = NULL;
-                curr_window->file_ptr = NULL;
                 curr_window->next = NULL;
+                curr_window->out_file_path = NULL;
 
                 // set head window or link previous
                 if (y == 0 && x == 0) {
@@ -302,6 +306,7 @@ static void calculate_layout (layout_t *layout)
 }
 
 
+#ifndef DEBUG
 
 /*
     Render header WINDOW
@@ -311,6 +316,11 @@ static void calculate_layout (layout_t *layout)
 */
 static void render_header (state_t *state)
 {
+#ifdef DEBUG
+    (void) state;
+#endif
+
+#ifndef DEBUG
     layout_t *layout = state->curr_layout;
     int title_len = strlen (prog_name);
     char *colon = ":";
@@ -338,6 +348,7 @@ static void render_header (state_t *state)
 
     refresh();
     wrefresh (layout->header);
+#endif
 }
 
 
@@ -347,6 +358,11 @@ static void render_header (state_t *state)
 */
 static void render_windows (state_t *state)
 {
+#ifdef DEBUG
+    (void) state;
+#endif
+
+#ifndef DEBUG
     // render windows
     window_t *w = state->curr_layout->windows;
     do {
@@ -360,6 +376,7 @@ static void render_windows (state_t *state)
     fix_corners (state->curr_layout->windows);
 
     render_titles (state);
+#endif
 }
 
 
@@ -392,7 +409,7 @@ static void render_header_titles (state_t *state)
     memset (titles_str, '\0', title_str_len);
     titles_str [0] = ' ';
 
-    for (int j = 0; j < strlen (layout->hdr_key_str); j++) {
+    for (size_t j = 0; j < strlen (layout->hdr_key_str); j++) {
 
         ch = layout->hdr_key_str [j];
         
@@ -404,7 +421,7 @@ static void render_header_titles (state_t *state)
 
             // print title
             wattron (header, COLOR_PAIR(HEADER_TITLE_COLOR));
-            for (int i = 0; i < strlen(titles_str) + 1; i++) {
+            for (size_t i = 0; i < strlen(titles_str) + 1; i++) {
 
                 mvwprintw (header, row, header_title_indent + i, "%c", titles_str[i]);
 
@@ -540,6 +557,7 @@ static int fix_corner_char (int y,
                             int x)
 {
     int i;
+    unsigned int uch;
     int ch;
 
     // get border character
@@ -552,6 +570,7 @@ static int fix_corner_char (int y,
     ch = mvwinch (curscr, y, x) & A_CHARTEXT;
 
     // if border character already corrected, return it as is
+    uch = 0;
     int corrected_chars [] = {
         ACS_LTEE,
         ACS_RTEE,
@@ -560,8 +579,9 @@ static int fix_corner_char (int y,
         ACS_PLUS
     };
     for (i = 0; i < 5; i++) {
-        if (ch == (corrected_chars [i] & A_CHARTEXT))
+        if (uch == (corrected_chars [i] & A_CHARTEXT)) {
             return corrected_chars [i];
+        }
     }
 
     // check for surrounding border characters
@@ -705,6 +725,7 @@ static WINDOW* allocate_window (int rows,
     return win;
 }
 
+#endif
 
 
 #ifdef DEBUG
@@ -716,11 +737,12 @@ static WINDOW* allocate_window (int rows,
     - Current layout's plugin key bindings
     - Called in render_layout.c -> render_layout()
 */
-static void print_layout (state_t *state)
+static void print_layout_info (state_t *state)
 {
     int i, j;
     layout_t *layout = state->curr_layout;
 
+    puts ("");
     printf ("Label: %s\n", layout->label);
     puts ("-----------");
     printf ("Screen cols: %d\n", getmaxy (stdscr));
@@ -737,19 +759,6 @@ static void print_layout (state_t *state)
     for (i = 0; i < layout->row_ratio; i++) {
         for (j = 0; j < layout->col_ratio; j++) {
             printf ("%c", layout->win_matrix [i][j]);
-        }
-        puts ("");
-    }
-    puts ("");
-
-    // segment (rows x cols)
-    printf ("Segment (rows x cols):\n");
-    for (i = 0; i < layout->row_ratio; i++) {
-        for (j = 0; j < layout->col_ratio; j++) {
-            printf ("(%c) %d x %d    ", 
-                    layout->win_matrix [i][j], 
-                    layout->windows->win_rows,
-                    layout->windows->win_cols);
         }
         puts ("");
     }

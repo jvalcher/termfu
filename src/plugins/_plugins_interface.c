@@ -1,8 +1,17 @@
 
-#include "gdb.h"
+/*
+    Interface for plugin and other debugger-specific functions
+*/
+
+#include <string.h>
+
+#include "gdb_plugins.h"
 #include "../data.h"
+#include "../window_updates/_insert_output_marker.h"
 #include "../render_window_data.h"
-#include "../run_plugin.h"
+#include "../window_updates/_win_updates_interface.h"
+
+char *plugin_path;
 
 
 /*
@@ -10,66 +19,8 @@
     -----------
     - Allows 0 to stand for "unassigned" in key_function_index[]  (data.h)
 */
-void empty_func (state_t *state) {}
-
-
-
-/********************
-  Debugger functions
- ********************/
-
-
-/*
-    Insert start marker, plugin output file path into debugger process output
-    ------------
-    - Called by run_plugin()
-    - Output used by debugger reader process
-*/
-void insert_output_start_marker (state_t *state)
-{
-    switch (state->debug_state->debugger) {
-        case (DEBUGGER_GDB):
-            gdb_insert_output_start_marker (state);
-            break;
-    }
-}
-
-
-
-/*
-    Insert end marker, plugin code into debugger process output
-    ------------
-    - Called by run_plugin()
-    - Output used by debugger reader process
-*/
-void insert_output_end_marker (state_t *state)
-{
-    switch (state->debug_state->debugger) {
-        case (DEBUGGER_GDB):
-            gdb_insert_output_end_marker (state);
-            break;
-    }
-}
-
-
-
-/*
-    Parse debugger process output
-    ------------
-    - Called in debugger reader process
-*/
-void parse_output (int  *rstate, 
-                   int   debugger, 
-                   char *in_buffer, 
-                   char *debug_out_path, 
-                   char *program_out_path, 
-                   char *code)
-{
-    switch (debugger) {
-        case (DEBUGGER_GDB):
-            gdb_parse_output (rstate, in_buffer, debug_out_path, program_out_path, code);
-            break;
-    }
+void empty_func (state_t *state) { 
+    (void) state; 
 }
 
 
@@ -86,7 +37,6 @@ void quit (state_t *state)
             gdb_exit (state);
             break;
     }
-
     state->running = false;
 }
 
@@ -96,8 +46,8 @@ void back (state_t *state)
 {
     // TODO: popup window in selected window
         // push/pop  curr_window linked list
-    if (state->curr_plugin->window)
-        deselect_window (state->curr_plugin->title, state->curr_plugin->window);
+    (void) state;
+    render_window_data (NULL, state, NULL, WINDOW_UNSELECT);
 }
 
 
@@ -105,7 +55,7 @@ void back (state_t *state)
 void scroll_down (state_t *state)
 {
     if (state->curr_window) {
-        render_window_data (state->curr_window, KEY_DOWN);
+        render_window_data (state->curr_window, state, KEY_DOWN, WINDOW_DATA);
     }
 }
 
@@ -114,7 +64,7 @@ void scroll_down (state_t *state)
 void scroll_up (state_t *state)
 {
     if (state->curr_window) {
-        render_window_data (state->curr_window, KEY_UP);
+        render_window_data (state->curr_window, state, KEY_UP, WINDOW_DATA);
     }
 }
 
@@ -123,7 +73,7 @@ void scroll_up (state_t *state)
 void scroll_left (state_t *state)
 {
     if (state->curr_window) {
-        render_window_data (state->curr_window, KEY_LEFT);
+        render_window_data (state->curr_window, state, KEY_LEFT, WINDOW_DATA);
     }
 }
 
@@ -132,7 +82,7 @@ void scroll_left (state_t *state)
 void scroll_right (state_t *state)
 {
     if (state->curr_window) {
-        render_window_data (state->curr_window, KEY_RIGHT);
+        render_window_data (state->curr_window, state, KEY_RIGHT, WINDOW_DATA);
     }
 }
 
@@ -146,16 +96,16 @@ void run_other_win_key (int key, state_t *state)
     // Use k->back in window while loop as exit condition
 
     if (key == k->scroll_up) {
-        render_window_data (win, KEY_UP);
+        render_window_data (state->curr_window, state, KEY_UP, WINDOW_DATA);
     } 
     else if (key == k->scroll_down) {
-        render_window_data (win, KEY_DOWN);
+        render_window_data (state->curr_window, state, KEY_DOWN, WINDOW_DATA);
     } 
     else if (key == k->scroll_left) {
-        render_window_data (win, KEY_LEFT);
+        render_window_data (state->curr_window, state, KEY_LEFT, WINDOW_DATA);
     } 
     else if (key == k->scroll_right) {
-        render_window_data (win, KEY_RIGHT);
+        render_window_data (state->curr_window, state, KEY_RIGHT, WINDOW_DATA);
     } 
     else if (key == k->quit) {
         quit (state); 
@@ -164,16 +114,16 @@ void run_other_win_key (int key, state_t *state)
         // TODO: pg up/down, home, end
         switch (key) {
             case KEY_UP:
-                render_window_data (win, KEY_UP);
+                render_window_data (state->curr_window, state, KEY_UP, WINDOW_DATA);
                 break;
             case KEY_DOWN:
-                render_window_data (win, KEY_DOWN);
+                render_window_data (state->curr_window, state, KEY_DOWN, WINDOW_DATA);
                 break;
             case KEY_RIGHT:
-                render_window_data (win, KEY_RIGHT);
+                render_window_data (state->curr_window, state, KEY_RIGHT, WINDOW_DATA);
                 break;
             case KEY_LEFT:
-                render_window_data (win, KEY_LEFT);
+                render_window_data (state->curr_window, state, KEY_LEFT, WINDOW_DATA);
                 break;
         }
     }
@@ -182,74 +132,75 @@ void run_other_win_key (int key, state_t *state)
 
 
 
-/******************
-   Header debugger
- ******************/
-
+/*******************
+  Debugger commands
+ *******************/
 
 
 void cont (state_t *state)
 {
+    insert_output_start_marker ("Prm", state);
     switch (state->debug_state->debugger) {
-        case (DEBUGGER_GDB):
-            gdb_continue (state);
-            break;
+        case (DEBUGGER_GDB): gdb_continue (state); break;
     }
+    insert_output_end_marker ("Prm", state);
 }
 
 
 
 void finish (state_t *state)
 {
+    insert_output_start_marker ("Prm", state);
     switch (state->debug_state->debugger) {
-        case (DEBUGGER_GDB):
-            gdb_finish (state);
-            break;
+        case (DEBUGGER_GDB): gdb_finish (state); break;
     }
+    insert_output_end_marker ("Prm", state);
 }
 
 
 
 void kill_prog (state_t *state)
 {
+    insert_output_start_marker ("Prm", state);
     switch (state->debug_state->debugger) {
-        case (DEBUGGER_GDB):
-            gdb_kill (state);
-            break;
+        case (DEBUGGER_GDB): gdb_kill (state); break;
     }
+    insert_output_end_marker ("Prm", state);
 }
 
 
 
 void next (state_t *state)
 {
+    insert_output_start_marker ("Prm", state);
     switch (state->debug_state->debugger) {
-        case (DEBUGGER_GDB):
-            gdb_next (state);
-            break;
+        case (DEBUGGER_GDB): gdb_next (state); break;
     }
+    insert_output_end_marker ("Prm", state);
 }
 
 
 
 void run (state_t *state)
 {
+    insert_output_start_marker ("Prm", state);
     switch (state->debug_state->debugger) {
-        case (DEBUGGER_GDB):
-            gdb_run (state);
-            break;
+        case (DEBUGGER_GDB): gdb_run (state); break;
     }
+    insert_output_end_marker ("Prm", state);
+        //
+    update_local_vars (state);
 }
 
 
 
 void step (state_t *state)
 {
+    insert_output_start_marker ("Prm", state);
     switch (state->debug_state->debugger) {
-        case (DEBUGGER_GDB):
-            gdb_step (state);
-            break;
+        case (DEBUGGER_GDB): gdb_step (state); break;
     }
+    insert_output_end_marker ("Prm", state);
 }
 
 
@@ -257,19 +208,24 @@ void step (state_t *state)
 // TODO: 
     // add line int to command
     // via popup?
-void until (state_t *state) {}
+void until (state_t *state) {
+    (void) state;
+}
 
 
 
 
 
-/***************
-   Popup window
- ***************/
+/****************
+   Popup windows
+ ****************/
 
 
 // TODO:
-static void open_popup_window (state_t *state) {}
+void open_popup_window (state_t *state)
+{
+    (void) state;
+}
 
 
 
@@ -277,11 +233,25 @@ static void open_popup_window (state_t *state) {}
     // add "builds" section to config file
     // build_t linked list ({ name, build_str });
     // popup window
-void pwin_builds (state_t *state) {}
+void pwin_builds (state_t *state) {
+    (void) state;
+}
 
 
 
-void pwin_layouts (state_t *state) {}
+// TODO:
+void pwin_layouts (state_t *state)
+{
+    (void) state;
+}
+
+
+
+// TODO:
+void pwin_source_files (state_t *state)
+{
+    (void) state;
+}
 
 
 
@@ -375,12 +345,6 @@ void win_watches (state_t *state)
             break;
     }
 }
-
-
-
-/********************
-  Update window data
- ********************/
 
 
 

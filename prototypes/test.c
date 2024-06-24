@@ -1,23 +1,18 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
 
-
-void change (int *num)
-{
-    *num = 8;
-}
-
-void change_helper (int *num)
-{
-    change (num);
-}
 
 int main (void)
 {
-    int num = 4;
+    char share_path[130];
+    struct stat st = {0};
+    char *home = getenv ("HOME");
+    snprintf (share_path, sizeof (share_path), "%s/%s", home, ".local/share/termide");
+    if (stat (share_path, &st) == -1) {
+        mkdir (share_path, 0700);
+    }
 
-    change_helper (&num);
-
-    printf ("%d\n", num);
      
     return 0;
 }

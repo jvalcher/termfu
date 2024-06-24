@@ -1,0 +1,11 @@
+#!/bin/bash
+
+gcc -g -Wall -Wextra -o ./parse \
+    $(ncurses5-config --cflags) \
+    -I ../../src \
+    ./test.c \
+    ../../src/parse_debugger_output.c \
+    ../../src/utilities.c \
+    $(ncurses5-config --libs) \
+    && ./parse
+

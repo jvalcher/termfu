@@ -45,10 +45,7 @@ Plugin
 */
 
 #include "_plugins.h"
-#include "_interface.h"
-
-#define FILE_PATH  "/var/lib/termide/"
-
+#include "_plugins_interface.h"
 
 
 /*
@@ -64,7 +61,6 @@ Plugin
 char *plugin_code [] = {
     
     "EMP",
-
     "Asm",
     "Bak",
     "Bld",
@@ -90,6 +86,7 @@ char *plugin_code [] = {
     "Wat"
 };
 int plugin_code_size = sizeof (plugin_code);
+int num_plugins = sizeof (plugin_code) / sizeof (plugin_code[0]);
 
 
 
@@ -101,7 +98,6 @@ int plugin_code_size = sizeof (plugin_code);
 plugin_func_t plugin_func [] = {
 
     (plugin_func_t) empty_func,         // "EMP"
-
     (plugin_func_t) win_assembly,       // "Asm"
     (plugin_func_t) back,               // "Bak"
     (plugin_func_t) pwin_builds,        // "Bld"
@@ -134,30 +130,33 @@ plugin_func_t plugin_func [] = {
     ---------
     - Bound to plugins in bind_keys_windows_to_plugins()
 */
-char *win_file_path [] = {
+char *win_file_name [] = {
 
-    NULL,                           // "EMP"
-    FILE_PATH "assembly.asm",       // "Asm"
-    NULL,                           // "Bak"
-    FILE_PATH "builds.lst",         // "Bld"
-    FILE_PATH "breakpoints.lst",    // "Brk"
-    NULL,                           // "Qut"
-    NULL,                           // "Con"
-    NULL,                           // "Fin"
-    NULL,                           // "Kil"
-    FILE_PATH "layouts.lst",        // "Lay"
-    FILE_PATH "local_vars.lst",     // "LcV"
-    NULL,                           // "Nxt"
-    FILE_PATH "program.out",        // "Out"
-    FILE_PATH "debugger.out",       // "Prm"
-    FILE_PATH "registers.lst",      // "Reg"
-    NULL,                           // "Run"
-    NULL,                           // "ScD"
-    NULL,                           // "ScL"
-    NULL,                           // "ScR"
-    NULL,                           // "ScU"
-    FILE_PATH "current.src",        // "Src"
-    NULL,                           // "Stp"
-    NULL,                           // "Unt"
-    FILE_PATH "watchpoints.lst",    // "Wat"
+    NULL,                       // "EMP"
+    "assembly.asm",             // "Asm"
+    NULL,                       // "Bak"
+    "builds.lst",               // "Bld"
+    "breakpoints.lst",          // "Brk"
+    NULL,                       // "Con"
+    NULL,                       // "Fin"
+    NULL,                       // "Kil"
+    "layouts.lst",              // "Lay"
+    "local_vars.lst",           // "LcV"
+    NULL,                       // "Nxt"
+    "program.out",              // "Out"
+    "debugger.out",             // "Prm"
+    NULL,                       // "Qut"
+    "registers.lst",            // "Reg"
+    NULL,                       // "Run"
+    NULL,                       // "ScD"
+    NULL,                       // "ScL"
+    NULL,                       // "ScR"
+    NULL,                       // "ScU"
+    "curr_src.path",            // "Src"
+    NULL,                       // "Stp"
+    NULL,                       // "Unt"
+    "watchpoints.lst"           // "Wat"
 };
+
+
+

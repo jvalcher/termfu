@@ -13,7 +13,11 @@
    termIDE
  ***********/
 
+#define RENDER_WINDOW_SEM_NAME  "/render_window_sem"
+#define PARENT_PROCESS  0
+#define CHILD_PROCESS   1
 extern char *prog_name;
+
 
 
 
@@ -79,6 +83,7 @@ extern char *prog_name;
  *****************************/
 
 #define CONFIG_FILE             ".termide"
+#define DATA_DIR_PATH           ".local/share/termide"
 #define MAX_CONFIG_CATEG_LEN    20
 #define MAX_CONFIG_LABEL_LEN    20
 #define MAX_KEY_STR_LEN         50
@@ -141,8 +146,7 @@ typedef struct window {
     int                win_border [8];
     int                win_mid_line;
 
-    char               file_path [256];
-    FILE              *file_ptr;
+    char              *out_file_path;
     int                file_first_char;
     int                file_rows;
     int                file_max_cols;
@@ -211,7 +215,6 @@ typedef struct plugin {
     char           code [4];
     char           key;
     char           title [MAX_TITLE_LEN];
-    char          *data_file_path;
     window_t*      window;
     struct plugin *next;
 
@@ -249,14 +252,10 @@ typedef struct debug_state {
     pid_t   debugger_pid;
     int     input_pipe;
     int     output_pipe;
+
     char   *prog_path;
-    char   *out_file_path;
-    FILE   *out_file_ptr;
-    char   *out_parsed_file_path;
-    FILE   *out_parsed_file_ptr;
-    char   *break_point;
-    char   *out_done_str;
-    char   *exit_str;
+    char   *prg_out_path;
+    char   *dbg_out_path;
 
 } debug_state_t;
 
@@ -294,6 +293,7 @@ typedef struct win_keys {
 typedef struct state {
 
     bool            running;
+    int             process;
 
     layout_t       *curr_layout;
     window_t       *curr_window;

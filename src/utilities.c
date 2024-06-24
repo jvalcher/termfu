@@ -1,8 +1,8 @@
 #include <ncurses.h>
 #include <unistd.h>
 
-#include "data.h"
 #include "utilities.h"
+#include "data.h"
 
 
 
@@ -27,6 +27,18 @@ FILE *clear_and_open_file_for_append (char *path)
     FILE *fp = fopen (path, "w");
     fclose (fp);
     return fopen (path, "a");
+}
+
+
+
+char *get_code_path (char *code, plugin_t *plugins)
+{
+    do {
+        if (strcmp (code, plugins->code) == 0)
+            break;
+        plugins = plugins->next;
+    } while (plugins != NULL);
+    return plugins->window->out_file_path;
 }
 
 

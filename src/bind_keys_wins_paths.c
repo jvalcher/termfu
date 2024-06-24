@@ -1,15 +1,16 @@
 #include <string.h>
 
-#include "bind_keys_wins_paths.h"
 #include "data.h"
 #include "utilities.h"
 #include "plugins/_plugins.h"
+#include "bind_keys_wins_paths.h"
 
-static void  *allocate_win_keys         (state_t*);
-static int    find_plugin_index         (char, plugin_t*);
-static void   set_plugin_index          (int, char, plugin_t*);
-static void   add_win_ptr_and_out_path  (int, plugin_t*, window_t*);
-static void   set_win_keys              (plugin_t*, win_keys_t*);
+static win_keys_t  *allocate_win_keys         (void);
+static int          find_plugin_index         (plugin_t*);
+static void         set_plugin_index          (int, char);
+static void         add_win_ptr_and_out_path  (plugin_t*, window_t*);
+static void         add_win_path              (int, plugin_t*);
+static void         set_win_keys              (plugin_t*, win_keys_t*);
 
 #ifdef DEBUG
 static void   print_key_and_func_index (void);
@@ -24,14 +25,13 @@ int key_function_index [ARR_SIZE] = {0};
 /*
     Bind shortcut keys, window_t structs, window data file paths to plugin_t structs
 */
-void bind_keys_windows_paths (state_t *state)
+void bind_keys_wins_paths (state_t *state)
 {
     int plugin_index;
     char key;
     plugin_t   *curr_plugin;
 
-    // allocate win_keys_t struct
-    allocate_win_keys (state);
+    state->win_keys = allocate_win_keys ();
 
     curr_plugin = state->plugins;
     do {
@@ -39,19 +39,22 @@ void bind_keys_windows_paths (state_t *state)
         key = curr_plugin->key;
 
         // find index of plugin_code[] matching current plugin's code,
-        plugin_index = find_plugin_index (key, curr_plugin);
+        plugin_index = find_plugin_index (curr_plugin);
 
         // Convert key to index in key_function_index[index], set to plugin_index
         //
         //      {0,a-z,A-Z}  -->  {0-52}
         //
-        set_plugin_index (plugin_index, key, curr_plugin);
+        set_plugin_index (plugin_index, key);
 
         // Add window_t pointer and debugger output data file path
-        add_win_ptr_and_out_path (plugin_index, curr_plugin, state->curr_layout->windows);
+        add_win_ptr_and_out_path (curr_plugin, state->curr_layout->windows);
 
         // Assign plugin key to win_keys_t if applicable
         set_win_keys (curr_plugin, state->win_keys);
+
+        // add window output path if applicable
+        add_win_path (plugin_index, curr_plugin);
 
         curr_plugin = curr_plugin->next;
     } while (curr_plugin != NULL);
@@ -64,18 +67,18 @@ void bind_keys_windows_paths (state_t *state)
 
 
 
-static void *allocate_win_keys (state_t *state)
+static win_keys_t *allocate_win_keys (void)
 {
     win_keys_t *win_keys = (win_keys_t*) malloc (sizeof (win_keys_t));
     if (win_keys == NULL) {
         pfeme ("win_cmds_t allocation error\n");
     }
-    state->win_keys = win_keys;
+    return win_keys;
 }
 
 
 
-static int find_plugin_index (char key, plugin_t *curr_plugin)
+static int find_plugin_index (plugin_t *curr_plugin)
 {
     extern int plugin_code_size;    // plugins/_plugins.c
 
@@ -108,8 +111,7 @@ static int find_plugin_index (char key, plugin_t *curr_plugin)
 
 
 static void set_plugin_index (int plugin_index,
-                              char key,
-                              plugin_t *curr_plugin)
+                              char key)
 {
     if (key >= 'a' && key <= 'z') {
         key_function_index [key - 'a' + 1] = plugin_index;
@@ -124,24 +126,44 @@ static void set_plugin_index (int plugin_index,
 
 
 
-static void add_win_ptr_and_out_path (int plugin_index,
-                                      plugin_t *curr_plugin,
-                                      window_t *curr_window)
+static void add_win_ptr_and_out_path (plugin_t *curr_plugin,
+                                      window_t *windows)
 {
+    window_t *curr_win = windows;
     curr_plugin->window = NULL;
+
     do {
-        if (curr_plugin->key == curr_window->key) {
-            curr_plugin->window = curr_window;
-            curr_plugin->data_file_path = win_file_path [plugin_index];
+        if (curr_plugin->key == curr_win->key) {
+
+            // window_t
+            curr_plugin->window = curr_win;
+
+            break;
         }
-        curr_window = curr_window->next;
-    } while (curr_window != NULL);
+        curr_win = curr_win->next;
+    } while (curr_win != NULL);
+}
+
+
+
+static void add_win_path (int plugin_index, 
+                          plugin_t *curr_plugin)
+{
+    char  path [256];
+    char *home = getenv ("HOME");
+
+    if (curr_plugin->window) {
+        
+        snprintf (path, sizeof (path), "%s/%s/%s", home, DATA_DIR_PATH, win_file_name [plugin_index]);
+        curr_plugin->window->out_file_path = (char*) malloc (strlen (path) + 1);
+        strncpy (curr_plugin->window->out_file_path, path, strlen (path) + 1);
+    } 
 }
 
 
 
 static void set_win_keys (plugin_t *curr_plugin,
-                          win_keys_t *win_keys);
+                          win_keys_t *win_keys)
 {
     if (strcmp (curr_plugin->code, "Bak") == 0) {
         win_keys->back = (int) curr_plugin->key;
@@ -174,8 +196,8 @@ static void print_key_and_func_index (void)
 {
     printf ("Key binding: function index\n");
     int ch, index = 1;
-    for (i = 0; i < 4; i++) {
-        for (j = 0; j < 13; j++) {
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 13; j++) {
 
             // convert index to key shortcut
             if (index >= 1 && index <= 26)
@@ -186,7 +208,8 @@ static void print_key_and_func_index (void)
             printf ("%c:%d ", ch, key_function_index[index++]);
         }
     }
-    puts ("");
+    printf ("\n\n");
+}
 
 #endif
 

@@ -5,10 +5,37 @@
 #include "../data.h"
 
 
-/*
-    Plugin codes
-*/
+
+enum {
+    EMP,
+    Asm,
+    Bak,
+    Bld,
+    Brk,
+    Con,
+    Fin,
+    Kil,
+    Lay,
+    LcV,
+    Nxt,
+    Out,
+    Prm,
+    Qut,
+    Reg,
+    Run,
+    ScD,
+    ScL,
+    ScR,
+    ScU,
+    Src,
+    Stp,
+    Unt,
+    Wat
+};
+
 extern char *plugin_code [];
+extern int   num_plugins;
+extern char *win_file_name [];
 
 
 
@@ -19,12 +46,6 @@ typedef void (*plugin_func_t) (state_t *state);
     //
 extern plugin_func_t plugin_func [];
 
-
-
-/*
-    Window data file paths
-*/
-extern char *win_file_path [];
 
 
 #endif
