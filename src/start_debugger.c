@@ -167,6 +167,9 @@ static void start_debugger_reader_proc (state_t *state)
 
         dstate = state->debug_state;
 
+        state->reader_sem = sem_open (RENDER_WINDOW_SEM_NAME, O_CREAT, 0600, 1);
+        state->process = CHILD_PROCESS;
+
         // set initial output file paths
         path = get_code_path ("Prm", state->plugins);
         strncpy (debug_out_path, path, strlen (path) + 1);
@@ -177,6 +180,8 @@ static void start_debugger_reader_proc (state_t *state)
         running = true;
         while (running) 
         {
+            //sem_wait (state->reader_sem);
+
             // read debugger pipe output
             bytes_read = read (debug_out_pipe [PIPE_READ], 
                                output_buffer, 
@@ -184,7 +189,7 @@ static void start_debugger_reader_proc (state_t *state)
             output_buffer [bytes_read] = '\0';
 
 #ifdef DEBUG
-            printf ("%s", output_buffer);
+            //printf ("%s", output_buffer);
 #endif
 
             parse_debugger_output ( dstate->debugger, 
@@ -200,10 +205,21 @@ static void start_debugger_reader_proc (state_t *state)
                     break;
 
                 case READER_DONE:
-                    update_window_data (state, plugin_code);
-                    update_window_data (state, "Out");
-
+#ifdef DEBUG
+                    puts   ("READER");
+                    puts   ("---------");
+                    printf ("Plugin code:        %s\n", plugin_code);
+                    printf ("Debugger out path:  %s\n", debug_out_path);
+                    printf ("Program out path:   %s\n", program_out_path);
+                    puts   ("");
+#endif
+                    //sem_post (state->reader_sem);
                     break;
+                    
+                case READER_SELECT: 
+                    // run plugin function
+
+                case READER_DESELECT:
 
                 case READER_EXIT:
                     running = false;

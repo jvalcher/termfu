@@ -10,39 +10,84 @@
 #include "data.h"
 #include "utilities.h"
 
-static window_t  *calculate_window_data  (plugin_t*, char*);
+#define START  0
+#define END    1
+
+static void  get_code_plugin        (state_t*, char*);
+static void  handle_title_color     (state_t*, char*, int);
+static void  calculate_window_data  (state_t*);
 
 
 
-void update_window_data (state_t *state, 
-                         char *code)
+void 
+update_window_data (state_t *state, 
+                    char *code)
 {
-    window_t *win = calculate_window_data (state->plugins, code);
+    plugin_t *plugin;
+    window_t *window;
 
-    render_window_data (win, state, BEGINNING, WINDOW_DATA);
+    get_code_plugin (state, code);
+
+    handle_title_color (state, code, START);
+
+    calculate_window_data (state);
+
+    render_window_data (state->curr_plugin->window, state, BEGINNING, WINDOW_DATA);
+
+    handle_title_color (state, code, END);
 }
 
 
 
-static window_t *calculate_window_data (plugin_t *plugins, 
-                                        char *code)
+static void
+get_code_plugin (state_t *state,
+                 char    *code)
+{
+    plugin_t *plugin = state->plugins;
+    do {
+        if (strcmp (plugin->code, code) == 0) {
+            state->curr_plugin = plugin;
+            break;
+        }
+        plugin = plugin->next;
+    } while (plugin != NULL);
+    if (plugin == NULL) {
+        pfeme ("Unable to find plugin for code \"%s\"", code);
+    }
+}
+
+
+
+static void 
+handle_title_color (state_t *state,
+                    char    *code,
+                    int      color_mode) 
+{
+    switch (color_mode) {
+    case START:
+        if (!state->curr_plugin->window) {
+            render_window_data (NULL, state, NULL, HEADER_TITLE_COLOR_ON);
+        }
+    case END:
+        if (!state->curr_plugin->window) {
+            render_window_data (NULL, state, NULL, HEADER_TITLE_COLOR_OFF);
+        } else {
+        }
+    }
+    
+}
+
+
+
+static void
+calculate_window_data (state_t *state)
 {
     plugin_t *plugin;
     window_t *win;
     FILE     *fp;
     int       i, ch;
 
-    // find code's plugin
-    plugin = plugins;
-    do {
-        if (strcmp (plugin->code, code) == 0)
-            break;
-        plugin = plugin->next;
-    } while (plugins != NULL);
-    if (plugin == NULL){
-        pfeme ("Unable to find plugin for code \"%s\"", code);
-    }
-    win = plugin->window;
+    win = state->curr_plugin->window;
 
     // open debugger output file
     fp  = fopen (win->out_file_path, "r");
@@ -65,6 +110,8 @@ static window_t *calculate_window_data (plugin_t *plugins,
     rewind (fp);
 
     // get file line byte offsets
+    if (win->file_offsets)
+        free (win->file_offsets);
     win->file_offsets = malloc ((size_t) win->file_rows * sizeof(long int));
     if (win->file_offsets == NULL) {
         pfeme ("Failed to allocate offsets array");
@@ -77,12 +124,12 @@ static window_t *calculate_window_data (plugin_t *plugins,
     }
 
     // subtract borders
-    win->win_rows -= 2;
-    win->win_cols -= 2;
+    win->dwin_rows = win->win_rows - 2;
+    win->dwin_cols = win->win_cols - 2;
 
     // calculate min, max middle file lines for vertical scrolling
-    win->file_min_mid = (win->win_rows / 2) + 1;
-    win->file_max_mid = win->file_rows - ((win->win_rows - 1) / 2);
+    win->file_min_mid = (win->dwin_rows / 2) + 1;
+    win->file_max_mid = win->file_rows - ((win->dwin_rows - 1) / 2);
 
     // set initial window middle line
     win->win_mid_line = win->file_min_mid;

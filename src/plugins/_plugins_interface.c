@@ -143,7 +143,7 @@ void cont (state_t *state)
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB): gdb_continue (state); break;
     }
-    insert_output_end_marker ("Prm", state);
+    insert_output_end_marker (state);
 }
 
 
@@ -154,7 +154,7 @@ void finish (state_t *state)
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB): gdb_finish (state); break;
     }
-    insert_output_end_marker ("Prm", state);
+    insert_output_end_marker (state);
 }
 
 
@@ -165,7 +165,7 @@ void kill_prog (state_t *state)
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB): gdb_kill (state); break;
     }
-    insert_output_end_marker ("Prm", state);
+    insert_output_end_marker (state);
 }
 
 
@@ -176,7 +176,7 @@ void next (state_t *state)
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB): gdb_next (state); break;
     }
-    insert_output_end_marker ("Prm", state);
+    insert_output_end_marker (state);
 }
 
 
@@ -187,7 +187,7 @@ void run (state_t *state)
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB): gdb_run (state); break;
     }
-    insert_output_end_marker ("Prm", state);
+    insert_output_end_marker (state);
         //
     update_local_vars (state);
 }
@@ -200,7 +200,7 @@ void step (state_t *state)
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB): gdb_step (state); break;
     }
-    insert_output_end_marker ("Prm", state);
+    insert_output_end_marker (state);
 }
 
 
@@ -262,88 +262,104 @@ void pwin_source_files (state_t *state)
 
 void win_assembly (state_t *state)
 {
+    insert_output_win_select_marker ("Asm", state);
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB):
             gdb_win_assembly (state);
             break;
     }
+    insert_output_win_deselect_marker ("Asm", state);
 }
 
 
 
 void win_breakpoints (state_t *state)
 {
+    insert_output_win_select_marker ("Brk", state);
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB):
             gdb_win_breakpoints (state);
             break;
     }
+    insert_output_win_deselect_marker ("Brk", state);
 }
 
 
 
 void win_local_vars (state_t *state)
 {
+    insert_output_win_select_marker ("LcV", state);
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB):
             gdb_win_local_vars (state);
             break;
     }
+    insert_output_win_deselect_marker ("LcV", state);
 }
 
 
 
 void win_prog_output (state_t *state)
 {
+    insert_output_win_select_marker ("Out", state);
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB):
             gdb_win_prog_output (state);
             break;
     }
+    insert_output_win_deselect_marker ("Out", state);
 }
 
 
 
 void win_prompt (state_t *state)
 {
+    insert_output_win_select_marker ("Prm", state);
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB):
             gdb_win_prompt (state);
             break;
     }
+    insert_output_win_deselect_marker ("Prm", state);
 }
 
 
 
 void win_registers (state_t *state)
 {
+    insert_output_win_select_marker ("Reg", state);
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB):
             gdb_win_registers (state);
             break;
     }
+    insert_output_win_deselect_marker ("Reg", state);
 }
 
 
 
 void win_src_file (state_t *state)
 {
+    insert_output_win_select_marker ("Src", state);
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB):
             gdb_win_src_file (state);
             break;
     }
+    insert_output_win_deselect_marker ("Src", state);
 }
 
 
 
 void win_watches (state_t *state)
 {
+    insert_output_win_select_marker ("Wat", state);
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB):
             gdb_win_watches (state);
             break;
     }
+    insert_output_win_deselect_marker ("Wat", state);
 }
 
 

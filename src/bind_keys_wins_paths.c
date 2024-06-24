@@ -152,8 +152,8 @@ static void add_win_path (int plugin_index,
     char  path [256];
     char *home = getenv ("HOME");
 
+    // data window
     if (curr_plugin->window) {
-        
         snprintf (path, sizeof (path), "%s/%s/%s", home, DATA_DIR_PATH, win_file_name [plugin_index]);
         curr_plugin->window->out_file_path = (char*) malloc (strlen (path) + 1);
         strncpy (curr_plugin->window->out_file_path, path, strlen (path) + 1);

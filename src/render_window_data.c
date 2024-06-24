@@ -12,7 +12,7 @@ static bool  find_window_string         (WINDOW*, char*, int*, int*);
 char     *curr_title = NULL;
 window_t *curr_win   = NULL;
 WINDOW   *curr_WIN   = NULL;
-
+ 
 
 
 /*
@@ -21,19 +21,20 @@ WINDOW   *curr_WIN   = NULL;
 void 
 render_window_data (window_t *win, 
                     state_t  *state,
-                    int key,
-                    int render_type) 
+                    int       key,
+                    int       render_type) 
 {
-    // TODO: pulse header string, select, deselect
+    // CURRENT: pulse header string, select, deselect
+    // CURRENT: fix window select loop
 
     switch (render_type) {
 
-        case HEADER_TITLE_COLOR_OFF:
-            pulse_header_title_color (state, HEADER_TITLE_COLOR_OFF);
-            break;
-
         case HEADER_TITLE_COLOR_ON:
             pulse_header_title_color (state, HEADER_TITLE_COLOR_ON);
+            break;
+
+        case HEADER_TITLE_COLOR_OFF:
+            pulse_header_title_color (state, HEADER_TITLE_COLOR_OFF);
             break;
 
         case WINDOW_SELECT:
@@ -94,8 +95,8 @@ render_data (window_t *win,
 
 #ifndef DEBUG
     // clear window
-    for (i = 1; i <= win->win_rows; i++) {
-        for (j = 1; j <= win->win_cols; j++) {
+    for (i = 1; i <= win->dwin_rows; i++) {
+        for (j = 1; j <= win->dwin_cols; j++) {
             mvwaddch (win->win, i, j, ' ');
         }
     }
@@ -103,7 +104,7 @@ render_data (window_t *win,
 
     // shift mid_line, first_char
     switch (key) {
-        case BEGINNING:
+        case BEGINNING:     // TODO: rename to FIRST_OPEN (?)
             break;
         case KEY_UP:
             win->win_mid_line = (win->win_mid_line <= win->file_min_mid) ? win->file_min_mid : win->win_mid_line - 1;
@@ -112,9 +113,9 @@ render_data (window_t *win,
             win->win_mid_line = (win->win_mid_line >= win->file_max_mid) ? win->file_max_mid : win->win_mid_line + 1;
             break;
         case KEY_RIGHT:
-            win->file_first_char = ((win->file_max_cols - win->file_first_char) > win->win_cols)
+            win->file_first_char = ((win->file_max_cols - win->file_first_char) > win->dwin_cols)
                 ? win->file_first_char + 1
-                : win->file_max_cols - win->win_cols;
+                : win->file_max_cols - win->dwin_cols;
             break;
         case KEY_LEFT:
             win->file_first_char = (win->file_first_char == 0) ? 0 : win->file_first_char - 1;
@@ -122,10 +123,10 @@ render_data (window_t *win,
     }
 
     // get starting line
-    print_line = win->win_mid_line - (win->win_rows / 2);
+    print_line = win->win_mid_line - (win->dwin_rows / 2);
 
     // print lines to window
-    for (i = 0; i < win->win_rows; i++) {
+    for (i = 0; i < win->dwin_rows; i++) {
 
         // seek to beginning of line
         fseek (fp, win->file_offsets[print_line++ - 1], SEEK_SET);
@@ -142,9 +143,9 @@ render_data (window_t *win,
                 line_len -= 1;
 
             // calculate line length
-            line_len = ((line_len - win->file_first_char) <= win->win_cols) 
+            line_len = ((line_len - win->file_first_char) <= win->dwin_cols) 
                         ? line_len - win->file_first_char
-                        : win->win_cols;
+                        : win->dwin_cols;
 
             // set line start index
             line_index = win->file_first_char;
@@ -181,9 +182,6 @@ render_data (window_t *win,
     }
     printf ("file_min_mid: %d\n", win->file_min_mid);
     printf ("file_max_mid: %d\n", win->file_max_mid);
-    printf ("win_rows: %d\n", win->win_rows);
-    printf ("win_cols: %d\n", win->win_cols);
-    printf ("win_mid_line: %d\n", win->win_mid_line);
     printf ("file_first_char: %d\n", win->file_first_char);
     puts   ("--------------");
     printf ("OUTPUT FILE DATA\n");
@@ -195,7 +193,8 @@ render_data (window_t *win,
     while ((ch = fgetc (fp)) != EOF) {
         putchar (ch);
     }
-    puts ("");
+    puts   ("--------------");
+    puts   ("");
 #endif
 
     fclose (fp);
@@ -205,7 +204,7 @@ render_data (window_t *win,
 
 static void 
 pulse_header_title_color (state_t *state, 
-                          int pulse_state)
+                          int      pulse_state)
 {
 #ifndef DEBUG
 

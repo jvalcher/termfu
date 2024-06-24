@@ -6,6 +6,7 @@
 #include <ncurses.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <semaphore.h>
 
 
 
@@ -137,10 +138,11 @@ typedef struct window {
     WINDOW            *win;
     char               key;
     bool               selected;
-    struct window     *next;           
 
     int                win_rows;                   
     int                win_cols;                   
+    int                dwin_rows;                   
+    int                dwin_cols;                   
     int                win_y;                      
     int                win_x;                      
     int                win_border [8];
@@ -153,6 +155,8 @@ typedef struct window {
     int                file_min_mid;
     int                file_max_mid;
     unsigned long int *file_offsets;
+
+    struct window     *next;           
 
 } window_t;
 
@@ -243,7 +247,7 @@ typedef struct plugin {
 enum { DEBUGGER_UNKNOWN, DEBUGGER_GDB };
 
 // Debugger reader process state
-enum { READER_RECEIVING, READER_DONE, READER_EXIT };
+enum { READER_RECEIVING, READER_DONE, READER_SELECT, READER_DESELECT, READER_EXIT };
 
 typedef struct debug_state {
 
@@ -252,10 +256,7 @@ typedef struct debug_state {
     pid_t   debugger_pid;
     int     input_pipe;
     int     output_pipe;
-
     char   *prog_path;
-    char   *prg_out_path;
-    char   *dbg_out_path;
 
 } debug_state_t;
 
@@ -294,6 +295,7 @@ typedef struct state {
 
     bool            running;
     int             process;
+    sem_t          *reader_sem;
 
     layout_t       *curr_layout;
     window_t       *curr_window;

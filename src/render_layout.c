@@ -44,7 +44,9 @@ int   header_offset;
 
 
 
-void render_layout (char *label, state_t *state)
+void 
+render_layout (char    *label,
+               state_t *state)
 {
     set_layout (label, state, state->layouts);
 
@@ -55,7 +57,6 @@ void render_layout (char *label, state_t *state)
     print_layout_info (state);
 
 #endif
-
 #ifndef DEBUG
 
     render_header (state);
@@ -75,7 +76,10 @@ void render_layout (char *label, state_t *state)
 /*
    Find layout that matches label
 */
-static void set_layout (char *label, state_t *state, layout_t *layout)
+static void
+set_layout (char     *label,
+            state_t  *state,
+            layout_t *layout)
 {
     do {
         if (strcmp (label, first_layout) == 0 || strcmp (label, layout->label) == 0) {
@@ -105,7 +109,8 @@ static void set_layout (char *label, state_t *state, layout_t *layout)
         win_cols   - main window width
         layout     - layout_t struct
 */
-static void calculate_layout (layout_t *layout)
+static void
+calculate_layout (layout_t *layout)
 {
     // calculate cols, rows in window area below header
     scr_rows = getmaxy (stdscr);
@@ -314,7 +319,8 @@ static void calculate_layout (layout_t *layout)
 
         <prog_name> : <curr_layout>           <header titles>
 */
-static void render_header (state_t *state)
+static void
+render_header (state_t *state)
 {
 #ifdef DEBUG
     (void) state;
@@ -391,7 +397,8 @@ static void render_windows (state_t *state)
     -------
     - Used by render_header()
 */
-static void render_header_titles (state_t *state)
+static void
+render_header_titles (state_t *state)
 {
     int row = 0;
     int ch;
@@ -469,10 +476,11 @@ static void render_header_titles (state_t *state)
         rows, cols  - height, width
         y, x        - window position in terms of top left coordinate
 */
-static WINDOW *render_window (int rows, 
-                              int cols, 
-                              int y, 
-                              int x) 
+static WINDOW*
+render_window (int rows, 
+               int cols, 
+               int y, 
+               int x) 
 {
     // create window object
     WINDOW *win = allocate_window (rows, cols, y, x);
@@ -498,7 +506,8 @@ static WINDOW *render_window (int rows,
          ─┐ -->  ─┤
           │       │
 */
-static void fix_corners (window_t *win)
+static void
+fix_corners (window_t *win)
 {
     int of = header_offset;
 
@@ -553,8 +562,9 @@ static void fix_corners (window_t *win)
         y, x    - window top left coordinates on stdscr
 
 */
-static int fix_corner_char (int y, 
-                            int x)
+static int
+fix_corner_char (int y, 
+                 int x)
 {
     int i;
     unsigned int uch;
@@ -656,7 +666,8 @@ static int fix_corner_char (int y,
 /*
     Render window titles
 */
-static void render_titles (state_t *state)
+static void 
+render_titles (state_t *state)
 {
     char *title;
     window_t *curr_window = state->curr_layout->windows;
@@ -714,10 +725,11 @@ static void render_titles (state_t *state)
 /*
     Allocate new Ncurses window relative to stdscr
 */
-static WINDOW* allocate_window (int rows,
-                                  int cols,
-                                  int y,
-                                  int x)
+static WINDOW* 
+allocate_window (int rows,
+                 int cols,
+                 int y,
+                 int x)
 {
     WINDOW *win = newwin (rows, cols, y, x);
     if (win == NULL)
@@ -745,8 +757,6 @@ static void print_layout_info (state_t *state)
     puts ("");
     printf ("Label: %s\n", layout->label);
     puts ("-----------");
-    printf ("Screen cols: %d\n", getmaxy (stdscr));
-    printf ("Screen rows: %d\n", getmaxx (stdscr));
     printf ("Window row ratio: %d\n", layout->row_ratio);
     printf ("Window col ratio: %d\n", layout->col_ratio);
 

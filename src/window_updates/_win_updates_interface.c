@@ -3,8 +3,6 @@
     Send window data update commands
 */
 
-#include <string.h>
-
 #include "_win_updates_interface.h"
 #include "gdb_win_updates.h"
 #include "_insert_output_marker.h"
@@ -21,7 +19,7 @@ void update_assembly (state_t *state)
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB): gdb_update_assembly (state); break;
     }
-    insert_output_end_marker ("Asm", state);
+    insert_output_end_marker (state);
 }
 
 
@@ -32,7 +30,7 @@ void update_breakpoints (state_t *state)
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB): gdb_update_breakpoints (state); break;
     }
-    insert_output_end_marker ("Brk", state);
+    insert_output_end_marker (state);
 }
 
 
@@ -43,7 +41,7 @@ void update_local_vars (state_t *state)
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB): gdb_update_local_vars (state); break;
     }
-    insert_output_end_marker ("LcV", state);
+    insert_output_end_marker (state);
 }
 
 
@@ -54,7 +52,7 @@ void update_source_file (state_t *state)
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB): gdb_update_source_file (state); break;
     }
-    insert_output_end_marker ("Src", state);
+    insert_output_end_marker (state);
 }
 
 
@@ -65,7 +63,7 @@ void update_registers (state_t *state)
     switch (state->debug_state->debugger) {
         case (DEBUGGER_GDB): gdb_update_local_vars (state); break;
     }
-    insert_output_end_marker ("Reg", state);
+    insert_output_end_marker (state);
 }
 
 

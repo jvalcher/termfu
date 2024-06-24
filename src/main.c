@@ -3,6 +3,7 @@
 #include <termio.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <semaphore.h>
 
 #include "data.h"
 #include "utilities.h"
@@ -123,8 +124,18 @@ void initialize_ncurses (void)
 */
 static void set_signal_semaphore (state_t *state)
 {
+    int sem_val;
+
     // ctrl + c
     signal (SIGINT, handle_sigint_exit);
+
+    // render_window_data() sempahore
+    state->reader_sem = sem_open (RENDER_WINDOW_SEM_NAME, O_CREAT, 0600, 1);
+    sem_getvalue (state->reader_sem, &sem_val);
+    if (sem_val == 0) {
+        sem_post (state->reader_sem);
+    }
+    state->process = PARENT_PROCESS;
 }
 
 

@@ -125,7 +125,7 @@ void gdb_parse_debugger_output (int  *reader_state,
 
                 //  beginning of command output marker
                 //
-                //      >START:<debugger output file path>:
+                //      >START:<plugin code>:<output file path>:
                 //
                 if (*(buff_ptr + 1) == 'S' && 
                     *(buff_ptr + 2) == 'T' && 
@@ -133,16 +133,25 @@ void gdb_parse_debugger_output (int  *reader_state,
                     *(buff_ptr + 4) == 'R' && 
                     *(buff_ptr + 5) == 'T') {
 
-                    *reader_state = READER_RECEIVING;
+                    // get plugin code
+                    buff_ptr += 7;
+                    i = 0;
+                    while (*buff_ptr != ':') {
+                        plugin_code [i++] = *buff_ptr++;
+                    }
+                    plugin_code [i] = '\0';
 
                     // get output path
+                    ++buff_ptr;
                     i = 0;
-                    buff_ptr += 7;
                     while (*buff_ptr != ':') {
                         debug_out_path [i++] = *buff_ptr++;
                     }
                     debug_out_path [i] = '\0';
-                    buff_ptr += 3;
+                    ++buff_ptr;
+
+                    // TODO: erase data window contents
+                    // TODO: insert timestamp, delimiter, etc.
 
                     // open debugger output file
                     debug_out_ptr = fopen (debug_out_path, "a");
@@ -150,11 +159,13 @@ void gdb_parse_debugger_output (int  *reader_state,
                         pfeme ("Unable to open debugger output file \"%s\"", debug_out_path);
                     }
 
-                    // open program output file
+                    // open program output file  (set in reader process)
                     program_out_ptr = fopen (program_out_path, "a");
                     if (program_out_ptr == NULL) {
                         pfeme ("Unable to open program output file \"%s\"", program_out_path);
                     }
+
+                    *reader_state = READER_RECEIVING;
 
                     is_newline = true;
                     is_gdb_output = false;
@@ -168,21 +179,13 @@ void gdb_parse_debugger_output (int  *reader_state,
                          *(buff_ptr + 2) == 'N' && 
                          *(buff_ptr + 3) == 'D') {
 
-                    *reader_state = READER_DONE;
-
-                    // move to first code character
-                    buff_ptr += 5;
-
-                    // set plugin code for update_window_data()
-                    i = 0;
-                    while (*buff_ptr != ':') {
-                        plugin_code [i++] = *buff_ptr++;
-                    }
-                    plugin_code [i] = '\0';
+                    buff_ptr += 4;
 
                     // close debugger, program output files
                     fclose (debug_out_ptr);
                     fclose (program_out_ptr);
+
+                    *reader_state = READER_DONE;
 
                     break;
                 }

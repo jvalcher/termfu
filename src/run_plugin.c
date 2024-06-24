@@ -41,6 +41,10 @@ run_plugin (int      key,
         state->curr_window = state->curr_plugin->window;
 
         plugin_func [func_index] (state);
+
+        //sem_wait (state->reader_sem);
+
+        //sem_post (state->reader_sem);
     }
 }
 
