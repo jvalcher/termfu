@@ -1,70 +1,67 @@
+#include <string.h>
 #include <ctype.h>
+#include <unistd.h>
 
 #include "parse_debugger_output.h"
 #include "data.h"
-#include "utilities.h"
 
-void gdb_parse_debugger_output (int*, char*, char*, char*, char*);
+void parse_debugger_output_gdb (reader_t *reader);
 
 
-FILE *debug_out_ptr   = NULL,
-     *program_out_ptr = NULL;
-bool  parse_first_run = true;
-
-/*
-    Parse debugger output
-    ----------
-    - Called in start_debugger_reader_proc()
-*/
-void parse_debugger_output (int   debugger, 
-                            int  *reader_state, 
-                            char *in_buffer, 
-                            char *plugin_code,
-                            char *debug_out_path, 
-                            char *program_out_path)
+void 
+parse_debugger_output (state_t *state)
 {
-    switch (debugger) {
-        case (DEBUGGER_GDB):
-            gdb_parse_debugger_output (reader_state, in_buffer, plugin_code, debug_out_path, program_out_path);
-            break;
+    bool running = true;
+    int bytes_read = 0;
+    char *debugger_buffer,
+         *program_buffer;
+    reader_t reader;
+
+    debugger_buffer = state->debugger->debugger_buffer;
+    program_buffer = state->debugger->program_buffer;
+
+    reader.state = READER_RECEIVING;
+    reader.output_line_buffer[0] = '\0';
+    reader.debugger_buffer_ptr = debugger_buffer;
+    reader.program_buffer_ptr = program_buffer;
+
+    while (running) 
+    {
+        memset (reader.output_line_buffer, '\0', sizeof (reader.output_line_buffer));
+
+        // read debugger stdout
+        bytes_read = read (state->debugger->stdout_pipe, 
+                           reader.output_line_buffer,
+                           sizeof (reader.output_line_buffer) - 1);
+        reader.output_line_buffer [bytes_read] = '\0';
+
+        // parse output
+        switch (state->debugger->curr) {
+            case DEBUGGER_GDB: parse_debugger_output_gdb (&reader); break;
+        }
+
+        switch (reader.state) {
+            case READER_RECEIVING: break;
+            case READER_DONE:      running = false; break;
+        }
     }
 }
 
 
 
-/*****************
-  Implementations
- *****************/
-
-
-/*
-    GDB
-*/
-void gdb_parse_debugger_output (int  *reader_state, 
-                                char *in_buffer, 
-                                char *plugin_code, 
-                                char *debug_out_path, 
-                                char *program_out_path)
+void
+parse_debugger_output_gdb (reader_t *reader)
 {
     bool  is_gdb_output,
           is_prog_output,
           is_newline;
     char *buff_ptr;
-    int   i;
 
-    buff_ptr = in_buffer;
+    buff_ptr = reader->output_line_buffer;
 
     is_gdb_output = false;
     is_prog_output = false;
     is_newline = true;
-
-    if (parse_first_run) {
-        if (debug_out_ptr == NULL) {
-            *reader_state = READER_RECEIVING;
-            debug_out_ptr   = fopen (debug_out_path, "w");
-            program_out_ptr = fopen (program_out_path, "w");
-        }
-    }
 
     while (*buff_ptr != '\0') {
 
@@ -87,13 +84,13 @@ void gdb_parse_debugger_output (int  *reader_state,
             // gdb
             if (is_gdb_output) {
                 is_gdb_output = false;
-                fputc (*buff_ptr++, debug_out_ptr);
+                *reader->debugger_buffer_ptr++ = *buff_ptr++;
             }
 
             // program
             else if (is_prog_output) {
                 is_prog_output = false;
-                fputc (*buff_ptr++, program_out_ptr);
+                *reader->program_buffer_ptr++ = *buff_ptr++;
             }
 
             else {
@@ -112,7 +109,7 @@ void gdb_parse_debugger_output (int  *reader_state,
             // ==  \\\"  ->  \"
             else if (*buff_ptr == '\\' && *(buff_ptr + 1) == '\"' ) {
                 buff_ptr += 1;
-                fputc (*buff_ptr++, debug_out_ptr);
+                *reader->debugger_buffer_ptr++ = *buff_ptr++;
             }
 
             // ==  \"  ->  skip
@@ -135,37 +132,8 @@ void gdb_parse_debugger_output (int  *reader_state,
 
                     // get plugin code
                     buff_ptr += 7;
-                    i = 0;
-                    while (*buff_ptr != ':') {
-                        plugin_code [i++] = *buff_ptr++;
-                    }
-                    plugin_code [i] = '\0';
 
-                    // get output path
-                    ++buff_ptr;
-                    i = 0;
-                    while (*buff_ptr != ':') {
-                        debug_out_path [i++] = *buff_ptr++;
-                    }
-                    debug_out_path [i] = '\0';
-                    ++buff_ptr;
-
-                    // TODO: erase data window contents
-                    // TODO: insert timestamp, delimiter, etc.
-
-                    // open debugger output file
-                    debug_out_ptr = fopen (debug_out_path, "a");
-                    if (debug_out_ptr == NULL) {
-                        pfeme ("Unable to open debugger output file \"%s\"", debug_out_path);
-                    }
-
-                    // open program output file  (set in reader process)
-                    program_out_ptr = fopen (program_out_path, "a");
-                    if (program_out_ptr == NULL) {
-                        pfeme ("Unable to open program output file \"%s\"", program_out_path);
-                    }
-
-                    *reader_state = READER_RECEIVING;
+                    reader->state = READER_RECEIVING;
 
                     is_newline = true;
                     is_gdb_output = false;
@@ -181,11 +149,7 @@ void gdb_parse_debugger_output (int  *reader_state,
 
                     buff_ptr += 4;
 
-                    // close debugger, program output files
-                    fclose (debug_out_ptr);
-                    fclose (program_out_ptr);
-
-                    *reader_state = READER_DONE;
+                    reader->state = READER_DONE;
 
                     break;
                 }
@@ -199,38 +163,24 @@ void gdb_parse_debugger_output (int  *reader_state,
                          *(buff_ptr + 3) == 'I' && 
                          *(buff_ptr + 4) == 'T') {
 
-                    *reader_state = READER_EXIT;
+                    reader->state = READER_EXIT;
                     break;
                 }
             } // ==  '>'
 
-            // ==  char
+            // == char
             else {
-                if (debug_out_ptr) {
-                    fputc (*buff_ptr++, debug_out_ptr);
-                } else {
-                    pfeme ("Debugger output file not set");
-                }
+                *reader->debugger_buffer_ptr++ = *buff_ptr++;
             }
-
         } // is_gdb_output
 
         // program output
         else if (is_prog_output) {
-            fputc (*buff_ptr++, program_out_ptr);
+            *reader->program_buffer_ptr++ = *buff_ptr++;
         }
 
         else {
             ++buff_ptr;
         }
     }
-
-    if (parse_first_run) {
-        if (strstr (in_buffer, "(gdb)")) {
-            fclose (debug_out_ptr);
-            fclose (program_out_ptr);
-            parse_first_run = false;
-        }
-    }
 }
-

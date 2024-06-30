@@ -2,7 +2,7 @@
 #ifndef _plugins_h
 #define _plugins_h
 
-#include "../data.h"
+#include "data.h"
 
 
 
@@ -33,18 +33,12 @@ enum {
     Wat
 };
 
-extern char *plugin_code [];
-extern int   num_plugins;
-extern char *win_file_name [];
 
+void set_num_plugins  (state_t*);
 
+void set_plugin_data_paths (state_t*);
 
-/*
-    Plugin function pointers
-*/
-typedef void (*plugin_func_t) (state_t *state);
-    //
-extern plugin_func_t plugin_func [];
+int get_plugin_code_index (char*, state_t*);
 
 
 

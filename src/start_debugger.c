@@ -11,22 +11,12 @@
 
 #include "start_debugger.h"
 #include "data.h"
-#include "utilities.h"
 #include "parse_debugger_output.h"
-#include "update_window_data.h"
+#include "utilities.h"
+#include "insert_output_marker.h"
 
-
-static void  create_debugger_pipes       (debug_state_t*);
-static void  create_data_dir             (void);
-static void  set_debugger                (debug_state_t*);
-static void  start_debugger_proc         (debug_state_t*);
-static void  start_debugger_reader_proc  (state_t*);
-
-#define PIPE_READ   0
-#define PIPE_WRITE  1
-int debug_in_pipe  [2],
-    debug_out_pipe [2];
-bool first_run;
+static void   configure_debugger          (debugger_t*);
+static void   start_debugger_proc         (debugger_t*);
 
 // TODO: 
 //  - get this via plugins/_interface
@@ -36,54 +26,25 @@ char *gdb_cmd[] = {"gdb", "--quiet", "--interpreter=mi", NULL, NULL};
 
 
 
-void start_debugger (state_t *state)
+void
+start_debugger (state_t *state)
 {
-    set_debugger (state->debug_state);
+    configure_debugger (state->debugger);
 
-    create_debugger_pipes (state->debug_state);
+    start_debugger_proc (state->debugger);
 
-    create_data_dir ();
+    insert_output_end_marker (state);
 
-    start_debugger_proc (state->debug_state);
-
-    start_debugger_reader_proc (state);
+    parse_debugger_output (state);
 }
 
 
 
-static void set_debugger (debug_state_t *dstate)
+static void
+configure_debugger (debugger_t *debugger)
 {
     // TODO: Get file type -> set debugger
-    dstate->debugger = DEBUGGER_GDB;
-}
-
-
-
-static void create_debugger_pipes (debug_state_t *dstate)
-{
-    if (pipe (debug_in_pipe)  == -1 || 
-        pipe (debug_out_pipe) == -1) 
-    {
-        perror("Debugger pipe");
-        exit (EXIT_FAILURE);
-    }
-
-    dstate->input_pipe  = debug_in_pipe [PIPE_WRITE];
-    dstate->output_pipe = debug_out_pipe [PIPE_READ];
-}
-
-
-
-static void create_data_dir (void)
-{
-    char  path [256];
-    struct stat st = {0};
-    char *home = getenv ("HOME");
-
-    // create directory
-    snprintf (path, sizeof (path), "%s/%s", home, DATA_DIR_PATH);
-    if (stat (path, &st) == -1)
-        mkdir (path, 0700);
+    debugger->curr = DEBUGGER_GDB;
 }
 
 
@@ -91,16 +52,28 @@ static void create_data_dir (void)
 /*
     Start debugger process
 */
-static void start_debugger_proc (debug_state_t *dstate)
+static void
+start_debugger_proc (debugger_t *debugger)
 {
     char  **cmd;
     pid_t  debugger_pid;
+    int  debug_in_pipe  [2],
+         debug_out_pipe [2];
+    
+    // create pipes
+    if (pipe (debug_in_pipe)  == -1 || 
+        pipe (debug_out_pipe) == -1)
+    {
+        pfeme ("Debugger pipe creation failed");
+    }
+    debugger->stdin_pipe      = debug_in_pipe [PIPE_WRITE];
+    debugger->stdout_pipe     = debug_out_pipe [PIPE_READ];
 
     // set command
-    switch (dstate->debugger) {
+    switch (debugger->curr) {
         case (DEBUGGER_GDB):
             cmd = gdb_cmd;      // TODO: see globals
-            cmd [GDB_PROG_INDEX] = dstate->prog_path;
+            cmd [GDB_PROG_INDEX] = debugger->prog_path;
             break;
     }
 
@@ -127,108 +100,13 @@ static void start_debugger_proc (debug_state_t *dstate)
         pfeme ("Debugger start failed");
     }
 
-}
+    if (debugger_pid > 0) {
+    
+        debugger->running = true;
 
-
-
-/*
-    Start debugger reading process
-*/
-static void start_debugger_reader_proc (state_t *state)
-{
-    pid_t debug_out_pid;
-
-    // fork
-    debug_out_pid = fork ();
-    if (debug_out_pid == -1) {
-        perror ("Debugger output fork");
-        exit (EXIT_FAILURE);
+        close (debug_in_pipe   [PIPE_READ]);
+        close (debug_out_pipe  [PIPE_WRITE]);
     }
-
-    // start debugger reader
-    if (debug_out_pid == 0) {
-
-        int            reader_state;
-        char           output_buffer [1024],
-                       plugin_code [4],
-                       debug_out_path [256],
-                       program_out_path [256],
-                      *path;
-        size_t         bytes_read;
-        bool           running;
-        debug_state_t *dstate;
-
-
-        close (debug_in_pipe  [PIPE_READ]);
-        close (debug_in_pipe  [PIPE_WRITE]);
-        close (debug_out_pipe [PIPE_WRITE]);
-
-        reader_state = READER_RECEIVING;
-
-        dstate = state->debug_state;
-
-        state->reader_sem = sem_open (RENDER_WINDOW_SEM_NAME, O_CREAT, 0600, 1);
-        state->process = CHILD_PROCESS;
-
-        // set initial output file paths
-        path = get_code_path ("Prm", state->plugins);
-        strncpy (debug_out_path, path, strlen (path) + 1);
-        path = get_code_path ("Out", state->plugins);
-        strncpy (program_out_path, path, strlen (path) + 1);
-
-        // reader loop
-        running = true;
-        while (running) 
-        {
-            //sem_wait (state->reader_sem);
-
-            // read debugger pipe output
-            bytes_read = read (debug_out_pipe [PIPE_READ], 
-                               output_buffer, 
-                               sizeof (output_buffer) - 1);
-            output_buffer [bytes_read] = '\0';
-
-#ifdef DEBUG
-            //printf ("%s", output_buffer);
-#endif
-
-            parse_debugger_output ( dstate->debugger, 
-                                   &reader_state, 
-                                    output_buffer, 
-                                    plugin_code, 
-                                    debug_out_path, 
-                                    program_out_path);
-
-            switch (reader_state) {
-
-                case READER_RECEIVING:
-                    break;
-
-                case READER_DONE:
-#ifdef DEBUG
-                    puts   ("READER");
-                    puts   ("---------");
-                    printf ("Plugin code:        %s\n", plugin_code);
-                    printf ("Debugger out path:  %s\n", debug_out_path);
-                    printf ("Program out path:   %s\n", program_out_path);
-                    puts   ("");
-#endif
-                    //sem_post (state->reader_sem);
-                    break;
-                    
-                case READER_SELECT: 
-                    // run plugin function
-
-                case READER_DESELECT:
-
-                case READER_EXIT:
-                    running = false;
-                    break;
-            }
-        }
-        exit (EXIT_SUCCESS);
-    }
-
 }
 
 

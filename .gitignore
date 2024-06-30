@@ -7,6 +7,10 @@ tags
 hello*
 debug_*
 
+venv
+__pycache__
+make_dev*
+
 .gdb*
 
 obj/*

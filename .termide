@@ -1,5 +1,5 @@
 
-[ keys ]
+[ plugins ]
 
 Bld : u : b(u)ilds
 Lay : l : (l)ayouts
@@ -22,6 +22,7 @@ Out : o : (o)utput
 
 
 [ layout : gdb_debug_1 ]
+
 >h
 ulbq
 rnscFk

@@ -1,44 +1,138 @@
 #include <ncurses.h>
+#include <string.h>
 #include <unistd.h>
+#include <semaphore.h>
+#include <termio.h>
+#include <fcntl.h>
+#include <stdarg.h>
 
 #include "utilities.h"
 #include "data.h"
+#include "parse_debugger_output.h"
 
 
 
 /*
    Close ncurses
 */
-void close_ncurses (void)
+void clean_up (void)
 {
-#ifndef DEBUG
+    // Ncurses
     curs_set (1);
     endwin ();
+}
+
+
+
+/*
+    Concatenate strings
+    --------
+    - must free returned string
+*/
+char*
+create_path (int num_strs, ...)
+{
+    char     buffer [PATH_MAX_LEN] = {0},
+            *sub_str,
+            *str;
+    va_list  strs;
+
+    // create path string
+    va_start (strs, num_strs);
+    for (int i = 0; i < num_strs; i++) {
+        sub_str = va_arg (strs, char*);
+        strncat (buffer, sub_str, sizeof(buffer) - strlen(buffer) - 1);
+    }
+    va_end (strs);
+
+    // allocate
+    str = (char*) malloc (strlen (buffer) + 1);
+    if (str == NULL) {
+        fprintf (stderr, "String malloc failed");
+        exit (EXIT_FAILURE);
+    }
+    strcpy (str, buffer);
+
+    return str;
+}
+
+
+
+void
+send_command (state_t *state,
+              int num_cmds,
+              ...)
+{
+    char     buffer [CMD_MAX_LEN] = {0},
+            *sub_cmd;
+    va_list  cmds;
+
+    // create command string
+    va_start (cmds, num_cmds);
+    for (int i = 0; i < num_cmds; i++) {
+        sub_cmd = va_arg (cmds, char*);
+        strncat (buffer, sub_cmd, sizeof(buffer) - strlen(buffer) - 1);
+    }
+    va_end (cmds);
+
+    // send command
+    size_t bytes = write (state->debugger->stdin_pipe, buffer, strlen (buffer));
+    if (bytes == 0) {
+        pfeme ("No bytes written");
+    }
+}
+
+
+
+int
+getkey (void)
+{
+#ifndef DEBUG
+        return getch();
+#endif
+
+#ifdef DEBUG
+
+    int key,
+        stdout_fd,
+        dev_null_fd;
+
+    static struct termios oldt, newt;
+    dev_null_fd = open ("/dev/null", O_WRONLY);
+    stdout_fd   = dup (STDOUT_FILENO);
+
+    // disable need to hit enter after key press
+    tcgetattr (STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);          
+    tcsetattr (STDIN_FILENO, TCSANOW, &newt);
+    dup2 (dev_null_fd, STDOUT_FILENO);
+        //
+    key = getchar();
+        //
+    dup2 (stdout_fd, STDOUT_FILENO);
+    tcsetattr (STDIN_FILENO, TCSANOW, &oldt);
+    close (dev_null_fd);
+
+    return key;
+
 #endif
 }
 
 
 
 /*
-    Clear file, open for appending by its path
+    Write to FIFO pipe
 */
-FILE *clear_and_open_file_for_append (char *path)
+void
+write_to_pipe (int n,
+               char **strings)
 {
-    FILE *fp = fopen (path, "w");
-    fclose (fp);
-    return fopen (path, "a");
-}
-
-
-
-char *get_code_path (char *code, plugin_t *plugins)
-{
-    do {
-        if (strcmp (code, plugins->code) == 0)
-            break;
-        plugins = plugins->next;
-    } while (plugins != NULL);
-    return plugins->window->out_file_path;
+    char buffer [256];
+    for (int i = 0; i < n; i++) {
+        strncat (buffer, strings[i], sizeof (buffer) - 1);
+    }
+    printf ("%s\n", buffer);
 }
 
 

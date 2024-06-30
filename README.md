@@ -42,6 +42,8 @@ A multi-language terminal debugger for GNU/Linux
 
 - [ ] Add switch-layout functionality
 
+- [ ] Come up with better program name (debugger, not IDE)
+
 - [ ] Figure out, cull refresh(), wrefresh() calls
 
 - [ ] Add cli flags

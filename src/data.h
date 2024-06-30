@@ -1,6 +1,6 @@
  
-#ifndef _data_h
-#define _data_h
+#ifndef _DATA_H
+#define _DATA_H
 
 
 #include <ncurses.h>
@@ -10,36 +10,26 @@
 
 
 
-/***********
-   termIDE
- ***********/
+/******
+  Main
+ ******/
 
-#define RENDER_WINDOW_SEM_NAME  "/render_window_sem"
-#define PARENT_PROCESS  0
-#define CHILD_PROCESS   1
-extern char *prog_name;
-
-
-
-
-/*********************
-   termIDE debugging
- *********************/
-
-#ifdef LAYOUT_DEBUG
-#define PRINT_LAYOUTS  1
-#endif
+#define PROGRAM_NAME     "termIDE"
+#define DATA_DIR_PATH    ".local/share/termide"
+#define PARENT_PROCESS   0
+#define CHILD_PROCESS    1
+#define PLUGIN_CODE_LEN  3
 
 
 
-/**************************
-   Color pair identifiers
- **************************/
+/*********
+  Ncurses
+ *********/
 
 /*
-    Created in src/main.c
-    
-        <font>_<background>
+   Color pair identifiers
+
+        <TEXT>_<BACKGROUND>
 */
 #define RED_BLACK       20
 #define GREEN_BLACK     21
@@ -69,22 +59,12 @@ extern char *prog_name;
 
 
 
-/*****************************
-   Layout configuration data
-  -------------
-    Contains parsed data from external CONFIG_FILE
-    Used to render screen and run plugins
-    Created in parse_config.c
-
-    layouts_t
-        ...
-        plugin_t
-        window_t
-
- *****************************/
+/*********
+  Layouts
+ *********/
 
 #define CONFIG_FILE             ".termide"
-#define DATA_DIR_PATH           ".local/share/termide"
+#define FIRST_LAYOUT            "FiRsT_lAyOuT"
 #define MAX_CONFIG_CATEG_LEN    20
 #define MAX_CONFIG_LABEL_LEN    20
 #define MAX_KEY_STR_LEN         50
@@ -95,24 +75,38 @@ extern char *prog_name;
 #define MAX_COL_SEGMENTS        10
 #define MAX_SHORTCUTS           52      // a-z, A-Z
 
+/*
+    label             - layout label string
+    header            - Ncurses WINDOW object for header
+    hdr_key_str       - header plugin key string  ("ssb\nssw\nccr\n")
+    win_key_str       - window plugin key string  ("ssb\nssw\nccr\n")
+    num_hdr_key_rows  - number of header rows needed for key strings
+    win_matrix        - window key segment* matrix
+    row_ratio         - y segment ratio for layout matrix
+    col_ratio         - x segment ratio for layout matrix
+    windows           - window_t linked list
+    next              - next layout_t struct   (TODO: remove?, re-render for new layout?)
+*/
+typedef struct layout {
+
+    char           label [MAX_CONFIG_LABEL_LEN];        // TODO: allocate
+    char           hdr_key_str [MAX_KEY_STR_LEN];
+    char           win_key_str [MAX_KEY_STR_LEN];
+    int            num_hdr_key_rows;
+    char         **win_matrix;
+    int            row_ratio;
+    int            col_ratio;
+    struct layout *next;
+
+} layout_t;
 
 
-/***********
-   structs
- ***********/
 
+/*********
+  Windows
+ *********/
 
 /*
-    window_t
-    --------
-    - All windows for single layout
-    - Ncurses window object, key, status
-    - Position, size data for Ncurses window 
-    - Scrolling data
-    - Stored in linked list
-
-        state->layout->windows
-
     win             - Ncurses WINDOW* object
     key             - window segment key
     selected        - is current window selected
@@ -135,8 +129,7 @@ extern char *prog_name;
 */  
 typedef struct window {
 
-    WINDOW            *win;
-    char               key;
+    WINDOW            *WIN;
     bool               selected;
 
     int                win_rows;                   
@@ -148,7 +141,6 @@ typedef struct window {
     int                win_border [8];
     int                win_mid_line;
 
-    char              *out_file_path;
     int                file_first_char;
     int                file_rows;
     int                file_max_cols;
@@ -156,157 +148,100 @@ typedef struct window {
     int                file_max_mid;
     unsigned long int *file_offsets;
 
-    struct window     *next;           
-
 } window_t;
 
 
 
+/**********
+  Debugger
+ **********/
+
+#define PIPE_READ            0
+#define PIPE_WRITE           1
+#define READER_MSG_MAX_LEN  24
+#define CMD_MAX_LEN         256
+#define DEBUG_BUF_LEN       4096
+
+enum { DEBUGGER_GDB };
+enum { READER_RECEIVING, READER_DONE, READER_EXIT };
+
+typedef struct {
+
+    int           curr;
+    bool          running;
+    char        **cmd;
+    char         *prog_path;
+
+    int           stdin_pipe;
+    int           stdout_pipe;
+    int           stderr_pipe;      // TODO: not used
+
+    char          debugger_buffer [DEBUG_BUF_LEN],
+                  program_buffer  [DEBUG_BUF_LEN];
+
+
+} debugger_t;
+
+typedef struct {
+
+    int   state;
+    char  output_line_buffer [1024];
+    char *debugger_buffer_ptr;
+    char *program_buffer_ptr;
+    int   plugin_index;
+
+} reader_t;
+
+
+
+/*********
+  Plugins
+ *********/
+
 /*
-    layout_t
-    ---------
-    - Main layout configuration struct for: 
-        - rendering layouts
-    - Stored in linked list
-    - Created in parse_config.c from external CONFIG_FILE
-
-        state->layouts
-  
-    label             - layout label string
-    header            - Ncurses WINDOW object for header
-    hdr_key_str       - header plugin key string  ("ssb\nssw\nccr\n")
-    win_key_str       - window plugin key string  ("ssb\nssw\nccr\n")
-    num_hdr_key_rows  - number of header rows needed for key strings
-    win_matrix        - window key segment* matrix
-    row_ratio         - y segment ratio for layout matrix
-    col_ratio         - x segment ratio for layout matrix
-    windows           - window_t linked list
-    next              - next layout_t struct   (TODO: remove?, re-render for new layout?)
-*/
-typedef struct layout {
-
-    char           label [MAX_CONFIG_LABEL_LEN];
-    WINDOW        *header;
-    char           hdr_key_str [MAX_KEY_STR_LEN];
-    char           win_key_str [MAX_KEY_STR_LEN];
-    int            num_hdr_key_rows;
-    char         **win_matrix;
-    int            row_ratio;
-    int            col_ratio;
-    window_t      *windows;
-    struct layout *next;
-
-} layout_t;
-
-
-
-/*
-    plugin_t
-    ---------
-    - All plugins' info
-    - Stored in linked list
-
-        state->plugins
-
     code        - code string  (Bld, Stp, ...)
     key         - keyboard shortcut character  (b, s, ...)
     title       - title string  ( (s)tep, (r)un, ...)
     window      - pointer to window_t struct if applicable
     next        - next plugin_t struct
 */
-typedef struct plugin {
+typedef struct {
 
-    char           code [4];
-    char           key;
-    char           title [MAX_TITLE_LEN];
-    window_t*      window;
-    struct plugin *next;
+    int    index;
+    char   key;
+    char   code [4];
+    char  *title;       // TODO: allocate
 
 } plugin_t;
 
 
 
-/*
-    debug_state_t
-    ------
-    - Current debugger state
+/*******
+  State
+ *******/
 
-        state->debug_state
+#define PATH_MAX_LEN  256
 
-    debugger        - debugger enum identifier
-    input_pipe      - debugger process input pipe
-    output_pipe     - debugger process output pipe
-    prog_path       - program path
-    out_file_path   - output file path
-    break_point     - breakpoint string to be set     
-    out_done_str    - string that indicates output is finished
-    exit_str        - string that indicates debugger process exited
-*/
+typedef struct state_t state_t;
+typedef void (*send_cmd_t)   (int, state_t*);
+typedef void (*update_win_t) (int, state_t*);
 
-// Debugger
-enum { DEBUGGER_UNKNOWN, DEBUGGER_GDB };
+typedef struct state_t {
 
-// Debugger reader process state
-enum { READER_RECEIVING, READER_DONE, READER_SELECT, READER_DESELECT, READER_EXIT };
+    int           num_plugins;
+    int          *plugin_key_index;
+    char         *break_path;
+    char         *watch_path;
 
-typedef struct debug_state {
+    layout_t     *layouts;
+    window_t    **windows;
+    plugin_t    **plugins;
+    debugger_t   *debugger;
 
-    int     debugger;
-    char  **cmd;
-    pid_t   debugger_pid;
-    int     input_pipe;
-    int     output_pipe;
-    char   *prog_path;
-
-} debug_state_t;
-
-
-
-/*
-   win_cmds_t
-   --------
-   - Keys that can be or are exclusive to window use
-   - Set in bind_keys_windows_to_plugins()
-*/
-typedef struct win_keys {
-
-    int back;
-    int quit;
-    int scroll_down;
-    int scroll_up;
-    int scroll_left;
-    int scroll_right;
-
-} win_keys_t;
-
-
-
-/*
-   state_t
-   -----
-   - Collection of all states
-
-   curr_layout    - Current layout
-   layouts        - Linked list of layout_t structs
-   plugins        - Linked list of plugin_t structs
-   debug_state    - Current debugger state
-*/
-typedef struct state {
-
-    bool            running;
-    int             process;
-    sem_t          *reader_sem;
-
-    layout_t       *curr_layout;
-    window_t       *curr_window;
-    plugin_t       *curr_plugin;
-
-    layout_t       *layouts;
-    plugin_t       *plugins;
-    debug_state_t  *debug_state;
-    win_keys_t     *win_keys;
+    WINDOW       *header;
 
 } state_t;
+
 
 
 #endif

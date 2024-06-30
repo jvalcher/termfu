@@ -5,7 +5,10 @@
 #include "data.h"
 
 
-void  run_plugin       (int, state_t*);
+
+void run_plugin (int, state_t*);
+
+void update_windows (state_t *state);
 
 
 #endif

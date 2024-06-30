@@ -16,50 +16,59 @@
 #include "render_layout.h"
 #include "utilities.h"
 
-// main functions
-static void    set_layout             (char*, state_t*, layout_t*);
-static void    calculate_layout       (layout_t*);
+static void      allocate_windows      (state_t *state);
+static void      free_window_data      (state_t*);
+static layout_t *get_label_layout      (char*, layout_t*);
+static void      calculate_layout      (layout_t*, state_t*);
 
 #ifndef DEBUG
-    static void    render_header          (state_t*);
-    static void    render_windows         (state_t*);
-    static void    render_header_titles   (state_t*);
-    static WINDOW* allocate_window        (int, int, int, int);
-    static WINDOW *render_window          (int, int, int, int);
-    static void    render_titles          (state_t*);
-    static void    fix_corners            (window_t*);
-    static int     fix_corner_char        (int, int);
+    static void      render_header         (layout_t*, state_t*);
+    static void      render_windows        (state_t*);
+    static void      render_header_titles  (layout_t*, state_t*);
+    static WINDOW   *allocate_window       (int, int, int, int);
+    static void      render_window         (window_t*);
+    static void      render_window_titles  (state_t*);
+    static void      fix_corners           (state_t*);
+    static int       fix_corner_char       (int, int);
 #endif
 
 #ifdef DEBUG
-    static void    print_layout_info      (state_t*);
+    static void      print_layout_info     (layout_t*);
 #endif
 
-char *prog_name    = "termIDE";
-char *first_layout = "&F";
-
+bool  window_t_arr_is_not_allocated = true;
 int   scr_rows;
 int   scr_cols;
 int   header_offset;
 
 
 
-void 
-render_layout (char    *label,
-               state_t *state)
+void
+render_layout (char     *label,
+               state_t  *state)
 {
-    set_layout (label, state, state->layouts);
+    layout_t *layout;
 
-    calculate_layout (state->curr_layout);
+    if (window_t_arr_is_not_allocated) {
+        allocate_windows (state);
+        window_t_arr_is_not_allocated = false;
+    } else {
+        free_window_data (state);
+    }
+
+    layout = get_label_layout (label, state->layouts);
+
+    calculate_layout (layout, state);
 
 #ifdef DEBUG
 
-    print_layout_info (state);
+    print_layout_info (layout);
 
 #endif
+
 #ifndef DEBUG
 
-    render_header (state);
+    render_header  (layout, state);
 
     render_windows (state);
 
@@ -68,31 +77,44 @@ render_layout (char    *label,
 
 
 
-/****************
-  Main functions
- ****************/
+static void
+allocate_windows (state_t *state)
+{
+    state->windows = (window_t**) malloc (state->num_plugins * sizeof (window_t));
+    for (int i = 0; i < state->num_plugins; i++) {
+        state->windows [i] = NULL;
+    }
+}
+
+
+
+static void
+free_window_data (state_t *state)
+{
+    for (int i = 0; i < state->num_plugins; i++) {
+        if (state->windows [i]) {
+            delwin (state->windows[i]->WIN);
+        }
+    }
+}
+
 
 
 /*
    Find layout that matches label
 */
-static void
-set_layout (char     *label,
-            state_t  *state,
-            layout_t *layout)
+static layout_t*
+get_label_layout (char     *label,
+                   layout_t *layouts)
 {
     do {
-        if (strcmp (label, first_layout) == 0 || strcmp (label, layout->label) == 0) {
-            state->curr_layout = layout;
-            break;
+        if (strcmp (label, FIRST_LAYOUT)   == 0 || 
+            strcmp (label, layouts->label) == 0) {
+            return layouts;
         } 
-        layout = layout->next;
-    } while (layout != NULL);
-
-    // if label not found, use first layout
-    if (layout == NULL) {
-        state->curr_layout = state->layouts;
-    }
+        layouts = layouts->next;
+    } while (layouts != NULL);
+    pfeme ("Layout \"%s\" not found", label);
 }
 
 
@@ -100,24 +122,44 @@ set_layout (char     *label,
 /*
     Calculate layout dimentions
     ------------
-    Calculate position, dimensions of plugin windows
-    Allocate memory for window_t structs in state->layout->windows
-
-    Parameters:
-
-        win_rows   - main window height
-        win_cols   - main window width
-        layout     - layout_t struct
+    - Calculate position, dimensions in window_t
+    - Allocate window_t structs if needed
 */
 static void
-calculate_layout (layout_t *layout)
+calculate_layout (layout_t *layout,
+                  state_t *state)
 {
+    int        win_cols,
+               win_rows,
+               i, j,
+               y, x,
+               yc, xc,
+               xi, yi,
+               row_ratio,
+               col_ratio,
+               floor_segm_rows,
+               floor_segm_cols,
+               segm_row_rem,
+               segm_col_rem,
+               col_rem,
+               segm_rows        [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0},
+               segm_cols        [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0},
+               segm_ys          [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0},
+               segm_xs          [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0},
+               used_segm_matrix [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0},
+               plugin_index;
+    char       key,
+             **layout_matrix;
+    window_t  *curr_window = NULL;
+
+
+
     // calculate cols, rows in window area below header
-    scr_rows = getmaxy (stdscr);
+    scr_rows = getmaxy (stdscr);        // TODO: Ncurses not initialized for DEBUG run
     scr_cols = getmaxx (stdscr);
     header_offset = layout->num_hdr_key_rows + 1;
-    int win_cols = scr_cols;
-    int win_rows = scr_rows - header_offset;
+    win_cols = scr_cols;
+    win_rows = scr_rows - header_offset;
 
 
     // create matrices for number of rows, columns per segment
@@ -148,30 +190,21 @@ calculate_layout (layout_t *layout)
     //          28  28  27
     //          28  28  27
     //
-    int y, x;
-    int row_ratio = layout->row_ratio;
-    int col_ratio = layout->col_ratio;
-    int floor_segm_rows = win_rows / row_ratio;  // floor row amount per segment
-    int floor_segm_cols = win_cols / col_ratio;
-    int segm_rows [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0};
-    int segm_cols [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0};
+    row_ratio = layout->row_ratio;
+    col_ratio = layout->col_ratio;
+    floor_segm_rows = win_rows / row_ratio;  // floor row amount per segment
+    floor_segm_cols = win_cols / col_ratio;
 
         // calculate total row, column remainders
-    int segm_row_rem = win_rows - (floor_segm_rows * row_ratio);
-    int segm_col_rem = win_cols - (floor_segm_cols * col_ratio);
+    segm_row_rem = win_rows - (floor_segm_rows * row_ratio);
+    segm_col_rem = win_cols - (floor_segm_cols * col_ratio);
 
-        // add base segment rows, columns
-        // distribute remainders
+        // add base segment rows, columns, distribute remainders
     for (y = 0; y < row_ratio; y++) {
-
-        int col_rem = segm_col_rem;
-
+        col_rem = segm_col_rem;
         for (x = 0; x < col_ratio; x++) {
-
-            // base
             segm_rows [y][x] = floor_segm_rows + (segm_row_rem > 0 ? 1 : 0);
             segm_cols [y][x] = floor_segm_cols + (col_rem > 0      ? 1 : 0);
-
             col_rem -= 1;
         }
         segm_row_rem -= 1;
@@ -183,18 +216,14 @@ calculate_layout (layout_t *layout)
     //     - - -        
     //     - - -        
     //
-    int segm_ys [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0};
-    int segm_xs [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0};
     for (y = 0; y < row_ratio; y++) {
         for (x = 0; x < col_ratio; x++) {
-            // y
-            int yc = 0;
+            yc = 0;
             while (yc < y) {
                 segm_ys [y][x] += segm_rows [yc][x];
                 yc += 1;
             }
-            // x
-            int xc = 0;
+            xc = 0;
             while (xc < x) {
                 segm_xs [y][x] += segm_cols [y][xc];
                 xc += 1;
@@ -202,49 +231,32 @@ calculate_layout (layout_t *layout)
         }
     }
 
-    // create (un)used segments matrix
-    //
-    //         0000
-    //         0000
-    //         0000
-    //
-    int used_segm_matrix [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0};
-
-    // create window_t pointers for arranging
-    // layout->windows linked list
-    window_t *curr_window = NULL;
-    window_t *prev_window = NULL;
-
-    // get layout matrix
-    char **layout_matrix = (char **) layout->win_matrix;
+    layout_matrix = (char**) layout->win_matrix;
 
     // create windows
-    char ch;
     for (y = 0; y < row_ratio; y++) {
         for (x = 0; x < col_ratio; x++) {
 
             // if unused segment
             if (used_segm_matrix [y][x] == 0) {
 
-                // create window
-                curr_window = (window_t *) malloc (sizeof (window_t));
-                if (curr_window == NULL)
-                    pfeme ("Unable to allocate memory for window_t struct");
-                curr_window->selected = false;
-                curr_window->file_offsets = NULL;
-                curr_window->next = NULL;
-                curr_window->out_file_path = NULL;
+                key = layout_matrix [y][x];
 
-                // set head window or link previous
-                if (y == 0 && x == 0) {
-                    layout->windows = curr_window; // head
+                plugin_index = state->plugin_key_index [(int)key];
+
+                // get or allocate window_t struct
+                if (state->windows[plugin_index]) {
+                    curr_window = state->windows[plugin_index];
                 } else {
-                    prev_window->next = curr_window;    // link previous
+                    curr_window = (window_t *) malloc (sizeof (window_t));
+                    if (curr_window == NULL) {
+                        pfeme ("Unable to allocate memory for window_t struct");
+                    }
+                    state->windows [plugin_index] = curr_window;
                 }
 
-                // add key from matrix
-                ch = layout_matrix [y][x];
-                curr_window->key = ch;
+                curr_window->selected       = false;
+                curr_window->file_offsets   = NULL;
 
                 // calculate rows, cols
                 //           
@@ -254,10 +266,10 @@ calculate_layout (layout_t *layout)
                 //         bbww
                 //
                     // rows
-                int yi = y;
+                yi = y;
                 curr_window->win_rows = 0;
                 while (yi < row_ratio) {
-                    if (layout_matrix [yi][x] == ch) {
+                    if (layout_matrix [yi][x] == key) {
                         curr_window->win_rows += segm_rows [yi][x];
                         yi += 1;
                     } else {
@@ -265,10 +277,10 @@ calculate_layout (layout_t *layout)
                     }
                 }
                     // cols
-                int xi = x;
+                xi = x;
                 curr_window->win_cols = 0;
                 while (xi < col_ratio) {
-                    if (layout_matrix [y][xi] == ch) {
+                    if (layout_matrix [y][xi] == key) {
                         curr_window->win_cols += segm_cols [y][xi];
                         xi += 1;
                     } else {
@@ -297,14 +309,22 @@ calculate_layout (layout_t *layout)
                 //      1110
                 //      0000
                 //
-                for (int i = y; i < yi; i++) {
-                    for (int j = x; j < xi; j++) {
+                for (i = y; i < yi; i++) {
+                    for (j = x; j < xi; j++) {
                         used_segm_matrix [i][j] = 1;
                     }
                 }
 
-                // set previous window for linking
-                prev_window = curr_window;
+#ifdef DEBUG
+                puts ("");
+                printf ("WINDOW: %s (%c)\n", state->plugins[plugin_index]->title, state->plugins[plugin_index]->key);
+                puts   ("------------");
+                printf ("win_x: %d\n", curr_window->win_x);
+                printf ("win_cols: %d\n", curr_window->win_cols);
+                printf ("win_y: %d\n", curr_window->win_y);
+                printf ("win_rows: %d\n", curr_window->win_rows);
+                puts   ("");
+#endif
             }
         }
     }
@@ -313,47 +333,48 @@ calculate_layout (layout_t *layout)
 
 #ifndef DEBUG
 
+
 /*
     Render header WINDOW
     ---------
 
-        <prog_name> : <curr_layout>           <header titles>
+        <program name> : <current layout>           <header titles>
 */
 static void
-render_header (state_t *state)
+render_header (layout_t *layout, 
+               state_t *state)
 {
 #ifdef DEBUG
     (void) state;
 #endif
 
 #ifndef DEBUG
-    layout_t *layout = state->curr_layout;
-    int title_len = strlen (prog_name);
-    char *colon = ":";
 
-    // create window
-    layout->header = allocate_window (header_offset, COLS, 0, 0);
+    WINDOW *header = allocate_window (header_offset, COLS, 0, 0);
+    int title_len  = strlen (PROGRAM_NAME);
 
     // print
         // program name
-    wattron (layout->header, COLOR_PAIR(MAIN_TITLE_COLOR) | A_BOLD | A_UNDERLINE);
-    mvwprintw (layout->header, 1, 2, "%s", prog_name);
-    wattrset (layout->header, A_NORMAL);
+    wattron (header, COLOR_PAIR(MAIN_TITLE_COLOR) | A_BOLD | A_UNDERLINE);
+    mvwprintw (header, 1, 2, "%s", PROGRAM_NAME);
+    wattrset (header, A_NORMAL);
 
         // colon
-    wattron (layout->header, COLOR_PAIR(WHITE_BLACK));
-    mvwprintw (layout->header, 1, title_len + 3, "%s", colon);
+    wattron (header, COLOR_PAIR(WHITE_BLACK));
+    mvwprintw (header, 1, title_len + 3, "%s", ":");
 
         // current layout
-    wattron (layout->header, COLOR_PAIR(LAYOUT_TITLE_COLOR));
-    mvwprintw (layout->header, 1, title_len + 4, "%s", layout->label);
+    wattron (header, COLOR_PAIR(LAYOUT_TITLE_COLOR));
+    mvwprintw (header, 1, title_len + 4, "%s", layout->label);
     attrset (A_NORMAL);
 
-        // header plugin titles
-    render_header_titles (state);
+    render_header_titles (layout, state);
 
     refresh();
-    wrefresh (layout->header);
+    wrefresh (header);
+
+    state->header = header;
+
 #endif
 }
 
@@ -362,26 +383,28 @@ render_header (state_t *state)
 /*
     Render WINDOWs
 */
-static void render_windows (state_t *state)
+static void 
+render_windows (state_t *state)
 {
 #ifdef DEBUG
     (void) state;
 #endif
 
 #ifndef DEBUG
-    // render windows
-    window_t *w = state->curr_layout->windows;
-    do {
-        w->win = render_window (w->win_rows,
-                                w->win_cols,
-                                w->win_y + header_offset,
-                                w->win_x);
-        w = w->next;
-    } while (w != NULL);
+    int       i;
 
-    fix_corners (state->curr_layout->windows);
+    for (i = 0; i < state->num_plugins; i++) {
+        if (state->windows [i]) {
+            render_window (state->windows [i]);
+        } else {
+            state->windows[i]->WIN = NULL;
+        }
+    }
 
-    render_titles (state);
+    fix_corners (state);
+
+    render_window_titles (state);
+
 #endif
 }
 
@@ -398,30 +421,35 @@ static void render_windows (state_t *state)
     - Used by render_header()
 */
 static void
-render_header_titles (state_t *state)
+render_header_titles (layout_t *layout,
+                      state_t *state)
 {
-    int row = 0;
-    int ch;
-    bool key_color_toggle;
-    layout_t *layout = state->curr_layout;
-    plugin_t* head_plugin = state->plugins;
-    plugin_t* curr_plugin;
-    WINDOW* header;
-    char *curr_title;
-    int   header_title_indent = 0;
-    int   title_str_len = scr_cols - (strlen (prog_name) + 4);
-    char *titles_str = (char *) malloc (sizeof (char) * title_str_len);
+    int       row, key, 
+              header_title_indent,
+              title_str_len,
+              title_str_ch_left;
+    bool      key_color_toggle;
+    WINDOW   *header;
+    char     *titles_str,
+             *curr_title;
 
-    header = layout->header;
+    row                 = 0;
+    header_title_indent = 0;
+    title_str_len       = scr_cols - (strlen (PROGRAM_NAME) + 4);
+    title_str_ch_left   = title_str_len;
+    titles_str          = (char*) malloc (sizeof (char) * title_str_len);
+    header              = state->header;
+
     memset (titles_str, '\0', title_str_len);
-    titles_str [0] = ' ';
+    titles_str [0]      = ' ';
 
     for (size_t j = 0; j < strlen (layout->hdr_key_str); j++) {
 
-        ch = layout->hdr_key_str [j];
+        key = layout->hdr_key_str [j];
         
         // render row of plugin titles
-        if (ch == '\n') {
+        if (key == '\n') {
+
             header_title_indent = scr_cols - strlen (titles_str) - 2;
 
             key_color_toggle = false;
@@ -448,19 +476,17 @@ render_header_titles (state_t *state)
             continue;
         }
 
-        // get title from key
-        curr_plugin = head_plugin;
-        do {
-            if (ch == curr_plugin->key) {
-                curr_title = (char*)curr_plugin->title;
-                break;
-            }
-            curr_plugin = curr_plugin->next;
-        } while (curr_plugin != NULL);
 
         // append title to titles_str
-        strcat (titles_str, curr_title);
-        strcat (titles_str, "  ");
+        curr_title         = state->plugins[state->plugin_key_index [key]]->title;
+        title_str_ch_left -= strlen (curr_title) + 2;
+            //
+        if (title_str_ch_left < 1) {
+            pfeme ("To many header titles in row %d", row + 1);
+        } else {
+            strcat (titles_str, curr_title);
+            strcat (titles_str, "  ");
+        }
     }
 
     free (titles_str);
@@ -476,25 +502,25 @@ render_header_titles (state_t *state)
         rows, cols  - height, width
         y, x        - window position in terms of top left coordinate
 */
-static WINDOW*
-render_window (int rows, 
-               int cols, 
-               int y, 
-               int x) 
+static void
+render_window (window_t *win)
 {
     // create window object
-    WINDOW *win = allocate_window (rows, cols, y, x);
-    if (win == NULL)
+    win->WIN = allocate_window (win->win_rows, 
+                                win->win_cols, 
+                                win->win_y + header_offset, 
+                                win->win_x);
+
+    if (win->WIN == NULL)
         pfeme  ("Unable to create window\n");
 
     // render border
-    wattron (win, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
-    wborder (win, 0,0,0,0,0,0,0,0);
-    wattroff (win, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
+    wattron  (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
+    wborder  (win->WIN, 0,0,0,0,0,0,0,0);
+    wattroff (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
 
     refresh ();
-    wrefresh (win);
-    return win;
+    wrefresh (win->WIN);
 }
 
 
@@ -507,19 +533,31 @@ render_window (int rows,
           │       │
 */
 static void
-fix_corners (window_t *win)
+fix_corners (state_t *state)
 {
-    int of = header_offset;
+    int       i, y, x,
+              rows, cols,
+              tl, tr, bl, br,
+              of = header_offset;
+    window_t **wins = state->windows;
+    window_t  *win;
 
-    do {
-        int y     = win->win_y;
-        int x     = win->win_x;
-        int rows  = win->win_rows;
-        int cols  = win->win_cols;
-        int tl = 0;     // top left
-        int tr = 0;     // top right
-        int bl = 0;     // bottom left
-        int br = 0;     // bottom right
+    for (i = 0; i < state->num_plugins; i++) {
+
+        if (wins [i]) {
+            win = wins[i];
+        } else {
+            continue;
+        }
+
+        y    = win->win_y;
+        x    = win->win_x;
+        rows = win->win_rows;
+        cols = win->win_cols;
+        tl   = 0;     // top left
+        tr   = 0;     // top right
+        bl   = 0;     // bottom left
+        br   = 0;     // bottom right
 
         tl = fix_corner_char (y + of, x);
         tr = fix_corner_char (y + of, x + (cols - 1));
@@ -530,12 +568,12 @@ fix_corners (window_t *win)
         //
         //      wborder (win, ls, rs, ts, bs, tl, tr, bl, br)
         //
-        wattron  (win->win, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
-        wborder  (win->win, 0, 0, 0, 0, tl, tr, bl, br);
-        wattroff (win->win, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
+        wattron  (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
+        wborder  (win->WIN, 0, 0, 0, 0, tl, tr, bl, br);
+        wattroff (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
 
         refresh  ();
-        wrefresh (win->win);
+        wrefresh (win->WIN);
 
         // store corners
         win->win_border [0] = 0;
@@ -547,8 +585,7 @@ fix_corners (window_t *win)
         win->win_border [6] = bl;
         win->win_border [7] = br;
 
-        win = win->next;
-    } while (win != NULL);
+    }
 }
 
 
@@ -667,57 +704,53 @@ fix_corner_char (int y,
     Render window titles
 */
 static void 
-render_titles (state_t *state)
+render_window_titles (state_t *state)
 {
-    char *title;
-    window_t *curr_window = state->curr_layout->windows;
-    plugin_t* head_plugin = state->plugins;
+    int       i,
+              title_length,
+              title_indent;
+    char     *title;
+    bool      key_color_toggle;
+    WINDOW   *Win;
 
-    do {
+    for (i = 0; i < state->num_plugins; i++) {
 
-        // get title
-        plugin_t* curr_plugin = head_plugin;
-        do {
-            if (curr_window->key == curr_plugin->key)
-                title = (char *)curr_plugin->title;
-            curr_plugin = curr_plugin->next;
-        } while (curr_plugin != NULL);
+        if (state->windows [i]) {
+            Win = state->windows[i]->WIN;
+        } else {
+            continue;
+        }
 
-        // render title
-        int key_color_toggle = false;
-        WINDOW* win = curr_window->win;
+        title = state->plugins[i]->title;
+        key_color_toggle = false;
 
             // calculate indent
-        int title_length = strlen (title);
-        int title_indent = (curr_window->win_cols - title_length) / 2;
+        title_length =  strlen (title);
+        title_indent = (state->windows[i]->win_cols - title_length) / 2;
 
             // print title
-        wattron (win, COLOR_PAIR(WINDOW_TITLE_COLOR));
+        wattron (Win, COLOR_PAIR(WINDOW_TITLE_COLOR));
         for (int i = 0; i < title_length + 1; i++) {
 
-            mvwprintw (win, 0, title_indent - 1 + i, "%c", title[i]);
-            wrefresh  (win);
+            mvwprintw (Win, 0, title_indent - 1 + i, "%c", title[i]);
+            wrefresh  (Win);
 
             // turn off key character color
             if (key_color_toggle) {
-                wattron (win, COLOR_PAIR(WINDOW_TITLE_COLOR));
+                wattron (Win, COLOR_PAIR(WINDOW_TITLE_COLOR));
                 key_color_toggle = false;
             }
 
             // set key shortcut color  (c)
             if (title[i] == '(') {
-                wattron (win, COLOR_PAIR(TITLE_KEY_COLOR));
+                wattron (Win, COLOR_PAIR(TITLE_KEY_COLOR));
                 key_color_toggle = true;
             }
         }
 
         refresh();
-        wrefresh(win);
-
-        curr_window = curr_window->next;
-
-    } while (curr_window != NULL);
-
+        wrefresh(Win);
+    }
 }
 
 
@@ -737,7 +770,8 @@ allocate_window (int rows,
     return win;
 }
 
-#endif
+#endif  //  #ifndef DEBUG
+
 
 
 #ifdef DEBUG
@@ -749,22 +783,19 @@ allocate_window (int rows,
     - Current layout's plugin key bindings
     - Called in render_layout.c -> render_layout()
 */
-static void print_layout_info (state_t *state)
+static void print_layout_info (layout_t *layout)
 {
     int i, j;
-    layout_t *layout = state->curr_layout;
 
-    puts ("");
-    printf ("Label: %s\n", layout->label);
-    puts ("-----------");
+    // layouts
+    puts   ("");
+    printf ("LAYOUT: %s\n", layout->label);
+    puts   ("------------");
+    puts   ("");
+    
     printf ("Window row ratio: %d\n", layout->row_ratio);
     printf ("Window col ratio: %d\n", layout->col_ratio);
-
-    // header keys
-    printf ("Header keys: \n%s\n", layout->hdr_key_str);
-    puts ("");
-
-    // window segement matrix
+    printf ("Header keys: \n\n%s\n", layout->hdr_key_str);
     printf ("Window segment matrix: \n");
     for (i = 0; i < layout->row_ratio; i++) {
         for (j = 0; j < layout->col_ratio; j++) {
@@ -773,16 +804,6 @@ static void print_layout_info (state_t *state)
         puts ("");
     }
     puts ("");
-
-    // plugins
-    printf ("Plugins:\n");
-    plugin_t* p = state->plugins;
-    do {
-        printf ("%s : %c : %s\n", p->code, p->key, p->title);
-        p = p->next;
-    } while (p != NULL);
-    puts ("");
 }
 
 #endif
-

@@ -1,22 +1,13 @@
 
-/*
-    Render Ncurses window
-    --------------------
+#ifndef RENDER_LAYOUT_H
+#define RENDER_LAYOUT_H
 
-*/
-
-
-#ifndef render_screen_h
-#define render_screen_h
+#include "data.h"
 
 
-#include "parse_config.h"
 
+void render_layout (char*, state_t*);
 
-extern char *first_layout;
-
-
-void render_layout (char *label, state_t *state);
 
 
 #endif

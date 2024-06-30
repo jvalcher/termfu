@@ -3,11 +3,14 @@
 #include "data.h"
 #include "utilities.h"
 
-static void  render_data                (window_t*, int);
-static void  pulse_header_title_color   (state_t*, int);
-       void  select_window              (state_t*);
-       void  deselect_window            (void);
-static bool  find_window_string         (WINDOW*, char*, int*, int*);
+static void  render_data                (int, int, state_t*);
+static void  pulse_header_title_color   (int, state_t*, int);
+static void  select_window_color        (int, state_t*);
+static void  deselect_window_color      (void);
+
+#ifndef DEBUG
+    static bool  find_window_string         (WINDOW*, char*, int*, int*);
+#endif
 
 char     *curr_title = NULL;
 window_t *curr_win   = NULL;
@@ -19,34 +22,31 @@ WINDOW   *curr_WIN   = NULL;
     Render window changes
 */
 void 
-render_window_data (window_t *win, 
+render_window_data (int       plugin_index,
                     state_t  *state,
                     int       key,
-                    int       render_type) 
+                    int       type) 
 {
-    // CURRENT: pulse header string, select, deselect
-    // CURRENT: fix window select loop
-
-    switch (render_type) {
+    switch (type) {
 
         case HEADER_TITLE_COLOR_ON:
-            pulse_header_title_color (state, HEADER_TITLE_COLOR_ON);
+            pulse_header_title_color (plugin_index, state, HEADER_TITLE_COLOR_ON);
             break;
 
         case HEADER_TITLE_COLOR_OFF:
-            pulse_header_title_color (state, HEADER_TITLE_COLOR_OFF);
+            pulse_header_title_color (plugin_index, state, HEADER_TITLE_COLOR_OFF);
             break;
 
-        case WINDOW_SELECT:
-            select_window (state);
+        case SELECT_WINDOW_COLOR:
+            select_window_color (plugin_index, state);
             break;
 
-        case WINDOW_UNSELECT:
-            deselect_window ();
+        case DESELECT_WINDOW_COLOR:
+            deselect_window_color ();
             break;
 
-        case WINDOW_DATA:
-            render_data (win, key);
+        case RENDER_DATA:
+            render_data (key, plugin_index, state);
             break;
 
         // TODO:
@@ -75,17 +75,24 @@ render_window_data (window_t *win,
     TODO: page up/down, home/end
 */
 static void 
-render_data (window_t *win, 
-             int key) 
+render_data (int      key,
+             int      plugin_index,
+             state_t *state)
 {
-    char  line[256];
-    int   row = 1,
-          col = 1,
-          print_line,
-          line_len,
-          line_index,
-          i, j;
-    FILE *fp;
+    (void) key;
+    (void) plugin_index;
+    (void) state;
+    /*
+    char      line [256];
+    int       row = 1,
+              col = 1,
+              print_line = 0,
+              line_len = 0,
+              line_index = 0,
+              i;
+    window_t *win;
+
+    win = state->windows[plugin_index];
 
     // open output file
     fp = fopen (win->out_file_path, "r");
@@ -94,10 +101,11 @@ render_data (window_t *win,
     }
 
 #ifndef DEBUG
+    int j;
     // clear window
     for (i = 1; i <= win->dwin_rows; i++) {
         for (j = 1; j <= win->dwin_cols; j++) {
-            mvwaddch (win->win, i, j, ' ');
+            mvwaddch (win->WIN, i, j, ' ');
         }
     }
 #endif
@@ -160,7 +168,7 @@ render_data (window_t *win,
 
 #ifndef DEBUG
         // print line to window
-        mvwaddnstr (win->win, row++, col, (const char *)(line + line_index), line_len);
+        mvwaddnstr (win->WIN, row++, col, (char*)(line + line_index), line_len);
 #endif
 
         // break if end of file
@@ -169,11 +177,11 @@ render_data (window_t *win,
     }
 
 #ifndef DEBUG
-    wrefresh(win->win);
+    wrefresh(win->WIN);
 #endif
 
 #ifdef DEBUG
-    printf ("RENDER WINDOW DATA (%c)\n", win->key);
+    printf ("RENDER WINDOW DATA (%c)\n", state->plugins[plugin_index]->key);
     puts   ("--------------");
     printf ("file_rows: %d\n", win->file_rows);
     printf ("file_max_cols: %d\n", win->file_max_cols);
@@ -197,26 +205,31 @@ render_data (window_t *win,
     puts   ("");
 #endif
 
+    (void) line_index;
+    (void) col;
+    (void) row;
+
     fclose (fp);
+    */
 }
 
 
 
 static void 
-pulse_header_title_color (state_t *state, 
+pulse_header_title_color (int      plugin_index, 
+                          state_t *state,
                           int      pulse_state)
 {
 #ifndef DEBUG
 
-    size_t i;
-    int x, y,
-        title_color,
-        keych_color;
-    bool key_color_toggle,
-         string_exists;
-    
-    WINDOW *win   = state->layouts->header;
-    char   *title = state->curr_plugin->title;
+    size_t  i;
+    int     x, y,
+            title_color,
+            keych_color;
+    bool    key_color_toggle,
+            string_exists;
+    WINDOW *header;
+    char   *title;
 
     // set title color variables
     switch (pulse_state) {
@@ -229,30 +242,34 @@ pulse_header_title_color (state_t *state,
             keych_color = TITLE_KEY_COLOR;
     }
 
+    header = state->header;
+    title  = state->plugins[plugin_index]->title;
+    
     // get title string location
-    string_exists = find_window_string (win, title, &y, &x);
+    string_exists = find_window_string (header, title, &y, &x);
 
     // change title string color
     if (string_exists) {
 
         key_color_toggle = false;
-        set_nc_attribute (win, title_color);
+        set_nc_attribute (header, title_color);
         for (i = 0; i < strlen (title) + 1; i++) {
-            mvwprintw (win, y, x + i, "%c", title [i]);
+            mvwprintw (header, y, x + i, "%c", title [i]);
             if (key_color_toggle) {
-                set_nc_attribute (win, title_color);
+                set_nc_attribute (header, title_color);
                 key_color_toggle = false;
             }
             if (title [i] == '(') {
-                set_nc_attribute (win, keych_color);
+                set_nc_attribute (header, keych_color);
                 key_color_toggle = true;
             }
         }
-        wrefresh (win);
+        wrefresh (header);
     }
 #endif
 
 #ifdef DEBUG
+    (void) plugin_index;
     (void) state;
     (void) pulse_state;
 #endif
@@ -260,117 +277,113 @@ pulse_header_title_color (state_t *state,
 
 
 
-void select_window (state_t *state)
+static void
+select_window_color (int      plugin_index,
+                     state_t *state)
 {
-    size_t i;
-    int x, y;
-    bool key_color_toggle,
-         string_exists;
-
     if (curr_win)
-        deselect_window ();
+        deselect_window_color ();
 
-    curr_win = state->curr_window;
-    curr_title = state->curr_plugin->title;
-
-    string_exists = find_window_string (curr_win->win, curr_title, &y, &x);
+    curr_win = state->windows[plugin_index];
+    curr_title = state->plugins[plugin_index]->title;
 
     curr_win->selected = true;
 
+
 #ifndef DEBUG
+
+    size_t i;
+    int    x, y;
+    bool   key_color_toggle,
+           string_exists;
+
+    string_exists = find_window_string (curr_win->WIN, curr_title, &y, &x);
 
     if (string_exists) {
 
         key_color_toggle = false;
-        wattron (curr_win->win, COLOR_PAIR(FOCUS_WINDOW_TITLE_COLOR) | A_UNDERLINE);
+        wattron (curr_win->WIN, COLOR_PAIR(FOCUS_WINDOW_TITLE_COLOR) | A_UNDERLINE);
 
         for (i = 0; i < strlen (curr_title) + 1; i++) {
 
-            mvwprintw (curr_win->win, y, x + i, "%c", curr_title [i]);
+            mvwprintw (curr_win->WIN, y, x + i, "%c", curr_title [i]);
 
             if (key_color_toggle) {
-                wattron (curr_win->win, COLOR_PAIR(FOCUS_WINDOW_TITLE_COLOR));
+                wattron (curr_win->WIN, COLOR_PAIR(FOCUS_WINDOW_TITLE_COLOR));
                 key_color_toggle = false;
             }
 
             if (curr_title [i] == '(') {
-                wattron (curr_win->win, COLOR_PAIR(FOCUS_WINDOW_TITLE_KEY_COLOR));
+                wattron (curr_win->WIN, COLOR_PAIR(FOCUS_WINDOW_TITLE_KEY_COLOR));
                 key_color_toggle = true;
             }
         }
-        wrefresh  (curr_win->win);
+        wrefresh  (curr_win->WIN);
     }
 
-#endif
-
-#ifdef DEBUG
-    (void) key_color_toggle;
-    (void) i;
 #endif
 }
 
 
 
-void deselect_window (void)
+void
+deselect_window_color (void)
 {
-    size_t i;
-    int x, y;
-    bool key_color_toggle,
-         string_exists;
-
-    string_exists = find_window_string (curr_win->win, curr_title, &y, &x);
 
     curr_win->selected = false;
 
 #ifndef DEBUG
 
+    size_t i;
+    int x, y;
+    bool key_color_toggle,
+         string_exists;
+
+    string_exists = find_window_string (curr_win->WIN, curr_title, &y, &x);
+
     if (string_exists) {
 
         key_color_toggle = false;
-        wattron (curr_win->win, COLOR_PAIR(WINDOW_TITLE_COLOR));
-        wattroff (curr_win->win, A_UNDERLINE);
+        wattron (curr_win->WIN, COLOR_PAIR(WINDOW_TITLE_COLOR));
+        wattroff (curr_win->WIN, A_UNDERLINE);
 
         for (i = 0; i < strlen (curr_title) + 1; i++) {
 
-            mvwprintw (curr_win->win, y, x + i, "%c", curr_title[i]);
+            mvwprintw (curr_win->WIN, y, x + i, "%c", curr_title[i]);
 
             if (key_color_toggle) {
-                wattron (curr_win->win, COLOR_PAIR(WINDOW_TITLE_COLOR));
+                wattron (curr_win->WIN, COLOR_PAIR(WINDOW_TITLE_COLOR));
                 key_color_toggle = false;
             }
 
             if (curr_title[i] == '(') {
-                wattron (curr_win->win, COLOR_PAIR(TITLE_KEY_COLOR));
+                wattron (curr_win->WIN, COLOR_PAIR(TITLE_KEY_COLOR));
                 key_color_toggle = true;
             }
         }
-        wrefresh  (curr_win->win);
+        wrefresh  (curr_win->WIN);
     }
 
 #endif
 
     curr_win = NULL;
     curr_title [0] = '\0';
-
-#ifdef DEBUG
-    (void) key_color_toggle;
-    (void) i;
-#endif
 }
 
 
+#ifndef DEBUG
 
 /*
     Find string in Ncurses WINDOW 
     -----------
     - Set y,x to coordinates
 */
-static bool find_window_string (WINDOW *window,
-                                char   *string,
-                                int    *y,
-                                int    *x)
+static bool
+find_window_string (WINDOW *window,
+                    char   *string,
+                    int    *y,
+                    int    *x)
 {
-#ifndef DEBUG
 
     int  i, j, 
          m, n,
@@ -414,17 +427,6 @@ static bool find_window_string (WINDOW *window,
     } else {
         return false;
     }
-
-#endif
-
-#ifdef DEBUG
-
-    (void) window;
-    (void) string;
-    (void) *y;
-    (void) *x;
-
-#endif
-
 }
 
+#endif

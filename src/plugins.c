@@ -1,9 +1,9 @@
 /*
 
-Plugin
+Plugins
 ------
-- Each code case-sensitive, three-letter code is associated with a plugin function 
-    - see plugins/_interface.c
+- Each case-sensitive, three-letter code is associated with a plugin
+- Each plugin is assigned a key shortcut [A-Z,a-z] in the configuration file
 
 - Codes:
 
@@ -44,8 +44,11 @@ Plugin
         ScR     Scroll window right
 */
 
-#include "_plugins.h"
-#include "_plugins_interface.h"
+#include <string.h>
+
+#include "plugins.h"
+#include "data.h"
+#include "utilities.h"
 
 
 /*
@@ -58,7 +61,7 @@ Plugin
     - Used in bind_keys_windows_to_plugins()
         - Ordered alphabetically for binary search  (A-Z,a-z)
 */
-char *plugin_code [] = {
+char *plugin_codes [] = {
     
     "EMP",
     "Asm",
@@ -85,55 +88,16 @@ char *plugin_code [] = {
     "Unt",
     "Wat"
 };
-int plugin_code_size = sizeof (plugin_code);
-int num_plugins = sizeof (plugin_code) / sizeof (plugin_code[0]);
-
-
-
-/*
-    Function pointer array
-    ----------
-    - Called by run_plugin()
-*/
-plugin_func_t plugin_func [] = {
-
-    (plugin_func_t) empty_func,         // "EMP"
-    (plugin_func_t) win_assembly,       // "Asm"
-    (plugin_func_t) back,               // "Bak"
-    (plugin_func_t) pwin_builds,        // "Bld"
-    (plugin_func_t) win_breakpoints,    // "Brk"
-    (plugin_func_t) cont,               // "Con"
-    (plugin_func_t) finish,             // "Fin"
-    (plugin_func_t) kill_prog,          // "Kil"
-    (plugin_func_t) pwin_layouts,       // "Lay"
-    (plugin_func_t) win_local_vars,     // "LcV"
-    (plugin_func_t) next,               // "Nxt"
-    (plugin_func_t) win_prog_output,    // "Out"
-    (plugin_func_t) win_prompt,         // "Prm"
-    (plugin_func_t) quit,               // "Qut"
-    (plugin_func_t) win_registers,      // "Reg"
-    (plugin_func_t) run,                // "Run"
-    (plugin_func_t) scroll_down,        // "ScD"
-    (plugin_func_t) scroll_left,        // "ScL"
-    (plugin_func_t) scroll_right,       // "ScR"
-    (plugin_func_t) scroll_up,          // "ScU"
-    (plugin_func_t) win_src_file,       // "Src"
-    (plugin_func_t) step,               // "Stp"
-    (plugin_func_t) until,              // "Unt"
-    (plugin_func_t) win_watches         // "Wat"
-};
 
 
 
 /*
     Window data file names
-    ---------
-    - Bound to plugins in bind_keys_windows_to_plugins()
 */
 char *win_file_name [] = {
 
     NULL,                       // "EMP"
-    "assembly.asm",             // "Asm"
+    "",             // "Asm"
     NULL,                       // "Bak"
     "builds.lst",               // "Bld"
     "breakpoints.lst",          // "Brk"
@@ -152,11 +116,58 @@ char *win_file_name [] = {
     NULL,                       // "ScL"
     NULL,                       // "ScR"
     NULL,                       // "ScU"
-    "curr_src.path",            // "Src"
+    "curr_src.file",            // "Src"    TODO: set path to actual source file
     NULL,                       // "Stp"
     NULL,                       // "Unt"
     "watchpoints.lst"           // "Wat"
 };
+
+
+
+void
+set_num_plugins (state_t *state)
+{
+    state->num_plugins = sizeof (plugin_codes) / sizeof (plugin_codes [0]);
+
+}
+
+
+
+void
+set_plugin_data_paths (state_t *state)
+{
+    char *home_path = getenv ("HOME");
+
+    // breakpoints
+    state->break_path = create_path (3, home_path, DATA_DIR_PATH, "breakpoints.lst");
+
+    // watchpoints
+    state->watch_path = create_path (3, home_path, DATA_DIR_PATH, "watches.ls");
+}
+
+
+
+int
+get_plugin_code_index (char    *code,
+                       state_t *state)
+{
+    int si = 1,
+        mi,
+        ei = state->num_plugins - 1, 
+        r;
+    while (si <= ei) {
+        mi = si + (ei - si) / 2;
+        r = strcmp (plugin_codes [mi], code);
+        if (r == 0) {
+            return mi;
+        } else if (r < 0) {
+            si = mi + 1;
+        } else {
+            ei = mi - 1;
+        }
+    }
+    return -1;
+}
 
 
 

@@ -10,68 +10,96 @@
 #include <stdbool.h>
 #include <ncurses.h>
 
-#include "parse_config.h"
+#include "parse_config_file.h"
 #include "data.h"
+#include "plugins.h"
 #include "utilities.h"
 
 static FILE      *open_config_file       (void);
 static void       get_category_and_label (FILE*, char*, char*);
 static void       create_plugins         (FILE*, state_t*);
 static layout_t  *create_layout          (FILE*, char*);
+static void       allocate_plugins       (state_t*);
 static layout_t  *allocate_layout        (void);
-static plugin_t  *allocate_plugin        (void);
+
+extern char **plugin_codes;
+extern char **win_file_names;
+
+#ifdef DEBUG
+    static void print_plugins (state_t*);
+#endif
 
 
 /*
-    Parse CONFIG_FILE data into passed layout_t object
-
-        [<category>:<label>]
-        <values>
+    Parse CONFIG_FILE data
+    --------------
+    - Allocate and add plugins to `plugin` *plugin_t array  (plugins.h)
+    - Create, return layout_t linked list
 */
-void parse_config (state_t *state)
+layout_t*
+parse_config_file (state_t *state)
 {
-    FILE *file = open_config_file ();
-
+    int       num_keys;
     char      ch;
-    bool      first_layout;
-    layout_t *curr_layout;
-    char      category [MAX_CONFIG_CATEG_LEN];
-    char      label    [MAX_CONFIG_LABEL_LEN];
+    bool      is_first_layout = true;
+    layout_t *prev_layout = NULL,
+             *curr_layout = NULL,
+             *head_layout = NULL;
+    char      category [MAX_CONFIG_CATEG_LEN] = {'\0'};
+    char      label    [MAX_CONFIG_LABEL_LEN] = {'\0'};
 
-    first_layout = true;
-    curr_layout = NULL;
-    while ((ch = fgetc (file)) != EOF) {
+    num_keys = (int)'z' + 1;
+    state->plugin_key_index = (int*) malloc (num_keys * sizeof (int));
+
+    set_num_plugins (state);
+
+    allocate_plugins (state);
+
+    set_plugin_data_paths (state);
+
+    // open config file
+    FILE *fp = open_config_file ();
+    if (fp == NULL) {
+        pfeme ("Failed to open configuration file");
+    }
+
+    // parse config file
+    is_first_layout = true;
+    while ((ch = fgetc (fp)) != EOF) {
 
         // get category and label of section
         if (ch == '[') 
-            get_category_and_label (file, category, label);
+            get_category_and_label (fp, category, label);
 
-        // plugins
-        if (strcmp (category, "keys") == 0) {
-            create_plugins (file, state);
+        // create plugins
+        if (strcmp (category, "plugins") == 0) {
+            create_plugins (fp, state);
         }
 
-        // layout
+        // create linked list of layout_t structs
         if (strcmp (category, "layout") == 0) {
-
-            state->curr_layout = create_layout (file, label);
-
-            if (first_layout) {
-                state->layouts = state->curr_layout;
-                curr_layout = state->curr_layout;
-                first_layout = false;
+            curr_layout = create_layout (fp, label);
+            if (is_first_layout) {
+                head_layout = curr_layout;
+                is_first_layout = false;
             } else {
-                curr_layout->next = state->curr_layout;
-                state->curr_layout->next = NULL;
+                prev_layout->next = curr_layout;
+                curr_layout->next = NULL;
             }
+            prev_layout = curr_layout;
         }
 
         category [0] = '\0';
         label [0] = '\0';
     }
 
-    // close configuration file
-    fclose (file);
+    fclose (fp);
+
+#ifdef DEBUG
+    print_plugins (state);
+#endif
+
+    return head_layout;
 }
 
 
@@ -88,7 +116,7 @@ static FILE* open_config_file (void)
     char cwd[100];
     char cwd_path[130];
     char home_path[130];
-    FILE *file;
+    FILE *file = NULL;
 
     // check current working directory
     if (getcwd (cwd, sizeof (cwd)) != NULL) {
@@ -111,6 +139,35 @@ static FILE* open_config_file (void)
     }
 
     return file;
+}
+
+
+
+static void
+allocate_plugins (state_t *state)
+{
+    state->plugins = (plugin_t**) malloc (state->num_plugins * sizeof (plugin_t*));
+    if (state->plugins == NULL) {
+        pfeme ("plugin_t pointer array allocation failed");
+    }
+    for (int i = 0; i < state->num_plugins; i++) {
+        state->plugins [i] = (plugin_t*) malloc (sizeof (plugin_t));
+        if (state->plugins [i] == NULL) {
+            pfeme ("plugin_t pointer allocation failed");
+        }
+    }
+}
+
+
+
+static layout_t*
+allocate_layout (void)
+{
+    layout_t *layout = (layout_t*) malloc (sizeof (layout_t));
+    if (layout == NULL) {
+        pfeme ("layout_t allocation failed\n");
+    }
+    return layout;
 }
 
 
@@ -160,7 +217,7 @@ static void get_category_and_label (FILE *file,
 /*
     Create plugins
     -------
-    - state->plugins
+    - Allocate and add to `plugin` array in plugins.h
 
         [ plugins ]
         Bld: b : (b)uild
@@ -169,58 +226,59 @@ static void get_category_and_label (FILE *file,
 */
 static void create_plugins (FILE *file, state_t *state)
 {
-    int ch, i;
-    plugin_t* curr_plugin = NULL;
-    bool head_plugin_exists = false;
-    bool title_started;
+    int       i, j,
+              key,
+              plugin_index;
+    char      title [MAX_TITLE_LEN],
+              code[PLUGIN_CODE_LEN + 1];
+    bool      title_started;
+    plugin_t *curr_plugin = NULL;
 
-    while ((ch = fgetc (file)) != '[' && ch != EOF) {
+    while ((key = fgetc (file)) != '[' && key != EOF) {
 
         // if letter
-        if (isalpha (ch)) {
-
-            // allocate plugin
-            if (head_plugin_exists) {
-                curr_plugin->next = allocate_plugin ();
-                curr_plugin = curr_plugin->next;
-            } else {
-                curr_plugin = allocate_plugin();
-                state->plugins = curr_plugin;
-                head_plugin_exists = true;
-            }
-            curr_plugin->next = NULL;
+        if (isalpha (key)) {
 
             // get code
-            for (int j = 0; j < 3; j++) {
-                curr_plugin->code[j] = ch;
-                ch = fgetc (file);
+            for (j = 0; j < PLUGIN_CODE_LEN; j++) {
+                code[j] = key;
+                key = fgetc (file);
             }
-            curr_plugin->code[3] = '\0';
+            code[PLUGIN_CODE_LEN] = '\0';
 
-            // get key
-            ungetc (ch, file);
-            while ((ch = fgetc (file)) != ':') {;}
-            while ((ch = fgetc (file)) != ':') {
-                if (isalpha (ch)) {
-                    curr_plugin->key = ch;
+            plugin_index = get_plugin_code_index (code, state);
+            curr_plugin = state->plugins [plugin_index];
+            strncpy (curr_plugin->code, code, PLUGIN_CODE_LEN + 1);
+
+            // set key
+            ungetc (key, file);
+            while ((key = fgetc (file)) != ':') {;}
+            while ((key = fgetc (file)) != ':') {
+                if (isalpha (key)) {
+                    curr_plugin->key = key;
                 }
             }
 
-            // get title
+            // set plugin_key_index
+            state->plugin_key_index [(int) curr_plugin->key] = plugin_index;
+
+            // set title
             i = 0;
             title_started = false;
-            while ((ch = fgetc (file)) != '\n' && i < (MAX_CONFIG_LABEL_LEN - 1)) {
-                if (isalpha (ch) || ch == '(' || title_started) {
-                    curr_plugin->title[i++] = ch;
+            while ((key = fgetc (file)) != '\n' && i < (MAX_CONFIG_LABEL_LEN - 1)) {
+                if (isalpha (key) || key == '(' || title_started) {
+                    title[i++] = key;
                     title_started = true;
                 }
             }
-            curr_plugin->title[i] = '\0';
+            title[i] = '\0';
+            curr_plugin->title = (char*) malloc (strlen (title) + 1);
+            strncpy (curr_plugin->title, title, strlen(title) + 1);
         }
     }
 
     // unget '[', EOF
-    ungetc (ch, file);
+    ungetc (key, file);
 }
 
 
@@ -398,32 +456,22 @@ static layout_t* create_layout (FILE* file,
 
 
 
-/*
-    Allocate memory for layout_t struct
-*/
-static layout_t* allocate_layout (void)
+#ifdef DEBUG
+
+static void
+print_plugins (state_t *state)
 {
-    layout_t *layout = (layout_t*) malloc (sizeof (layout_t));
-    if (layout == NULL) {
-        pfeme ("layout_t allocation failed\n");
+    // plugins
+    puts ("");
+    puts ("PLUGINS:");
+    puts ("------------");
+    for (int i = 0; i < state->num_plugins; i++) {
+        printf ("%s : %c : %s\n", 
+                        state->plugins[i]->code, 
+                        state->plugins[i]->key, 
+                        state->plugins[i]->title);
     }
-    return layout;
+    puts ("");
 }
 
-
-
-/*
-    Allocate memory for plugin_t struct
-*/
-static plugin_t *allocate_plugin (void)
-{
-    plugin_t *plugin = (plugin_t *) calloc (1, sizeof (plugin_t));
-    if (plugin) {
-        return plugin;
-    } else {
-        pfeme ("Unable to allocate memory for plugin_t struct");
-    }
-}
-
-
-
+#endif

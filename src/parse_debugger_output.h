@@ -1,7 +1,13 @@
-#ifndef PARSE_OUTPUT_H
-#define PARSE_OUTPUT_H
 
-void parse_debugger_output (int, int*, char*, char*, char*, char*);
+#ifndef PARSE_DEBUGGER_OUTPUT_H
+#define PARSE_DEBUGGER_OUTPUT_H
+
+#include "data.h"
+
+
+
+void parse_debugger_output (state_t*);
+
 
 
 #endif

@@ -5,7 +5,7 @@
 #include "data.h"
 
 
-void  update_window_data  (state_t*, char*);
+void  update_window_data  (int, state_t*);
 
 
 #endif

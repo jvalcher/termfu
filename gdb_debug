@@ -1,0 +1,4 @@
+#!/bin/bash
+
+gdb --tui --quiet -x .gdbtermide termide-dev
+

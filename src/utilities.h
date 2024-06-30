@@ -18,24 +18,17 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "parse_config.h"
+#include "parse_config_file.h"
 #include "render_layout.h"
 
-
-
-#define arrlen(a) (sizeof(a) / sizeof *(a))
-
-#define CHECK_BYTES(b)  if ((b) == 0) pfeme ("No bytes written")
-
-#define INPUT_PIPE      state->debug_state->input_pipe
-
-
-
-void   close_ncurses                    (void);
-FILE  *clear_and_open_file_for_append   (char *path);
-void   set_nc_attribute                 (WINDOW*, int);
-void   unset_nc_attribute               (WINDOW*, int);
-char  *get_code_path                    (char*, plugin_t*);
+void  clean_up              (void);
+char *create_path           (int, ...);
+void  send_command          (state_t*, int, ...);
+int   getkey                (void);
+char* create_path           (int, ...);
+void  write_to_pipe         (int, char**);
+void  set_nc_attribute      (WINDOW*, int);
+void  unset_nc_attribute    (WINDOW*, int);
 
 
 
@@ -78,7 +71,7 @@ Multiple messages, exit;
 
 // Print formatted error message, exit
 #define pfeme(...) do { \
-    close_ncurses(); \
+    clean_up(); \
     pfem(__VA_ARGS__); \
     exit (EXIT_FAILURE); \
 } while (0)
@@ -93,7 +86,7 @@ Multiple messages, exit;
 
 // Print error message, exit
 #define peme(...) do { \
-    close_ncurses(); \
+    clean_up(); \
     pem(__VA_ARGS__); \
     exit (EXIT_FAILURE); \
 } while (0)

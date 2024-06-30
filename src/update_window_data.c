@@ -10,84 +10,33 @@
 #include "data.h"
 #include "utilities.h"
 
-#define START  0
-#define END    1
-
-static void  get_code_plugin        (state_t*, char*);
-static void  handle_title_color     (state_t*, char*, int);
-static void  calculate_window_data  (state_t*);
+static void  calculate_window_data  (int, state_t*);
 
 
 
 void 
-update_window_data (state_t *state, 
-                    char *code)
+update_window_data (int      plugin_index,
+                    state_t *state)
 {
-    plugin_t *plugin;
-    window_t *window;
+    calculate_window_data (plugin_index, state);
 
-    get_code_plugin (state, code);
-
-    handle_title_color (state, code, START);
-
-    calculate_window_data (state);
-
-    render_window_data (state->curr_plugin->window, state, BEGINNING, WINDOW_DATA);
-
-    handle_title_color (state, code, END);
+    render_window_data (plugin_index, state, BEGINNING, RENDER_DATA);
 }
 
 
 
 static void
-get_code_plugin (state_t *state,
-                 char    *code)
+calculate_window_data (int      plugin_index,
+                       state_t *state)
 {
-    plugin_t *plugin = state->plugins;
-    do {
-        if (strcmp (plugin->code, code) == 0) {
-            state->curr_plugin = plugin;
-            break;
-        }
-        plugin = plugin->next;
-    } while (plugin != NULL);
-    if (plugin == NULL) {
-        pfeme ("Unable to find plugin for code \"%s\"", code);
-    }
-}
-
-
-
-static void 
-handle_title_color (state_t *state,
-                    char    *code,
-                    int      color_mode) 
-{
-    switch (color_mode) {
-    case START:
-        if (!state->curr_plugin->window) {
-            render_window_data (NULL, state, NULL, HEADER_TITLE_COLOR_ON);
-        }
-    case END:
-        if (!state->curr_plugin->window) {
-            render_window_data (NULL, state, NULL, HEADER_TITLE_COLOR_OFF);
-        } else {
-        }
-    }
-    
-}
-
-
-
-static void
-calculate_window_data (state_t *state)
-{
-    plugin_t *plugin;
+    (void) plugin_index;
+    (void) state;
+    /*
     window_t *win;
     FILE     *fp;
     int       i, ch;
 
-    win = state->curr_plugin->window;
+    win = state->windows[plugin_index];
 
     // open debugger output file
     fp  = fopen (win->out_file_path, "r");
@@ -138,8 +87,7 @@ calculate_window_data (state_t *state)
     win->file_first_char = 0;
 
     fclose (fp);
-
-    return win;
+    */
 }
 
 
