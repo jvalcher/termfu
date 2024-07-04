@@ -125,6 +125,8 @@ def format_gcc_output (command):
     global err_num
     global warn_num
 
+    print ("\n  ----------\n  Compiling...")
+
     # run command, get output
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     stdout, stderr = process.communicate()

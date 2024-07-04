@@ -4,18 +4,22 @@
 
 #include "data.h"
 
+
+
 enum {
     HEADER_TITLE_COLOR_ON,
     HEADER_TITLE_COLOR_OFF,
-    SELECT_WINDOW_COLOR,
-    DESELECT_WINDOW_COLOR,
-    RENDER_DATA,
-    BEGINNING
+    SELECT,
+    DESELECT,
+    DATA,
+    SRC_FILE,
+
+    CURRENT
 };
 
 
 
-void render_window_data (int, state_t*, int, int);
+void render_window (int, int, int, state_t*);
 
 
 

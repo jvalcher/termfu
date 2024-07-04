@@ -127,28 +127,36 @@ typedef struct layout {
     file_max_mid    - maximum mid line (end of file)
     file_offsets    - byte offsets for each line of file
 */  
+#define MAX_LINES  128
+
 typedef struct window {
 
-    WINDOW            *WIN;
-    bool               selected;
+    WINDOW  *WIN;
+    bool     selected;
 
-    int                win_rows;                   
-    int                win_cols;                   
-    int                dwin_rows;                   
-    int                dwin_cols;                   
-    int                win_y;                      
-    int                win_x;                      
-    int                win_border [8];
-    int                win_mid_line;
+    int      rows;                   
+    int      cols;                   
+    int      y;                      
+    int      x;                      
+    int      border [8];
 
-    int                file_first_char;
-    int                file_rows;
-    int                file_max_cols;
-    int                file_min_mid;
-    int                file_max_mid;
-    unsigned long int *file_offsets;
+    int      scroll_y;
+    int      scroll_x;
 
 } window_t;
+
+typedef struct {
+
+    bool      path_changed;
+    char     *path;
+    int       rows;
+    int       max_cols;
+    int       min_mid;
+    int       max_mid;
+    int      *offsets;
+    window_t *win;
+
+} src_file_t;
 
 
 
@@ -211,6 +219,7 @@ typedef struct {
     char   key;
     char   code [4];
     char  *title;       // TODO: allocate
+    bool   has_window;
 
 } plugin_t;
 
@@ -235,6 +244,7 @@ typedef struct state_t {
 
     layout_t     *layouts;
     window_t    **windows;
+    src_file_t   *src_file;
     plugin_t    **plugins;
     debugger_t   *debugger;
 

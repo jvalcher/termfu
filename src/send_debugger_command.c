@@ -8,8 +8,10 @@
 #include "data.h"
 #include "insert_output_marker.h"
 #include "parse_debugger_output.h"
+#include "update_windows.h"
 #include "plugins.h"
 #include "utilities.h"
+#include "render_window.h"
 
 
 
@@ -17,7 +19,10 @@ void
 send_debugger_command (int      plugin_index,
                        state_t *state)
 {
+    bool quitting = false;
     int curr_debugger = state->debugger->curr;
+
+    render_window (HEADER_TITLE_COLOR_ON, -1, plugin_index, state);
 
     insert_output_start_marker (state);
 
@@ -52,10 +57,6 @@ send_debugger_command (int      plugin_index,
         case (DEBUGGER_GDB): send_command (state, 1, "-exec-run\n"); break;
         }
         break;
-    case Brk:
-        switch (curr_debugger) {
-        case (DEBUGGER_GDB): send_command (state, 2, "-break-insert ", " main\n"); break;   // TODO: breaks
-        }
     case Unt:
         switch (curr_debugger) {
         case (DEBUGGER_GDB): send_command (state, 2, "-exec-until", "15\n"); break;       // TODO: until
@@ -66,19 +67,22 @@ send_debugger_command (int      plugin_index,
         case (DEBUGGER_GDB): send_command (state, 1, "-gdb-exit\n"); break;
         }
         state->debugger->running = false;
-        goto skip_parse;
+        quitting = true;
     }
 
-    insert_output_end_marker (state);
+    if (!quitting) {
 
-    parse_debugger_output (state);
+        insert_output_end_marker (state);
 
-    printf ("DEBUGGER OUTPUT: \n%s\n\n", state->debugger->debugger_buffer);
-    printf ("PROGRAM OUTPUT: \n%s\n\n", state->debugger->program_buffer);
+        parse_debugger_output (state);
 
-    // CURRENT: Figure out how to update windows
+        render_window (DATA, -1, Prm, state);
+        render_window (DATA, -1, Out, state);
 
-skip_parse:
+        render_window (HEADER_TITLE_COLOR_OFF, -1, plugin_index, state);
+
+        update_windows (state, 6, Brk, LcV, Out, Reg, Src, Wat);
+    }
 }
 
 

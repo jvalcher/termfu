@@ -18,7 +18,7 @@
 static FILE      *open_config_file       (void);
 static void       get_category_and_label (FILE*, char*, char*);
 static void       create_plugins         (FILE*, state_t*);
-static layout_t  *create_layout          (FILE*, char*);
+static layout_t  *create_layout          (FILE*, char*, state_t*);
 static void       allocate_plugins       (state_t*);
 static layout_t  *allocate_layout        (void);
 
@@ -78,7 +78,7 @@ parse_config_file (state_t *state)
 
         // create linked list of layout_t structs
         if (strcmp (category, "layout") == 0) {
-            curr_layout = create_layout (fp, label);
+            curr_layout = create_layout (fp, label, state);
             if (is_first_layout) {
                 head_layout = curr_layout;
                 is_first_layout = false;
@@ -250,6 +250,8 @@ static void create_plugins (FILE *file, state_t *state)
             curr_plugin = state->plugins [plugin_index];
             strncpy (curr_plugin->code, code, PLUGIN_CODE_LEN + 1);
 
+            curr_plugin->index = plugin_index;
+
             // set key
             ungetc (key, file);
             while ((key = fgetc (file)) != ':') {;}
@@ -287,7 +289,8 @@ static void create_plugins (FILE *file, state_t *state)
     Create new layout
 */
 static layout_t* create_layout (FILE* file,
-                                char *label)
+                                char *label,
+                                state_t *state)
 {
     int ch, next_ch;
     char *win_keys;
@@ -347,6 +350,9 @@ static layout_t* create_layout (FILE* file,
                     keys [i++] = ch;
                     num_chars += 1;
                     is_key = true;
+                    if (section == 'w') {
+                        state->plugins[state->plugin_key_index[ch]]->has_window = true;
+                    }
                 }
 
                 // add newline

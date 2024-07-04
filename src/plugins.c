@@ -139,10 +139,10 @@ set_plugin_data_paths (state_t *state)
     char *home_path = getenv ("HOME");
 
     // breakpoints
-    state->break_path = create_path (3, home_path, DATA_DIR_PATH, "breakpoints.lst");
+    state->break_path = create_path (5, home_path, "/", DATA_DIR_PATH, "/", "breakpoints.lst");
 
     // watchpoints
-    state->watch_path = create_path (3, home_path, DATA_DIR_PATH, "watches.ls");
+    state->watch_path = create_path (5, home_path, "/", DATA_DIR_PATH, "/", "watches.ls");
 }
 
 

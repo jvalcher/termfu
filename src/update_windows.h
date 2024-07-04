@@ -6,7 +6,7 @@
 
 
 
-void send_window_update_command (int, state_t*);
+void update_windows (state_t*, int, ...);
 
 
 

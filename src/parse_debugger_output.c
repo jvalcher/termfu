@@ -13,17 +13,12 @@ parse_debugger_output (state_t *state)
 {
     bool running = true;
     int bytes_read = 0;
-    char *debugger_buffer,
-         *program_buffer;
     reader_t reader;
-
-    debugger_buffer = state->debugger->debugger_buffer;
-    program_buffer = state->debugger->program_buffer;
 
     reader.state = READER_RECEIVING;
     reader.output_line_buffer[0] = '\0';
-    reader.debugger_buffer_ptr = debugger_buffer;
-    reader.program_buffer_ptr = program_buffer;
+    reader.debugger_buffer_ptr = state->debugger->debugger_buffer;
+    reader.program_buffer_ptr = state->debugger->program_buffer;
 
     while (running) 
     {
@@ -41,8 +36,20 @@ parse_debugger_output (state_t *state)
         }
 
         switch (reader.state) {
-            case READER_RECEIVING: break;
-            case READER_DONE:      running = false; break;
+            case READER_RECEIVING:
+                break;
+
+            case READER_DONE:
+#ifdef DEBUG
+                printf ("DEBUGGER BUFFER:\n %s\n", state->debugger->debugger_buffer);
+                printf ("PROGRAM BUFFER:\n %s\n", state->debugger->program_buffer);
+#endif
+                running = false;
+                break;
+
+            case READER_EXIT:
+                running = false;
+                break;
         }
     }
 }
@@ -147,7 +154,8 @@ parse_debugger_output_gdb (reader_t *reader)
                          *(buff_ptr + 2) == 'N' && 
                          *(buff_ptr + 3) == 'D') {
 
-                    buff_ptr += 4;
+                    *reader->program_buffer_ptr = '\0';
+                    *reader->debugger_buffer_ptr = '\0';
 
                     reader->state = READER_DONE;
 

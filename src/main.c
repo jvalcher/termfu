@@ -12,8 +12,6 @@
 #include "start_debugger.h"
 #include "run_plugin.h"
 
-static state_t     *allocate_state          (void);
-static debugger_t  *allocate_debugger       (void);
 static void         parse_cli_arguments     (int, char *argv[], debugger_t*);
 static void         initialize_ncurses      (void);
 static void         set_signals_et_al       (void);
@@ -25,53 +23,30 @@ int main (int argc, char *argv[])
 {
     int key;
 
-    state_t    *state    = allocate_state ();
-    debugger_t *debugger = allocate_debugger ();
-    state->debugger = debugger;
+    state_t state;
+    debugger_t debugger;
+    state.debugger = &debugger;
 
-    parse_cli_arguments (argc, argv, debugger);
+    parse_cli_arguments (argc, argv, &debugger);
 
     initialize_ncurses ();
 
-    state->layouts = parse_config_file (state);
+    state.layouts = parse_config_file (&state);
 
-    render_layout (FIRST_LAYOUT, state);
+    render_layout (FIRST_LAYOUT, &state);
 
-    start_debugger (state); 
+    start_debugger (&state); 
 
     set_signals_et_al ();
 
-    while (debugger->running) {
+    while (debugger.running) {
         key = getkey ();
-        run_plugin (state->plugin_key_index[key], state);
+        run_plugin (state.plugin_key_index[key], &state);
     }
 
     clean_up ();
 
     return 0;
-}
-
-
-static state_t*
-allocate_state (void)
-{
-    state_t *s = (state_t*) malloc (sizeof (state_t));
-    if (s == NULL) {
-        pfeme ("debug_state_t allocation error\n");
-    }
-    return s;
-}
-
-
-
-static debugger_t*
-allocate_debugger (void)
-{
-    debugger_t *d = (debugger_t*) malloc (sizeof (debugger_t));
-    if (d == NULL) {
-        pfeme ("debug_state_t allocation error\n");
-    }
-    return d;
 }
 
 

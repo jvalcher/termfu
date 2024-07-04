@@ -4,8 +4,8 @@
 # -------
 # 	make      	- build prod binary
 # 	make dev	- build dev binary, run it
-# 	make debug  - build dev binary, print debug data (no Ncurses), run it
-# 	make devf   - build dev binary, print formatted error messages
+# 	make devf   - build dev binary with formatted error messages
+# 	make debug  - build dev binary with DEBUG flag (no ncurses), run it
 # 	make colors	- check if current terminal can display colors
 #
 
@@ -18,7 +18,7 @@ FLAGS=			-Wall -Wextra -MMD -I ./src/plugins -I ./src/window_updates
 PROD_FLAGS=		-O3
 DEV_FLAGS=		-g
 DEBUG_FLAGS=	-D DEBUG -g
-FORMAT_FLAGS=	-D DEBUG -g -fdiagnostics-format=json
+DEV_F_FLAGS=	-g -fdiagnostics-format=json
 
 NCURSES_CFLAGS 	:= $(shell ncurses5-config --cflags)
 NCURSES_LIBS 	:= $(shell ncurses5-config --libs)
@@ -48,10 +48,8 @@ debug: clean $(B_FILE_DEV)
 	./$(B_FILE_DEV) ./misc/hello
 	@echo ""
 
-devf: FLAGS += $(FORMAT_FLAGS)
+devf: FLAGS += $(DEV_F_FLAGS)
 devf: clean $(B_FILE_DEV)
-	@echo ""
-	./$(B_FILE_DEV) ./misc/hello
 	@echo ""
 
 colors:

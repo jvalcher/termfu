@@ -7,7 +7,7 @@
 
 
 enum {
-    EMP,
+    EMP,    
     Asm,
     Bak,
     Bld,
