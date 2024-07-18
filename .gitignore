@@ -6,6 +6,7 @@ ncurses.h
 tags
 hello*
 debug_*
+ToDo.md
 
 venv
 __pycache__

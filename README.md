@@ -6,79 +6,7 @@ A multi-language terminal debugger for GNU/Linux
 **\*\* In development \*\***
 
 
-## To do
-
-### Bookmark == "CURRENT"
-
--> Last task: Read output buffer to file, hook up scrolling, ...
-
-- [x] Render layout from configuration file
-
-- [x] Attach keyboard shortcuts to plugin functions
-
-- [x] Add title string color pulse, switch to indicate usage
-
-- [ ] Add debugger, plugins functionality
-  - [x] Add plugin function interface
-  - [x] Add select window coloring
-  - [ ] Add DEBUG macros and functionality (no Ncurses, only data)
-  - [ ] Parse debugger output to files
-    - [ ] debugger
-    - [ ] program
-    - [ ] window data
-  - [ ] Update window data
-  - [ ] Add window functionality
-    - [ ] Scroll
-    - [ ] Debugger-specific
-  - [ ] Add popup windows
-  - [ ] Make window data persistent
-  - [ ] Format window data
-    - [ ] source file -> source-highlight
-  - [ ] Combine commits, merge
-
-- [ ] Add help menus
-  - [ ] Main
-  - [ ] Per window
-
-- [ ] Add switch-layout functionality
-
-- [ ] Come up with better program name (debugger, not IDE)
-
-- [ ] Figure out, cull refresh(), wrefresh() calls
-
-- [ ] Add cli flags
-
-- [ ] Organize Makefile dependencies for better compile time
-
-- [ ] Incorporate errno messages into pfem
-
-- [ ] Add other debuggers
-  - [ ] pdb
-  - [ ] node --inspect
-
-- [ ] Update, fix comments
-
-- [ ] Add PLUGINS.md
-
-- [ ] Research open source repo management
-  - [ ] Add CONTRIBUTING.md
-  - [ ] Add CHANGES.md
-  - [ ] Add LICENSE.md
-  - [ ] Update, fix README.md
-
-- [ ] Add issues
-  - [ ] Convert processes to threads where possible
-  - [ ] Convert corner fixes to bitwise operations
-
-- [ ] Make repo public
-
-
-
-
-
 ## Configuration
-
-### The idea
 
 Unique, three-character, case-sensitive "plugin" codes are each associated with a specific debugger action or window. The codes are bound to user-defined shortcut keys. The key characters are used to create custom layouts.
 <br />
@@ -178,36 +106,7 @@ or <br />
 <br /><br />
 
 
-## Plugins
-
-See `PLUGINS.md` for a list of available plugins.
-<br /><br />
-
-
-## Debuggers
-
-- See `CONTRIBUTING.md` for information about adding functionality to the following debuggers and adding new debuggers.
-
-- GDB 
-  - C/C++
-  - D
-  - Go
-  - Objective-C
-  - OpenCL C
-  - Fortran
-  - Pascal
-  - Rust
-  - Modula-2
-  - Ada
-
-- PDB
-  - Python
-
-- node --inspect
-  - NodeJS
-
-
-## Builds
+## Build
 
 ### Production
 ```

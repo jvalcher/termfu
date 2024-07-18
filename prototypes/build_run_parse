@@ -1,3 +1,0 @@
-#!/bin/bash
-
-gcc -g test.c gdb.c -o gdb_parse_test && ./gdb_parse_test

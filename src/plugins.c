@@ -91,36 +91,63 @@ char *plugin_codes [] = {
 
 
 
-/*
-    Window data file names
-*/
-char *win_file_name [] = {
+int win_plugins[] = { Asm, Brk, LcV, Out, Prm, Reg, Wat };
 
-    NULL,                       // "EMP"
-    "",             // "Asm"
-    NULL,                       // "Bak"
-    "builds.lst",               // "Bld"
-    "breakpoints.lst",          // "Brk"
-    NULL,                       // "Con"
-    NULL,                       // "Fin"
-    NULL,                       // "Kil"
-    "layouts.lst",              // "Lay"
-    "local_vars.lst",           // "LcV"
-    NULL,                       // "Nxt"
-    "program.out",              // "Out"
-    "debugger.out",             // "Prm"
-    NULL,                       // "Qut"
-    "registers.lst",            // "Reg"
-    NULL,                       // "Run"
-    NULL,                       // "ScD"
-    NULL,                       // "ScL"
-    NULL,                       // "ScR"
-    NULL,                       // "ScU"
-    "curr_src.file",            // "Src"    TODO: set path to actual source file
-    NULL,                       // "Stp"
-    NULL,                       // "Unt"
-    "watchpoints.lst"           // "Wat"
+int win_input_plugins[] = {
+    Brk,
+    Prm,
+    Src,
+    Wat
 };
+
+char *input_inactive_strs[] = {
+    " (d)elete",
+    " (c)ommand",
+    " Create (b)reak ",
+    " (c)reate  (d)elete "
+};
+
+char *input_active_strs[] = {
+    " Break num: ",
+    " Command: ",
+    " Select line...",
+    " Watch: "
+};
+
+
+
+void
+set_window_plugins (state_t *state)
+{
+    int num_win_plugins = sizeof (win_plugins) / sizeof (win_plugins[0]);
+    int num_win_input_plugins = sizeof (win_input_plugins) / sizeof (win_input_plugins[0]);
+
+    for (int i = 0; i < state->num_plugins; i++) {
+
+        for (int j = 0; j < num_win_plugins; j++) {
+
+            // set as window
+            if (i == win_plugins[j]) {
+                state->plugins[i]->has_window = true;
+
+                for (int k = 0; k < num_win_input_plugins; k++) {
+
+                    // set as input window
+                    if (i == win_input_plugins[k]) {
+                        state->plugins[i]->win->has_input = true;
+                        state->plugins[i]->win->input_inactive_str = input_inactive_strs[k];
+                        state->plugins[i]->win->input_active_str = input_active_strs[k];
+                        break;
+                    } else {
+                        state->plugins[i]->win->has_input = false;
+                    }
+                }
+            } else {
+                state->plugins[i]->has_window = false;
+            }
+        }
+    }
+}
 
 
 
@@ -129,20 +156,6 @@ set_num_plugins (state_t *state)
 {
     state->num_plugins = sizeof (plugin_codes) / sizeof (plugin_codes [0]);
 
-}
-
-
-
-void
-set_plugin_data_paths (state_t *state)
-{
-    char *home_path = getenv ("HOME");
-
-    // breakpoints
-    state->break_path = create_path (5, home_path, "/", DATA_DIR_PATH, "/", "breakpoints.lst");
-
-    // watchpoints
-    state->watch_path = create_path (5, home_path, "/", DATA_DIR_PATH, "/", "watches.ls");
 }
 
 

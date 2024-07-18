@@ -31,7 +31,6 @@ static void      calculate_layout      (layout_t*, state_t*);
     static void      render_windows        (state_t*);
     static void      render_header_titles  (layout_t*, state_t*);
     static WINDOW   *allocate_window       (int, int, int, int);
-    static WINDOW   *allocate_subwin       (WINDOW*, int, int, int, int);
     static void      render_window         (window_t*);
     static void      render_window_titles  (state_t*);
     static void      fix_corners           (state_t*);
@@ -92,11 +91,9 @@ allocate_windows (state_t *state)
         pfeme ("window_t pointer array allocation failed");
     }
     for (int i = 0; i < state->num_plugins; i++) {
-        if (state->plugins[i]->has_window) {
-            state->plugins[i]->win = (window_t*) malloc (sizeof (window_t));
-            if (state->plugins[i]->win == NULL) {
-                pfeme ("window_t pointer allocation failed");
-            }
+        state->windows [i] = (window_t*) malloc (sizeof (window_t));
+        if (state->windows [i] == NULL) {
+            pfeme ("window_t pointer allocation failed");
         }
     }
 }
@@ -107,15 +104,8 @@ static void
 free_window_data (state_t *state)
 {
     for (int i = 0; i < state->num_plugins; i++) {
-        if (state->plugins[i]->has_window) {
-            delwin (state->plugins[i]->win->WIN);
-            if (state->plugins[i]->win->IWIN) {
-                delwin (state->plugins[i]->win->IWIN);
-            }
-            if (state->plugins[i]->win->DWIN) {
-                delwin (state->plugins[i]->win->DWIN);
-            }
-            free (state->plugins[i]->win);
+        if (state->windows [i]) {
+            delwin (state->windows[i]->WIN);
         }
     }
 }
@@ -269,15 +259,18 @@ calculate_layout (layout_t *layout,
 
                 plugin_index = state->plugin_key_index [(int)key];
 
-                curr_window = state->plugins[plugin_index]->win;
-                if (curr_window == NULL) {
-                    pfeme ("No window allocated for plugin %s (code: %s, index: %d)",
-                            state->plugins[plugin_index]->title,
-                            state->plugins[plugin_index]->code,
-                            plugin_index);
+                // get or allocate window_t struct
+                if (state->windows[plugin_index]) {
+                    curr_window = state->windows[plugin_index];
+                } else {
+                    curr_window = (window_t *) malloc (sizeof (window_t));
+                    if (curr_window == NULL) {
+                        pfeme ("Unable to allocate memory for window_t struct");
+                    }
+                    state->windows [plugin_index] = curr_window;
                 }
 
-                curr_window->selected  = false;
+                curr_window->selected       = false;
 
                 // calculate rows, cols
                 //           
@@ -418,8 +411,10 @@ render_windows (state_t *state)
 
     for (i = 0; i < state->num_plugins; i++) {
         if (state->plugins[i]->has_window) {
-            render_window (state->plugins[i]->win);
-        } 
+            render_window (state->windows [i]);
+        } else {
+            state->windows[i]->WIN = NULL;
+        }
     }
 
     fix_corners (state);
@@ -527,36 +522,16 @@ render_header_titles (layout_t *layout,
 static void
 render_window (window_t *win)
 {
-    int irows = 0;
-
-    // create main window
+    // create window object
     win->WIN = allocate_window (win->rows, 
                                 win->cols, 
                                 win->y + header_offset, 
                                 win->x);
-    if (win->WIN == NULL) {
+
+    if (win->WIN == NULL)
         pfeme  ("Unable to create window\n");
-    }
 
-    if (win->has_input) {
-        irows = 1;
-        win->IWIN = allocate_subwin (win->WIN, irows, win->cols - 2, 1, 1);
-        if (win->IWIN == NULL) {
-            pfeme  ("Unable to create input window\n");
-        }
-    }
-
-    // add data subwindow
-    win->DWIN = allocate_subwin (win->WIN,
-                                 win->rows - irows - 2,
-                                 win->cols - 2,
-                                 irows + 1,
-                                 1);
-    if (win->DWIN == NULL) {
-        pfeme  ("Unable to create data window\n");
-    }
-
-    // render main window border
+    // render border
     wattron  (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
     wborder  (win->WIN, 0,0,0,0,0,0,0,0);
     wattroff (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
@@ -807,19 +782,6 @@ allocate_window (int rows,
                  int x)
 {
     WINDOW *win = newwin (rows, cols, y, x);
-    if (win == NULL)
-        pfeme ("Unable to create window\n");
-    return win;
-}
-
-static WINDOW* 
-allocate_subwin (WINDOW* parent_win,
-                 int rows,
-                 int cols,
-                 int y,
-                 int x)
-{
-    WINDOW *win = derwin (parent_win, rows, cols, y, x);
     if (win == NULL)
         pfeme ("Unable to create window\n");
     return win;

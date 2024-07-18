@@ -110,8 +110,8 @@ render_data (int      key,
               newline_offsets [MAX_LINES];
     bool      not_finished;
 
-    rows = win->rows - 2;
-    cols = win->cols - 2;
+    rows = win->rows;
+    cols = win->cols;
     y = win->scroll_y;
     x = win->scroll_x;
     not_finished = false;
@@ -130,22 +130,7 @@ render_data (int      key,
         offset_index += 1;
     } while (*buff_ptr++ != '\0');
     
-    if (plugin_index == Prm) {
-        buff_ptr = state->debugger->program_buffer;
-    } else {
-        buff_ptr = state->debugger->debugger_buffer;
-    }
-
-
-    (void) key;     // TODO: render data key
-    (void) rows;
-    (void) cols;
-    (void) lines;
-    (void) not_finished;
-    (void) newline_offsets;
-    
-    /*
-    // calculate first line
+    // calculate scroll 
     if (lines > rows) {
         switch (key) {
             case CURRENT:     // TODO: set to 
@@ -168,29 +153,34 @@ render_data (int      key,
     }
     y = win->scroll_y;
     x = win->scroll_x;
-    */
 
     // print buffer to window
     char *newline;
     while ((newline = strchr(buff_ptr, '\n')) != NULL) {
+
         int len = newline - buff_ptr;
         if (len > cols) {
             len = cols;
         }
-        mvwprintw(win->WIN, y++, x, "%.*s", len, buff_ptr);
-        buff_ptr = newline + 1; // Move to the character after the newline
-        x = 1;  // Reset column to start_x for the new line
+
+        mvwprintw(win->DWIN, y++, x, "%.*s", len, buff_ptr);
+        buff_ptr = newline + 1;
+        x = 1;
     }
 
     // Print the remaining part after the last newline
     if (*buff_ptr != '\0') {
+
         int len = strlen(buff_ptr);
-        if (len > cols) len = cols;
-        mvwprintw(win->WIN, y++, x, "%.*s", len, buff_ptr);
+        if (len > cols) {
+            len = cols;
+        }
+
+        mvwprintw(win->DWIN, y++, x, "%.*s", len, buff_ptr);
         buff_ptr += len;
     }
 
-    wrefresh (win->WIN);
+    wrefresh (win->DWIN);
 
 #endif
 

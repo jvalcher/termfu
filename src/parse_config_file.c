@@ -55,7 +55,7 @@ parse_config_file (state_t *state)
 
     allocate_plugins (state);
 
-    set_plugin_data_paths (state);
+    set_window_plugins (state);
 
     // open config file
     FILE *fp = open_config_file ();

@@ -40,6 +40,7 @@ void set_plugin_data_paths (state_t*);
 
 int get_plugin_code_index (char*, state_t*);
 
+void set_window_plugins (state_t*);
 
 
 #endif

@@ -1,3 +1,0 @@
-#!/bin/bash
-
-gcc -g ./test.c -o ./test && ./test

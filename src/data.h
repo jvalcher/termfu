@@ -56,6 +56,7 @@
 #define FOCUS_WINDOW_TITLE_COLOR        YELLOW_BLACK
 #define FOCUS_BORDER_COLOR              YELLOW_BLACK
 #define FOCUS_WINDOW_TITLE_KEY_COLOR    BLUE_BLACK
+#define WINDOW_INPUT_COLOR              WHITE_BLUE
 
 
 
@@ -129,10 +130,16 @@ typedef struct layout {
 */  
 #define MAX_LINES  128
 
-typedef struct window {
+typedef struct {
 
     WINDOW  *WIN;
+    WINDOW  *IWIN;
+    WINDOW  *DWIN;
     bool     selected;
+
+    bool     has_input;
+    char    *input_inactive_str;
+    char    *input_active_str;
 
     int      rows;                   
     int      cols;                   
@@ -142,6 +149,9 @@ typedef struct window {
 
     int      scroll_y;
     int      scroll_x;
+
+    int      buff_max_cols;
+    int      buff_rows;
 
 } window_t;
 
@@ -215,11 +225,12 @@ typedef struct {
 */
 typedef struct {
 
-    int    index;
-    char   key;
-    char   code [4];
-    char  *title;       // TODO: allocate
-    bool   has_window;
+    int       index;
+    char      key;
+    char      code [4];
+    char     *title;       // TODO: allocate
+    bool      has_window;
+    window_t *win;
 
 } plugin_t;
 
