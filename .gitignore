@@ -6,6 +6,9 @@ ncurses.h
 tags
 core
 hello*
+venv
+ToDo.md
+__pycache__
 
 .gdb*
 
