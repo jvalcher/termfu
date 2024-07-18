@@ -1,7 +1,7 @@
 
 # term_debug
 
-A multi-language terminal debugger for GNU/Linux
+A multi-language terminal debugger
 
 **\*\* In development \*\***
 
