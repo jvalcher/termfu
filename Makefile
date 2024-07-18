@@ -9,8 +9,8 @@
 # 	make colors	- check if current terminal can display colors
 #
 
-B_FILE_DEV=		termide-dev
-B_FILE_PROD=	termide
+B_FILE_DEV=		term_debug_dev
+B_FILE_PROD=	term_debug
 
 CC=				gcc
 #FLAGS=			-Wall -Wextra -Werror -MMD -I ./src/plugins -I ./src/window_updates
@@ -92,7 +92,7 @@ obj/%.o: src/window_updates/%.c
 #
 clean:
 	rm -f ./obj/*
-	rm -f ./termide
-	rm -f ./termide-dev
+	rm -f ./term_debug
+	rm -f ./term_debug_dev
 	@echo ""
 

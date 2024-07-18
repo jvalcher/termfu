@@ -1,4 +1,4 @@
 #!/bin/bash
 
-gdb --tui --quiet -x .gdbtermide termide-dev
+gdb --tui --quiet -x .gdbterm term_debug
 

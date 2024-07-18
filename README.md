@@ -1,5 +1,5 @@
 
-# termIDE
+# term_debug
 
 A multi-language terminal debugger for GNU/Linux
 
@@ -53,19 +53,18 @@ eoopp
 ### Resulting layout...
 
 <img src='./misc/screenshots/layout.png' height='500px'>
-<br /><br /><br />
+<br />
 
 
 ### File location
 
-`$PROJECT_DIR/.termide` <br />
+`$PROJECT_DIR/.term_debug` <br />
 or <br />
-`$HOME/.termide`
+`$HOME/.term_debug`
 <br /><br />
  
 
 ### Formatting
-<br />
 
 #### Plugins ( `[ plugins ]` ):
 
@@ -79,7 +78,7 @@ or <br />
 
   - `title`
     - String displayed in header or window
-    - Adding parentheses around the key binding allows termIDE to change its color for better visibility.
+    - Adding parentheses around the key binding allows term_debug to change its color for better visibility.
 <br />
 
 #### Layout ( `[ layout : gdb_debug_1 ]` ):
@@ -100,9 +99,6 @@ or <br />
     - Windows layout
       - Each character represents a "segment" of that particular window.
       - The number of segments a window has vertically and horizontally determines the number of terminal rows and columns it is assigned.
-<br />
-
-- **NOTE**:  Adding a non-window plugin to the header or vice-versa will result in an error (see PLUGINS.md).
 <br /><br />
 
 

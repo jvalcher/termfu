@@ -108,8 +108,8 @@ parse_config_file (state_t *state)
     ---------
     Checks in this order:
 
-        PWD/.termide
-        HOME/.termide
+        PWD/.term_debug
+        HOME/.term_debug
 */
 static FILE* open_config_file (void)
 {
@@ -134,8 +134,8 @@ static FILE* open_config_file (void)
     // if no config file found, exit
     if (file == NULL) {
         pfem  ("Unable to find config file:\n");
-        pem  ("%s/.termide\n", cwd_path);
-        peme ("%s/.termide\n", home_path);
+        pem  ("%s/.term_debug\n", cwd_path);
+        peme ("%s/.term_debug\n", home_path);
     }
 
     return file;

@@ -14,8 +14,8 @@
   Main
  ******/
 
-#define PROGRAM_NAME     "termIDE"
-#define DATA_DIR_PATH    ".local/share/termide"
+#define PROGRAM_NAME     "term_debug"
+#define DATA_DIR_PATH    ".local/share/term_debug"
 #define PARENT_PROCESS   0
 #define CHILD_PROCESS    1
 #define PLUGIN_CODE_LEN  3
@@ -64,7 +64,7 @@
   Layouts
  *********/
 
-#define CONFIG_FILE             ".termide"
+#define CONFIG_FILE             ".term_debug"
 #define FIRST_LAYOUT            "FiRsT_lAyOuT"
 #define MAX_CONFIG_CATEG_LEN    20
 #define MAX_CONFIG_LABEL_LEN    20

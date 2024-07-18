@@ -1,6 +1,5 @@
 */*.out
-termide
-termide-dev
+term_debug*
 core
 ncurses.h
 tags

@@ -67,7 +67,7 @@ parse_cli_arguments (int argc,
     if (argc > 1) {
         debugger->prog_path = argv [1];
     } else {
-        pfeme ("Usage:  termide a.out\n");
+        pfeme ("Usage:  term_debug a.out\n");
     }
 }
 
