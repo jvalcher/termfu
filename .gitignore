@@ -4,11 +4,13 @@ termide-dev
 core
 ncurses.h
 tags
-core
 hello*
-venv
+debug_*
 ToDo.md
+
+venv
 __pycache__
+make_dev*
 
 .gdb*
 
@@ -16,5 +18,7 @@ obj/*
 !obj/.gitkeep
 
 build.log
-.vim-bookmarks
 tags
+
+tests/parse_debugger_out/d/debug.out
+tests/parse_debugger_out/d/progr.out

@@ -1,67 +1,45 @@
 
 # termIDE
 
-An ncurses debugger frontend for the Linux terminal
+A multi-language terminal debugger for GNU/Linux
 
 **\*\* In development \*\***
 
-## Configuration file overview
 
-Unique, three-character, case-sensitive plugin codes are bound to specific debugger actions. These codes are bound to shortcut keys, which can then be used to create a layout.
+## Configuration
 
-#### Formatting
+Unique, three-character, case-sensitive "plugin" codes are each associated with a specific debugger action or window. The codes are bound to user-defined shortcut keys. The key characters are used to create custom layouts.
+<br />
 
-File name:
-
-```
-./.termide
-```
-
-Layout header title format:
-
-  `[[ <type> : <title string> ]]`
-
-Sections:
+### Example configuration...
 
 ```
->p  plugin code, key binding, title string
->h  determines order and layout of plugin title strings in header
->w  window layout
-    - each keybinding (u, l, q, etc.) corresponds to a "window segment"
-    - the size of each window is determined by how many segments it has for its
-      width and height
-    - segment sizes are calculated based on the current terminal's dimensions
-```
+[ keys ]
 
-Plugin (`>p`) formatting:
+Qut : q : (q)uit
+Bak : b : (p)rev
+Bld : u : b(u)ilds
+Lay : l : (l)ayouts
+Run : r : (r)un
+Nxt : n : (n)ext
+Stp : s : (s)tep
+Con : c : (c)ontinue
+Fin : i : f(i)nish
+Kil : k : (k)ill
+Brk : b : (b)reakpoints
+Src : f : source (f)ile
+Asm : a : (a)ssembly
+Reg : e : r(e)gisters
+Prm : m : pro(m)pt
+Wat : w : (w)atch
+LcV : v : local (v)ars
+Out : o : (o)utput
 
-  `<code> : <key> : <window/action title string>`
 
-#### Example configuration file...
-
-```
 [ layout : gdb_debug_1 ]
->p
-Bld : u :b(u)ilds
-Lay : l :(l)ayouts
-Bak : q :(q)uit
-Run : r :(r)un
-Nxt : n :(n)ext
-Stp : s :(s)tep
-Con : c :(c)ontinue
-Fin : i :f(i)nish
-Kil : k :(k)ill
-Brk : b :(b)reakpoints
-Src : f :source (f)ile
-Asm : a :(a)ssembly
-Reg : e :r(e)gisters
-Prm : p :(p)rompt
-Wat : w :(w)atch
-LcV : v :local (v)ars
-Out : o :(o)utput
 
 >h
-ulq
+ulpq
 rnscfk
 
 >w
@@ -71,31 +49,72 @@ lffaa
 eoopp
 ```
 
-#### Resulting layout...
+
+### Resulting layout...
 
 <img src='./misc/screenshots/layout.png' height='500px'>
+<br /><br /><br />
+
+
+### File location
+
+`$PROJECT_DIR/.termide` <br />
+or <br />
+`$HOME/.termide`
+<br /><br />
+ 
+
+### Formatting
+<br />
+
+#### Plugins ( `[ plugins ]` ):
+
+- `<code> : <key> : <title>`
+
+  - `code`
+    - Plugin code identifier
+
+  - `key`
+    - Key binding
+
+  - `title`
+    - String displayed in header or window
+    - Adding parentheses around the key binding allows termIDE to change its color for better visibility.
+<br />
+
+#### Layout ( `[ layout : gdb_debug_1 ]` ):
+
+- Title ( `gdb_debug_1` ):
+  - Title displayed in header
+  - Identifier used by layouts plugin (`Lay`) to switch layouts
+<br /><br />
+
+- Window sections:
+  - The characters under each `>section` correspond to the plugin key bindings defined under `[ plugins ]`. 
+
+  - `>h`  
+    - Header window 
+      - Each character determines the row and position of its corresponding title string.
+
+  - `>w`  
+    - Windows layout
+      - Each character represents a "segment" of that particular window.
+      - The number of segments a window has vertically and horizontally determines the number of terminal rows and columns it is assigned.
+<br />
+
+- **NOTE**:  Adding a non-window plugin to the header or vice-versa will result in an error (see PLUGINS.md).
+<br /><br />
 
 
 ## Build
 
-Production
+### Production
 ```
 $ make
 ```
-Development
+### Development
 ```
 $ make dev
 ```
+<br /><br />
 
-## To do
-
-- [x] Render layout from configuration file
-- [x] Attach keyboard shortcuts to plugin functions
-- [x] Add header string color pulse to indicate usage
-- [ ] Create debugger process
-- [ ] Create debugger plugin functions (GDB)
-- [ ] Hook up debugger output to layout windows
-- [ ] Add window functionality (select, scroll, help, ...)
-- [ ] Add multiple-layout functionality
-- [ ] Add build functionality
-- [ ] Add other CLI debuggers (pdb, node inspect, ...)

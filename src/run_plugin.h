@@ -6,14 +6,9 @@
 
 
 
-/*
-    Plugin function array
-    ----------
-    - Functions defined in plugins/...
-    - Called in main.c
-*/
-int run_plugin (int key, 
-                layout_t *layout);
+void run_plugin (int, state_t*);
+
+void update_windows (state_t *state);
 
 
 #endif

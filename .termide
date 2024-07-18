@@ -1,31 +1,34 @@
 
+[ plugins ]
+
+Bld : u : b(u)ilds
+Lay : l : (l)ayouts
+Bak : b : (b)ack
+Qut : q : (q)uit
+Run : r : (r)un
+Nxt : n : (n)ext
+Stp : s : (s)tep
+Con : c : (c)ontinue
+Fin : F : (F)inish
+Kil : k : (k)ill
+Brk : B : (B)reakpoints
+Src : S : (S)ource file
+Asm : a : (a)ssembly
+Reg : R : (R)egisters
+Prm : p : (p)rompt
+Wat : w : (w)atch
+LcV : v : local (v)ars
+Out : o : (o)utput
+
+
 [ layout : gdb_debug_1 ]
 
->p
-Bld : u :b(u)ilds
-Lay : l :(l)ayouts
-Bak : q :(q)uit
-Run : r :(r)un
-Nxt : n :(n)ext
-Stp : s :(s)tep
-Con : c :(c)ontinue
-Fin : i :f(i)nish
-Kil : k :(k)ill
-Brk : b :(b)reakpoints
-Src : f :source (f)ile
-Asm : a :(a)ssembly
-Reg : e :r(e)gisters
-Prm : p :(p)rompt
-Wat : w :(w)atch
-LcV : v :local (v)ars
-Out : o :(o)utput
-
 >h
-u l q
-r n s c k
-
+ulbq
+rnscFk
 >w
-bffaa 
-wffaa
-vffaa
-eoopp
+BSSaa 
+wSSaa
+vSSaa
+Roopp
+
