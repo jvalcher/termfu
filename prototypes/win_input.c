@@ -29,10 +29,11 @@ main (void)
     int data_y = input_y + input_lines;
     int data_x = 1;
 
-    initscr();
-    refresh();
+    initscr ();
+    curs_set (0);
+    refresh ();
     
-    start_color();
+    start_color ();
     init_pair (1, COLOR_WHITE, COLOR_BLUE);
     init_pair (2, COLOR_RED, COLOR_YELLOW);
     init_pair (3, COLOR_BLACK, COLOR_GREEN);
@@ -40,6 +41,7 @@ main (void)
     // main win
     win = newwin (lines, cols, y, x);
     box (win, 0, 0);
+    wrefresh (win);
 
     // input win
     input_win = derwin (win, input_lines, input_cols, input_y, input_x);
@@ -51,17 +53,20 @@ main (void)
     wrefresh (win);
 
     // select input
-    noecho();
-    getch();
+    noecho ();
+    getch ();
+    curs_set (1);
+    echo ();
 
     // get input
     mvwprintw (input_win, 0, 0, "%s", input_str);
     wrefresh  (input_win);
     wgetnstr  (input_win, input_buffer, BUFF_LEN - 1);
 
-    // return to title
+    // print input, return to title
     wclrtoeol (input_win);
     mvwprintw (input_win, 0, 0, "%s", input_title);
+    curs_set (0);
     wrefresh  (input_win);
 
     // print input to data window
