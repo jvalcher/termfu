@@ -50,7 +50,7 @@ typedef struct {
 
 void get_buff_rows_cols (char *buffer, window_t *win);
 void file_to_buffer (char *path, char *buffer);
-void display_lines (int, window_t*);
+void display_lines_buff (int, window_t*);
 
 
 
@@ -65,7 +65,6 @@ int main (void)
 
     unsigned long i;
     char data_buffer [DBUFF_LEN] = {0};
-    char input_buffer [IBUFF_LEN];
 
     // create data buffer
     file_to_buffer ("./src_file.c", data_buffer);   // mock buffer
@@ -82,7 +81,6 @@ int main (void)
     int x = 20;
 
     char *input_title = "(i)nput";
-    char *input_str = "Input: ";
     int input_lines = 1;
     int input_cols = cols - 2;
     int input_y = 1;
@@ -131,25 +129,27 @@ int main (void)
     window->DWIN = data_win;
 
     // display lines
-    display_lines (0, window);
+    display_lines_buff (0, window);
         //
     while ((ch = getch()) != 'q') {
         switch (ch) {
             case KEY_UP:
-                display_lines (KEY_UP, window);
+                display_lines_buff (KEY_UP, window);
                 break;
             case KEY_DOWN:
-                display_lines (KEY_DOWN, window);
+                display_lines_buff (KEY_DOWN, window);
                 break;
             case KEY_RIGHT:
-                display_lines (KEY_RIGHT, window);
+                display_lines_buff (KEY_RIGHT, window);
                 break;
             case KEY_LEFT:
-                display_lines (KEY_LEFT, window);
+                display_lines_buff (KEY_LEFT, window);
                 break;
         }
     }
 
+    keypad (stdscr, FALSE);
+    curs_set(1);
     endwin();
 
     return 0;
@@ -199,8 +199,8 @@ get_buff_rows_cols (char *buffer,
 
 
 void
-display_lines (int key,
-               window_t *win)
+display_lines_buff (int key,
+                    window_t *win)
 {
     char   *buff_ptr = win->data_buff_ptr,
            *newline_ptr;
