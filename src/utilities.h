@@ -72,7 +72,13 @@ void  unset_nc_attribute    (WINDOW *nc_window, int);
     - returns true if string found, false otherwise
 */
 bool  find_window_string    (WINDOW *nc_window, char *string, int *y, int *x);
-void  copy_string_buffer    (char*, char*);
+
+
+
+/*
+    Copy src_buff null-terminated string to dest_buff
+*/
+void  copy_string_buffer    (char *src_buff, char *dest_buff);
 
 
 

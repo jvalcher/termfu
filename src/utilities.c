@@ -273,6 +273,7 @@ copy_string_buffer (char *src_buff,
 {
     char *sb = src_buff,
          *db = dest_buff;
+
     while (*sb != '\0') {
         *db++ = *sb++;
     }
