@@ -21,7 +21,7 @@
 /*
     Clean up before exiting program
 */
-void  clean_up              (void);
+void  clean_up (void);
 
 
 
@@ -31,7 +31,7 @@ void  clean_up              (void);
     - Returns pointer to created string
     - Must free after use
 */
-char *concatenate_strings   (int num_strings, ...);
+char *concatenate_strings (int num_strings, ...);
 
 
 
@@ -40,7 +40,7 @@ char *concatenate_strings   (int num_strings, ...);
     --------
     - Comma separated strings (including space character) for each word in command
 */
-void  send_command          (state_t *state, int num_strs, ...);
+void  send_command (state_t *state, int num_strs, ...);
 
 
 
@@ -50,7 +50,7 @@ void  send_command          (state_t *state, int num_strs, ...);
     -------
     - With and without Ncurses activated (debug mode)
 */
-int   getkey                (void);
+int   getkey (void);
 
 
 
@@ -60,8 +60,8 @@ int   getkey                (void);
     - Must normally set attributes with wattron/off using constants or macros 
     - This function allows you to use (predefined) integer variables
 */
-void  set_nc_attribute      (WINDOW *nc_window, int attribute_value);
-void  unset_nc_attribute    (WINDOW *nc_window, int);
+void  set_nc_attribute   (WINDOW *nc_window, int attribute_value);
+void  unset_nc_attribute (WINDOW *nc_window, int);
 
 
 
@@ -71,14 +71,14 @@ void  unset_nc_attribute    (WINDOW *nc_window, int);
     - Sets y,x variables to window (not stdscr) coordinate
     - returns true if string found, false otherwise
 */
-bool  find_window_string    (WINDOW *nc_window, char *string, int *y, int *x);
+bool  find_window_string (WINDOW *nc_window, char *string, int *y, int *x);
 
 
 
 /*
     Copy src_buff null-terminated string to dest_buff
 */
-void  copy_string_buffer    (char *src_buff, char *dest_buff);
+void  copy_string_buffer (char *src_buff, char *dest_buff);
 
 
 
