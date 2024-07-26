@@ -57,6 +57,32 @@ parse_debugger_output (state_t *state)
 
 
 void
+get_buff_rows_cols (char *buffer,
+                    window_t *win)
+{
+    char *buff_ptr = buffer;
+    int   curr_cols = 0;
+
+    win->data_buff->rows = 1;
+    win->data_buff->max_cols = 0;
+
+    while (*buff_ptr != '\0') {
+        if (*buff_ptr == '\n') {
+            ++win->data_buff->rows;
+            if (curr_cols > win->data_buff->max_cols) {
+                win->data_buff->max_cols = curr_cols;
+            }
+            curr_cols = 0;
+        } else {
+            ++curr_cols;
+        }
+        ++buff_ptr;
+    }
+}
+
+
+
+void
 parse_debugger_output_gdb (reader_t *reader)
 {
     bool  is_gdb_output,

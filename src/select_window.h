@@ -6,7 +6,12 @@
 
 
 
-void select_window (int, state_t*);
+/*
+    Select plugin window
+    ---------
+    Enters window loop for scrolling through data, running commands
+*/
+void select_window (int plugin_index, state_t *state);
 
 
 

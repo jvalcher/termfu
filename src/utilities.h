@@ -1,15 +1,4 @@
 
-/*
-    Misc utilities
-    -------------
-
-    arrlen()                - get length of array
-    pfem()                  - print file, error info
-    pfemo()                 - print       error info
-    print_int_matrix()      - print matrix values (ncurses)
-
-*/
-
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
@@ -21,38 +10,95 @@
 #include "parse_config_file.h"
 #include "render_layout.h"
 
+
+
+/*
+    Misc utilities
+*/
+
+
+
+/*
+    Clean up before exiting program
+*/
 void  clean_up              (void);
-char *create_path           (int, ...);
-void  send_command          (state_t*, int, ...);
+
+
+
+/*
+    Concatenate variable number of strings
+    -------
+    - Returns pointer to created string
+    - Must free after use
+*/
+char *concatenate_strings   (int num_strings, ...);
+
+
+
+/*
+    Send debugger command
+    --------
+    - Comma separated strings (including space character) for each word in command
+*/
+void  send_command          (state_t *state, int num_strs, ...);
+
+
+
+
+/*
+    Get user key input
+    -------
+    - With and without Ncurses activated (debug mode)
+*/
 int   getkey                (void);
-char* create_path           (int, ...);
-void  write_to_pipe         (int, char**);
-void  set_nc_attribute      (WINDOW*, int);
-void  unset_nc_attribute    (WINDOW*, int);
+
+
+
+/*
+    Set, unset Ncurses attribute with variable 
+    -----------
+    - Must normally set attributes with wattron/off using constants or macros 
+    - This function allows you to use (predefined) integer variables
+*/
+void  set_nc_attribute      (WINDOW *nc_window, int attribute_value);
+void  unset_nc_attribute    (WINDOW *nc_window, int);
+
+
+
+/*
+    Find string in Ncurses window
+    ----------
+    - Sets y,x variables to window (not stdscr) coordinate
+    - returns true if string found, false otherwise
+*/
+bool  find_window_string    (WINDOW *nc_window, char *string, int *y, int *x);
+void  copy_string_buffer    (char*, char*);
 
 
 
 /****************
-  Error handling
+  Formatted error messages
  ****************
+ - Samurai error handling
+ - Runs clean_up() 
 
-Single message, exit:
+    Single message, exit:
 
-    pfeme ("Unknown character \"%c\" \n", ch);
+        pfeme ("Unknown character \"%c\" \n", ch);
 
-    ERROR: src_file.c : func () :10
-           Unknown character "c"
+        ERROR: src_file.c : func () :10
+               Unknown character "c"
 
-Multiple messages, exit;
+    Multiple messages, exit;
 
-    pfem ("Unknown character \"%c\" \n", ch);
-    pem  ("Check README.md for more details");
-    peme ("Exiting...");
+        pfem ("Unknown character \"%c\" \n", ch);
+        pem  ("Check README.md for more details");
+        peme ("Exiting...");
 
-    ERROR: src_file.c : func () :10
-           Unknown character "c"
-           Check README.md for more details
-           Exiting...
+        ERROR: src_file.c : func () :10
+               Unknown character "c"
+               Check README.md for more details
+               Exiting...
 */
 
 // Print formatted error message

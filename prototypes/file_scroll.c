@@ -12,6 +12,7 @@ typedef struct {
 
     FILE              *ptr;
     char               path [256];
+    bool               path_changed;
     int                first_char;
     int                rows;
     int                max_cols;
@@ -19,7 +20,7 @@ typedef struct {
     int                max_mid;
     unsigned long int *offsets;
 
-} file_scroll_t;
+} file_data_t;
 
 
 typedef struct {
@@ -27,11 +28,8 @@ typedef struct {
     WINDOW  *WIN;
     WINDOW  *IWIN;
     WINDOW  *DWIN;
-    bool     selected;
 
-    bool     has_input;
-    char    *input_inactive_str;
-    char    *input_active_str;
+    bool     selected;
 
     int      rows;                   
     int      cols;                   
@@ -39,16 +37,23 @@ typedef struct {
     int      x;                      
     int      border [8];
 
-    char    *data_buff_ptr;
-    int      data_buff_rows;
-    int      data_buff_max_cols;
+    int      input_rows;
+    int      input_cols;
+    int      input_y;
+    int      input_x;
+    char    *input_title;
+    char    *input_prompt;
+    bool     has_input;
+    char    *input_inactive_str;
+    char    *input_active_str;
+
     int      data_win_cols;
     int      data_win_rows;
-    int      data_scroll_row;
-    int      data_scroll_col;
+    int      data_win_y;
+    int      data_win_x;
     int      data_win_mid_line;
 
-    file_scroll_t *file_scroll;
+    file_data_t *file_data;
 
 } window_t;
 
@@ -60,62 +65,55 @@ void display_lines_file (int key, window_t* win);
 int main (void) 
 {
     int     i, ch;
-    WINDOW *win;
-    WINDOW *input_win;
-    WINDOW *data_win;
 
-    window_t *window = (window_t*) malloc (sizeof (window_t));
-    file_scroll_t *fs = (file_scroll_t*) malloc (sizeof (file_scroll_t));
-    window->file_scroll = fs;
+    window_t *win = (window_t*) malloc (sizeof (window_t));
+    win->file_data = (file_data_t*) malloc (sizeof (file_data_t));
 
     // open source file
-    strncpy (window->file_scroll->path, "./src_file.c", sizeof (window->file_scroll->path) - 1);
-    window->file_scroll->ptr = fopen(window->file_scroll->path, "r");
-    if (window->file_scroll->ptr == NULL) {
+    strncpy (win->file_data->path, "./src_file.c", sizeof (win->file_data->path) - 1);
+    win->file_data->ptr = fopen(win->file_data->path, "r");
+    if (win->file_data->ptr == NULL) {
         perror ("Failed to open source file");
         return 1;
     }
+    win->file_data->path_changed = false;
 
         // get number of file rows and max line length
-    get_num_file_rows_cols (window);
+    get_num_file_rows_cols (win);
 
         // get file line offsets
-    window->file_scroll->offsets = malloc ((size_t) window->file_scroll->rows * sizeof(long int));
-    if (window->file_scroll->offsets == NULL) {
+    win->file_data->offsets = malloc ((size_t) win->file_data->rows * sizeof(long int));
+    if (win->file_data->offsets == NULL) {
         perror ("Failed to allocate offsets array");
         return 1;
     }
         // add offsets to array
-    window->file_scroll->offsets [0] = 0;
-    for (i = 1; i < window->file_scroll->rows; i++) {
-        while ((ch = fgetc (window->file_scroll->ptr)) != '\n' && ch != EOF) {}
+    win->file_data->offsets [0] = 0;
+    for (i = 1; i < win->file_data->rows; i++) {
+        while ((ch = fgetc (win->file_data->ptr)) != '\n' && ch != EOF) {}
         if (ch == '\n')
-            window->file_scroll->offsets [i] = ftell (window->file_scroll->ptr);
+            win->file_data->offsets[i] = ftell (win->file_data->ptr);
     }
 
     // create ncurses windows
-    int lines = 30;
-    int cols = 50;
-    int y = 20;
-    int x = 20;
+    win->rows = 30;
+    win->cols = 50;
+    win->y = 20;
+    win->x = 20;
 
     char *input_title = "(i)nput";
-    int input_lines = 1;
-    int input_cols = cols - 2;
-    int input_y = 1;
-    int input_x = 1;
+    char *input_prompt = "Input: ";
+    win->input_title = input_title;
+    win->input_prompt = input_prompt;
+    win->input_rows = 1;
+    win->input_cols = win->cols - 2;
+    win->input_y = 1;
+    win->input_x = 1;
 
-    int data_lines = lines - input_lines - 2;
-    int data_cols = cols - 2;
-    int data_y = input_y + 1;
-    int data_x = 1;
-
-    window->rows = lines;
-    window->cols = cols;
-    window->y = 20;
-    window->x = 20;
-    window->data_win_rows = data_lines;
-    window->data_win_cols = data_cols;
+    win->data_win_rows = win->rows - win->input_rows - 2;
+    win->data_win_cols = win->cols - 2;
+    win->data_win_y = win->input_y + 1;
+    win->data_win_x = 1;
 
         // Initialize ncurses
     initscr ();
@@ -131,45 +129,42 @@ int main (void)
     init_pair (3, COLOR_BLACK, COLOR_GREEN);
 
     // main win
-    win = newwin (lines, cols, y, x);
-    box (win, 0, 0);
-    wrefresh (win);
+    win->WIN = newwin (win->rows, win->cols, win->y, win->x);
+    box (win->WIN, 0, 0);
+    wrefresh (win->WIN);
 
     // input win
-    input_win = derwin (win, input_lines, input_cols, input_y, input_x);
-    wbkgd (input_win, COLOR_PAIR(2));
-    waddstr (input_win, input_title);
+    win->IWIN = derwin (win->WIN, win->input_rows, win->input_cols, win->input_y, win->input_x);
+    wbkgd (win->IWIN, COLOR_PAIR(2));
+    waddstr (win->IWIN, win->input_title);
 
     // data win
-    data_win = derwin (win, data_lines, data_cols, data_y, data_x);
+    win->DWIN = derwin (win->WIN, win->data_win_rows, win->data_win_cols, win->data_win_y, win->data_win_x);
 
-    wrefresh (win);
+    wrefresh (win->WIN);
 
-    window->WIN = win;
-    window->IWIN = input_win;
-    window->DWIN = data_win;
-
-    window->file_scroll->min_mid = (window->data_win_rows / 2) + 1;
-    window->file_scroll->max_mid = window->file_scroll->rows - ((window->data_win_rows - 1) / 2);
-    window->data_win_mid_line = window->file_scroll->min_mid;
-    window->file_scroll->first_char = 0;
+    // calculate file data
+    win->file_data->min_mid = (win->data_win_rows / 2) + 1;
+    win->file_data->max_mid = win->file_data->rows - ((win->data_win_rows - 1) / 2);
+    win->data_win_mid_line = win->file_data->min_mid;
+    win->file_data->first_char = 0;
 
     // display starting lines
-    display_lines_file(0, window);
+    display_lines_file(0, win);
         //
     while ((ch = getch()) != 'q') {
         switch (ch) {
             case KEY_UP:
-                display_lines_file (KEY_UP, window);
+                display_lines_file (KEY_UP, win);
                 break;
             case KEY_DOWN:
-                display_lines_file (KEY_DOWN, window);
+                display_lines_file (KEY_DOWN, win);
                 break;
             case KEY_RIGHT:
-                display_lines_file (KEY_RIGHT, window);
+                display_lines_file (KEY_RIGHT, win);
                 break;
             case KEY_LEFT:
-                display_lines_file (KEY_LEFT, window);
+                display_lines_file (KEY_LEFT, win);
                 break;
         }
     }
@@ -184,18 +179,18 @@ int main (void)
 
 
 void get_num_file_rows_cols (window_t *win) {
-    win->file_scroll->rows = 0;
-    win->file_scroll->max_cols = 0;
+    win->file_data->rows = 0;
+    win->file_data->max_cols = 0;
     char  line [512];
     int line_len;
-    while (fgets(line, sizeof(line), win->file_scroll->ptr) != NULL) {
+    while (fgets(line, sizeof(line), win->file_data->ptr) != NULL) {
         line_len = strlen(line);
-        if (win->file_scroll->max_cols < line_len) {
-            win->file_scroll->max_cols = line_len + 1;
+        if (win->file_data->max_cols < line_len) {
+            win->file_data->max_cols = line_len + 1;
         }
-        win->file_scroll->rows += 1;
+        win->file_data->rows += 1;
     }
-    rewind (win->file_scroll->ptr);
+    rewind (win->file_data->ptr);
 }
 
 
@@ -221,18 +216,18 @@ void display_lines_file (int key,
         case 0:
             break;
         case KEY_UP:
-            win->data_win_mid_line = (win->data_win_mid_line <= win->file_scroll->min_mid) ? win->file_scroll->min_mid : win->data_win_mid_line - 1;
+            win->data_win_mid_line = (win->data_win_mid_line <= win->file_data->min_mid) ? win->file_data->min_mid : win->data_win_mid_line - 1;
             break;
         case KEY_DOWN:
-            win->data_win_mid_line = (win->data_win_mid_line >= win->file_scroll->max_mid) ? win->file_scroll->max_mid : win->data_win_mid_line + 1;
+            win->data_win_mid_line = (win->data_win_mid_line >= win->file_data->max_mid) ? win->file_data->max_mid : win->data_win_mid_line + 1;
             break;
         case KEY_RIGHT:
-            win->file_scroll->first_char = ((win->file_scroll->max_cols - win->file_scroll->first_char) > win->data_win_cols)
-                ? win->file_scroll->first_char + 1
-                : win->file_scroll->max_cols - win->data_win_cols;
+            win->file_data->first_char = ((win->file_data->max_cols - win->file_data->first_char) > win->data_win_cols)
+                ? win->file_data->first_char + 1
+                : win->file_data->max_cols - win->data_win_cols;
             break;
         case KEY_LEFT:
-            win->file_scroll->first_char = (win->file_scroll->first_char == 0) ? 0 : win->file_scroll->first_char - 1;
+            win->file_data->first_char = (win->file_data->first_char == 0) ? 0 : win->file_data->first_char - 1;
             break;
     }
 
@@ -243,26 +238,26 @@ void display_lines_file (int key,
     for (i = 0; i < win->data_win_rows; i++) {
 
         // seek to beginning of line
-        fseek (win->file_scroll->ptr, win->file_scroll->offsets[print_line++ - 1], SEEK_SET);
+        fseek (win->file_data->ptr, win->file_data->offsets[print_line++ - 1], SEEK_SET);
 
         // get line
-        fgets (line, sizeof (line), win->file_scroll->ptr);
+        fgets (line, sizeof (line), win->file_data->ptr);
         line_len = strlen (line);
 
         // if line characters visible
-        if (win->file_scroll->first_char <= line_len) {
+        if (win->file_data->first_char <= line_len) {
 
             // remove newline
             if (line [line_len - 1] == '\n')
                 line_len -= 1;
 
             // calculate line length
-            line_len = ((line_len - win->file_scroll->first_char) <= win->data_win_cols) 
-                        ? line_len - win->file_scroll->first_char
+            line_len = ((line_len - win->file_data->first_char) <= win->data_win_cols) 
+                        ? line_len - win->file_data->first_char
                         : win->data_win_cols;
 
             // set line start index
-            line_index = win->file_scroll->first_char;
+            line_index = win->file_data->first_char;
         } 
 
         // if no characters visible
@@ -275,7 +270,7 @@ void display_lines_file (int key,
         mvwaddnstr (win->DWIN, row++, col, (const char*)(line + line_index), line_len);
 
         // break if end of file
-        if (print_line > win->file_scroll->rows) {
+        if (print_line > win->file_data->rows) {
             break;
         }
     }

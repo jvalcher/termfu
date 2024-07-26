@@ -7,7 +7,6 @@
 int
 main (void)
 {
-    char    input_buffer [BUFF_LEN];
     WINDOW *win;
     WINDOW *input_win;
     WINDOW *data_win;

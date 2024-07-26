@@ -16,14 +16,22 @@ typedef unsigned long int ulong;
 
 typedef struct {
 
+
+    char    *ptr;
+    int      rows;
+    int      max_cols;
+    int      scroll_row;
+    int      scroll_col;
+
+} data_buff_t;
+
+
+typedef struct {
+
     WINDOW  *WIN;
     WINDOW  *IWIN;
     WINDOW  *DWIN;
     bool     selected;
-
-    bool     has_input;
-    char    *input_inactive_str;
-    char    *input_active_str;
 
     int      rows;                   
     int      cols;                   
@@ -31,13 +39,22 @@ typedef struct {
     int      x;                      
     int      border [8];
 
-    char    *data_buff_ptr;
-    int      data_buff_rows;
-    int      data_buff_max_cols;
+    int      input_rows;
+    int      input_cols;
+    int      input_y;
+    int      input_x;
+    char    *input_title;
+    char    *input_prompt;
+    bool     has_input;
+    char    *input_inactive_str;
+    char    *input_active_str;
+
     int      data_win_cols;
     int      data_win_rows;
-    int      data_scroll_row;
-    int      data_scroll_col;
+    int      data_win_y;
+    int      data_win_x;
+
+    data_buff_t *data_buff;
 
 } window_t;
 
@@ -57,46 +74,40 @@ void display_lines_buff (int, window_t*);
 int main (void) 
 {
     int ch;
-    WINDOW *win;
-    WINDOW *input_win;
-    WINDOW *data_win;
 
-    window_t *window = (window_t*) malloc (sizeof (window_t));
+    window_t *w = (window_t*) malloc (sizeof (window_t));
+    w->data_buff = (data_buff_t*) malloc (sizeof (data_buff_t));
 
     unsigned long i;
     char data_buffer [DBUFF_LEN] = {0};
 
     // create data buffer
     file_to_buffer ("./src_file.c", data_buffer);   // mock buffer
-    window->data_buff_ptr = data_buffer;
-    window->data_scroll_row = 1;
-    window->data_scroll_col = 1;
-    get_buff_rows_cols (data_buffer, window);
+    w->data_buff->ptr = data_buffer;
+    w->data_buff->scroll_row = 1;
+    w->data_buff->scroll_col = 1;
+    get_buff_rows_cols (data_buffer, w);
 
 
     // create ncurses windows
-    int lines = 30;
-    int cols = 50;
-    int y = 20;
-    int x = 20;
+    w->rows = 30;
+    w->cols = 50;
+    w->y = 20;
+    w->x = 20;
 
     char *input_title = "(i)nput";
-    int input_lines = 1;
-    int input_cols = cols - 2;
-    int input_y = 1;
-    int input_x = 1;
+    char *input_prompt = "Input: ";
+    w->input_title = input_title;
+    w->input_prompt = input_prompt;
+    w->input_rows = 1;
+    w->input_cols = w->cols - 2;
+    w->input_y = 1;
+    w->input_x = 1;
 
-    int data_lines = lines - input_lines - 2;
-    int data_cols = cols - 2;
-    int data_y = input_y + 1;
-    int data_x = 1;
-
-    window->rows = lines;
-    window->cols = cols;
-    window->y = 20;
-    window->x = 20;
-    window->data_win_rows = data_lines;
-    window->data_win_cols = data_cols;
+    w->data_win_rows = w->rows - w->input_rows - 2;
+    w->data_win_cols = w->cols - 2;
+    w->data_win_y = w->input_y + 1;
+    w->data_win_x = 1;
 
     initscr ();
     noecho ();
@@ -110,40 +121,36 @@ int main (void)
     init_pair (3, COLOR_BLACK, COLOR_GREEN);
 
     // main win
-    win = newwin (lines, cols, y, x);
-    box (win, 0, 0);
-    wrefresh (win);
+    w->WIN = newwin (w->rows, w->cols, w->y, w->x);
+    box (w->WIN, 0, 0);
+    wrefresh (w->WIN);
 
     // input win
-    input_win = derwin (win, input_lines, input_cols, input_y, input_x);
-    wbkgd (input_win, COLOR_PAIR(2));
-    waddstr (input_win, input_title);
+    w->IWIN = derwin (w->WIN, w->input_rows, w->input_cols, w->input_y, w->input_x);
+    wbkgd (w->IWIN, COLOR_PAIR(2));
+    waddstr (w->IWIN, w->input_title);
 
     // data win
-    data_win = derwin (win, data_lines, data_cols, data_y, data_x);
+    w->DWIN = derwin (w->WIN, w->data_win_rows, w->data_win_cols, w->data_win_y, w->data_win_x);
 
-    wrefresh (win);
-
-    window->WIN = win;
-    window->IWIN = input_win;
-    window->DWIN = data_win;
+    wrefresh (w->WIN);
 
     // display lines
-    display_lines_buff (0, window);
+    display_lines_buff (0, w);
         //
     while ((ch = getch()) != 'q') {
         switch (ch) {
             case KEY_UP:
-                display_lines_buff (KEY_UP, window);
+                display_lines_buff (KEY_UP, w);
                 break;
             case KEY_DOWN:
-                display_lines_buff (KEY_DOWN, window);
+                display_lines_buff (KEY_DOWN, w);
                 break;
             case KEY_RIGHT:
-                display_lines_buff (KEY_RIGHT, window);
+                display_lines_buff (KEY_RIGHT, w);
                 break;
             case KEY_LEFT:
-                display_lines_buff (KEY_LEFT, window);
+                display_lines_buff (KEY_LEFT, w);
                 break;
         }
     }
@@ -179,14 +186,14 @@ get_buff_rows_cols (char *buffer,
     char *buff_ptr = buffer;
     int   curr_cols = 0;
 
-    win->data_buff_rows = 1;
-    win->data_buff_max_cols = 0;
+    win->data_buff->rows = 1;
+    win->data_buff->max_cols = 0;
 
     while (*buff_ptr != '\0') {
         if (*buff_ptr == '\n') {
-            ++win->data_buff_rows;
-            if (curr_cols > win->data_buff_max_cols) {
-                win->data_buff_max_cols = curr_cols;
+            ++win->data_buff->rows;
+            if (curr_cols > win->data_buff->max_cols) {
+                win->data_buff->max_cols = curr_cols;
             }
             curr_cols = 0;
         } else {
@@ -202,7 +209,7 @@ void
 display_lines_buff (int key,
                     window_t *win)
 {
-    char   *buff_ptr = win->data_buff_ptr,
+    char   *buff_ptr = win->data_buff->ptr,
            *newline_ptr;
     int     wy = 0,
             wx = 0,
@@ -214,30 +221,30 @@ display_lines_buff (int key,
         case 0:
             break;
         case KEY_UP:
-            if (win->data_scroll_row > 1) {
-                --win->data_scroll_row;
+            if (win->data_buff->scroll_row > 1) {
+                --win->data_buff->scroll_row;
             }
             break;
         case KEY_DOWN:
-            if ((win->data_buff_rows - win->data_scroll_row) >= win->data_win_rows) {
-                ++win->data_scroll_row;
+            if ((win->data_buff->rows - win->data_buff->scroll_row) >= win->data_win_rows) {
+                ++win->data_buff->scroll_row;
             }
             break;
         case KEY_LEFT:
-            if (win->data_scroll_col > 1) {
-                --win->data_scroll_col;
+            if (win->data_buff->scroll_col > 1) {
+                --win->data_buff->scroll_col;
             }
             break;
         case KEY_RIGHT:
-            if ((win->data_buff_max_cols - win->data_scroll_col) >= win->data_win_cols) {
-                ++win->data_scroll_col;
+            if ((win->data_buff->max_cols - win->data_buff->scroll_col) >= win->data_win_cols) {
+                ++win->data_buff->scroll_col;
             }
             break;
     }
 
     // move buffer pointer to beginning of current row
     data_row = 1;
-    while (data_row != win->data_scroll_row) {
+    while (data_row != win->data_buff->scroll_row) {
         if (*buff_ptr++ == '\n') {
             ++data_row;
         }
@@ -248,13 +255,13 @@ display_lines_buff (int key,
 
         int len = newline_ptr - buff_ptr;
 
-        if (len >= win->data_scroll_col) {
-            if (len - win->data_scroll_col > win->data_win_cols) {
+        if (len >= win->data_buff->scroll_col) {
+            if (len - win->data_buff->scroll_col > win->data_win_cols) {
                 len = win->data_win_cols;
             } else {
-                len = len - (win->data_scroll_col - 1);
+                len = len - (win->data_buff->scroll_col - 1);
             }
-            mvwprintw (win->DWIN, wy, wx, "%.*s", len, buff_ptr + (win->data_scroll_col - 1));
+            mvwprintw (win->DWIN, wy, wx, "%.*s", len, buff_ptr + (win->data_buff->scroll_col - 1));
         } else {
             mvwprintw (win->DWIN, wy, wx, " ");
         }
@@ -268,13 +275,13 @@ display_lines_buff (int key,
     if (*buff_ptr != '\0' && wy <= win->data_win_rows) {
         int len = strlen (buff_ptr);
 
-        if (len > win->data_scroll_col) {
-            if (len - win->data_scroll_col > win->data_win_cols) {
+        if (len > win->data_buff->scroll_col) {
+            if (len - win->data_buff->scroll_col > win->data_win_cols) {
                 len = win->data_win_cols;
             } else {
-                len = len - win->data_scroll_col;
+                len = len - win->data_buff->scroll_col;
             }
-            mvwprintw(win->DWIN, wy, wx, "%.*s", len, buff_ptr + win->data_scroll_col);
+            mvwprintw(win->DWIN, wy, wx, "%.*s", len, buff_ptr + win->data_buff->scroll_col);
         } else {
             mvwprintw(win->DWIN, wy, wx, " ");
         }

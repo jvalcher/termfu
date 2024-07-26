@@ -6,9 +6,13 @@
 
 
 
-void run_plugin (int, state_t*);
+/*
+    Run debugger commands or enter window loop
+    ----------
+    Used in main() program loop
+*/
+void run_plugin (int plugin_index, state_t *state);
 
-void update_windows (state_t *state);
 
 
 #endif

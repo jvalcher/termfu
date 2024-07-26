@@ -6,8 +6,8 @@
 #include "utilities.h"
 #include "plugins.h"
 
-static void  render_data                (int, int, state_t*);
-static void  render_src_file            (int, int, state_t*);
+static void  display_lines_buff         (int, int, state_t*);
+static void  display_lines_file         (int, int, state_t*);
 static void  pulse_header_title_color   (int, state_t*, int);
 static void  select_window_color        (int, state_t*);
 static void  deselect_window_color      (void);
@@ -34,14 +34,6 @@ render_window (int       type,
 {
     switch (type) {
 
-        case HEADER_TITLE_COLOR_ON:
-            pulse_header_title_color (plugin_index, state, HEADER_TITLE_COLOR_ON);
-            break;
-
-        case HEADER_TITLE_COLOR_OFF:
-            pulse_header_title_color (plugin_index, state, HEADER_TITLE_COLOR_OFF);
-            break;
-
         case SELECT:
             select_window_color (plugin_index, state);
             break;
@@ -50,15 +42,20 @@ render_window (int       type,
             deselect_window_color ();
             break;
 
-        case SRC_FILE:
-            render_src_file (key, plugin_index, state);
-            break;
-
         case DATA:
-            if (plugin_index == Src) {
-                render_src_file (key, plugin_index, state);
-            } else {
-                render_data (key, plugin_index, state);
+            switch (plugin_index) {
+                case Asm:
+                case Brk:
+                case LcV:
+                case Out:
+                case Prm:
+                case Reg:
+                case Wat: 
+                    display_lines_buff (key, plugin_index, state);
+                    break;
+                case Src:
+                    display_lines_file (key, plugin_index, state);
+                    break;
             }
             break;
 
@@ -88,9 +85,9 @@ render_window (int       type,
     TODO: page up/down, home/end
 */
 static void 
-render_data (int      key,
-             int      plugin_index,
-             state_t *state)
+display_lines_buff (int      key,
+                    int      plugin_index,
+                    state_t *state)
 {
     char     *buff_ptr;
     window_t *win = state->windows[plugin_index];

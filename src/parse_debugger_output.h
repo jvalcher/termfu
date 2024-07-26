@@ -6,7 +6,10 @@
 
 
 
-void parse_debugger_output (state_t*);
+/*
+    Run initial parse of debugger command output
+*/
+void parse_debugger_output (state_t *state);
 
 
 

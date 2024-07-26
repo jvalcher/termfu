@@ -45,6 +45,7 @@ Plugins
 */
 
 #include <string.h>
+#include <time.h>
 
 #include "plugins.h"
 #include "data.h"
@@ -91,7 +92,11 @@ char *plugin_codes [] = {
 
 
 
-int win_plugins[] = { Asm, Brk, LcV, Out, Prm, Reg, Wat };
+int win_plugins[] = { Asm, Brk, LcV, Out, Prm, Reg, Src, Wat };
+
+int win_file_data[] = { Src };   // as opposed to buffer
+
+
 
 int win_input_plugins[] = {
     Brk,
@@ -99,15 +104,13 @@ int win_input_plugins[] = {
     Src,
     Wat
 };
-
-char *input_inactive_strs[] = {
+char *input_titles[] = {
     " (d)elete",
     " (c)ommand",
     " Create (b)reak ",
     " (c)reate  (d)elete "
 };
-
-char *input_active_strs[] = {
+char *input_prompts[] = {
     " Break num: ",
     " Command: ",
     " Select line...",
@@ -121,32 +124,56 @@ set_window_plugins (state_t *state)
 {
     int num_win_plugins = sizeof (win_plugins) / sizeof (win_plugins[0]);
     int num_win_input_plugins = sizeof (win_input_plugins) / sizeof (win_input_plugins[0]);
+    int num_win_file_plugins = sizeof (win_file_data) / sizeof (win_file_data[0]);
 
     for (int i = 0; i < state->num_plugins; i++) {
 
         for (int j = 0; j < num_win_plugins; j++) {
 
-            // set as window
+            // if window...
             if (i == win_plugins[j]) {
+
                 state->plugins[i]->has_window = true;
 
+                // input window
                 for (int k = 0; k < num_win_input_plugins; k++) {
-
-                    // set as input window
                     if (i == win_input_plugins[k]) {
                         state->plugins[i]->win->has_input = true;
-                        state->plugins[i]->win->input_inactive_str = input_inactive_strs[k];
-                        state->plugins[i]->win->input_active_str = input_active_strs[k];
+                        state->plugins[i]->win->input_title = input_titles[k];
+                        state->plugins[i]->win->input_prompt = input_prompts[k];
                         break;
                     } else {
                         state->plugins[i]->win->has_input = false;
                     }
                 }
-            } else {
+
+                // file/buffer data
+                for (int l = 0; l < num_win_file_plugins; l++) {
+
+                    // file
+                    if (i == win_file_data[l]) {
+                        state->plugins[i]->win->has_data_buff = false;
+                        state->plugins[i]->win->file_data = (data_file_t*) malloc (sizeof (data_file_t));
+                        state->plugins[i]->win->buff_data = NULL;
+                    } 
+
+                    // buffer
+                    else {
+                        state->plugins[i]->win->has_data_buff = true;
+                        state->plugins[i]->win->buff_data = (data_buff_t*) malloc (sizeof (data_buff_t));
+                        state->plugins[i]->win->file_data = NULL;
+                    }
+                }
+            } 
+
+            // not window
+            else {
                 state->plugins[i]->has_window = false;
             }
         }
     }
+
+    state->plugins[Src]->win->has_data_buff = true;
 }
 
 

@@ -28,12 +28,13 @@ run_plugin (int      plugin_index,
             break;
                   
         // windows
-        case Brk:
         case Asm:
+        case Brk:
         case LcV:
         case Out:
         case Prm:
         case Reg:
+        case Src:
         case Wat: 
             select_window (plugin_index, state);
             break;

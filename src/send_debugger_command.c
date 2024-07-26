@@ -12,6 +12,7 @@
 #include "plugins.h"
 #include "utilities.h"
 #include "render_window.h"
+#include "pulse_header_title_color.h"
 
 
 
@@ -22,7 +23,7 @@ send_debugger_command (int      plugin_index,
     bool quitting = false;
     int curr_debugger = state->debugger->curr;
 
-    render_window (HEADER_TITLE_COLOR_ON, -1, plugin_index, state);
+    pulse_header_title_color (plugin_index, state, ON);
 
     insert_output_start_marker (state);
 
@@ -76,13 +77,10 @@ send_debugger_command (int      plugin_index,
 
         parse_debugger_output (state);
 
-        render_window (DATA, -1, Prm, state);
-        render_window (DATA, -1, Out, state);
-
-        render_window (HEADER_TITLE_COLOR_OFF, -1, plugin_index, state);
-
-        update_windows (state, 6, Brk, LcV, Out, Reg, Src, Wat);
+        update_windows (state, 7, Brk, LcV, Out, Prm, Reg, Src, Wat);
     }
+
+    pulse_header_title_color (plugin_index, state, OFF);
 }
 
 

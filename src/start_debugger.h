@@ -8,7 +8,7 @@
 
 
 /*
-    Start debugger processes
+    Configure, start debugger process
 */
 void start_debugger (state_t*);
 

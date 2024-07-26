@@ -7,18 +7,16 @@
 
 
 enum {
-    HEADER_TITLE_COLOR_ON,
-    HEADER_TITLE_COLOR_OFF,
     SELECT,
     DESELECT,
     DATA,
-    SRC_FILE,
-
-    CURRENT
 };
 
 
 
+/*
+    TODO: Separate into separate files, functions
+*/
 void render_window (int, int, int, state_t*);
 
 

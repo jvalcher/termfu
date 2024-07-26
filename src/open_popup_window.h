@@ -6,7 +6,10 @@
 
 
 
-void open_popup_window (int, state_t*);
+/*
+    TODO: Open Ncurses popup window
+*/
+void open_popup_window (int plugin_index, state_t *state);
 
 
 

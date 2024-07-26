@@ -1,9 +1,4 @@
 
-/*
-   Render Ncurses layout (not including window data)
-*/
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -107,14 +102,30 @@ static void
 free_window_data (state_t *state)
 {
     for (int i = 0; i < state->num_plugins; i++) {
+
         if (state->plugins[i]->has_window) {
-            delwin (state->plugins[i]->win->WIN);
+
+            // input WINDOW
             if (state->plugins[i]->win->IWIN) {
                 delwin (state->plugins[i]->win->IWIN);
             }
+
+            // data WINDOW
             if (state->plugins[i]->win->DWIN) {
                 delwin (state->plugins[i]->win->DWIN);
             }
+
+            // parent WINDOW
+            delwin (state->plugins[i]->win->WIN);
+
+            // file/buffer data
+            if (state->plugins[i]->win->has_data_buff) {
+                free (state->plugins[i]->win->data_buff);
+            } else {
+                free (state->plugins[i]->win->data_file);
+            }
+
+            // window_t
             free (state->plugins[i]->win);
         }
     }
@@ -173,8 +184,6 @@ calculate_layout (layout_t *layout,
     char       key,
              **layout_matrix;
     window_t  *curr_window = NULL;
-
-
 
     // calculate cols, rows in window area below header
     scr_rows = getmaxy (stdscr);
@@ -336,9 +345,6 @@ calculate_layout (layout_t *layout,
                     }
                 }
 
-                curr_window->scroll_x = 1;
-                curr_window->scroll_y = 1;
-
 #ifdef DEBUG
                 puts ("");
                 printf ("WINDOW: %s (%c)\n", state->plugins[plugin_index]->title, state->plugins[plugin_index]->key);
@@ -355,8 +361,8 @@ calculate_layout (layout_t *layout,
 }
 
 
-#ifndef DEBUG
 
+#ifndef DEBUG
 
 /*
     Render header WINDOW
@@ -518,18 +524,11 @@ render_header_titles (layout_t *layout,
 
 /*
     Create Ncurses window
-    -------------------
-    - Relative to stdscr
-
-        rows, cols  - height, width
-        y, x        - window position in terms of top left coordinate
 */
 static void
 render_window (window_t *win)
 {
-    int irows = 0;
-
-    // create main window
+    // parent window
     win->WIN = allocate_window (win->rows, 
                                 win->cols, 
                                 win->y + header_offset, 
@@ -538,25 +537,37 @@ render_window (window_t *win)
         pfeme  ("Unable to create window\n");
     }
 
+    // input window
     if (win->has_input) {
-        irows = 1;
-        win->IWIN = allocate_subwin (win->WIN, irows, win->cols - 2, 1, 1);
+        win->input_rows = 1;
+        win->input_cols = win->cols - 2;
+        win->input_y = 1;
+        win->input_x = 1;
+        win->IWIN = allocate_subwin (win->WIN,
+                                     win->input_rows,
+                                     win->input_cols,
+                                     win->input_y,
+                                     win->input_x);
         if (win->IWIN == NULL) {
             pfeme  ("Unable to create input window\n");
         }
     }
 
-    // add data subwindow
+    // data window
+    win->data_win_rows = win->rows - win->input_rows - 2;
+    win->data_win_cols = win->cols - 2;
+    win->data_win_y = win->input_y + 1;
+    win->data_win_x = 1;
     win->DWIN = allocate_subwin (win->WIN,
-                                 win->rows - irows - 2,
-                                 win->cols - 2,
-                                 irows + 1,
-                                 1);
+                                 win->data_win_rows,
+                                 win->data_win_cols,
+                                 win->data_win_y,
+                                 win->data_win_x);
     if (win->DWIN == NULL) {
         pfeme  ("Unable to create data window\n");
     }
 
-    // render main window border
+    // render parent window border
     wattron  (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
     wborder  (win->WIN, 0,0,0,0,0,0,0,0);
     wattroff (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);

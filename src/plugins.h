@@ -6,6 +6,9 @@
 
 
 
+/*
+   Plugin enums used to identify plugins in switch statements
+*/
 enum {
     EMP,    
     Asm,
@@ -34,13 +37,31 @@ enum {
 };
 
 
+/*
+    Calculate and set number of plugins
+    ---------
+    Used in parse_config_file()
+*/
 void set_num_plugins  (state_t*);
 
-void set_plugin_data_paths (state_t*);
 
+
+/*
+    Return plugin code index matching its enum above
+    ------
+    Used in parse_config_file()
+*/
 int get_plugin_code_index (char*, state_t*);
 
+
+
+/*
+    Label plugins with and without windows
+    --------
+    Configure buffer or file data source
+*/
 void set_window_plugins (state_t*);
+
 
 
 #endif

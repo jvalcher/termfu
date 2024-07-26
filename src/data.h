@@ -129,44 +129,74 @@ typedef struct layout {
     file_offsets    - byte offsets for each line of file
 */  
 #define MAX_LINES  128
+#define FILE_PATH_LEN 128
+#define WIN_INPUT_LEN  128
+
+
+typedef struct {
+
+    char    *buff;
+    int      rows;
+    int      max_cols;
+    int      scroll_row;
+    int      scroll_col;
+
+} buff_data_t;
+
+
+typedef struct {
+
+    FILE              *ptr;
+    char               path [FILE_PATH_LEN];
+    bool               path_changed;
+    int                first_char;
+    int                rows;
+    int                max_cols;
+    int                min_mid;
+    int                max_mid;
+    unsigned long int *offsets;
+
+} file_data_t;
+
 
 typedef struct {
 
     WINDOW  *WIN;
     WINDOW  *IWIN;
     WINDOW  *DWIN;
+
     bool     selected;
-
     bool     has_input;
-    char    *input_inactive_str;
-    char    *input_active_str;
+    bool     has_data_buff;     // as opposed to file
 
+    // parent window
     int      rows;                   
     int      cols;                   
     int      y;                      
     int      x;                      
     int      border [8];
 
-    int      scroll_y;
-    int      scroll_x;
+    // input line
+    int      input_rows;
+    int      input_cols;
+    int      input_y;
+    int      input_x;
+    char    *input_title;
+    char    *input_prompt;
+    char     input_buffer [WIN_INPUT_LEN];
 
-    int      buff_max_cols;
-    int      buff_rows;
+    // data window
+    int      data_win_rows;
+    int      data_win_cols;
+    int      data_win_y;
+    int      data_win_x;
+    int      data_win_mid_line;
+
+    // data buffers
+    buff_data_t *buff_data;
+    file_data_t *file_data;
 
 } window_t;
-
-typedef struct {
-
-    bool      path_changed;
-    char     *path;
-    int       rows;
-    int       max_cols;
-    int       min_mid;
-    int       max_mid;
-    int      *offsets;
-    window_t *win;
-
-} src_file_t;
 
 
 
@@ -196,7 +226,6 @@ typedef struct {
 
     char          debugger_buffer [DEBUG_BUF_LEN],
                   program_buffer  [DEBUG_BUF_LEN];
-
 
 } debugger_t;
 
@@ -255,7 +284,6 @@ typedef struct state_t {
 
     layout_t     *layouts;
     window_t    **windows;
-    src_file_t   *src_file;
     plugin_t    **plugins;
     debugger_t   *debugger;
 

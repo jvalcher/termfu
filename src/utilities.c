@@ -9,6 +9,8 @@
 
 #include "utilities.h"
 #include "data.h"
+#include "insert_output_marker.h"
+#include "parse_debugger_output.h"
 
 
 
@@ -30,7 +32,7 @@ void clean_up (void)
     - must free returned string
 */
 char*
-create_path (int num_strs, ...)
+concatenate_strings (int num_strs, ...)
 {
     char     buffer [PATH_MAX_LEN] = {0},
             *sub_str,
@@ -58,9 +60,12 @@ create_path (int num_strs, ...)
 
 
 
+/*
+    TODO: integrate concatenate_strings(), automatically detect num_strs
+*/
 void
 send_command (state_t *state,
-              int num_cmds,
+              int num_strs,
               ...)
 {
     char     buffer [CMD_MAX_LEN] = {0},
@@ -68,18 +73,22 @@ send_command (state_t *state,
     va_list  cmds;
 
     // create command string
-    va_start (cmds, num_cmds);
-    for (int i = 0; i < num_cmds; i++) {
+    va_start (cmds, num_strs);
+    for (int i = 0; i < num_strs; i++) {
         sub_cmd = va_arg (cmds, char*);
         strncat (buffer, sub_cmd, sizeof(buffer) - strlen(buffer) - 1);
     }
     va_end (cmds);
 
     // send command
+    insert_output_start_marker (state);
     size_t bytes = write (state->debugger->stdin_pipe, buffer, strlen (buffer));
     if (bytes == 0) {
         pfeme ("No bytes written");
     }
+    insert_output_end_marker (state);
+
+    parse_debugger_output (state);
 }
 
 
@@ -117,22 +126,6 @@ getkey (void)
     return key;
 
 #endif
-}
-
-
-
-/*
-    Write to FIFO pipe
-*/
-void
-write_to_pipe (int n,
-               char **strings)
-{
-    char buffer [256];
-    for (int i = 0; i < n; i++) {
-        strncat (buffer, strings[i], sizeof (buffer) - 1);
-    }
-    printf ("%s\n", buffer);
 }
 
 
@@ -221,26 +214,69 @@ void unset_nc_attribute (WINDOW* win, int attr)
 
 
 
-/*
-    Print colored string in Ncurses window
-    ---------
-    - Setting an Ncurses color (apparently) requires a constant color value
-    - This function allows the use of a color variable from data.h
-
-    - Usage:
-        int my_color = MAGENTA_BLACK;
-        print_nc_str (my_color, win, y, x, "%s", msg);
-*/
-void print_nc_str (int     color, 
-                   WINDOW *win,
-                   int     row,
-                   int     col, 
-                   char   *str)
+bool
+find_window_string (WINDOW *window,
+                    char   *string,
+                    int    *y,
+                    int    *x)
 {
-    set_nc_attribute (win, color);
-    mvwprintw (win, row, col, "%s", str);
-    unset_nc_attribute (win, color);
-    wrefresh  (win);
+
+    int  i, j, 
+         m, n,
+         ch,
+         rows, cols;
+    size_t si = 0;
+    bool found = false;
+
+    // get number of rows, columns
+    getmaxyx (window, rows, cols);
+
+    // find string
+    for (i = 0; i < rows; i++) {
+        for (j = 0; j < cols; j++) {
+
+            ch = mvwinch (window, i, j);
+
+            if ((char) ch == string [si]) {
+                if (si == 0) {
+                    m = i;
+                    n = j;
+                }
+                si += 1;
+                if (si == strlen (string)) {
+                    found = true;
+                    break;
+                }
+            } else {
+                si = 0;
+            }
+        }
+        if (found) {
+            break;
+        }
+    }
+
+    if (found) {
+        *y = m;
+        *x = n;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+
+void
+copy_string_buffer (char *src_buff,
+                    char *dest_buff)
+{
+    char *sb = src_buff,
+         *db = dest_buff;
+    while (*sb != '\0') {
+        *db++ = *sb++;
+    }
+    *db = *sb;
 }
 
 

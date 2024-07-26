@@ -7,10 +7,10 @@
 
 
 /*
-   Parse external configuration file CONFIG_FILE located
+   Parse external configuration file (see CONFIG_FILE in data.h) located
    in current or home directory
 */  
-layout_t *parse_config_file (state_t*);
+layout_t *parse_config_file (state_t *state);
 
 
 
