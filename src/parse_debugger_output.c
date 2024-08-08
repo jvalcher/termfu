@@ -17,8 +17,10 @@ parse_debugger_output (state_t *state)
 
     reader.state = READER_RECEIVING;
     reader.output_line_buffer[0] = '\0';
-    reader.debugger_buffer_ptr = state->debugger->debugger_buffer;
+    reader.cli_buffer_ptr = state->debugger->cli_buffer;
     reader.program_buffer_ptr = state->debugger->program_buffer;
+    reader.data_buffer_ptr = state->debugger->data_buffer;
+    reader.async_buffer_ptr = state->debugger->async_buffer;
 
     while (running) 
     {
@@ -41,11 +43,10 @@ parse_debugger_output (state_t *state)
 
             case READER_DONE:
 #ifdef DEBUG
-                printf ("DEBUGGER BUFFER:\n %s\n", state->debugger->debugger_buffer);
+                printf ("CLI BUFFER:\n %s\n", state->debugger->cli_buffer);
                 printf ("PROGRAM BUFFER:\n %s\n", state->debugger->program_buffer);
+                printf ("DATA BUFFER:\n %s\n", state->debugger->data_buffer);
 #endif
-                running = false;
-                break;
 
             case READER_EXIT:
                 running = false;
@@ -57,36 +58,12 @@ parse_debugger_output (state_t *state)
 
 
 void
-get_buff_rows_cols (char *buffer,
-                    window_t *win)
-{
-    char *buff_ptr = buffer;
-    int   curr_cols = 0;
-
-    win->data_buff->rows = 1;
-    win->data_buff->max_cols = 0;
-
-    while (*buff_ptr != '\0') {
-        if (*buff_ptr == '\n') {
-            ++win->data_buff->rows;
-            if (curr_cols > win->data_buff->max_cols) {
-                win->data_buff->max_cols = curr_cols;
-            }
-            curr_cols = 0;
-        } else {
-            ++curr_cols;
-        }
-        ++buff_ptr;
-    }
-}
-
-
-
-void
 parse_debugger_output_gdb (reader_t *reader)
 {
     bool  is_gdb_output,
           is_prog_output,
+          is_data_output,
+          is_async_output,
           is_newline;
     char *buff_ptr;
 
@@ -94,6 +71,8 @@ parse_debugger_output_gdb (reader_t *reader)
 
     is_gdb_output = false;
     is_prog_output = false;
+    is_data_output = false;
+    is_async_output = false;
     is_newline = true;
 
     while (*buff_ptr != '\0') {
@@ -101,10 +80,26 @@ parse_debugger_output_gdb (reader_t *reader)
         // set type of output for new line
         if (is_newline && *buff_ptr != '\n') {
             is_newline = false;
+
+            // cli
             if (*buff_ptr == '~') {
                 is_gdb_output = true;
                 ++buff_ptr;
             } 
+
+            // data
+            else if (*buff_ptr == '^') {
+                is_data_output = true;
+                ++buff_ptr;
+            }
+
+            // async
+            else if (*buff_ptr == '*') {
+                is_async_output = true;
+                ++buff_ptr;
+            }
+
+            // program output
             else if (isalpha (*buff_ptr)) {
                 is_prog_output = true;
             }
@@ -117,13 +112,25 @@ parse_debugger_output_gdb (reader_t *reader)
             // gdb
             if (is_gdb_output) {
                 is_gdb_output = false;
-                *reader->debugger_buffer_ptr++ = *buff_ptr++;
+                *reader->cli_buffer_ptr++ = *buff_ptr++;
             }
 
             // program
             else if (is_prog_output) {
                 is_prog_output = false;
                 *reader->program_buffer_ptr++ = *buff_ptr++;
+            }
+
+            // data
+            else if (is_data_output) {
+                is_data_output = false;
+                *reader->data_buffer_ptr++ = *buff_ptr++;
+            }
+
+            // async
+            else if (is_async_output) {
+                is_async_output = false;
+                *reader->async_buffer_ptr++ = *buff_ptr++;
             }
 
             else {
@@ -142,7 +149,7 @@ parse_debugger_output_gdb (reader_t *reader)
             // ==  \\\"  ->  \"
             else if (*buff_ptr == '\\' && *(buff_ptr + 1) == '\"' ) {
                 buff_ptr += 1;
-                *reader->debugger_buffer_ptr++ = *buff_ptr++;
+                *reader->cli_buffer_ptr++ = *buff_ptr++;
             }
 
             // ==  \"  ->  skip
@@ -181,7 +188,8 @@ parse_debugger_output_gdb (reader_t *reader)
                          *(buff_ptr + 3) == 'D') {
 
                     *reader->program_buffer_ptr = '\0';
-                    *reader->debugger_buffer_ptr = '\0';
+                    *reader->cli_buffer_ptr = '\0';
+                    *reader->data_buffer_ptr = '\0';
 
                     reader->state = READER_DONE;
 
@@ -204,13 +212,23 @@ parse_debugger_output_gdb (reader_t *reader)
 
             // == char
             else {
-                *reader->debugger_buffer_ptr++ = *buff_ptr++;
+                *reader->cli_buffer_ptr++ = *buff_ptr++;
             }
         } // is_gdb_output
 
         // program output
         else if (is_prog_output) {
             *reader->program_buffer_ptr++ = *buff_ptr++;
+        }
+
+        // data output
+        else if (is_data_output) {
+            *reader->data_buffer_ptr++ = *buff_ptr++;
+        }
+
+        // async output
+        else if (is_async_output) {
+            *reader->async_buffer_ptr++ = *buff_ptr++;
         }
 
         else {

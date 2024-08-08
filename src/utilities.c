@@ -14,9 +14,6 @@
 
 
 
-/*
-   Close ncurses
-*/
 void clean_up (void)
 {
     // Ncurses
@@ -26,11 +23,6 @@ void clean_up (void)
 
 
 
-/*
-    Concatenate strings
-    --------
-    - must free returned string
-*/
 char*
 concatenate_strings (int num_strs, ...)
 {
@@ -60,35 +52,14 @@ concatenate_strings (int num_strs, ...)
 
 
 
-/*
-    TODO: integrate concatenate_strings(), automatically detect num_strs
-*/
 void
 send_command (state_t *state,
-              int num_strs,
-              ...)
+              char *command)
 {
-    char     buffer [CMD_MAX_LEN] = {0},
-            *sub_cmd;
-    va_list  cmds;
-
-    // create command string
-    va_start (cmds, num_strs);
-    for (int i = 0; i < num_strs; i++) {
-        sub_cmd = va_arg (cmds, char*);
-        strncat (buffer, sub_cmd, sizeof(buffer) - strlen(buffer) - 1);
-    }
-    va_end (cmds);
-
-    // send command
-    insert_output_start_marker (state);
-    size_t bytes = write (state->debugger->stdin_pipe, buffer, strlen (buffer));
+    size_t bytes = write (state->debugger->stdin_pipe, command, strlen (command));
     if (bytes == 0) {
-        pfeme ("No bytes written");
+        pfeme ("No bytes written to debugger process");
     }
-    insert_output_end_marker (state);
-
-    parse_debugger_output (state);
 }
 
 
@@ -133,7 +104,9 @@ getkey (void)
 /*
     Set Ncurses attribute with variable instead of constant
 */
-void set_nc_attribute (WINDOW* win, int attr)
+void
+set_nc_attribute (WINDOW* win,
+                  int attr)
 {
     switch (attr) {
 
@@ -175,7 +148,9 @@ void set_nc_attribute (WINDOW* win, int attr)
 /*
     Unset Ncurses attribute with variable instead of constant
 */
-void unset_nc_attribute (WINDOW* win, int attr)
+void
+unset_nc_attribute (WINDOW* win,
+                    int attr)
 {
     switch (attr) {
 
@@ -200,6 +175,9 @@ void unset_nc_attribute (WINDOW* win, int attr)
             break;
         case WHITE_BLACK:
             wattroff (win, COLOR_PAIR(WHITE_BLACK));
+            break;
+        case WHITE_BLUE:
+            wattroff (win, COLOR_PAIR(WHITE_BLUE));
             break;
 
         // other
@@ -277,7 +255,7 @@ copy_string_buffer (char *src_buff,
     while (*sb != '\0') {
         *db++ = *sb++;
     }
-    *db = *sb;
+    *db = '\0';
 }
 
 

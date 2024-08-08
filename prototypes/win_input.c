@@ -18,6 +18,7 @@ main (void)
 
     char *input_title = "(i)nput";
     char *input_str = "Input: ";
+    char  input_buffer [BUFF_LEN];
     int input_lines = 1;
     int input_cols = cols - 2;
     int input_y = 1;

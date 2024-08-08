@@ -4,14 +4,30 @@
 
 #include "../data.h"
 
+#define NEW_WIN    0      // display lines of new buffer, file
 
 
-void  update_windows (state_t*, int, ...);
-void  update_window (int, state_t*);
-void  get_buff_rows_cols (window_t*);
-void  display_lines_buff (int, window_t*);
-void  get_num_file_rows_cols (window_t*);
-void  display_lines_file (int, window_t*);
+
+
+/*
+    Update multiple windows' data
+    ------
+    - Enter <num_windows> plugin enums (see plugins.h) 
+*/
+void  update_windows (state_t *state, int num_windows, ...);
+
+
+
+/*
+    Update single window's data
+    ---------
+    - Window enum (see plugins.h)
+*/
+void  update_window (int win_enum, state_t *state);
+
+
+
+
 
 
 #endif

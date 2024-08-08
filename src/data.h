@@ -1,7 +1,6 @@
  
-#ifndef _DATA_H
-#define _DATA_H
-
+#ifndef DATA_H
+#define DATA_H
 
 #include <ncurses.h>
 #include <stdint.h>
@@ -78,71 +77,49 @@
 
 /*
     label             - layout label string
-    header            - Ncurses WINDOW object for header
+    header            - Ncurses WINDOW struct for header
     hdr_key_str       - header plugin key string  ("ssb\nssw\nccr\n")
     win_key_str       - window plugin key string  ("ssb\nssw\nccr\n")
     num_hdr_key_rows  - number of header rows needed for key strings
     win_matrix        - window key segment* matrix
     row_ratio         - y segment ratio for layout matrix
     col_ratio         - x segment ratio for layout matrix
-    windows           - window_t linked list
-    next              - next layout_t struct   (TODO: remove?, re-render for new layout?)
+    next              - next layout_t struct
 */
 typedef struct layout {
 
-    char           label [MAX_CONFIG_LABEL_LEN];        // TODO: allocate
-    char           hdr_key_str [MAX_KEY_STR_LEN];
-    char           win_key_str [MAX_KEY_STR_LEN];
-    int            num_hdr_key_rows;
-    char         **win_matrix;
-    int            row_ratio;
-    int            col_ratio;
-    struct layout *next;
+    char            label [MAX_CONFIG_LABEL_LEN];        // TODO: allocate
+    WINDOW         *header;
+    char            hdr_key_str [MAX_KEY_STR_LEN];
+    char            win_key_str [MAX_KEY_STR_LEN];
+    int             num_hdr_key_rows;
+    char          **win_matrix;
+    int             row_ratio;
+    int             col_ratio;
+    struct layout  *next;
 
 } layout_t;
 
 
 
 /*********
-  Windows
+  Ncurses window data
  *********/
 
-/*
-    win             - Ncurses WINDOW* object
-    key             - window segment key
-    selected        - is current window selected
-    next            - pointer to next window_t object in layout
-
-    win_rows        - height in rows
-    win_cols        - width in columns
-    win_y           - top left corner y coordinate
-    win_x           - top left corner x coordinate
-    win_mid_line    - middle row of window
-
-	file_path       - current src/data file's absolute path
-    file_ptr        - FILE pointer
-    file_first_char - first character (col) displayed of lines
-    file_rows       - number of file rows
-    file_max_cols   - columns in longest file line
-    file_min_mid    - mininimum mid line (beginning of file)
-    file_max_mid    - maximum mid line (end of file)
-    file_offsets    - byte offsets for each line of file
-*/  
-#define MAX_LINES  128
-#define FILE_PATH_LEN 128
-#define WIN_INPUT_LEN  128
-
+#define MAX_LINES       128
+#define FILE_PATH_LEN   128
+#define WIN_INPUT_LEN   128
+#define DEBUG_BUF_LEN   4096
 
 typedef struct {
 
-    char    *buff;
-    int      rows;
-    int      max_cols;
-    int      scroll_row;
-    int      scroll_col;
+    char  buff [DEBUG_BUF_LEN];
+    int   rows;
+    int   max_cols;
+    int   scroll_row;
+    int   scroll_col;
 
 } buff_data_t;
-
 
 typedef struct {
 
@@ -157,7 +134,6 @@ typedef struct {
     unsigned long int *offsets;
 
 } file_data_t;
-
 
 typedef struct {
 
@@ -182,7 +158,6 @@ typedef struct {
     int      input_y;
     int      input_x;
     char    *input_title;
-    char    *input_prompt;
     char     input_buffer [WIN_INPUT_LEN];
 
     // data window
@@ -192,7 +167,7 @@ typedef struct {
     int      data_win_x;
     int      data_win_mid_line;
 
-    // data buffers
+    // buffer, file data
     buff_data_t *buff_data;
     file_data_t *file_data;
 
@@ -208,24 +183,26 @@ typedef struct {
 #define PIPE_WRITE           1
 #define READER_MSG_MAX_LEN  24
 #define CMD_MAX_LEN         256
-#define DEBUG_BUF_LEN       4096
 
 enum { DEBUGGER_GDB };
 enum { READER_RECEIVING, READER_DONE, READER_EXIT };
 
 typedef struct {
 
-    int           curr;
-    bool          running;
-    char        **cmd;
-    char         *prog_path;
+    int     curr;
+    bool    running;
+    char  **cmd;
+    char   *prog_path;
+    char   *src_file_path;
+    char   *src_file_line;
 
-    int           stdin_pipe;
-    int           stdout_pipe;
-    int           stderr_pipe;      // TODO: not used
+    int     stdin_pipe;
+    int     stdout_pipe;
 
-    char          debugger_buffer [DEBUG_BUF_LEN],
-                  program_buffer  [DEBUG_BUF_LEN];
+    char    cli_buffer     [DEBUG_BUF_LEN];
+    char    program_buffer [DEBUG_BUF_LEN];
+    char    data_buffer    [DEBUG_BUF_LEN];
+    char    async_buffer   [DEBUG_BUF_LEN];
 
 } debugger_t;
 
@@ -233,8 +210,10 @@ typedef struct {
 
     int   state;
     char  output_line_buffer [1024];
-    char *debugger_buffer_ptr;
+    char *cli_buffer_ptr;
     char *program_buffer_ptr;
+    char *data_buffer_ptr;
+    char *async_buffer_ptr;
     int   plugin_index;
 
 } reader_t;
@@ -269,24 +248,18 @@ typedef struct {
   State
  *******/
 
-#define PATH_MAX_LEN  256
+#define INPUT_BUFF_LEN  256
 
-typedef struct state_t state_t;
-typedef void (*send_cmd_t)   (int, state_t*);
-typedef void (*update_win_t) (int, state_t*);
-
-typedef struct state_t {
+typedef struct {
 
     int           num_plugins;
     int          *plugin_key_index;
-    char         *break_path;
-    char         *watch_path;
+    char          input_buffer [INPUT_BUFF_LEN];
 
-    layout_t     *layouts;
-    window_t    **windows;
-    plugin_t    **plugins;
     debugger_t   *debugger;
 
+    layout_t     *layouts;
+    plugin_t    **plugins;
     WINDOW       *header;
 
 } state_t;

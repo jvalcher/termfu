@@ -13,7 +13,9 @@
 
 
 /*
-    Misc utilities
+    ------------
+    Misc functions
+    ------------
 */
 
 
@@ -21,7 +23,7 @@
 /*
     Clean up before exiting program
 */
-void  clean_up (void);
+void  clean_up  (void);
 
 
 
@@ -31,16 +33,17 @@ void  clean_up (void);
     - Returns pointer to created string
     - Must free after use
 */
-char *concatenate_strings (int num_strings, ...);
+char  *concatenate_strings  (int num_strings, ...);
 
 
 
 /*
-    Send debugger command
-    --------
-    - Comma separated strings (including space character) for each word in command
+    Send debugger command string
+    ------
+    - Must include '\n' at end
+    - Parses output into state->debugger->debugger_buffer, program_buffer
 */
-void  send_command (state_t *state, int num_strs, ...);
+void  send_command  (state_t *state, char *command_string);
 
 
 
@@ -50,35 +53,42 @@ void  send_command (state_t *state, int num_strs, ...);
     -------
     - With and without Ncurses activated (debug mode)
 */
-int   getkey (void);
+int  getkey  (void);
 
 
 
 /*
     Set, unset Ncurses attribute with variable 
     -----------
-    - Must normally set attributes with wattron/off using constants or macros 
-    - This function allows you to use (predefined) integer variables
+    - Must normally set, unset attributes with wattron/off using constant or macro
+    - This function allows you to use integer variables (predefined in functions)
 */
-void  set_nc_attribute   (WINDOW *nc_window, int attribute_value);
-void  unset_nc_attribute (WINDOW *nc_window, int);
+void  set_nc_attribute    (WINDOW *nc_window, int attribute_value);
+void  unset_nc_attribute  (WINDOW *nc_window, int);
 
 
 
 /*
     Find string in Ncurses window
     ----------
-    - Sets y,x variables to window (not stdscr) coordinate
+    - Sets y,x variables to window coordinates
     - returns true if string found, false otherwise
 */
-bool  find_window_string (WINDOW *nc_window, char *string, int *y, int *x);
+bool  find_window_string  (WINDOW *nc_window, char *string, int *y, int *x);
 
 
 
 /*
     Copy src_buff null-terminated string to dest_buff
 */
-void  copy_string_buffer (char *src_buff, char *dest_buff);
+void  copy_string_buffer  (char *src_buff, char *dest_buff);
+
+
+
+/*
+    Get current source file path, line number
+*/
+void get_src_file_path_and_line_num (state_t *state);
 
 
 

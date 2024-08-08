@@ -5,7 +5,6 @@
 #include "plugins.h"
 #include "send_debugger_command.h"
 #include "select_window.h"
-#include "open_popup_window.h"
 
 
 
@@ -36,13 +35,15 @@ run_plugin (int      plugin_index,
         case Reg:
         case Src:
         case Wat: 
-            select_window (plugin_index, state);
+            if (state->plugins[plugin_index]->has_window) {
+                select_window (plugin_index, state);
+            }
             break;
 
         // popup windows
         case Bld:
         case Lay: 
-            open_popup_window (plugin_index, state);
+            //TODO: open_popup_window (plugin_index, state);
             break;
     }
 }

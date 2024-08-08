@@ -16,8 +16,7 @@
 #include "render_layout.h"
 #include "utilities.h"
 
-static void      allocate_windows      (state_t *state);
-static void      free_window_data      (state_t*);
+//static void      free_nc_window_data      (state_t*);
 static layout_t *get_label_layout      (char*, layout_t*);
 static void      calculate_layout      (layout_t*, state_t*);
 
@@ -38,7 +37,7 @@ static void      calculate_layout      (layout_t*, state_t*);
     static void      get_rows_cols         (int*, int*);
 #endif
 
-bool  window_t_arr_is_not_allocated = true;
+bool  first_window_t_allocation = true;
 int   scr_rows;
 int   scr_cols;
 int   header_offset;
@@ -51,12 +50,8 @@ render_layout (char     *label,
 {
     layout_t *layout;
 
-    if (window_t_arr_is_not_allocated) {
-        allocate_windows (state);
-        window_t_arr_is_not_allocated = false;
-    } else {
-        free_window_data (state);
-    }
+    // TODO: free Ncurses windows when switching layouts
+    // free_nc_window_data()
 
     layout = get_label_layout (label, state->layouts);
 
@@ -79,27 +74,9 @@ render_layout (char     *label,
 
 
 
+/*
 static void
-allocate_windows (state_t *state)
-{
-    state->windows = (window_t**) malloc (state->num_plugins * sizeof (window_t*));
-    if (state->windows == NULL) {
-        pfeme ("window_t pointer array allocation failed");
-    }
-    for (int i = 0; i < state->num_plugins; i++) {
-        if (state->plugins[i]->has_window) {
-            state->plugins[i]->win = (window_t*) malloc (sizeof (window_t));
-            if (state->plugins[i]->win == NULL) {
-                pfeme ("window_t pointer allocation failed");
-            }
-        }
-    }
-}
-
-
-
-static void
-free_window_data (state_t *state)
+free_nc_window_data (state_t *state)
 {
     for (int i = 0; i < state->num_plugins; i++) {
 
@@ -117,19 +94,10 @@ free_window_data (state_t *state)
 
             // parent WINDOW
             delwin (state->plugins[i]->win->WIN);
-
-            // file/buffer data
-            if (state->plugins[i]->win->has_data_buff) {
-                free (state->plugins[i]->win->data_buff);
-            } else {
-                free (state->plugins[i]->win->data_file);
-            }
-
-            // window_t
-            free (state->plugins[i]->win);
         }
     }
 }
+*/
 
 
 
@@ -537,8 +505,21 @@ render_window (window_t *win)
         pfeme  ("Unable to create window\n");
     }
 
+    // render parent window border
+    wattron  (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
+    wborder  (win->WIN, 0,0,0,0,0,0,0,0);
+    wattroff (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
+
+    wrefresh (win->WIN);
+
     // input window
+    win->input_rows = 0;
+    win->input_y = 0;
+    win->input_cols = 0;
+    win->input_x = 0;
     if (win->has_input) {
+
+        // create window
         win->input_rows = 1;
         win->input_cols = win->cols - 2;
         win->input_y = 1;
@@ -551,6 +532,13 @@ render_window (window_t *win)
         if (win->IWIN == NULL) {
             pfeme  ("Unable to create input window\n");
         }
+
+        // print input title
+        wattron (win->IWIN, WINDOW_INPUT_COLOR);
+        mvwprintw (win->IWIN, 0, 0, "%s", win->input_title);
+        wattroff (win->IWIN, WINDOW_INPUT_COLOR);
+
+        wrefresh (win->IWIN);
     }
 
     // data window
@@ -566,14 +554,7 @@ render_window (window_t *win)
     if (win->DWIN == NULL) {
         pfeme  ("Unable to create data window\n");
     }
-
-    // render parent window border
-    wattron  (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
-    wborder  (win->WIN, 0,0,0,0,0,0,0,0);
-    wattroff (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
-
-    refresh ();
-    wrefresh (win->WIN);
+    wrefresh (win->DWIN);
 }
 
 
@@ -592,13 +573,12 @@ fix_corners (state_t *state)
               rows, cols,
               tl, tr, bl, br,
               of = header_offset;
-    window_t **wins = state->windows;
     window_t  *win;
 
     for (i = 0; i < state->num_plugins; i++) {
 
-        if (wins [i]) {
-            win = wins[i];
+        if (state->plugins[i]->has_window) {
+            win = state->plugins[i]->win;
         } else {
             continue;
         }
@@ -769,7 +749,7 @@ render_window_titles (state_t *state)
     for (i = 0; i < state->num_plugins; i++) {
 
         if (state->plugins[i]->has_window) {
-            Win = state->windows[i]->WIN;
+            Win = state->plugins[i]->win->WIN;
         } else {
             continue;
         }
@@ -779,7 +759,7 @@ render_window_titles (state_t *state)
 
             // calculate indent
         title_length =  strlen (title);
-        title_indent = (state->windows[i]->cols - title_length) / 2;
+        title_indent = (state->plugins[i]->win->cols - title_length) / 2;
 
             // print title
         wattron (Win, COLOR_PAIR(WINDOW_TITLE_COLOR));
@@ -809,7 +789,7 @@ render_window_titles (state_t *state)
 
 
 /*
-    Allocate new Ncurses window relative to stdscr
+    Allocate new Ncurses windows
 */
 static WINDOW* 
 allocate_window (int rows,
@@ -819,9 +799,12 @@ allocate_window (int rows,
 {
     WINDOW *win = newwin (rows, cols, y, x);
     if (win == NULL)
-        pfeme ("Unable to create window\n");
+        pfeme ("Unable to create window (rows: %d, cols: %d, y: %d, x: %d)\n",
+                    rows, cols, y, x);
     return win;
 }
+
+
 
 static WINDOW* 
 allocate_subwin (WINDOW* parent_win,

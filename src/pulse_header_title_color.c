@@ -69,7 +69,4 @@ pulse_header_title_color (int plugin_index,
         }
         wrefresh (header);
     }
-
-
-    return start;
 }

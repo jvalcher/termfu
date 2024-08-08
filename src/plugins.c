@@ -92,29 +92,19 @@ char *plugin_codes [] = {
 
 
 
-int win_plugins[] = { Asm, Brk, LcV, Out, Prm, Reg, Src, Wat };
-
-int win_file_data[] = { Src };   // as opposed to buffer
-
-
+int win_plugins[]      = { Asm, Brk, LcV, Out, Prm, Reg, Src, Wat };
+int win_buff_plugins[] = { Asm, Brk, LcV, Out, Prm, Reg, Src, Wat };    // TODO: Src -> file type
+int win_file_plugins[] = { Src };
 
 int win_input_plugins[] = {
     Brk,
-    Prm,
     Src,
     Wat
 };
 char *input_titles[] = {
     " (d)elete",
-    " (c)ommand",
-    " Create (b)reak ",
+    " (i)nsert break ",
     " (c)reate  (d)elete "
-};
-char *input_prompts[] = {
-    " Break num: ",
-    " Command: ",
-    " Select line...",
-    " Watch: "
 };
 
 
@@ -122,58 +112,64 @@ char *input_prompts[] = {
 void
 set_window_plugins (state_t *state)
 {
-    int num_win_plugins = sizeof (win_plugins) / sizeof (win_plugins[0]);
-    int num_win_input_plugins = sizeof (win_input_plugins) / sizeof (win_input_plugins[0]);
-    int num_win_file_plugins = sizeof (win_file_data) / sizeof (win_file_data[0]);
+    int i, j,
+        num_win_plugins       = sizeof (win_plugins) / sizeof (win_plugins[0]),
+        num_win_input_plugins = sizeof (win_input_plugins) / sizeof (win_input_plugins[0]),
+        // TODO: num_win_file_plugins  = sizeof (win_file_plugins) / sizeof (win_file_plugins[0]),
+        num_win_file_plugins = 0,
+        num_win_buff_plugins  = sizeof (win_buff_plugins) / sizeof (win_buff_plugins[0]);
+    window_t *win;
+    plugin_t *plugin;
 
-    for (int i = 0; i < state->num_plugins; i++) {
-
-        for (int j = 0; j < num_win_plugins; j++) {
-
-            // if window...
-            if (i == win_plugins[j]) {
-
-                state->plugins[i]->has_window = true;
-
-                // input window
-                for (int k = 0; k < num_win_input_plugins; k++) {
-                    if (i == win_input_plugins[k]) {
-                        state->plugins[i]->win->has_input = true;
-                        state->plugins[i]->win->input_title = input_titles[k];
-                        state->plugins[i]->win->input_prompt = input_prompts[k];
-                        break;
-                    } else {
-                        state->plugins[i]->win->has_input = false;
-                    }
-                }
-
-                // file/buffer data
-                for (int l = 0; l < num_win_file_plugins; l++) {
-
-                    // file
-                    if (i == win_file_data[l]) {
-                        state->plugins[i]->win->has_data_buff = false;
-                        state->plugins[i]->win->file_data = (data_file_t*) malloc (sizeof (data_file_t));
-                        state->plugins[i]->win->buff_data = NULL;
-                    } 
-
-                    // buffer
-                    else {
-                        state->plugins[i]->win->has_data_buff = true;
-                        state->plugins[i]->win->buff_data = (data_buff_t*) malloc (sizeof (data_buff_t));
-                        state->plugins[i]->win->file_data = NULL;
-                    }
-                }
-            } 
-
-            // not window
-            else {
-                state->plugins[i]->has_window = false;
-            }
-        }
+    for (i = 0; i < state->num_plugins; i++) {
+        state->plugins[i]->has_window = false;
     }
 
-    state->plugins[Src]->win->has_data_buff = true;
+    // allocate window_t structs
+    for (i = 0; i < num_win_plugins; i++) {
+
+        j = win_plugins[i];
+        plugin = state->plugins[j];
+        win = plugin->win;
+        win = (window_t*) malloc (sizeof (window_t));
+        if (win == NULL) {
+            pfeme ("Window malloc failed for plugin %s (code: %s, index: %d)",
+                    plugin->title, plugin->code, i);
+        }
+        win->has_input = false;
+    }
+
+    // set input windows
+    for (i = 0; i < num_win_input_plugins; i++) {
+        j = win_input_plugins[i];
+        win = state->plugins[j]->win;
+            //
+        win->has_input = true;
+        win->input_title = input_titles[i];
+    }
+
+    // allocate file data
+    for (i = 0; i < num_win_file_plugins; i++) {
+        j = win_file_plugins[i];
+        win = state->plugins[j]->win;
+            //
+        win->has_data_buff = false;
+        win->file_data = (file_data_t*) malloc (sizeof (file_data_t));
+        win->file_data->path_changed = true;
+        win->buff_data = NULL;
+    }
+
+    // allocate buffer data
+    for (i = 0; i < num_win_buff_plugins; i++) {
+        j = win_buff_plugins[i];
+        win = state->plugins[j]->win;
+            //
+        win->has_data_buff = true;
+        win->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t));
+        win->buff_data->scroll_col = 1;
+        win->buff_data->scroll_row = 1;
+        win->file_data = NULL;
+    }
 }
 
 

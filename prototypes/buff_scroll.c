@@ -16,7 +16,6 @@ typedef unsigned long int ulong;
 
 typedef struct {
 
-
     char    *ptr;
     int      rows;
     int      max_cols;

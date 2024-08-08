@@ -1,14 +1,21 @@
 
 #include "select_window.h"
 #include "data.h"
+#include "display_lines.h"
+#include "popup_windows.h"
 #include "utilities.h"
 #include "plugins.h"
-#include "render_window.h"
-#include "insert_output_marker.h"
-#include "update_windows.h"
-#include "parse_debugger_output.h"
 
-#define ESC  27
+#define ESC        27
+#define BUFF_LEN  256
+
+static void  select_window_color    (int plugin_index, state_t *state);
+static void  deselect_window_color  (void);
+static void  delete_breakpoint      (int num, state_t *state);
+
+char     *curr_title = NULL;
+window_t *curr_win   = NULL;
+WINDOW   *curr_WIN   = NULL;
 
 
 
@@ -16,14 +23,21 @@ void
 select_window (int      plugin_index,
                state_t *state)
 {
-    int       key,
-              curr_debugger;
-    bool      in_loop         = true,
-              key_not_pressed = true;
+    int           key,
+                  file_type;
+    bool          in_loop         = true,
+                  key_not_pressed = true;
+    window_t     *win;
 
-    curr_debugger = state->debugger->curr;
+    if (state->plugins[plugin_index]->win->has_data_buff) {
+        file_type = BUFF_TYPE;
+    } else {
+        file_type = FILE_TYPE;
+    }
 
-    render_window (SELECT, -1, plugin_index, state);
+    win = state->plugins[plugin_index]->win;
+
+    select_window_color (plugin_index, state);
 
     while (in_loop) {
 
@@ -32,19 +46,19 @@ select_window (int      plugin_index,
         // TODO: pg up/down, home, end
         switch (key) {
         case KEY_UP:
-            render_window (DATA, KEY_UP, plugin_index, state);
+            display_lines (file_type, KEY_UP, win);
             key_not_pressed = false;
             break;
         case KEY_DOWN:
-            render_window (DATA, KEY_DOWN, plugin_index, state);
+            display_lines (file_type, KEY_DOWN, win);
             key_not_pressed = false;
             break;
         case KEY_RIGHT:
-            render_window (DATA, KEY_RIGHT, plugin_index, state);
+            display_lines (file_type, KEY_RIGHT, win);
             key_not_pressed = false;
             break;
         case KEY_LEFT:
-            render_window (DATA, KEY_LEFT, plugin_index, state);
+            display_lines (file_type, KEY_LEFT, win);
             key_not_pressed = false;
             break;
         case ESC:
@@ -54,7 +68,10 @@ select_window (int      plugin_index,
 
         // custom keys
         if (in_loop && key_not_pressed) {
-            if      (key == state->plugins[Bak]->key) {
+
+
+            // misc, navigation
+            if  (key == state->plugins[Bak]->key) {
                 in_loop = false;
                 continue;
             } 
@@ -64,31 +81,30 @@ select_window (int      plugin_index,
                 continue;
             }
             else if (key == state->plugins[ScU]->key) {
-                render_window (DATA, KEY_UP, plugin_index, state);
+                display_lines (file_type, KEY_UP, win);
                 continue;
             } 
             else if (key == state->plugins[ScD]->key) {
-                render_window (DATA, KEY_DOWN, plugin_index, state);
+                display_lines (file_type, KEY_DOWN, win);
                 continue;
             } 
             else if (key == state->plugins[ScL]->key) {
-                render_window (DATA, KEY_LEFT, plugin_index, state);
+                display_lines (file_type, KEY_LEFT, win);
                 continue;
             } 
             else if (key == state->plugins[ScR]->key) {
-                render_window (DATA, KEY_RIGHT, plugin_index, state);
+                display_lines (file_type, KEY_RIGHT, win);
                 continue;
             }
 
+            // plugin window keys
             switch (plugin_index) {
+
+            // breakpoints
             case Brk:
-                switch (curr_debugger) {
-                case (DEBUGGER_GDB): 
-                    insert_output_start_marker (state);
-                    send_command (state, 2, "-break-insert ", " main\n"); 
-                    insert_output_end_marker (state);
-                    parse_debugger_output (state);
-                    update_windows (state, 1, Brk);
+                switch (key) {
+                case 'd': 
+                    delete_breakpoint (1, state);
                     break;   // TODO: breaks
             }
             break;
@@ -98,5 +114,111 @@ select_window (int      plugin_index,
         key_not_pressed = true;
     }
 
-    render_window (DESELECT, -1, plugin_index, state);
+    deselect_window_color ();
+}
+
+
+
+static void
+select_window_color (int      plugin_index,
+                     state_t *state)
+{
+    if (curr_win)
+        deselect_window_color ();
+
+    curr_win = state->plugins[plugin_index]->win;
+    curr_title = state->plugins[plugin_index]->title;
+
+    curr_win->selected = true;
+
+
+#ifndef DEBUG
+
+    size_t i;
+    int    x, y;
+    bool   key_color_toggle,
+           string_exists;
+
+    string_exists = find_window_string (curr_win->WIN, curr_title, &y, &x);
+
+    if (string_exists) {
+
+        key_color_toggle = false;
+        wattron (curr_win->WIN, COLOR_PAIR(FOCUS_WINDOW_TITLE_COLOR) | A_UNDERLINE);
+
+        for (i = 0; i < strlen (curr_title) + 1; i++) {
+
+            mvwprintw (curr_win->WIN, y, x + i, "%c", curr_title [i]);
+
+            if (key_color_toggle) {
+                wattron (curr_win->WIN, COLOR_PAIR(FOCUS_WINDOW_TITLE_COLOR));
+                key_color_toggle = false;
+            }
+
+            if (curr_title [i] == '(') {
+                wattron (curr_win->WIN, COLOR_PAIR(FOCUS_WINDOW_TITLE_KEY_COLOR));
+                key_color_toggle = true;
+            }
+        }
+        wattrset (curr_win->WIN, A_NORMAL);
+        wrefresh  (curr_win->WIN);
+    }
+
+#endif
+}
+
+
+
+static void
+deselect_window_color (void)
+{
+
+    curr_win->selected = false;
+
+#ifndef DEBUG
+
+    size_t i;
+    int x, y;
+    bool key_color_toggle,
+         string_exists;
+
+    string_exists = find_window_string (curr_win->WIN, curr_title, &y, &x);
+
+    if (string_exists) {
+
+        key_color_toggle = false;
+        wattron (curr_win->WIN, COLOR_PAIR(WINDOW_TITLE_COLOR));
+        wattroff (curr_win->WIN, A_UNDERLINE);
+
+        for (i = 0; i < strlen (curr_title) + 1; i++) {
+
+            mvwprintw (curr_win->WIN, y, x + i, "%c", curr_title[i]);
+
+            if (key_color_toggle) {
+                wattron (curr_win->WIN, COLOR_PAIR(WINDOW_TITLE_COLOR));
+                key_color_toggle = false;
+            }
+
+            if (curr_title[i] == '(') {
+                wattron (curr_win->WIN, COLOR_PAIR(TITLE_KEY_COLOR));
+                key_color_toggle = true;
+            }
+        }
+        wrefresh  (curr_win->WIN);
+    }
+
+#endif
+
+    curr_win = NULL;
+    curr_title [0] = '\0';
+}
+
+
+
+static void
+delete_breakpoint (int num,
+                   state_t *state)
+{
+    // get line number
+    open_input_popup_window (" Delete breakpoint number: ", input_buffer);
 }

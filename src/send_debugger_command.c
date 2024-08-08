@@ -8,11 +8,10 @@
 #include "data.h"
 #include "insert_output_marker.h"
 #include "parse_debugger_output.h"
-#include "update_windows.h"
 #include "plugins.h"
 #include "utilities.h"
-#include "render_window.h"
 #include "pulse_header_title_color.h"
+#include "update_window_data/_update_window_data.h"
 
 
 
@@ -30,42 +29,42 @@ send_debugger_command (int      plugin_index,
     switch (plugin_index) {
     case Con:
         switch (curr_debugger) {
-        case (DEBUGGER_GDB): send_command (state, 1, "-exec-continue\n"); break;
+        case (DEBUGGER_GDB): send_command (state, "-exec-continue\n"); break;
         }
         break;
     case Fin:
         switch (curr_debugger) {
-        case (DEBUGGER_GDB): send_command (state, 1, "-exec-finish\n"); break;
+        case (DEBUGGER_GDB): send_command (state, "-exec-finish\n"); break;
         }
         break;
     case Kil:
         switch (curr_debugger) {
-        case (DEBUGGER_GDB): send_command (state, 1, "-exec-abort\n"); break;
+        case (DEBUGGER_GDB): send_command (state, "-exec-abort\n"); break;
         }
         break;
     case Nxt:
         switch (curr_debugger) {
-        case (DEBUGGER_GDB): send_command (state, 1, "-exec-next\n"); break;
+        case (DEBUGGER_GDB): send_command (state, "-exec-next\n"); break;
         }
         break;
     case Stp:
         switch (curr_debugger) {
-        case (DEBUGGER_GDB): send_command (state, 1, "step\n"); break;
+        case (DEBUGGER_GDB): send_command (state, "step\n"); break;
         }
         break;
     case Run:
         switch (curr_debugger) {
-        case (DEBUGGER_GDB): send_command (state, 1, "-exec-run\n"); break;
+        case (DEBUGGER_GDB): send_command (state, "-exec-run\n"); break;
         }
         break;
     case Unt:
         switch (curr_debugger) {
-        case (DEBUGGER_GDB): send_command (state, 2, "-exec-until", "15\n"); break;       // TODO: until
+        case (DEBUGGER_GDB): send_command (state, "-exec-until 15\n"); break;       // TODO: until
         }
         break;
     case Qut:
         switch (curr_debugger) {
-        case (DEBUGGER_GDB): send_command (state, 1, "-gdb-exit\n"); break;
+        case (DEBUGGER_GDB): send_command (state, "-gdb-exit\n"); break;
         }
         state->debugger->running = false;
         quitting = true;

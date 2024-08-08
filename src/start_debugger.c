@@ -25,7 +25,6 @@ static void   start_debugger_proc         (debugger_t*);
 char *gdb_cmd[] = {"gdb", "--quiet", "--interpreter=mi", NULL, NULL};
 
 
-
 void
 start_debugger (state_t *state)
 {
@@ -56,9 +55,9 @@ static void
 start_debugger_proc (debugger_t *debugger)
 {
     char  **cmd;
-    pid_t  debugger_pid;
-    int  debug_in_pipe  [2],
-         debug_out_pipe [2];
+    pid_t   debugger_pid;
+    int     debug_in_pipe  [2],
+            debug_out_pipe [2];
     
     // create pipes
     if (pipe (debug_in_pipe)  == -1 || 

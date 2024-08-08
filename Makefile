@@ -13,8 +13,7 @@ B_FILE_DEV=		term_debug_dev
 B_FILE_PROD=	term_debug
 
 CC=				gcc
-#FLAGS=			-Wall -Wextra -Werror -MMD -I ./src/plugins -I ./src/window_updates
-FLAGS=			-Wall -Wextra -MMD -I ./src/plugins -I ./src/window_updates
+FLAGS=			-Wall -Wextra -MMD -I ./src/update_window_data
 PROD_FLAGS=		-O3
 DEV_FLAGS=		-g
 DEBUG_FLAGS=	-D DEBUG -g
@@ -25,7 +24,10 @@ NCURSES_LIBS 	:= $(shell ncurses5-config --libs)
 
 C_FILES=		$(wildcard ./src/*.c)
 O_FILES=		$(patsubst ./src/%.c, ./obj/%.o, $(C_FILES))
-D_FILES= 		$(patsubst ./src/%.c, ./obj/%.d, $(C_FILES))
+CU_FILES=		$(wildcard ./src/update_window_data/*.c)
+OU_FILES=		$(patsubst ./src/update_window_data/%.c, ./obj/%.o, $(CU_FILES))
+D_FILES= 		$(patsubst ./src/%.c, ./obj/%.d, $(C_FILES)) \
+				$(patsubst ./src/update_window_data/%.c, ./obj/%.d, $(CU_FILES))
 
 .PHONY: clean colors all dev debug
 
@@ -59,11 +61,11 @@ colors:
 
 # binary
 #
-$(B_FILE_PROD): $(O_FILES)
+$(B_FILE_PROD): $(O_FILES) $(OU_FILES)
 	@echo ""
 	$(CC) -o $@ $^ $(NCURSES_LIBS)
 
-$(B_FILE_DEV): $(O_FILES)
+$(B_FILE_DEV): $(O_FILES) $(OU_FILES)
 	@echo ""
 	$(CC) -o $@ $^ $(NCURSES_LIBS)
 
@@ -73,17 +75,12 @@ $(B_FILE_DEV): $(O_FILES)
 obj/%.o: src/%.c
 	$(CC) $(FLAGS) $(NCURSES_CFLAGS) -c -o $@ $<
 
-obj/%.o: src/plugins/%.c
-	$(CC) $(FLAGS) $(NCURSES_CFLAGS) -c -o $@ $<
-
-obj/%.o: src/window_updates/%.c
+obj/%.o: src/update_window_data/%.c
 	$(CC) $(FLAGS) $(NCURSES_CFLAGS) -c -o $@ $<
 
 
 # d files
 #
--include $(D_WUPD_FILES)
--include $(D_PLUG_FILES)
 -include $(D_FILES)
 
 

@@ -7,7 +7,9 @@
 
 
 /*
-   Plugin enums used to identify plugins in switch statements
+   Plugin enum identifiers
+   --------
+   - In alphabetical order
 */
 enum {
     EMP,    
