@@ -7,12 +7,12 @@
 
 #include "data.h"
 #include "utilities.h"
+#include "parse_cli_arguments.h"
 #include "parse_config_file.h"
 #include "render_layout.h"
 #include "start_debugger.h"
 #include "run_plugin.h"
 
-static void         parse_cli_arguments     (int, char *argv[], debugger_t*);
 static void         initialize_ncurses      (void);
 static void         set_signals_et_al       (void);
 static void         handle_sigint_exit      (int);
@@ -51,28 +51,6 @@ int main (int argc, char *argv[])
 
 
 
-/*
-    Parse command-line arguments
-*/
-static void
-parse_cli_arguments (int argc,
-                     char *argv[],
-                     debugger_t *debugger)
-{
-    // TODO: add flag options
-        // -h  - help
-        // -f  - config file path
-        // -d  - manually choose debugger
-        // -l  - set initial layout
-    if (argc > 1) {
-        debugger->prog_path = argv [1];
-    } else {
-        pfeme ("Usage:  term_debug a.out\n");
-    }
-}
-
-
-    
 /*
     Initialize Ncurses
 */

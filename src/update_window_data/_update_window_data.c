@@ -7,8 +7,9 @@
 #include "_update_window_data.h"
 #include "../data.h"
 #include "../plugins.h"
+#include "../display_lines.h"
 
-#include "update_window_gdb.h"
+#include "get_breakpoint_data.h"
 
 void  update_window  (int, state_t*);
 
@@ -38,39 +39,22 @@ void
 update_window (int      plugin_index,
                state_t *state)
 {
-    int curr_debugger = state->debugger->curr;
+    window_t *win = state->plugins[plugin_index]->win;
 
     switch (plugin_index) {
     case Asm:
-        switch (curr_debugger) {
-        case (DEBUGGER_GDB): update_assembly_gdb (state); break;
-        }
         break;
-    case Brk:
-        switch (curr_debugger) {
-        case (DEBUGGER_GDB): update_breakpoints_gdb (state); break;
-        }
+    case Brk: 
+        get_breakpoint_data (state); 
+        display_lines (BUFF_TYPE, NEW_WIN, win);
         break;
     case LcV:
-        switch (curr_debugger) {
-        case (DEBUGGER_GDB): update_local_vars_gdb (state); break;
-            break;
-        }
         break;
     case Reg:
-        switch (curr_debugger) {
-        case (DEBUGGER_GDB): update_registers_gdb (state); break;
-        }
         break;
     case Src:
-        switch (curr_debugger) {
-        case (DEBUGGER_GDB): update_source_file_gdb (state); break;
-        }
         break;
     case Wat:
-        switch (curr_debugger) {
-        case (DEBUGGER_GDB): update_watchpoints_gdb (state); break;
-        }
         break;
     }
 }

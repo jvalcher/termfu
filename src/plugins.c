@@ -93,18 +93,15 @@ char *plugin_codes [] = {
 
 
 int win_plugins[]      = { Asm, Brk, LcV, Out, Prm, Reg, Src, Wat };
-int win_buff_plugins[] = { Asm, Brk, LcV, Out, Prm, Reg, Src, Wat };    // TODO: Src -> file type
+int win_buff_plugins[] = { Asm, Brk, LcV, Out, Prm, Reg, Src, Wat };
 int win_file_plugins[] = { Src };
-
 int win_input_plugins[] = {
     Brk,
-    Src,
     Wat
 };
-char *input_titles[] = {
-    " (d)elete",
-    " (i)nsert break ",
-    " (c)reate  (d)elete "
+char *win_input_titles[] = {
+    "(i)nsert (d)elete",
+    "(c)reate  (d)elete"
 };
 
 
@@ -115,9 +112,9 @@ set_window_plugins (state_t *state)
     int i, j,
         num_win_plugins       = sizeof (win_plugins) / sizeof (win_plugins[0]),
         num_win_input_plugins = sizeof (win_input_plugins) / sizeof (win_input_plugins[0]),
-        // TODO: num_win_file_plugins  = sizeof (win_file_plugins) / sizeof (win_file_plugins[0]),
-        num_win_file_plugins = 0,
+        num_win_file_plugins  = sizeof (win_file_plugins) / sizeof (win_file_plugins[0]),
         num_win_buff_plugins  = sizeof (win_buff_plugins) / sizeof (win_buff_plugins[0]);
+
     window_t *win;
     plugin_t *plugin;
 
@@ -130,8 +127,8 @@ set_window_plugins (state_t *state)
 
         j = win_plugins[i];
         plugin = state->plugins[j];
+        plugin->win = (window_t*) malloc (sizeof (window_t));
         win = plugin->win;
-        win = (window_t*) malloc (sizeof (window_t));
         if (win == NULL) {
             pfeme ("Window malloc failed for plugin %s (code: %s, index: %d)",
                     plugin->title, plugin->code, i);
@@ -145,7 +142,8 @@ set_window_plugins (state_t *state)
         win = state->plugins[j]->win;
             //
         win->has_input = true;
-        win->input_title = input_titles[i];
+        win->input_title = (char*) malloc (strlen (win_input_titles[i]) + 1);
+        strcpy (win->input_title, win_input_titles[i]);
     }
 
     // allocate file data

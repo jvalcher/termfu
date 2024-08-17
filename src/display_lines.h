@@ -22,7 +22,7 @@ void  display_lines (int type, int key, window_t *win);
 /*
     Get number of rows, max cols, et al. in new window buffer string
 */
-void  get_buff_rows_cols (window_t *win);
+void  set_buff_rows_cols (window_t *win);
 
 
 

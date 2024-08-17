@@ -1,12 +1,14 @@
-#ifndef POPUP_WINDOWS_H
-#define POPUP_WINDOWS_H
+#ifndef GET_POPUP_WINDOW_INPUT_H
+#define GET_POPUP_WINDOW_INPUT_H
+
+#include "../data.h"
 
 
 
 /*
     Open popup window with <prompt> and save typed string into <buffer>
 */
-void  open_input_popup_window  (char *prompt, char *buffer);
+void  get_popup_window_input  (char *prompt, char *buffer);
 
 
 

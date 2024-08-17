@@ -1,8 +1,10 @@
 #include <ncurses.h>
 
-#include "popup_windows.h"
+#include "_get_popup_window_input.h"
+
 
 void close_popup_window (void);
+
 
 WINDOW *curr_screen_layout,
        *parent_popup_win,
@@ -11,8 +13,8 @@ WINDOW *curr_screen_layout,
 
 
 void
-open_input_popup_window (char *prompt,
-                         char *buffer)
+get_popup_window_input (char *prompt,
+                        char *buffer)
 {
     int scr_rows, scr_cols,
         rows, cols,
@@ -63,3 +65,6 @@ close_popup_window (void)
     delwin (data_popup_win);
     delwin (parent_popup_win);
 }
+
+
+

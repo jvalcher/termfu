@@ -1,4 +1,23 @@
 #!/bin/bash
 
-gcc -g -Wall -Wextra $(ncursesw5-config --cflags) $1 $(ncursesw5-config --libs) && ./a.out
-
+gcc -g -Wall -Wextra $(ncursesw5-config --cflags) \
+\
+    ../src/display_lines.c\
+    ../src/get_source_file.c\
+    ../src/insert_output_marker.c\
+    ../src/parse_cli_arguments.c\
+    ../src/parse_debugger_output.c\
+    ../src/start_debugger.c\
+    ../src/utilities.c\
+\
+    ../src/update_window_data/_update_window_data.c\
+    ../src/update_window_data/get_breakpoint_data.c\
+\
+    ../src/get_popup_window_input/_get_popup_window_input.c\
+    ../src/get_popup_window_input/popup_breakpoints.c\
+\
+    $1\
+\
+    $(ncursesw5-config --libs) && \
+\
+./a.out ./hello

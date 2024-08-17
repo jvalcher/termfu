@@ -187,6 +187,14 @@ typedef struct {
 enum { DEBUGGER_GDB };
 enum { READER_RECEIVING, READER_DONE, READER_EXIT };
 
+
+typedef struct break_t{
+    int     index;
+    char   *location;
+    struct  break_t *next;
+} breakpoint_t;
+
+
 typedef struct {
 
     int     curr;
@@ -199,17 +207,21 @@ typedef struct {
     int     stdin_pipe;
     int     stdout_pipe;
 
+    char    format_buffer  [DEBUG_BUF_LEN];
     char    cli_buffer     [DEBUG_BUF_LEN];
     char    program_buffer [DEBUG_BUF_LEN];
     char    data_buffer    [DEBUG_BUF_LEN];
     char    async_buffer   [DEBUG_BUF_LEN];
 
+    breakpoint_t *breakpoints;
+
 } debugger_t;
+
 
 typedef struct {
 
     int   state;
-    char  output_line_buffer [1024];
+    char  output_line_buffer [DEBUG_BUF_LEN];
     char *cli_buffer_ptr;
     char *program_buffer_ptr;
     char *data_buffer_ptr;

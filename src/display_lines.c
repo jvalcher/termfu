@@ -29,7 +29,7 @@ display_lines (int type,
 
 
 void
-get_buff_rows_cols (window_t *win)
+set_buff_rows_cols (window_t *win)
 {
     char *buff_ptr = win->buff_data->buff;
     int   curr_cols = 0;

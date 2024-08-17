@@ -2,16 +2,15 @@
 #include "select_window.h"
 #include "data.h"
 #include "display_lines.h"
-#include "popup_windows.h"
 #include "utilities.h"
 #include "plugins.h"
+#include "get_popup_window_input/popup_breakpoints.h"
 
 #define ESC        27
 #define BUFF_LEN  256
 
 static void  select_window_color    (int plugin_index, state_t *state);
 static void  deselect_window_color  (void);
-static void  delete_breakpoint      (int num, state_t *state);
 
 char     *curr_title = NULL;
 window_t *curr_win   = NULL;
@@ -104,8 +103,11 @@ select_window (int      plugin_index,
             case Brk:
                 switch (key) {
                 case 'd': 
-                    delete_breakpoint (1, state);
+                    delete_breakpoint (state);
                     break;   // TODO: breaks
+                case 'i':
+                    insert_breakpoint (state);
+                    break;
             }
             break;
             }
@@ -215,10 +217,3 @@ deselect_window_color (void)
 
 
 
-static void
-delete_breakpoint (int num,
-                   state_t *state)
-{
-    // get line number
-    open_input_popup_window (" Delete breakpoint number: ", input_buffer);
-}

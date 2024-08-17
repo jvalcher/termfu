@@ -26,8 +26,12 @@ C_FILES=		$(wildcard ./src/*.c)
 O_FILES=		$(patsubst ./src/%.c, ./obj/%.o, $(C_FILES))
 CU_FILES=		$(wildcard ./src/update_window_data/*.c)
 OU_FILES=		$(patsubst ./src/update_window_data/%.c, ./obj/%.o, $(CU_FILES))
+CP_FILES=		$(wildcard ./src/get_popup_window_input/*.c)
+OP_FILES=		$(patsubst ./src/get_popup_window_input/%.c, ./obj/%.o, $(CP_FILES))
+
 D_FILES= 		$(patsubst ./src/%.c, ./obj/%.d, $(C_FILES)) \
-				$(patsubst ./src/update_window_data/%.c, ./obj/%.d, $(CU_FILES))
+				$(patsubst ./src/update_window_data/%.c, ./obj/%.d, $(CU_FILES)) \
+				$(patsubst ./src/get_popup_window_input/%.c, ./obj/%.d, $(CP_FILES))
 
 .PHONY: clean colors all dev debug
 
@@ -61,11 +65,11 @@ colors:
 
 # binary
 #
-$(B_FILE_PROD): $(O_FILES) $(OU_FILES)
+$(B_FILE_PROD): $(O_FILES) $(OU_FILES) $(OP_FILES)
 	@echo ""
 	$(CC) -o $@ $^ $(NCURSES_LIBS)
 
-$(B_FILE_DEV): $(O_FILES) $(OU_FILES)
+$(B_FILE_DEV): $(O_FILES) $(OU_FILES) $(OP_FILES)
 	@echo ""
 	$(CC) -o $@ $^ $(NCURSES_LIBS)
 
@@ -73,6 +77,9 @@ $(B_FILE_DEV): $(O_FILES) $(OU_FILES)
 # objects
 #
 obj/%.o: src/%.c
+	$(CC) $(FLAGS) $(NCURSES_CFLAGS) -c -o $@ $<
+
+obj/%.o: src/get_popup_window_input/%.c
 	$(CC) $(FLAGS) $(NCURSES_CFLAGS) -c -o $@ $<
 
 obj/%.o: src/update_window_data/%.c

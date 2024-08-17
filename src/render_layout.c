@@ -12,8 +12,8 @@
 #include <unistd.h>
 #endif
 
-#include "data.h"
 #include "render_layout.h"
+#include "data.h"
 #include "utilities.h"
 
 //static void      free_nc_window_data      (state_t*);
@@ -496,6 +496,8 @@ render_header_titles (layout_t *layout,
 static void
 render_window (window_t *win)
 {
+    int left_spaces, right_spaces;
+
     // parent window
     win->WIN = allocate_window (win->rows, 
                                 win->cols, 
@@ -517,13 +519,15 @@ render_window (window_t *win)
     win->input_y = 0;
     win->input_cols = 0;
     win->input_x = 0;
+
     if (win->has_input) {
 
-        // create window
         win->input_rows = 1;
         win->input_cols = win->cols - 2;
         win->input_y = 1;
         win->input_x = 1;
+        left_spaces = (win->input_cols - strlen(win->input_title)) / 2;
+        right_spaces = win->input_cols - strlen(win->input_title) - left_spaces;
         win->IWIN = allocate_subwin (win->WIN,
                                      win->input_rows,
                                      win->input_cols,
@@ -534,9 +538,9 @@ render_window (window_t *win)
         }
 
         // print input title
-        wattron (win->IWIN, WINDOW_INPUT_COLOR);
-        mvwprintw (win->IWIN, 0, 0, "%s", win->input_title);
-        wattroff (win->IWIN, WINDOW_INPUT_COLOR);
+        wattron (win->IWIN, COLOR_PAIR(WINDOW_INPUT_COLOR));
+        mvwprintw (win->IWIN, 0, 0, "%*c%s%*c", left_spaces, ' ', win->input_title, right_spaces, ' ');
+        wattroff (win->IWIN, COLOR_PAIR(WINDOW_INPUT_COLOR));
 
         wrefresh (win->IWIN);
     }

@@ -57,6 +57,16 @@ parse_debugger_output (state_t *state)
 
 
 
+/*
+    Parse GDB/MI debuger output
+    --------
+    "<first line character>" :  <destination buffer>
+    -----------------------------
+    "~" :  state->debugger->cli_buffer
+    "^" :  state->debugger->data_buffer
+    "*" :  state->debugger->async_buffer
+    ""  :  state->debugger->program_buffer
+*/
 void
 parse_debugger_output_gdb (reader_t *reader)
 {

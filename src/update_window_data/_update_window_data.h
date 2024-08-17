@@ -8,16 +8,6 @@
 
 
 
-
-/*
-    Update multiple windows' data
-    ------
-    - Enter <num_windows> plugin enums (see plugins.h) 
-*/
-void  update_windows (state_t *state, int num_windows, ...);
-
-
-
 /*
     Update single window's data
     ---------
@@ -27,6 +17,12 @@ void  update_window (int win_enum, state_t *state);
 
 
 
+/*
+    Update multiple windows' data
+    ------
+    - Enter <num_windows> plugin enums (see plugins.h) 
+*/
+void  update_windows (state_t *state, int num_windows, ...);
 
 
 

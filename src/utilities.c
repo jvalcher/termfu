@@ -9,8 +9,6 @@
 
 #include "utilities.h"
 #include "data.h"
-#include "insert_output_marker.h"
-#include "parse_debugger_output.h"
 
 
 
@@ -26,7 +24,7 @@ void clean_up (void)
 char*
 concatenate_strings (int num_strs, ...)
 {
-    char     buffer [PATH_MAX_LEN] = {0},
+    char     buffer [FILE_PATH_LEN] = {0},
             *sub_str,
             *str;
     va_list  strs;
