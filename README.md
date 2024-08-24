@@ -8,7 +8,7 @@ A multi-language TUI debugger
 
 ## Configuration
 
-Unique, three-character, case-sensitive "plugin" codes are each associated with a specific debugger action or window. The codes are bound to user-defined shortcut keys. The keys are then used to create custom ASCII-art layouts.
+Unique, three-character, case-sensitive "plugin" codes are each associated with a specific debugger action or window. The codes are bound to user-defined shortcut keys. The keys are then used to create custom ASCII-art layouts. Header and window titles change the color of any letter within parentheses.
 <br />
 
 ### Example configuration...
