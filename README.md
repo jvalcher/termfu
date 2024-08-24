@@ -1,5 +1,5 @@
 
-# term_debug
+# Terminal Debugger
 
 A multi-language TUI debugger
 
