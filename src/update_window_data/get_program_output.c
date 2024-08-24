@@ -1,0 +1,3 @@
+
+// CURRENT: get program output
+

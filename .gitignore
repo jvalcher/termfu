@@ -6,6 +6,7 @@ tags
 hello*
 debug_*
 ToDo.md
+debug.out
 
 venv
 __pycache__

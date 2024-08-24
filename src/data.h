@@ -13,11 +13,11 @@
   Main
  ******/
 
-#define PROGRAM_NAME     "term_debug"
+#define PROGRAM_NAME     "term_debug"       // TODO: rename program
 #define DATA_DIR_PATH    ".local/share/term_debug"
+#define DEBUG_OUT_PATH   "debug.out"
 #define PARENT_PROCESS   0
 #define CHILD_PROCESS    1
-#define PLUGIN_CODE_LEN  3
 
 
 
@@ -114,6 +114,7 @@ typedef struct layout {
 typedef struct {
 
     char  buff [DEBUG_BUF_LEN];
+    bool  changed;
     int   rows;
     int   max_cols;
     int   scroll_row;
@@ -123,15 +124,17 @@ typedef struct {
 
 typedef struct {
 
-    FILE              *ptr;
-    char               path [FILE_PATH_LEN];
-    bool               path_changed;
-    int                first_char;
-    int                rows;
-    int                max_cols;
-    int                min_mid;
-    int                max_mid;
-    unsigned long int *offsets;
+    FILE  *ptr;
+    char   path [FILE_PATH_LEN];
+    bool   path_changed;
+    int    line;
+    int    line_num_digits;
+    int    first_char;
+    int    rows;
+    int    max_cols;
+    int    min_mid;
+    int    max_mid;
+    long  *offsets;
 
 } file_data_t;
 
@@ -141,6 +144,7 @@ typedef struct {
     WINDOW  *IWIN;
     WINDOW  *DWIN;
 
+    char     code[4];
     bool     selected;
     bool     has_input;
     bool     has_data_buff;     // as opposed to file
@@ -185,15 +189,7 @@ typedef struct {
 #define CMD_MAX_LEN         256
 
 enum { DEBUGGER_GDB };
-enum { READER_RECEIVING, READER_DONE, READER_EXIT };
-
-
-typedef struct break_t{
-    int     index;
-    char   *location;
-    struct  break_t *next;
-} breakpoint_t;
-
+enum { READER_RECEIVING, READER_DONE };
 
 typedef struct {
 
@@ -201,8 +197,6 @@ typedef struct {
     bool    running;
     char  **cmd;
     char   *prog_path;
-    char   *src_file_path;
-    char   *src_file_line;
 
     int     stdin_pipe;
     int     stdout_pipe;
@@ -213,10 +207,7 @@ typedef struct {
     char    data_buffer    [DEBUG_BUF_LEN];
     char    async_buffer   [DEBUG_BUF_LEN];
 
-    breakpoint_t *breakpoints;
-
 } debugger_t;
-
 
 typedef struct {
 
@@ -243,12 +234,14 @@ typedef struct {
     window      - pointer to window_t struct if applicable
     next        - next plugin_t struct
 */
+#define PLUGIN_CODE_LEN  3
+
 typedef struct {
 
     int       index;
     char      key;
     char      code [4];
-    char     *title;       // TODO: allocate
+    char     *title;
     bool      has_window;
     window_t *win;
 

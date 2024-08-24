@@ -10,22 +10,15 @@
 
 int main (void)
 {
-    initscr();
-    int nc_rows = getmaxy (stdscr);
-    int nc_cols = getmaxx (stdscr);
+    char *str = "Hello, world!";
+
+    initscr ();
+
+    mvwprintw (stdscr, 1, 1, "%.*s\n", 3, str);
+    refresh ();
+
+    getch (); 
     endwin ();
-
-    struct winsize w;
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1) {
-        perror("ioctl");
-        return 1;
-    }
-
-    printf ("nc rows: %d\n", nc_rows);
-    printf ("nc cols: %d\n", nc_cols);
-    printf ("sc rows: %d\n", w.ws_row);
-    printf ("sc rows: %d\n", w.ws_col);
-
 
     return 0;
 }

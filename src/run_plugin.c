@@ -5,6 +5,7 @@
 #include "plugins.h"
 #include "send_debugger_command.h"
 #include "select_window.h"
+#include "update_window_data/get_source_file_and_line_number.h"
 
 
 
@@ -29,9 +30,9 @@ run_plugin (int      plugin_index,
         // windows
         case Asm:
         case Brk:
+        case Dbg:
         case LcV:
-        case Out:
-        case Prm:
+        case Prg:
         case Reg:
         case Src:
         case Wat: 

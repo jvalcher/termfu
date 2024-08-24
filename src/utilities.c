@@ -1,14 +1,36 @@
 #include <ncurses.h>
 #include <string.h>
 #include <unistd.h>
-#include <semaphore.h>
-#include <termio.h>
 #include <fcntl.h>
-#include <stdarg.h>
 #include <stdarg.h>
 
 #include "utilities.h"
 #include "data.h"
+
+FILE *debug_out_ptr = NULL;
+
+
+
+
+
+/*
+   Log debug output to file
+*/
+void
+logd (const char *formatted_string, ...)
+{
+    if (debug_out_ptr == NULL) {
+        debug_out_ptr = fopen (DEBUG_OUT_PATH, "w");
+        if (debug_out_ptr == NULL) {
+            pfeme ("Unable to open debug output file");
+        }
+    }
+
+    va_list args;
+    va_start (args, formatted_string);
+    vfprintf (debug_out_ptr, formatted_string, args);
+    va_end (args);
+}
 
 
 
@@ -17,6 +39,11 @@ void clean_up (void)
     // Ncurses
     curs_set (1);
     endwin ();
+
+    // debug output file
+    if (debug_out_ptr != NULL) {
+        fclose (debug_out_ptr);
+    }
 }
 
 
@@ -58,43 +85,6 @@ send_command (state_t *state,
     if (bytes == 0) {
         pfeme ("No bytes written to debugger process");
     }
-}
-
-
-
-int
-getkey (void)
-{
-#ifndef DEBUG
-        return getch();
-#endif
-
-#ifdef DEBUG
-
-    int key,
-        stdout_fd,
-        dev_null_fd;
-
-    static struct termios oldt, newt;
-    dev_null_fd = open ("/dev/null", O_WRONLY);
-    stdout_fd   = dup (STDOUT_FILENO);
-
-    // disable need to hit enter after key press
-    tcgetattr (STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);          
-    tcsetattr (STDIN_FILENO, TCSANOW, &newt);
-    dup2 (dev_null_fd, STDOUT_FILENO);
-        //
-    key = getchar();
-        //
-    dup2 (stdout_fd, STDOUT_FILENO);
-    tcsetattr (STDIN_FILENO, TCSANOW, &oldt);
-    close (dev_null_fd);
-
-    return key;
-
-#endif
 }
 
 
@@ -240,21 +230,4 @@ find_window_string (WINDOW *window,
         return false;
     }
 }
-
-
-
-void
-copy_string_buffer (char *src_buff,
-                    char *dest_buff)
-{
-    char *sb = src_buff,
-         *db = dest_buff;
-
-    while (*sb != '\0') {
-        *db++ = *sb++;
-    }
-    *db = '\0';
-}
-
-
 

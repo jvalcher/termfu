@@ -11,7 +11,6 @@
     ----------
     key:   key pressed (e.g. KEY_UP, KEY_LEFT, ...) in window loop
 */
-
 #define BUFF_TYPE  0
 #define FILE_TYPE  1
 
@@ -29,7 +28,7 @@ void  set_buff_rows_cols (window_t *win);
 /*
     Get number of file rows, max columns, et al. in new window data file
 */
-void  get_file_rows_cols (window_t *win);
+void  set_file_rows_cols (window_t *win);
 
 
 

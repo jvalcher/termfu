@@ -1,10 +1,12 @@
 
-#ifndef UPDATE_WINDOW_H
-#define UPDATE_WINDOW_H
+#ifndef UPDATE_WINDOW_DATA_H
+#define UPDATE_WINDOW_DATA_H
 
 #include "../data.h"
 
-#define NEW_WIN    0      // display lines of new buffer, file
+#define BEG_DATA    0      // display beginning buffer, file data
+#define END_DATA    1      // display end of buffer, file data
+#define LINE_DATA   3      // center data on state->plugins[i]->win->file_data->line
 
 
 

@@ -11,9 +11,9 @@ Plugins
 
         Asm     Assembly code
         Brk     Breakpoints
+        Dbg     Debugger prompt, output
         LcV     Local variables
-        Out     Program output
-        Prm     Debugger prompt, output
+        Prg     Program output
         Reg     Registers
         Src     Source file
         Wat     Watchpoints
@@ -70,13 +70,13 @@ char *plugin_codes [] = {
     "Bld",
     "Brk",
     "Con",
+    "Dbg",
     "Fin",
     "Kil",
     "Lay",
     "LcV",
     "Nxt",
-    "Out",
-    "Prm",
+    "Prg",
     "Qut",
     "Reg",
     "Run",
@@ -92,15 +92,23 @@ char *plugin_codes [] = {
 
 
 
-int win_plugins[]      = { Asm, Brk, LcV, Out, Prm, Reg, Src, Wat };
-int win_buff_plugins[] = { Asm, Brk, LcV, Out, Prm, Reg, Src, Wat };
+char*
+get_plugin_code (int plugin_index)
+{
+    return plugin_codes [plugin_index];
+}
+
+
+
+int win_plugins[]      = { Asm, Brk, Dbg, LcV, Prg, Reg, Src, Wat };
+int win_buff_plugins[] = { Asm, Brk, Dbg, LcV, Prg, Reg, Wat };
 int win_file_plugins[] = { Src };
 int win_input_plugins[] = {
     Brk,
     Wat
 };
 char *win_input_titles[] = {
-    "(i)nsert (d)elete",
+    "(c)reate  (d)elete",
     "(c)reate  (d)elete"
 };
 
@@ -134,6 +142,7 @@ set_window_plugins (state_t *state)
                     plugin->title, plugin->code, i);
         }
         win->has_input = false;
+        strcpy (win->code, plugin_codes[j]);
     }
 
     // set input windows
@@ -166,6 +175,7 @@ set_window_plugins (state_t *state)
         win->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t));
         win->buff_data->scroll_col = 1;
         win->buff_data->scroll_row = 1;
+        win->buff_data->changed = true;
         win->file_data = NULL;
     }
 }

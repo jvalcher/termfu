@@ -14,7 +14,7 @@
 #include "run_plugin.h"
 
 static void         initialize_ncurses      (void);
-static void         set_signals_et_al       (void);
+static void         set_signals_et_al       ();
 static void         handle_sigint_exit      (int);
 
 
@@ -40,7 +40,7 @@ int main (int argc, char *argv[])
     set_signals_et_al ();
 
     while (debugger.running) {
-        key = getkey ();
+        key = getch ();
         run_plugin (state.plugin_key_index[key], &state);
     }
 
@@ -57,9 +57,8 @@ int main (int argc, char *argv[])
 void
 initialize_ncurses (void)
 {
-#ifndef DEBUG
-
     initscr();         // initialize Ncurses
+
     if (has_colors()) {
         start_color();
         init_pair(RED_BLACK, COLOR_RED, COLOR_BLACK);           // RED_BLACK
@@ -71,11 +70,11 @@ initialize_ncurses (void)
         init_pair(WHITE_BLACK, COLOR_WHITE, COLOR_BLACK);       // WHITE_BLACK
         init_pair(WHITE_BLUE, COLOR_WHITE, COLOR_BLUE);         // WHITE_BLUE
     }
-    cbreak();          // disable need to press Enter after key choice
-    noecho();          // do not display pressed key character
-    curs_set (0);      // hide cursor
 
-#endif
+    cbreak();
+    noecho();
+    curs_set (0);
+    set_escdelay (0);
 }
 
 

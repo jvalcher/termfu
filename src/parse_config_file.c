@@ -25,9 +25,6 @@ static layout_t  *allocate_layout        (void);
 extern char **plugin_codes;
 extern char **win_file_names;
 
-#ifdef DEBUG
-    static void print_plugins (state_t*);
-#endif
 
 
 /*
@@ -94,10 +91,6 @@ parse_config_file (state_t *state)
     }
 
     fclose (fp);
-
-#ifdef DEBUG
-    print_plugins (state);
-#endif
 
     return head_layout;
 }
@@ -248,7 +241,7 @@ static void create_plugins (FILE *file, state_t *state)
 
             plugin_index = get_plugin_code_index (code, state);
             curr_plugin = state->plugins [plugin_index];
-            strncpy (curr_plugin->code, code, PLUGIN_CODE_LEN + 1);
+            strcpy (curr_plugin->code, code);
 
             curr_plugin->index = plugin_index;
 
@@ -460,24 +453,3 @@ static layout_t* create_layout (FILE* file,
     return layout;
 }
 
-
-
-#ifdef DEBUG
-
-static void
-print_plugins (state_t *state)
-{
-    // plugins
-    puts ("");
-    puts ("PLUGINS:");
-    puts ("------------");
-    for (int i = 0; i < state->num_plugins; i++) {
-        printf ("%s : %c : %s\n", 
-                        state->plugins[i]->code, 
-                        state->plugins[i]->key, 
-                        state->plugins[i]->title);
-    }
-    puts ("");
-}
-
-#endif

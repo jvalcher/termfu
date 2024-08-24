@@ -1,3 +1,8 @@
+/*
+    ------------
+    Misc functions
+    ------------
+*/
 
 #ifndef UTILITIES_H
 #define UTILITIES_H
@@ -13,10 +18,11 @@
 
 
 /*
-    ------------
-    Misc functions
-    ------------
+    Log formatted string to DEBUG_OUT_PATH for debugging
+    --------
+    Same usage as printf()
 */
+void logd (const char *formatted_string, ...);
 
 
 
@@ -49,15 +55,6 @@ void  send_command  (state_t *state, char *command_string);
 
 
 /*
-    Get user key input
-    -------
-    - With and without Ncurses activated (debug mode)
-*/
-int  getkey  (void);
-
-
-
-/*
     Set, unset Ncurses attribute with variable 
     -----------
     - Must normally set, unset attributes with wattron/off using constant or macro
@@ -71,24 +68,10 @@ void  unset_nc_attribute  (WINDOW *nc_window, int);
 /*
     Find string in Ncurses window
     ----------
-    - Sets y,x variables to window coordinates
+    - Sets y,x variables to first character's coordinates
     - returns true if string found, false otherwise
 */
 bool  find_window_string  (WINDOW *nc_window, char *string, int *y, int *x);
-
-
-
-/*
-    Copy src_buff null-terminated string to dest_buff
-*/
-void  copy_string_buffer  (char *src_buff, char *dest_buff);
-
-
-
-/*
-    Get current source file path, line number
-*/
-void get_src_file_path_and_line_num (state_t *state);
 
 
 

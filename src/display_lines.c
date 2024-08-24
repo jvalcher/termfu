@@ -1,10 +1,13 @@
 
 #include <string.h>
 #include <ncurses.h>
+#include <stdlib.h>
 
 #include "display_lines.h"
+#include "utilities.h"
 #include "update_window_data/_update_window_data.h"
 
+#define LINE_NUM_TEXT_SPACES  2
 
 static void  display_lines_buff (int key, window_t *win);
 static void  display_lines_file (int key, window_t *win);
@@ -12,15 +15,45 @@ static void  display_lines_file (int key, window_t *win);
 
 
 void
-display_lines (int type,
-               int key,
+display_lines (int       type,
+               int       key,
                window_t *win)
 {
     switch (type) {
+
         case BUFF_TYPE:
+            if (win->buff_data->changed) {
+                set_buff_rows_cols (win);
+                win->buff_data->changed = false;
+            }
+
             display_lines_buff (key, win);
             break;
+
         case FILE_TYPE:
+
+            if (win->file_data->path_changed) {
+
+                // free file pointer, offsets
+                if (win->file_data->ptr != NULL) {
+                    fclose (win->file_data->ptr);
+                }
+                if (win->file_data->offsets != NULL) {
+                    free (win->file_data->offsets);
+                }
+
+                // open new file
+                win->file_data->ptr = fopen (win->file_data->path, "r");
+                if (win->file_data->ptr == NULL) {
+                    pfeme ("Unable to open file path \"%s\" for plugin \"%s\".",
+                            win->file_data->path, win->code);
+                }
+
+                set_file_rows_cols (win);
+
+                win->file_data->path_changed = false;
+            }
+
             display_lines_file (key, win);
             break;
     }
@@ -49,6 +82,9 @@ set_buff_rows_cols (window_t *win)
         }
         ++buff_ptr;
     }
+    
+    win->buff_data->scroll_row = 1;
+    win->buff_data->scroll_col = 1;
 }
 
 
@@ -57,16 +93,30 @@ static void
 display_lines_buff (int key,
                     window_t *win)
 {
-    char   *buff_ptr = win->buff_data->buff,
+    char   *buff_ptr,
            *newline_ptr;
-    int     wy = 0,
-            wx = 0,
+    int     wy,
+            wx,
             data_row;
 
     wclear (win->DWIN);
 
+    buff_ptr = win->buff_data->buff;
+    wy = 0;
+    wx = 0;
+
     switch (key) {
-        case NEW_WIN:
+        case BEG_DATA:
+            win->buff_data->scroll_row = 1;
+            win->buff_data->scroll_col = 1;
+            break;
+        case END_DATA:
+            if (win->buff_data->rows <= win->data_win_rows) {
+                win->buff_data->scroll_row = 1;
+            } else {
+                win->buff_data->scroll_row = win->buff_data->rows - win->data_win_rows;
+            }
+            win->buff_data->scroll_col = 1;
             break;
         case KEY_UP:
             if (win->buff_data->scroll_row > 1) {
@@ -141,15 +191,22 @@ display_lines_buff (int key,
 
 
 /*
-    Display file lines
+    Calculate file rows, columns, etc.
 */
-
 void
-get_file_rows_cols (window_t *win) {
+set_file_rows_cols (window_t *win)
+{
+    char  line [512];
+    int   line_len,
+          max_mid,
+          ch, n;
+
+    win->file_data->first_char = 0;
     win->file_data->rows = 0;
     win->file_data->max_cols = 0;
-    char  line [512];
-    int line_len;
+
+    // calculate rows, max columns
+    // TODO: combine row, max column, offsets calculations into single loop
     while (fgets(line, sizeof(line), win->file_data->ptr) != NULL) {
         line_len = strlen(line);
         if (win->file_data->max_cols < line_len) {
@@ -158,7 +215,34 @@ get_file_rows_cols (window_t *win) {
         win->file_data->rows += 1;
     }
     rewind (win->file_data->ptr);
+
+    // calculate max line number digits
+    n = win->file_data->rows;
+    win->file_data->line_num_digits = 0;
+    while (n != 0) {
+        ++win->file_data->line_num_digits;
+        n /= 10;
+    }
+
+    // calculate newline offsets
+    win->file_data->offsets = (long*) malloc (win->file_data->rows * sizeof(long));
+    if (win->file_data->offsets == NULL) {
+        pfeme ("Failed to allocate offsets array for \"%s\" (%s)", win->file_data->path, win->code);
+    }
+    win->file_data->offsets [0] = 0;
+    for (int i = 1; i < win->file_data->rows; i++) {
+        while ((ch = fgetc (win->file_data->ptr)) != '\n' && ch != EOF) {}
+        if (ch == '\n')
+            win->file_data->offsets[i] = ftell (win->file_data->ptr);
+    }
+    rewind (win->file_data->ptr);
+
+    win->file_data->min_mid = (win->data_win_rows / 2) + 1;
+    max_mid = win->file_data->rows - ((win->data_win_rows - 1) / 2);
+    win->file_data->max_mid = (win->file_data->rows > win->data_win_rows) ? max_mid : win->file_data->min_mid;
+    win->data_win_mid_line = win->file_data->min_mid;
 }
+
 
 
 static void
@@ -166,37 +250,68 @@ display_lines_file (int key,
                     window_t *win) 
 {
     char line[256];
+    char buff[16];
     int  row = 0,
          col = 0,
          print_line,
          line_len,
          line_index,
-         i;
+         i, spaces, win_text_len;
 
     wclear (win->DWIN);
 
     // shift mid_line, first_char
     switch (key) {
-        case 0:
+
+        case BEG_DATA:
             break;
+
+        case LINE_DATA:
+            if (win->file_data->line < win->file_data->min_mid) {
+                win->data_win_mid_line = win->file_data->min_mid;
+            } else if (win->file_data->line > win->file_data->max_mid) {
+                win->data_win_mid_line = win->file_data->max_mid;
+            } else {
+                win->data_win_mid_line = win->file_data->line;
+            }
+
         case KEY_UP:
-            win->data_win_mid_line = (win->data_win_mid_line <= win->file_data->min_mid) ? win->file_data->min_mid : win->data_win_mid_line - 1;
+            win->data_win_mid_line =
+                (win->data_win_mid_line <= win->file_data->min_mid)
+                ? win->file_data->min_mid
+                : win->data_win_mid_line - 1;
             break;
+
         case KEY_DOWN:
-            win->data_win_mid_line = (win->data_win_mid_line >= win->file_data->max_mid) ? win->file_data->max_mid : win->data_win_mid_line + 1;
+            win->data_win_mid_line =
+                (win->data_win_mid_line >= win->file_data->max_mid)
+                ? win->file_data->max_mid
+                : win->data_win_mid_line + 1;
             break;
+
         case KEY_RIGHT:
-            win->file_data->first_char = ((win->file_data->max_cols - win->file_data->first_char) > win->data_win_cols)
+            win->file_data->first_char =
+                ((win->file_data->max_cols - win->file_data->first_char) >
+                    (win->data_win_cols - win->file_data->line_num_digits - LINE_NUM_TEXT_SPACES))
                 ? win->file_data->first_char + 1
-                : win->file_data->max_cols - win->data_win_cols;
+                : win->file_data->max_cols - win->data_win_cols + win->file_data->line_num_digits + LINE_NUM_TEXT_SPACES;
             break;
+
         case KEY_LEFT:
-            win->file_data->first_char = (win->file_data->first_char == 0) ? 0 : win->file_data->first_char - 1;
+            win->file_data->first_char =
+                (win->file_data->first_char == 0)
+                ? 0
+                : win->file_data->first_char - 1;
             break;
+
+        // TODO: file scroll for page up/down, home, end
     }
 
     // calculate first line
     print_line = win->data_win_mid_line - (win->data_win_rows / 2);
+
+    // calculate text length minux line number, spaces
+    win_text_len = win->data_win_cols - win->file_data->line_num_digits - LINE_NUM_TEXT_SPACES;
 
     // print lines
     for (i = 0; i < win->data_win_rows; i++) {
@@ -212,26 +327,36 @@ display_lines_file (int key,
         if (win->file_data->first_char <= line_len) {
 
             // remove newline
-            if (line [line_len - 1] == '\n')
+            if (line [line_len - 1] == '\n') {
                 line_len -= 1;
+            } 
 
             // calculate line length
-            line_len = ((line_len - win->file_data->first_char) <= win->data_win_cols) 
-                        ? line_len - win->file_data->first_char
-                        : win->data_win_cols;
+            else {
+                line_len = ((line_len - win->file_data->first_char) <= win->data_win_cols) 
+                            ? line_len - win->file_data->first_char
+                            : win->data_win_cols;
+            }
 
-            // set line start index
             line_index = win->file_data->first_char;
-        } 
 
-        // if no characters visible
-        else {
+        } else {
+
             line [0] = ' ';
+            line [1] = '\0';
             line_len = 1;
             line_index = 0;
         }
 
-        mvwaddnstr (win->DWIN, row++, col, (const char*)(line + line_index), line_len);
+        spaces = win->file_data->line_num_digits - sprintf (buff, "%d", print_line - 1) + LINE_NUM_TEXT_SPACES;
+
+        // print line
+        if ((print_line - 1) == win->file_data->line) {
+            wattron (win->DWIN, A_REVERSE);
+        }
+        mvwprintw (win->DWIN, row++, col, "%d%*c%.*s",
+                print_line - 1, spaces, ' ', win_text_len, (const char*)(line + line_index));
+        wattroff (win->DWIN, A_REVERSE);
 
         // break if end of file
         if (print_line > win->file_data->rows) {
@@ -239,5 +364,6 @@ display_lines_file (int key,
         }
     }
 
+    refresh ();
     wrefresh(win->DWIN);
 }

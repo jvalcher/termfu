@@ -3,7 +3,6 @@
 gcc -g -Wall -Wextra $(ncursesw5-config --cflags) \
 \
     ../src/display_lines.c\
-    ../src/get_source_file.c\
     ../src/insert_output_marker.c\
     ../src/parse_cli_arguments.c\
     ../src/parse_debugger_output.c\
@@ -11,7 +10,10 @@ gcc -g -Wall -Wextra $(ncursesw5-config --cflags) \
     ../src/utilities.c\
 \
     ../src/update_window_data/_update_window_data.c\
+    ../src/update_window_data/get_assembly_data.c\
     ../src/update_window_data/get_breakpoint_data.c\
+    ../src/update_window_data/get_debugger_output.c\
+    ../src/update_window_data/get_source_file_and_line_number.c\
 \
     ../src/get_popup_window_input/_get_popup_window_input.c\
     ../src/get_popup_window_input/popup_breakpoints.c\

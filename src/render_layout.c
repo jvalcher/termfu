@@ -19,23 +19,15 @@
 //static void      free_nc_window_data      (state_t*);
 static layout_t *get_label_layout      (char*, layout_t*);
 static void      calculate_layout      (layout_t*, state_t*);
-
-#ifndef DEBUG
-    static void      render_header         (layout_t*, state_t*);
-    static void      render_windows        (state_t*);
-    static void      render_header_titles  (layout_t*, state_t*);
-    static WINDOW   *allocate_window       (int, int, int, int);
-    static WINDOW   *allocate_subwin       (WINDOW*, int, int, int, int);
-    static void      render_window         (window_t*);
-    static void      render_window_titles  (state_t*);
-    static void      fix_corners           (state_t*);
-    static int       fix_corner_char       (int, int);
-#endif
-
-#ifdef DEBUG
-    static void      print_layout_info     (layout_t*);
-    static void      get_rows_cols         (int*, int*);
-#endif
+static void      render_header         (layout_t*, state_t*);
+static void      render_windows        (state_t*);
+static void      render_header_titles  (layout_t*, state_t*);
+static WINDOW   *allocate_window       (int, int, int, int);
+static WINDOW   *allocate_subwin       (WINDOW*, int, int, int, int);
+static void      render_window         (window_t*);
+static void      render_window_titles  (state_t*);
+static void      fix_corners           (state_t*);
+static int       fix_corner_char       (int, int);
 
 bool  first_window_t_allocation = true;
 int   scr_rows;
@@ -57,19 +49,9 @@ render_layout (char     *label,
 
     calculate_layout (layout, state);
 
-#ifdef DEBUG
-
-    print_layout_info (layout);
-
-#endif
-
-#ifndef DEBUG
-
     render_header  (layout, state);
 
     render_windows (state);
-
-#endif
 }
 
 
@@ -153,18 +135,15 @@ calculate_layout (layout_t *layout,
              **layout_matrix;
     window_t  *curr_window = NULL;
 
-    // calculate cols, rows in window area below header
+    // Calculate cols, rows in window area below header
     scr_rows = getmaxy (stdscr);
     scr_cols = getmaxx (stdscr);
-#ifdef DEBUG
-    get_rows_cols (&scr_rows, &scr_cols);
-#endif
     header_offset = layout->num_hdr_key_rows + 1;
     win_cols = scr_cols;
     win_rows = scr_rows - header_offset;
 
 
-    // create matrices for number of rows, columns per segment
+    // Create matrices for number of rows, columns per segment
     //
     //      Example: 
     //
@@ -197,11 +176,11 @@ calculate_layout (layout_t *layout,
     floor_segm_rows = win_rows / row_ratio;  // floor row amount per segment
     floor_segm_cols = win_cols / col_ratio;
 
-        // calculate total row, column remainders
+        // Calculate total row, column remainders
     segm_row_rem = win_rows - (floor_segm_rows * row_ratio);
     segm_col_rem = win_cols - (floor_segm_cols * col_ratio);
 
-        // add base segment rows, columns, distribute remainders
+        // Add base segment rows, columns, distribute remainders
     for (y = 0; y < row_ratio; y++) {
         col_rem = segm_col_rem;
         for (x = 0; x < col_ratio; x++) {
@@ -212,7 +191,7 @@ calculate_layout (layout_t *layout,
         segm_row_rem -= 1;
     }
 
-    // create matrices for top left y and x segment coordinates
+    // Create matrices for top left y and x segment coordinates
     //
     //     x - -
     //     - - -        
@@ -235,11 +214,11 @@ calculate_layout (layout_t *layout,
 
     layout_matrix = (char**) layout->win_matrix;
 
-    // create windows
+    // Set window_t structs data
     for (y = 0; y < row_ratio; y++) {
         for (x = 0; x < col_ratio; x++) {
 
-            // if unused segment
+            // If unused segment
             if (used_segm_matrix [y][x] == 0) {
 
                 key = layout_matrix [y][x];
@@ -256,7 +235,7 @@ calculate_layout (layout_t *layout,
 
                 curr_window->selected  = false;
 
-                // calculate rows, cols
+                // Calculate rows, cols
                 //           
                 //         ┌──a
                 //         │ssa
@@ -286,11 +265,11 @@ calculate_layout (layout_t *layout,
                     }
                 }
 
-                // set top left coordinates
+                // Set top left coordinates
                 curr_window->y = segm_ys [y][x];
                 curr_window->x = segm_xs [y][x];
 
-                // overlap borders
+                // Overlap borders
                 if (y > 0) {
                     curr_window->y -= 1;
                     curr_window->rows += 1;
@@ -300,7 +279,7 @@ calculate_layout (layout_t *layout,
                     curr_window->cols += 1;
                 }
 
-                // set used segments
+                // Set used segments
                 //
                 //      1110
                 //      1110
@@ -312,25 +291,12 @@ calculate_layout (layout_t *layout,
                         used_segm_matrix [i][j] = 1;
                     }
                 }
-
-#ifdef DEBUG
-                puts ("");
-                printf ("WINDOW: %s (%c)\n", state->plugins[plugin_index]->title, state->plugins[plugin_index]->key);
-                puts   ("------------");
-                printf ("x: %d\n", curr_window->x);
-                printf ("cols: %d\n", curr_window->cols);
-                printf ("y: %d\n", curr_window->y);
-                printf ("rows: %d\n", curr_window->rows);
-                puts   ("");
-#endif
             }
         }
     }
 }
 
 
-
-#ifndef DEBUG
 
 /*
     Render header WINDOW
@@ -342,12 +308,6 @@ static void
 render_header (layout_t *layout, 
                state_t *state)
 {
-#ifdef DEBUG
-    (void) state;
-#endif
-
-#ifndef DEBUG
-
     WINDOW *header = allocate_window (header_offset, COLS, 0, 0);
     state->header = header;
     int title_len  = strlen (PROGRAM_NAME);
@@ -371,23 +331,16 @@ render_header (layout_t *layout,
     wrefresh (header);
 
     render_header_titles (layout, state);
-
-#endif
 }
 
 
 
 /*
-    Render WINDOWs
+    Render Ncurses WINDOWs
 */
 static void 
 render_windows (state_t *state)
 {
-#ifdef DEBUG
-    (void) state;
-#endif
-
-#ifndef DEBUG
     int       i;
 
     for (i = 0; i < state->num_plugins; i++) {
@@ -399,15 +352,8 @@ render_windows (state_t *state)
     fix_corners (state);
 
     render_window_titles (state);
-
-#endif
 }
 
-
-
-/******************
-  Helper functions
- ******************/
 
 
 /*
@@ -621,7 +567,6 @@ fix_corners (state_t *state)
         win->border [5] = tr;
         win->border [6] = bl;
         win->border [7] = br;
-
     }
 }
 
@@ -674,8 +619,6 @@ fix_corner_char (int y,
     //    l c r       ─ c   -->      ==
     //      b                      t, r, b, l   
     //                            {1, 0, 0, 1}
-    //
-    // TODO: make quicker with bitwise operations
     //
     int borders [4] = {0};
     int horiz_line  = ACS_HLINE & A_CHARTEXT;
@@ -793,7 +736,7 @@ render_window_titles (state_t *state)
 
 
 /*
-    Allocate new Ncurses windows
+    Allocate Ncurses window
 */
 static WINDOW* 
 allocate_window (int rows,
@@ -810,6 +753,9 @@ allocate_window (int rows,
 
 
 
+/*
+   Allocate Ncurses subwindow
+*/
 static WINDOW* 
 allocate_subwin (WINDOW* parent_win,
                  int rows,
@@ -819,59 +765,8 @@ allocate_subwin (WINDOW* parent_win,
 {
     WINDOW *win = derwin (parent_win, rows, cols, y, x);
     if (win == NULL)
-        pfeme ("Unable to create window\n");
+        pfeme ("Unable to create subwindow (rows: %d, cols: %d, y: %d, x: %d)\n",
+                    rows, cols, y, x);
     return win;
 }
 
-#endif  //  #ifndef DEBUG
-
-
-
-#ifdef DEBUG
-
-/*
-    Print layout, plugin information for debugging
-    ---------
-    - Data for first <n> layout(s)
-    - Current layout's plugin key bindings
-    - Called in render_layout.c -> render_layout()
-*/
-static void print_layout_info (layout_t *layout)
-{
-    int i, j;
-
-    // layouts
-    puts   ("");
-    printf ("LAYOUT: %s\n", layout->label);
-    puts   ("------------");
-    puts   ("");
-    
-    printf ("Window row ratio: %d\n", layout->row_ratio);
-    printf ("Window col ratio: %d\n", layout->col_ratio);
-    printf ("Header keys: \n\n%s\n", layout->hdr_key_str);
-    printf ("Window segment matrix: \n");
-    for (i = 0; i < layout->row_ratio; i++) {
-        for (j = 0; j < layout->col_ratio; j++) {
-            printf ("%c", layout->win_matrix [i][j]);
-        }
-        puts ("");
-    }
-    puts ("");
-}
-
-
-
-static void
-get_rows_cols (int *rows, int *cols)
-{
-    struct winsize w;
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1) {
-        perror("ioctl");
-        return 1;
-    }
-    *rows = w.ws_row;
-    *cols = w.ws_col;
-}
-
-
-#endif

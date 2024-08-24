@@ -6,56 +6,9 @@
 #include <ncurses.h>
 #include <stdlib.h>
 
+#include "../src/data.h"
+
 #define DBUFF_LEN   4096
-
-typedef struct {
-
-    FILE              *ptr;
-    char               path [256];
-    bool               path_changed;
-    int                first_char;
-    int                rows;
-    int                max_cols;
-    int                min_mid;
-    int                max_mid;
-    unsigned long int *offsets;
-
-} file_data_t;
-
-
-typedef struct {
-
-    WINDOW  *WIN;
-    WINDOW  *IWIN;
-    WINDOW  *DWIN;
-
-    bool     selected;
-
-    int      rows;                   
-    int      cols;                   
-    int      y;                      
-    int      x;                      
-    int      border [8];
-
-    int      input_rows;
-    int      input_cols;
-    int      input_y;
-    int      input_x;
-    char    *input_title;
-    char    *input_prompt;
-    bool     has_input;
-    char    *input_inactive_str;
-    char    *input_active_str;
-
-    int      data_win_cols;
-    int      data_win_rows;
-    int      data_win_y;
-    int      data_win_x;
-    int      data_win_mid_line;
-
-    file_data_t *file_data;
-
-} window_t;
 
 void get_num_file_rows_cols (window_t* win);
 void display_lines_file (int key, window_t* win);
@@ -82,7 +35,7 @@ int main (void)
     get_num_file_rows_cols (win);
 
         // get file line offsets
-    win->file_data->offsets = malloc ((size_t) win->file_data->rows * sizeof(long int));
+    win->file_data->offsets = (unsigned long*) malloc (win->file_data->rows * sizeof(unsigned long));
     if (win->file_data->offsets == NULL) {
         perror ("Failed to allocate offsets array");
         return 1;
@@ -102,9 +55,7 @@ int main (void)
     win->x = 20;
 
     char *input_title = "(i)nput";
-    char *input_prompt = "Input: ";
     win->input_title = input_title;
-    win->input_prompt = input_prompt;
     win->input_rows = 1;
     win->input_cols = win->cols - 2;
     win->input_y = 1;

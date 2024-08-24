@@ -12,6 +12,7 @@
 #include "utilities.h"
 #include "pulse_header_title_color.h"
 #include "update_window_data/_update_window_data.h"
+#include "update_window_data/get_source_file_and_line_number.h"
 
 
 
@@ -54,7 +55,9 @@ send_debugger_command (int      plugin_index,
         break;
     case Run:
         switch (curr_debugger) {
-        case (DEBUGGER_GDB): send_command (state, "-exec-run\n"); break;
+        case (DEBUGGER_GDB): 
+            send_command (state, "-exec-run\n");
+            break;
         }
         break;
     case Unt:
@@ -73,10 +76,12 @@ send_debugger_command (int      plugin_index,
     if (!quitting) {
 
         insert_output_end_marker (state);
-
         parse_debugger_output (state);
 
-        update_windows (state, 7, Brk, LcV, Out, Prm, Reg, Src, Wat);
+        update_window (Dbg, state);
+        update_window (Prg, state);
+
+        update_windows (state, 6, Asm, Brk, LcV, Reg, Src, Wat);
     }
 
     pulse_header_title_color (plugin_index, state, OFF);

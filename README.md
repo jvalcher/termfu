@@ -1,14 +1,14 @@
 
 # term_debug
 
-A multi-language terminal debugger
+A multi-language TUI debugger
 
 **\*\* In development \*\***
 
 
 ## Configuration
 
-Unique, three-character, case-sensitive "plugin" codes are each associated with a specific debugger action or window. The codes are bound to user-defined shortcut keys. The key characters are used to create custom layouts.
+Unique, three-character, case-sensitive "plugin" codes are each associated with a specific debugger action or window. The codes are bound to user-defined shortcut keys. The keys associated with windows are used to create custom ASCII art layouts.
 <br />
 
 ### Example configuration...

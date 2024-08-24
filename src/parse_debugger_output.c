@@ -42,13 +42,6 @@ parse_debugger_output (state_t *state)
                 break;
 
             case READER_DONE:
-#ifdef DEBUG
-                printf ("CLI BUFFER:\n %s\n", state->debugger->cli_buffer);
-                printf ("PROGRAM BUFFER:\n %s\n", state->debugger->program_buffer);
-                printf ("DATA BUFFER:\n %s\n", state->debugger->data_buffer);
-#endif
-
-            case READER_EXIT:
                 running = false;
                 break;
         }
@@ -58,14 +51,15 @@ parse_debugger_output (state_t *state)
 
 
 /*
-    Parse GDB/MI debuger output
+    Parse GDB/MI output
     --------
+
     "<first line character>" :  <destination buffer>
-    -----------------------------
-    "~" :  state->debugger->cli_buffer
-    "^" :  state->debugger->data_buffer
-    "*" :  state->debugger->async_buffer
-    ""  :  state->debugger->program_buffer
+
+    "~" :  state->debugger->cli_buffer     (GDB CLI console window output)
+    "^" :  state->debugger->data_buffer    (Data values e.g. source file path, line number, breakpoints)
+    "*" :  state->debugger->async_buffer   (Async state change info e.g. started, stopped)
+    ""  :  state->debugger->program_buffer (Debugged program's CLI output)
 */
 void
 parse_debugger_output_gdb (reader_t *reader)
@@ -89,6 +83,7 @@ parse_debugger_output_gdb (reader_t *reader)
 
         // set type of output for new line
         if (is_newline && *buff_ptr != '\n') {
+
             is_newline = false;
 
             // cli
@@ -109,7 +104,7 @@ parse_debugger_output_gdb (reader_t *reader)
                 ++buff_ptr;
             }
 
-            // program output
+            // program
             else if (isalpha (*buff_ptr)) {
                 is_prog_output = true;
             }
@@ -117,6 +112,7 @@ parse_debugger_output_gdb (reader_t *reader)
 
         // end of line
         else if (*buff_ptr == '\n') {
+
             is_newline = true;
 
             // gdb
@@ -172,7 +168,7 @@ parse_debugger_output_gdb (reader_t *reader)
 
                 //  beginning of command output marker
                 //
-                //      >START:<plugin code>:<output file path>:
+                //      ">START\n"
                 //
                 if (*(buff_ptr + 1) == 'S' && 
                     *(buff_ptr + 2) == 'T' && 
@@ -180,18 +176,15 @@ parse_debugger_output_gdb (reader_t *reader)
                     *(buff_ptr + 4) == 'R' && 
                     *(buff_ptr + 5) == 'T') {
 
-                    // get plugin code
                     buff_ptr += 7;
-
                     reader->state = READER_RECEIVING;
-
                     is_newline = true;
                     is_gdb_output = false;
                 }
 
                 //  end of command output marker
                 //
-                //      >END:<plugin code>:
+                //     ">END\n"
                 //
                 else if (*(buff_ptr + 1) == 'E' && 
                          *(buff_ptr + 2) == 'N' && 
@@ -200,24 +193,13 @@ parse_debugger_output_gdb (reader_t *reader)
                     *reader->program_buffer_ptr = '\0';
                     *reader->cli_buffer_ptr = '\0';
                     *reader->data_buffer_ptr = '\0';
+                    *reader->async_buffer_ptr = '\0';
 
                     reader->state = READER_DONE;
 
                     break;
                 }
 
-                // exit marker
-                //
-                //      >EXIT
-                //
-                else if (*(buff_ptr + 1) == 'E' && 
-                         *(buff_ptr + 2) == 'X' && 
-                         *(buff_ptr + 3) == 'I' && 
-                         *(buff_ptr + 4) == 'T') {
-
-                    reader->state = READER_EXIT;
-                    break;
-                }
             } // ==  '>'
 
             // == char

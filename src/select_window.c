@@ -23,80 +23,89 @@ select_window (int      plugin_index,
                state_t *state)
 {
     int           key,
-                  file_type;
+                  type;
     bool          in_loop         = true,
                   key_not_pressed = true;
     window_t     *win;
 
+    // set window type
     if (state->plugins[plugin_index]->win->has_data_buff) {
-        file_type = BUFF_TYPE;
+        type = BUFF_TYPE;
     } else {
-        file_type = FILE_TYPE;
+        type = FILE_TYPE;
     }
 
     win = state->plugins[plugin_index]->win;
 
     select_window_color (plugin_index, state);
 
+    keypad (stdscr, TRUE);
+
     while (in_loop) {
 
-        key = getkey();
+        key = getch ();
 
         // TODO: pg up/down, home, end
         switch (key) {
         case KEY_UP:
-            display_lines (file_type, KEY_UP, win);
+            display_lines (type, KEY_UP, win);
             key_not_pressed = false;
             break;
         case KEY_DOWN:
-            display_lines (file_type, KEY_DOWN, win);
+            display_lines (type, KEY_DOWN, win);
             key_not_pressed = false;
             break;
         case KEY_RIGHT:
-            display_lines (file_type, KEY_RIGHT, win);
+            display_lines (type, KEY_RIGHT, win);
             key_not_pressed = false;
             break;
         case KEY_LEFT:
-            display_lines (file_type, KEY_LEFT, win);
+            display_lines (type, KEY_LEFT, win);
             key_not_pressed = false;
             break;
         case ESC:
             in_loop = false;
             key_not_pressed = false;
+            break;
         }
 
         // custom keys
         if (in_loop && key_not_pressed) {
 
-
-            // misc, navigation
-            if  (key == state->plugins[Bak]->key) {
+            // deselect window
+            if  (key == state->plugins[Bak]->key ||
+                 key == state->plugins[plugin_index]->key) {
                 in_loop = false;
                 continue;
-            } 
+            }
+
+            // quit
             else if (key == state->plugins[Qut]->key) {
-                in_loop                  = false;
+                in_loop = false;
                 state->debugger->running = false;
                 continue;
             }
+
+            // custom navigation
             else if (key == state->plugins[ScU]->key) {
-                display_lines (file_type, KEY_UP, win);
+                display_lines (type, KEY_UP, win);
                 continue;
             } 
             else if (key == state->plugins[ScD]->key) {
-                display_lines (file_type, KEY_DOWN, win);
+                display_lines (type, KEY_DOWN, win);
                 continue;
             } 
             else if (key == state->plugins[ScL]->key) {
-                display_lines (file_type, KEY_LEFT, win);
+                display_lines (type, KEY_LEFT, win);
                 continue;
             } 
             else if (key == state->plugins[ScR]->key) {
-                display_lines (file_type, KEY_RIGHT, win);
+                display_lines (type, KEY_RIGHT, win);
                 continue;
             }
 
             // plugin window keys
+            // TODO: Add plugins for each window action so they can be customized
             switch (plugin_index) {
 
             // breakpoints
@@ -117,10 +126,18 @@ select_window (int      plugin_index,
     }
 
     deselect_window_color ();
+
+    keypad (stdscr, FALSE);
 }
 
 
 
+/*
+    Change Ncurses window title color to indicate focus
+    ----------- 
+    // TODO: change top, right, left borders color
+    // - corrected corner characters stored in state->plugins[xxx]->win->border
+*/
 static void
 select_window_color (int      plugin_index,
                      state_t *state)
@@ -132,9 +149,6 @@ select_window_color (int      plugin_index,
     curr_title = state->plugins[plugin_index]->title;
 
     curr_win->selected = true;
-
-
-#ifndef DEBUG
 
     size_t i;
     int    x, y;
@@ -165,8 +179,6 @@ select_window_color (int      plugin_index,
         wattrset (curr_win->WIN, A_NORMAL);
         wrefresh  (curr_win->WIN);
     }
-
-#endif
 }
 
 
@@ -176,8 +188,6 @@ deselect_window_color (void)
 {
 
     curr_win->selected = false;
-
-#ifndef DEBUG
 
     size_t i;
     int x, y;
@@ -209,11 +219,7 @@ deselect_window_color (void)
         wrefresh  (curr_win->WIN);
     }
 
-#endif
-
     curr_win = NULL;
-    curr_title [0] = '\0';
+    curr_title = NULL;
 }
-
-
 

@@ -18,13 +18,13 @@ enum {
     Bld,
     Brk,
     Con,
+    Dbg,
     Fin,
     Kil,
     Lay,
     LcV,
     Nxt,
-    Out,
-    Prm,
+    Prg,
     Qut,
     Reg,
     Run,
@@ -37,6 +37,14 @@ enum {
     Unt,
     Wat
 };
+
+
+
+/*
+   Get plugin code from its index
+*/
+char* get_plugin_code (int plugin_index);
+
 
 
 /*

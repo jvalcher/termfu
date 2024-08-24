@@ -14,9 +14,13 @@
 #include "parse_debugger_output.h"
 #include "utilities.h"
 #include "insert_output_marker.h"
+#include "update_window_data/get_source_file_and_line_number.h"
+#include "display_lines.h"
+#include "update_window_data/_update_window_data.h"
+#include "plugins.h"
 
 static void   configure_debugger          (debugger_t*);
-static void   start_debugger_proc         (debugger_t*);
+static void   start_debugger_proc         (state_t*);
 
 // TODO: 
 //  - get this via plugins/_interface
@@ -30,7 +34,7 @@ start_debugger (state_t *state)
 {
     configure_debugger (state->debugger);
 
-    start_debugger_proc (state->debugger);
+    start_debugger_proc (state);
 
     insert_output_end_marker (state);
 
@@ -52,12 +56,14 @@ configure_debugger (debugger_t *debugger)
     Start debugger process
 */
 static void
-start_debugger_proc (debugger_t *debugger)
+start_debugger_proc (state_t *state)
 {
     char  **cmd;
     pid_t   debugger_pid;
     int     debug_in_pipe  [2],
             debug_out_pipe [2];
+
+    debugger_t *debugger = state->debugger;
     
     // create pipes
     if (pipe (debug_in_pipe)  == -1 || 
@@ -65,8 +71,8 @@ start_debugger_proc (debugger_t *debugger)
     {
         pfeme ("Debugger pipe creation failed");
     }
-    debugger->stdin_pipe      = debug_in_pipe [PIPE_WRITE];
-    debugger->stdout_pipe     = debug_out_pipe [PIPE_READ];
+    debugger->stdin_pipe  = debug_in_pipe [PIPE_WRITE];
+    debugger->stdout_pipe = debug_out_pipe [PIPE_READ];
 
     // set command
     switch (debugger->curr) {
@@ -105,6 +111,9 @@ start_debugger_proc (debugger_t *debugger)
 
         close (debug_in_pipe   [PIPE_READ]);
         close (debug_out_pipe  [PIPE_WRITE]);
+
+        get_source_file_path_and_line_number (state);
+        display_lines (FILE_TYPE, LINE_DATA, state->plugins[Src]->win);
     }
 }
 

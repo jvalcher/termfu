@@ -31,34 +31,48 @@ get_assembly_data_gdb (state_t *state)
          *key_func_name = "func-name=\"",
          *key_inst      = "inst=\"";
     char *src_ptr,
-         *dest_ptr;
+         *dest_ptr,
+         *cmd;
 
     win      = state->plugins[Brk]->win;
     src_ptr  = state->debugger->data_buffer;
     dest_ptr = win->buff_data->buff;
 
     // send debugger command
+    cmd = concatenate_strings (3, "-data-disassemble -f ",
+                                  state->plugins[Src]->win->file_data->path,
+                                  " -l 1 -- 0\n");
     insert_output_start_marker (state);
-    send_command (state, "-break-info\n");
+    send_command (state, cmd);
     insert_output_end_marker (state);
     parse_debugger_output (state);
 
-    // format data
+    // create buffer
     if (strstr (src_ptr, "error") == NULL) {
 
-        // get breakpoint number
-        while ((src_ptr = strstr (src_ptr, key_number)) != NULL) {
-            src_ptr += strlen (key_number);
+        // get address
+        while ((src_ptr = strstr (src_ptr, key_address)) != NULL) {
+            src_ptr += strlen (key_address);
             while (*src_ptr != '\"') {
                 *dest_ptr++ = *src_ptr++;
             }
 
-            *dest_ptr++ = ':';
+            *dest_ptr++ = ' ';
             *dest_ptr++ = ' ';
 
-            // get location
-            src_ptr = strstr (src_ptr, key_orig_loc);
-            src_ptr += strlen (key_orig_loc);
+            // get function
+            src_ptr = strstr (src_ptr, key_func_name);
+            src_ptr += strlen (key_func_name);
+            while (*src_ptr != '\"') {
+                *dest_ptr++ = *src_ptr++;
+            }
+
+            *dest_ptr++ = ' ';
+            *dest_ptr++ = ' ';
+
+            // get command
+            src_ptr = strstr (src_ptr, key_inst);
+            src_ptr += strlen (key_inst);
             while (*src_ptr != '\"') {
                 *dest_ptr++ = *src_ptr++;
             }
@@ -67,8 +81,10 @@ get_assembly_data_gdb (state_t *state)
         }
         *dest_ptr = '\0';
 
-        set_buff_rows_cols (win);
+        win->buff_data->changed = true;
     }
+
+    free (cmd);
 }
 
 

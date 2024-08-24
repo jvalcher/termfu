@@ -13,9 +13,9 @@ parse_cli_arguments (int argc,
 {
     // TODO: add flag options
         // -h  - help
-        // -f  - config file path
-        // -d  - manually choose debugger
-        // -l  - set initial layout
+        // -d  - choose debugger
+        // -f  - config file path (optional)
+        // -l  - set initial layout (optional)
     if (argc > 1) {
         debugger->prog_path = argv [1];
     } else {

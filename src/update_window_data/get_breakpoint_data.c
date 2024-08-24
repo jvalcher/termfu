@@ -42,20 +42,21 @@ get_breakpoint_data_gdb (state_t *state)
     insert_output_end_marker (state);
     parse_debugger_output (state);
 
-    // format data
+    // create buffer
     if (strstr (src_ptr, "error") == NULL) {
 
         // get breakpoint number
         while ((src_ptr = strstr (src_ptr, key_number)) != NULL) {
+           *dest_ptr++ = '(';
             src_ptr += strlen (key_number);
             while (*src_ptr != '\"') {
                 *dest_ptr++ = *src_ptr++;
             }
 
-            *dest_ptr++ = ':';
+            *dest_ptr++ = ')';
             *dest_ptr++ = ' ';
 
-            // get location
+            // get file:line
             src_ptr = strstr (src_ptr, key_orig_loc);
             src_ptr += strlen (key_orig_loc);
             while (*src_ptr != '\"') {
@@ -66,7 +67,7 @@ get_breakpoint_data_gdb (state_t *state)
         }
         *dest_ptr = '\0';
 
-        set_buff_rows_cols (win);
+        win->buff_data->changed = true;
     }
 }
 
