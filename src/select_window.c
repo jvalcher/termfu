@@ -114,7 +114,7 @@ select_window (int      plugin_index,
                 case 'd': 
                     delete_breakpoint (state);
                     break;   // TODO: breaks
-                case 'i':
+                case 'c':
                     insert_breakpoint (state);
                     break;
             }
