@@ -14,45 +14,45 @@ Unique, three-character, case-sensitive "plugin" codes are each associated with 
 ### Example configuration...
 
 ```
-[ keys ]
+[ plugins ]
 
-Qut : q : (q)uit
-Bak : b : (p)rev
-Bld : u : b(u)ilds
-Lay : l : (l)ayouts
-Run : r : (r)un
-Nxt : n : (n)ext
-Stp : s : (s)tep
-Con : c : (c)ontinue
-Fin : i : f(i)nish
-Kil : k : (k)ill
-Brk : b : (b)reakpoints
-Src : f : source (f)ile
 Asm : a : (a)ssembly
-Reg : e : r(e)gisters
-Prm : m : pro(m)pt
-Wat : w : (w)atch
+Bak : b : (b)ack
+Bld : u : b(u)ilds
+Brk : e : br(e)akpoints
+Con : c : (c)ontinue
+Dbg : d : (d)ebug out
+Fin : f : (f)inish
+Kil : k : (k)ill
+Lay : l : (l)ayouts
 LcV : v : local (v)ars
-Out : o : (o)utput
+Nxt : n : (n)ext
+Prg : p : (p)rogram out
+Qut : q : (q)uit
+Reg : g : re(g)isters
+Run : r : (r)un
+Src : o : s(o)urce file
+Stp : s : (s)tep
+Wat : w : (w)atch
 
 
 [ layout : gdb_debug_1 ]
 
 >h
-ulpq
+ulbq
 rnscfk
-
 >w
-bffaa 
-wffaa
-lffaa
-eoopp
+eooaa 
+wooaa
+vooaa
+gppdd
+
 ```
 
 
 ### Resulting layout...
 
-<img src='./misc/screenshots/layout.png' height='500px'>
+<img src='./misc/layout.png' height='500px'>
 <br />
 
 
