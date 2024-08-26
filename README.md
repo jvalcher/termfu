@@ -1,5 +1,5 @@
 
-# Terminal Debugger
+# termvu
 
 A multi-language TUI debugger
 
