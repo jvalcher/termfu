@@ -62,7 +62,6 @@ get_breakpoint_data_gdb (state_t *state)
             while (*src_ptr != '\"') {
                 *dest_ptr++ = *src_ptr++;
             }
-
             *dest_ptr++ = '\n';
         }
         *dest_ptr = '\0';

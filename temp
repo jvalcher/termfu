@@ -1,0 +1,27 @@
+
+while (running) 
+{
+
+    // read debugger stdout
+    reader.output_line_buffer[0] = '\0';
+    bytes_read = read (state->debugger->stdout_pipe, 
+                        reader.output_line_buffer,
+                        sizeof (reader.output_line_buffer) - 1);
+    reader.output_line_buffer [bytes_read] = '\0';
+
+    // parse output
+    switch (state->debugger->curr) {
+        case DEBUGGER_GDB:
+            parse_debugger_output_gdb (&reader);
+            break;
+    }
+
+    switch (reader.state) {
+        case READER_RECEIVING:
+            break;
+
+        case READER_DONE:
+            running = false;
+            break;
+    }
+}

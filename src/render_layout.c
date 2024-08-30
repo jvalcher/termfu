@@ -314,7 +314,7 @@ render_header (layout_t *layout,
 
     // print
         // program name
-    wattron (header, COLOR_PAIR(MAIN_TITLE_COLOR) | A_BOLD | A_UNDERLINE);
+    wattron (header, COLOR_PAIR(MAIN_TITLE_COLOR) | A_BOLD);
     mvwprintw (header, 1, 2, "%s", PROGRAM_NAME);
     wattrset (header, A_NORMAL);
 
@@ -452,22 +452,17 @@ render_window (window_t *win)
     if (win->WIN == NULL) {
         pfeme  ("Unable to create window\n");
     }
-
-    // render parent window border
     wattron  (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
     wborder  (win->WIN, 0,0,0,0,0,0,0,0);
     wattroff (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
-
     wrefresh (win->WIN);
 
-    // input window
+    // input title subwindow
     win->input_rows = 0;
     win->input_y = 0;
     win->input_cols = 0;
     win->input_x = 0;
-
     if (win->has_input) {
-
         win->input_rows = 1;
         win->input_cols = win->cols - 2;
         win->input_y = 1;
@@ -482,16 +477,13 @@ render_window (window_t *win)
         if (win->IWIN == NULL) {
             pfeme  ("Unable to create input window\n");
         }
-
-        // print input title
-        wattron (win->IWIN, COLOR_PAIR(WINDOW_INPUT_COLOR));
+        wattron   (win->IWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
         mvwprintw (win->IWIN, 0, 0, "%*c%s%*c", left_spaces, ' ', win->input_title, right_spaces, ' ');
-        wattroff (win->IWIN, COLOR_PAIR(WINDOW_INPUT_COLOR));
-
-        wrefresh (win->IWIN);
+        wattroff  (win->IWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
+        wrefresh  (win->IWIN);
     }
 
-    // data window
+    // data subwindow
     win->data_win_rows = win->rows - win->input_rows - 2;
     win->data_win_cols = win->cols - 2;
     win->data_win_y = win->input_y + 1;

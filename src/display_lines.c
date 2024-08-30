@@ -5,20 +5,25 @@
 
 #include "display_lines.h"
 #include "utilities.h"
+#include "plugins.h"
 #include "update_window_data/_update_window_data.h"
 
 #define LINE_NUM_TEXT_SPACES  2
 
-static void  display_lines_buff (int key, window_t *win);
-static void  display_lines_file (int key, window_t *win);
+static void  display_lines_buff  (int, int, state_t*);
+static void  display_lines_file  (int, window_t*);
+static void  format_win_data     (int, state_t*);
 
 
 
 void
 display_lines (int       type,
                int       key,
-               window_t *win)
+               int       plugin_index,
+               state_t  *state)
 {
+    window_t *win = state->plugins[plugin_index]->win;
+
     switch (type) {
 
         case BUFF_TYPE:
@@ -27,7 +32,7 @@ display_lines (int       type,
                 win->buff_data->changed = false;
             }
 
-            display_lines_buff (key, win);
+            display_lines_buff (key, plugin_index, state);
             break;
 
         case FILE_TYPE:
@@ -57,6 +62,8 @@ display_lines (int       type,
             display_lines_file (key, win);
             break;
     }
+
+    format_win_data (plugin_index, state);
 }
 
 
@@ -90,26 +97,33 @@ set_buff_rows_cols (window_t *win)
 
 
 static void
-display_lines_buff (int key,
-                    window_t *win)
+display_lines_buff (int      key,
+                    int      plugin_index,
+                    state_t *state)
 {
     char   *buff_ptr,
            *newline_ptr;
     int     wy,
             wx,
             data_row;
+    window_t *win;
 
-    wclear (win->DWIN);
-
+    win = state->plugins[plugin_index]->win;
     buff_ptr = win->buff_data->buff;
     wy = 0;
     wx = 0;
 
+    wclear (win->DWIN);
+
     switch (key) {
+
+        // TODO: add persist scroll location option
+
         case BEG_DATA:
             win->buff_data->scroll_row = 1;
             win->buff_data->scroll_col = 1;
             break;
+
         case END_DATA:
             if (win->buff_data->rows <= win->data_win_rows) {
                 win->buff_data->scroll_row = 1;
@@ -118,21 +132,25 @@ display_lines_buff (int key,
             }
             win->buff_data->scroll_col = 1;
             break;
+
         case KEY_UP:
             if (win->buff_data->scroll_row > 1) {
                 --win->buff_data->scroll_row;
             }
             break;
+
         case KEY_DOWN:
             if ((win->buff_data->rows - win->buff_data->scroll_row) >= win->data_win_rows) {
                 ++win->buff_data->scroll_row;
             }
             break;
+            
         case KEY_LEFT:
             if (win->buff_data->scroll_col > 1) {
                 --win->buff_data->scroll_col;
             }
             break;
+
         case KEY_RIGHT:
             if ((win->buff_data->max_cols - win->buff_data->scroll_col) >= win->data_win_cols) {
                 ++win->buff_data->scroll_col;
@@ -159,7 +177,9 @@ display_lines_buff (int key,
             } else {
                 len = len - (win->buff_data->scroll_col - 1);
             }
+
             mvwprintw (win->DWIN, wy, wx, "%.*s", len, buff_ptr + (win->buff_data->scroll_col - 1));
+
         } else {
             mvwprintw (win->DWIN, wy, wx, " ");
         }
@@ -179,7 +199,18 @@ display_lines_buff (int key,
             } else {
                 len = len - win->buff_data->scroll_col;
             }
+
             mvwprintw(win->DWIN, wy, wx, "%.*s", len, buff_ptr + win->buff_data->scroll_col);
+
+            // remove formatting
+            switch (plugin_index) {
+            case Asm:
+                if ((buff_ptr = strstr (win->buff_data->buff, state->plugins[Src]->win->file_data->addr)) != NULL) {
+                    
+                }
+            }
+
+
         } else {
             mvwprintw(win->DWIN, wy, wx, " ");
         }
@@ -274,6 +305,7 @@ display_lines_file (int key,
             } else {
                 win->data_win_mid_line = win->file_data->line;
             }
+            break;
 
         case KEY_UP:
             win->data_win_mid_line =
@@ -350,13 +382,18 @@ display_lines_file (int key,
 
         spaces = win->file_data->line_num_digits - sprintf (buff, "%d", print_line - 1) + LINE_NUM_TEXT_SPACES;
 
-        // print line
+        // highlight current line
         if ((print_line - 1) == win->file_data->line) {
             wattron (win->DWIN, A_REVERSE);
         }
+
+        // print line
         mvwprintw (win->DWIN, row++, col, "%d%*c%.*s",
                 print_line - 1, spaces, ' ', win_text_len, (const char*)(line + line_index));
-        wattroff (win->DWIN, A_REVERSE);
+
+        if ((print_line - 1) == win->file_data->line) {
+            wattroff (win->DWIN, A_REVERSE);
+        }
 
         // break if end of file
         if (print_line > win->file_data->rows) {
@@ -367,3 +404,54 @@ display_lines_file (int key,
     refresh ();
     wrefresh(win->DWIN);
 }
+
+
+
+static void
+format_win_data (int plugin_index,
+                 state_t *state)
+{
+    int       i, j, 
+              m, n,
+              ch,
+              rows, cols;
+    size_t    k, si;
+    window_t *win;
+    char     *needle;
+
+    win = state->plugins[plugin_index]->win;
+
+    // assembly
+    if (plugin_index == Asm) {
+
+        // highlight current hex address (wherever it occurs)
+        si = 0;
+        getmaxyx (win->DWIN, rows, cols);
+        needle = state->plugins[Src]->win->file_data->addr;
+        for (i = 0; i < rows; i++) {
+            for (j = 0; j < cols; j++) {
+                ch = mvwinch (win->DWIN, i, j);
+                if ((char) ch == needle [si]) {
+                    if (si == 0) {
+                        m = i;
+                        n = j;
+                    }
+                    si += 1;
+                    if (si == strlen (needle)) {
+                        wattron (win->DWIN, A_REVERSE);
+                        for (k = 0; k < strlen (needle); k++) {
+                            mvwprintw (win->DWIN, m, n + k, "%c", needle[k]);
+                        }
+                        wattroff (win->DWIN, A_REVERSE);
+                        wrefresh (win->DWIN);
+                    }
+                } 
+                else {
+                    si = 0;
+                }
+            }
+        }
+    }
+
+}
+

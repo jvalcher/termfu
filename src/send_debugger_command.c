@@ -12,7 +12,6 @@
 #include "utilities.h"
 #include "pulse_header_title_color.h"
 #include "update_window_data/_update_window_data.h"
-#include "update_window_data/get_source_file_and_line_number.h"
 
 
 
@@ -20,7 +19,7 @@ void
 send_debugger_command (int      plugin_index,
                        state_t *state)
 {
-    bool quitting = false;
+    bool exiting = false;
     int curr_debugger = state->debugger->curr;
 
     pulse_header_title_color (plugin_index, state, ON);
@@ -30,27 +29,37 @@ send_debugger_command (int      plugin_index,
     switch (plugin_index) {
     case Con:
         switch (curr_debugger) {
-        case (DEBUGGER_GDB): send_command (state, "-exec-continue\n"); break;
+        case (DEBUGGER_GDB):
+            send_command (state, "-exec-continue\n");
+            break;
         }
         break;
     case Fin:
         switch (curr_debugger) {
-        case (DEBUGGER_GDB): send_command (state, "-exec-finish\n"); break;
+        case (DEBUGGER_GDB):
+            send_command (state, "-exec-finish\n");
+            break;
         }
         break;
     case Kil:
         switch (curr_debugger) {
-        case (DEBUGGER_GDB): send_command (state, "-exec-abort\n"); break;
+        case (DEBUGGER_GDB):
+            send_command (state, "kill\n");
+            break;
         }
         break;
     case Nxt:
         switch (curr_debugger) {
-        case (DEBUGGER_GDB): send_command (state, "-exec-next\n"); break;
+        case (DEBUGGER_GDB):
+            send_command (state, "-exec-next\n");
+            break;
         }
         break;
     case Stp:
         switch (curr_debugger) {
-        case (DEBUGGER_GDB): send_command (state, "step\n"); break;
+        case (DEBUGGER_GDB):
+            send_command (state, "step\n");
+            break;
         }
         break;
     case Run:
@@ -62,26 +71,34 @@ send_debugger_command (int      plugin_index,
         break;
     case Unt:
         switch (curr_debugger) {
-        case (DEBUGGER_GDB): send_command (state, "-exec-until 15\n"); break;       // TODO: until
+        case (DEBUGGER_GDB):
+            send_command (state, "-exec-until 15\n");
+            break;       // TODO: until popup
         }
         break;
     case Qut:
         switch (curr_debugger) {
-        case (DEBUGGER_GDB): send_command (state, "-gdb-exit\n"); break;
+        case (DEBUGGER_GDB):
+            send_command (state, "-gdb-exit\n");
         }
         state->debugger->running = false;
-        quitting = true;
+        exiting = true;
     }
 
-    if (!quitting) {
+    if (!exiting) {
+
+        // flush program stdout
+        switch (curr_debugger) {
+        case DEBUGGER_GDB:
+            send_command (state, "call ((void(*)(int))fflush)(0)\n");
+            break;
+        }
 
         insert_output_end_marker (state);
         parse_debugger_output (state);
 
-        update_window (Dbg, state);
-        update_window (Prg, state);
-
-        update_windows (state, 6, Asm, Brk, LcV, Reg, Src, Wat);
+        update_windows (state, 2, Dbg, Prg);                        // Use output from last parse
+        update_windows (state, 6, Src, Asm, Brk, LcV, Reg, Wat);    // Src first to update info
     }
 
     pulse_header_title_color (plugin_index, state, OFF);

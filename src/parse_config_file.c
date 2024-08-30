@@ -52,9 +52,8 @@ parse_config_file (state_t *state)
 
     allocate_plugins (state);
 
-    set_window_plugins (state);
+    allocate_plugin_windows (state);
 
-    // open config file
     FILE *fp = open_config_file ();
     if (fp == NULL) {
         pfeme ("Failed to open configuration file");
@@ -101,6 +100,7 @@ parse_config_file (state_t *state)
     ---------
     Checks in this order:
 
+        // TODO: check config file flag location
         PWD/.term_debug
         HOME/.term_debug
 */
@@ -213,9 +213,8 @@ static void get_category_and_label (FILE *file,
     - Allocate and add to `plugin` array in plugins.h
 
         [ plugins ]
-        Bld: b : (b)uild
+        Lay: l : (l)ayout
         Src: f : source (f)ile
-        ...
 */
 static void create_plugins (FILE *file, state_t *state)
 {
@@ -242,8 +241,6 @@ static void create_plugins (FILE *file, state_t *state)
             plugin_index = get_plugin_code_index (code, state);
             curr_plugin = state->plugins [plugin_index];
             strcpy (curr_plugin->code, code);
-
-            curr_plugin->index = plugin_index;
 
             // set key
             ungetc (key, file);
@@ -393,10 +390,11 @@ static layout_t* create_layout (FILE* file,
     //     ssbb
     //     ssww
     //     ccrr --> The 's' window will take up half of the screen's
-    //              columns (2/4 segments) and two thirds of the rows
-    //              (2/3 segments).
+    //              columns (2/4 column segments) and two thirds of the rows
+    //              (2/3 row segments).
     // 
-    // Here we are calculating the total ratio for all the keys.
+
+    // Calculate total ratio for all keys
     //
     //     ****     
     //     ****     

@@ -14,17 +14,11 @@
 #include "parse_debugger_output.h"
 #include "utilities.h"
 #include "insert_output_marker.h"
-#include "update_window_data/get_source_file_and_line_number.h"
-#include "display_lines.h"
-#include "update_window_data/_update_window_data.h"
-#include "plugins.h"
 
 static void   configure_debugger          (debugger_t*);
 static void   start_debugger_proc         (state_t*);
 
-// TODO: 
-//  - get this via plugins/_interface
-//  - add more gdb flags
+// TODO: get debugger commands via configuration file
 # define GDB_PROG_INDEX  3
 char *gdb_cmd[] = {"gdb", "--quiet", "--interpreter=mi", NULL, NULL};
 
@@ -46,15 +40,12 @@ start_debugger (state_t *state)
 static void
 configure_debugger (debugger_t *debugger)
 {
-    // TODO: Get file type -> set debugger
+    // TODO: Get debugger via command line flag
     debugger->curr = DEBUGGER_GDB;
 }
 
 
 
-/*
-    Start debugger process
-*/
 static void
 start_debugger_proc (state_t *state)
 {
@@ -111,9 +102,6 @@ start_debugger_proc (state_t *state)
 
         close (debug_in_pipe   [PIPE_READ]);
         close (debug_out_pipe  [PIPE_WRITE]);
-
-        get_source_file_path_and_line_number (state);
-        display_lines (FILE_TYPE, LINE_DATA, state->plugins[Src]->win);
     }
 }
 

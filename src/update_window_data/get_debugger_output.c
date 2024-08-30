@@ -29,7 +29,11 @@ get_debugger_output_gdb (state_t *state)
     win      = state->plugins[Dbg]->win;
     src_ptr  = state->debugger->cli_buffer;
     dest_ptr = win->buff_data->buff;
-    dest_ptr += strlen (dest_ptr);
+
+    // check buffer size
+    if (strlen (src_ptr) < (win->buff_data->buff_len - strlen (dest_ptr) - 1)) {
+        dest_ptr += strlen (dest_ptr);
+    }
 
     // create buffer
     if (strstr (src_ptr, "error") == NULL) {
@@ -37,7 +41,6 @@ get_debugger_output_gdb (state_t *state)
         while (*src_ptr != '\0') {
             *dest_ptr++ = *src_ptr++; 
         }
-        *dest_ptr++ = '\n';
         *dest_ptr = '\0';
 
         win->buff_data->changed = true;

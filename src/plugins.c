@@ -11,22 +11,20 @@ Plugins
 
         Asm     Assembly code
         Brk     Breakpoints
-        Dbg     Debugger prompt, output
+        Dbg     Debugger output
         LcV     Local variables
         Prg     Program output
         Reg     Registers
         Src     Source file
         Wat     Watchpoints
 
-    - Pop-up window
+    - Pop-up window selection
 
-        Bld     Project build selection
-        Lay     Layout selection
+        Lay     Layouts
 
     - Non-window
 
         EMP     Empty function
-        Bak     Back out of window
         Qut     Quit
 
         Con     Continue
@@ -51,23 +49,23 @@ Plugins
 #include "data.h"
 #include "utilities.h"
 
+#define Asm_BUF_LEN  20000 
+#define Brk_BUF_LEN  4000
+#define Dbg_BUF_LEN  20000
+#define LcV_BUF_LEN  10000
+#define Prg_BUF_LEN  20000
+#define Reg_BUF_LEN  8000
+#define Wat_BUF_LEN  4000
+
+
 
 /*
     Plugin codes
-    -----------
-    - Indexes match corresponding indexes in:
-        - plugin_function []
-        - win_file_path []
-
-    - Used in bind_keys_windows_to_plugins()
-        - Ordered alphabetically for binary search  (A-Z,a-z)
 */
 char *plugin_codes [] = {
     
     "EMP",
     "Asm",
-    "Bak",
-    "Bld",
     "Brk",
     "Con",
     "Dbg",
@@ -101,8 +99,19 @@ get_plugin_code (int plugin_index)
 
 
 int win_plugins[]      = { Asm, Brk, Dbg, LcV, Prg, Reg, Src, Wat };
-int win_buff_plugins[] = { Asm, Brk, Dbg, LcV, Prg, Reg, Wat };
 int win_file_plugins[] = { Src };
+
+int win_buff_plugins[] = { Asm, Brk, Dbg, LcV, Prg, Reg, Wat };
+int win_buff_len[] = {
+    Asm_BUF_LEN,
+    Brk_BUF_LEN,
+    Dbg_BUF_LEN,
+    LcV_BUF_LEN,
+    Prg_BUF_LEN,
+    Reg_BUF_LEN,
+    Wat_BUF_LEN
+};
+
 int win_input_plugins[] = {
     Brk,
     Wat
@@ -115,7 +124,7 @@ char *win_input_titles[] = {
 
 
 void
-set_window_plugins (state_t *state)
+allocate_plugin_windows (state_t *state)
 {
     int i, j,
         num_win_plugins       = sizeof (win_plugins) / sizeof (win_plugins[0]),
@@ -142,6 +151,7 @@ set_window_plugins (state_t *state)
                     plugin->title, plugin->code, i);
         }
         win->has_input = false;
+        win->key = j;
         strcpy (win->code, plugin_codes[j]);
     }
 
@@ -162,7 +172,6 @@ set_window_plugins (state_t *state)
             //
         win->has_data_buff = false;
         win->file_data = (file_data_t*) malloc (sizeof (file_data_t));
-        win->file_data->path_changed = true;
         win->buff_data = NULL;
     }
 
@@ -173,6 +182,8 @@ set_window_plugins (state_t *state)
             //
         win->has_data_buff = true;
         win->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t));
+        win->buff_data->buff = (char*) malloc (win_buff_len[i]);
+        win->buff_data->buff_len = win_buff_len[i];
         win->buff_data->scroll_col = 1;
         win->buff_data->scroll_row = 1;
         win->buff_data->changed = true;

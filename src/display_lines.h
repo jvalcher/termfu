@@ -14,7 +14,7 @@
 #define BUFF_TYPE  0
 #define FILE_TYPE  1
 
-void  display_lines (int type, int key, window_t *win);
+void  display_lines (int type, int key, int plugin_index, state_t *state);
 
 
 

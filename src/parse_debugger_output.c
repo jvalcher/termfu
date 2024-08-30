@@ -16,7 +16,12 @@ parse_debugger_output (state_t *state)
     reader_t reader;
 
     reader.state = READER_RECEIVING;
-    reader.output_line_buffer[0] = '\0';
+
+    state->debugger->cli_buffer[0] = '\0';
+    state->debugger->program_buffer[0] = '\0';
+    state->debugger->data_buffer[0] = '\0';
+    state->debugger->async_buffer[0] = '\0';
+
     reader.cli_buffer_ptr = state->debugger->cli_buffer;
     reader.program_buffer_ptr = state->debugger->program_buffer;
     reader.data_buffer_ptr = state->debugger->data_buffer;
@@ -24,17 +29,19 @@ parse_debugger_output (state_t *state)
 
     while (running) 
     {
-        memset (reader.output_line_buffer, '\0', sizeof (reader.output_line_buffer));
 
         // read debugger stdout
+        reader.output_buffer[0] = '\0';
         bytes_read = read (state->debugger->stdout_pipe, 
-                           reader.output_line_buffer,
-                           sizeof (reader.output_line_buffer) - 1);
-        reader.output_line_buffer [bytes_read] = '\0';
+                           reader.output_buffer,
+                           READER_BUF_LEN - 1);
+        reader.output_buffer [bytes_read] = '\0';
 
         // parse output
         switch (state->debugger->curr) {
-            case DEBUGGER_GDB: parse_debugger_output_gdb (&reader); break;
+            case DEBUGGER_GDB:
+                parse_debugger_output_gdb (&reader);
+                break;
         }
 
         switch (reader.state) {
@@ -71,7 +78,7 @@ parse_debugger_output_gdb (reader_t *reader)
           is_newline;
     char *buff_ptr;
 
-    buff_ptr = reader->output_line_buffer;
+    buff_ptr = reader->output_buffer;
 
     is_gdb_output = false;
     is_prog_output = false;

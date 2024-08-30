@@ -6,16 +6,21 @@
 #include <semaphore.h>
 
 #include "data.h"
+#include "update_window_data/get_assembly_data.h"
 #include "utilities.h"
 #include "parse_cli_arguments.h"
 #include "parse_config_file.h"
 #include "render_layout.h"
 #include "start_debugger.h"
 #include "run_plugin.h"
+#include "display_lines.h"
+#include "update_window_data/get_source_path_line_memory.h"
+#include "update_window_data/_update_window_data.h"
+#include "plugins.h"
 
-static void         initialize_ncurses      (void);
-static void         set_signals_et_al       ();
-static void         handle_sigint_exit      (int);
+static void  initialize_ncurses          (void);
+static void  set_signals                 ();
+static void  update_initial_window_data  (state_t*);
 
 
 
@@ -33,11 +38,14 @@ int main (int argc, char *argv[])
 
     state.layouts = parse_config_file (&state);
 
+    // TODO: set first layout to first config file layout
     render_layout (FIRST_LAYOUT, &state);
 
     start_debugger (&state); 
 
-    set_signals_et_al ();
+    set_signals ();
+
+    update_initial_window_data (&state);
 
     while (debugger.running) {
         key = getch ();
@@ -80,27 +88,33 @@ initialize_ncurses (void)
 
 
 /*
-    Set signals
+    Update initial window data
 */
 static void
-set_signals_et_al (void)
+update_initial_window_data (state_t *state)
 {
-    // ctrl + c
-    signal (SIGINT, handle_sigint_exit);
+    get_source_path_line_memory (state);
+    display_lines (FILE_TYPE, LINE_DATA, Src, state);
+
+    get_assembly_data (state);
+    display_lines (BUFF_TYPE, BEG_DATA, Asm, state);
 }
 
 
 
 /*
-    Intercept SIGINT (Ctrl-c) -> exit Ncurses, program
+    Signal handlers
 */
-void handle_sigint_exit (int sig_num)
+static void
+sigint_handler (int sig_num)
 {
     (void) sig_num;
-
-    // TODO: send >EXIT et al. to processes
     pfeme ("Program exited (SIGINT)\n");
 }
 
-
+static void
+set_signals (void)
+{
+    signal (SIGINT, sigint_handler);    // Ctrl-C
+}
 

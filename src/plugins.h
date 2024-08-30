@@ -7,15 +7,13 @@
 
 
 /*
-   Plugin enum identifiers
+   Plugin index identifiers
    --------
    - In alphabetical order
 */
 enum {
     EMP,    
     Asm,
-    Bak,
-    Bld,
     Brk,
     Con,
     Dbg,
@@ -66,11 +64,9 @@ int get_plugin_code_index (char*, state_t*);
 
 
 /*
-    Label plugins with and without windows
-    --------
-    Configure buffer or file data source
+    Allocate plugin window_t structs et al.
 */
-void set_window_plugins (state_t*);
+void allocate_plugin_windows (state_t*);
 
 
 

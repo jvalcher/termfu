@@ -1,10 +1,13 @@
+#include <string.h>
+
 #include "get_assembly_data.h"
 #include "../data.h"
 #include "../insert_output_marker.h"
 #include "../parse_debugger_output.h"
 #include "../utilities.h"
 #include "../plugins.h"
-#include "../display_lines.h"
+
+#define OFFSET_COLS 4
 
 
 static void get_assembly_data_gdb (state_t *state);
@@ -25,18 +28,16 @@ get_assembly_data (state_t *state)
 static void
 get_assembly_data_gdb (state_t *state)
 {
-    window_t *win;
-    const
-    char *key_address   = "address=\"",
-         *key_func_name = "func-name=\"",
-         *key_inst      = "inst=\"";
+    const char *key_address = "address=\"",
+               *key_offset  = "offset=\"",
+               *key_inst    = "inst=\"";
     char *src_ptr,
          *dest_ptr,
          *cmd;
+    int cols;
 
-    win      = state->plugins[Brk]->win;
     src_ptr  = state->debugger->data_buffer;
-    dest_ptr = win->buff_data->buff;
+    dest_ptr = state->plugins[Asm]->win->buff_data->buff;
 
     // send debugger command
     cmd = concatenate_strings (3, "-data-disassemble -f ",
@@ -46,11 +47,12 @@ get_assembly_data_gdb (state_t *state)
     send_command (state, cmd);
     insert_output_end_marker (state);
     parse_debugger_output (state);
+    free (cmd);
 
     // create buffer
     if (strstr (src_ptr, "error") == NULL) {
 
-        // get address
+        // address
         while ((src_ptr = strstr (src_ptr, key_address)) != NULL) {
             src_ptr += strlen (key_address);
             while (*src_ptr != '\"') {
@@ -60,13 +62,18 @@ get_assembly_data_gdb (state_t *state)
             *dest_ptr++ = ' ';
             *dest_ptr++ = ' ';
 
-            // get function
-            src_ptr = strstr (src_ptr, key_func_name);
-            src_ptr += strlen (key_func_name);
+            // offset
+            cols = OFFSET_COLS;
+            src_ptr = strstr (src_ptr, key_offset);
+            src_ptr += strlen (key_offset);
             while (*src_ptr != '\"') {
                 *dest_ptr++ = *src_ptr++;
+                --cols;
             }
 
+            for (int i = 0; i < cols; i++) {
+                *dest_ptr++ = ' ';
+            }
             *dest_ptr++ = ' ';
             *dest_ptr++ = ' ';
 
@@ -81,10 +88,8 @@ get_assembly_data_gdb (state_t *state)
         }
         *dest_ptr = '\0';
 
-        win->buff_data->changed = true;
+        state->plugins[Asm]->win->buff_data->changed = true;
     }
-
-    free (cmd);
 }
 
 

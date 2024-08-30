@@ -13,7 +13,7 @@ B_FILE_DEV=		term_debug_dev
 B_FILE_PROD=	term_debug
 
 CC=				gcc
-FLAGS=			-Wall -Wextra -MMD -I ./src/update_window_data
+FLAGS=			-Wall -Wextra -MMD
 PROD_FLAGS=		-O3
 DEV_FLAGS=		-g
 DEBUG_FLAGS=	-D DEBUG -g

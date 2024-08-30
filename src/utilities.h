@@ -78,23 +78,23 @@ bool  find_window_string  (WINDOW *nc_window, char *string, int *y, int *x);
 /****************
   Formatted error messages
  ****************
- - Samurai error handling
- - Runs clean_up() 
+ - TODO: implement stack error tracing in all functions
+    - Display popen output
 
     Single message, exit:
 
         pfeme ("Unknown character \"%c\" \n", ch);
 
-        ERROR: src_file.c : func () :10
+        ERROR: src_file.c : func() : 10
                Unknown character "c"
 
     Multiple messages, exit;
 
         pfem ("Unknown character \"%c\" \n", ch);
-        pem  ("Check README.md for more details");
+        pem  ("Check README.md for more details"); 
         peme ("Exiting...");
 
-        ERROR: src_file.c : func () :10
+        ERROR: src_file.c : func() : 10
                Unknown character "c"
                Check README.md for more details
                Exiting...
@@ -134,6 +134,21 @@ bool  find_window_string  (WINDOW *nc_window, char *string, int *y, int *x);
     clean_up(); \
     pem(__VA_ARGS__); \
     exit (EXIT_FAILURE); \
+} while (0)
+
+
+
+/*
+    Copy character from source to destination buff_data_t->buff (circular buffer)
+*/
+#define cp_char(dest_buff_data, src_buff_data) do {\
+    dest_buff_data->buff[dest_buff_data->buff_pos] = src_buff_data->buff[src_buff_data->buff_pos++];\
+    dest_buff_data->buff[dest_buff_data->buff_pos + 1] = '\0';\
+    if (dest_buff_data->buff_pos < dest_buff_data->buff_len - 2) {\
+        ++dest_buff_data->buff_pos;\
+    } else {\
+        dest_buff_data->buff_pos = 0;\
+    }\
 } while (0)
 
 

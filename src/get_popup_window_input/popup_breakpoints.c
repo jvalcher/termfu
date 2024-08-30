@@ -54,9 +54,6 @@ insert_breakpoint_gdb (state_t *state)
     insert_output_end_marker (state);
     parse_debugger_output (state);
 
-    // update window
-
-
     free (cmd);
 }
 
@@ -79,3 +76,4 @@ delete_breakpoint_gdb (state_t *state)
 
     free (cmd);
 }
+

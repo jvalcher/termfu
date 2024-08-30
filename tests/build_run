@@ -3,6 +3,13 @@
 gcc -g -Wall -Wextra $(ncursesw5-config --cflags) \
 \
     ../src/display_lines.c\
+    ../src/parse_config_file.c\
+    ../src/render_layout.c\
+    ../src/run_plugin.c\
+    ../src/plugins.c\
+    ../src/send_debugger_command.c\
+    ../src/select_window.c\
+    ../src/pulse_header_title_color.c\
     ../src/insert_output_marker.c\
     ../src/parse_cli_arguments.c\
     ../src/parse_debugger_output.c\
@@ -13,13 +20,16 @@ gcc -g -Wall -Wextra $(ncursesw5-config --cflags) \
     ../src/update_window_data/get_assembly_data.c\
     ../src/update_window_data/get_breakpoint_data.c\
     ../src/update_window_data/get_debugger_output.c\
-    ../src/update_window_data/get_source_file_and_line_number.c\
+    ../src/update_window_data/get_program_output.c\
+    ../src/update_window_data/get_source_path_line_memory.c\
+    ../src/update_window_data/get_watchpoint_data.c\
 \
     ../src/get_popup_window_input/_get_popup_window_input.c\
     ../src/get_popup_window_input/popup_breakpoints.c\
+    ../src/get_popup_window_input/popup_watchpoints.c\
 \
     $1\
 \
     $(ncursesw5-config --libs) && \
 \
-./a.out ./hello
+./a.out ../misc/hello

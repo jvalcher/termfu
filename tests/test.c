@@ -7,18 +7,18 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+#include "../src/utilities.h"
+
 
 int main (void)
 {
-    char *str = "Hello, world!";
+    int   n;
+    char *src_str = "abcdefghi",
+          dst_str[6];
 
-    initscr ();
+    n = strncpy (dst_str, src_str, strlen (src_str) - 1);
 
-    mvwprintw (stdscr, 1, 1, "%.*s\n", 3, str);
-    refresh ();
-
-    getch (); 
-    endwin ();
+    printf ("%d\n", n);
 
     return 0;
 }

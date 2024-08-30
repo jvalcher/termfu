@@ -56,51 +56,13 @@ gppdd
 <br />
 
 
-### File location
+### Configuration file location
 
-`$PROJECT_DIR/.term_debug` <br />
+`$PROJECT_DIR/.termvu` <br />
 or <br />
-`$HOME/.term_debug`
+`$HOME/.termvu`
 <br /><br />
  
-
-### Formatting
-
-#### Plugins ( `[ plugins ]` ):
-
-- `<code> : <key> : <title>`
-
-  - `code`
-    - Plugin code identifier
-
-  - `key`
-    - Key binding
-
-  - `title`
-    - String displayed in header or window
-    - Adding parentheses around the key binding allows term_debug to change its color for better visibility.
-<br />
-
-#### Layout ( `[ layout : gdb_debug_1 ]` ):
-
-- Title ( `gdb_debug_1` ):
-  - Title displayed in header
-  - Identifier used by layouts plugin (`Lay`) to switch layouts
-<br /><br />
-
-- Window sections:
-  - The characters under each `>section` correspond to the plugin key bindings defined under `[ plugins ]`. 
-
-  - `>h`  
-    - Header window 
-      - Each character determines the row and position of its corresponding title string.
-
-  - `>w`  
-    - Windows layout
-      - Each character represents a "segment" of that particular window.
-      - The number of segments a window has vertically and horizontally determines the number of terminal rows and columns it is assigned.
-<br /><br />
-
 
 ## Build
 

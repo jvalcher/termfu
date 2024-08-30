@@ -2,8 +2,6 @@
 [ plugins ]
 
 Asm : a : (a)ssembly
-Bak : b : (b)ack
-Bld : u : b(u)ilds
 Brk : e : br(e)akpoints
 Con : c : (c)ontinue
 Dbg : d : (d)ebug out
@@ -21,10 +19,10 @@ Stp : s : (s)tep
 Wat : w : (w)atch
 
 
-[ layout : gdb_debug_1 ]
+[ layout : GDB Debug 1 ]
 
 >h
-ulbq
+lq
 rnscfk
 >w
 eooaa 

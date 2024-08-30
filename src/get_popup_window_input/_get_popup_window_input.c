@@ -45,8 +45,8 @@ get_popup_window_input (char *prompt,
     wrefresh (data_popup_win);
 
     // get input
-    // TODO: get each character individually to enable ESC, arrow keys, etc.
-    wgetnstr (data_popup_win, buffer, sizeof (buffer) - 1);
+    // TODO: get each character individually to enable escape, arrows, home, end, ...
+    wgetnstr (data_popup_win, buffer, INPUT_BUFF_LEN - 1);
 
     close_popup_window ();
 }

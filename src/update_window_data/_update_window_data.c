@@ -8,11 +8,14 @@
 #include "../data.h"
 #include "../plugins.h"
 #include "../display_lines.h"
+#include "../utilities.h"
 
 #include "get_assembly_data.h"
 #include "get_breakpoint_data.h"
 #include "get_debugger_output.h"
-#include "get_source_file_and_line_number.h"
+#include "get_program_output.h"
+#include "get_source_path_line_memory.h"
+#include "get_watchpoint_data.h"
 
 void  update_window  (int, state_t*);
 
@@ -43,6 +46,7 @@ update_window (int      plugin_index,
                state_t *state)
 {
     window_t *win = state->plugins[plugin_index]->win;
+
     int buff_type = win->has_data_buff ? BUFF_TYPE : FILE_TYPE;
     int data_position = BEG_DATA;
 
@@ -60,20 +64,20 @@ update_window (int      plugin_index,
     case LcV:
         break;
     case Prg:
+        get_program_output (state);
         data_position = END_DATA;
         break;
     case Reg:
         break;
     case Src:
-        get_source_file_path_and_line_number (state);
+        get_source_path_line_memory (state);
         data_position = LINE_DATA;
         break;
     case Wat:
+        get_watchpoint_data (state);
         break;
     }
 
-    display_lines (buff_type, data_position, win);
+    display_lines (buff_type, data_position, plugin_index, state);
 }
-
-
 

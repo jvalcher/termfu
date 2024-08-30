@@ -186,7 +186,6 @@ find_window_string (WINDOW *window,
                     int    *y,
                     int    *x)
 {
-
     int  i, j, 
          m, n,
          ch,

@@ -13,8 +13,7 @@
   Main
  ******/
 
-#define PROGRAM_NAME     "term_debug"       // TODO: rename program
-#define DATA_DIR_PATH    ".local/share/term_debug"
+#define PROGRAM_NAME     "termvu"       // TODO: rename program
 #define DEBUG_OUT_PATH   "debug.out"
 #define PARENT_PROCESS   0
 #define CHILD_PROCESS    1
@@ -39,15 +38,16 @@
 #define WHITE_BLACK     26
 #define WHITE_BLUE      27
 
-// shared
-#define MAIN_TITLE_COLOR       GREEN_BLACK
-#define LAYOUT_TITLE_COLOR     MAGENTA_BLACK
-#define TITLE_KEY_COLOR        YELLOW_BLACK
+// misc
+#define DEFAULT                         WHITE_BLACK
+#define MAIN_TITLE_COLOR                GREEN_BLACK
+#define LAYOUT_TITLE_COLOR              MAGENTA_BLACK
+#define TITLE_KEY_COLOR                 YELLOW_BLACK
 
 // header
-#define HEADER_TITLE_COLOR       GREEN_BLACK
-#define FOCUS_TITLE_KEY_COLOR    GREEN_BLACK
-#define FOCUS_HEADER_TITLE_COLOR YELLOW_BLACK
+#define HEADER_TITLE_COLOR              GREEN_BLACK
+#define FOCUS_TITLE_KEY_COLOR           GREEN_BLACK
+#define FOCUS_HEADER_TITLE_COLOR        YELLOW_BLACK
 
 // window
 #define WINDOW_TITLE_COLOR              CYAN_BLACK
@@ -55,7 +55,7 @@
 #define FOCUS_WINDOW_TITLE_COLOR        YELLOW_BLACK
 #define FOCUS_BORDER_COLOR              YELLOW_BLACK
 #define FOCUS_WINDOW_TITLE_KEY_COLOR    BLUE_BLACK
-#define WINDOW_INPUT_COLOR              WHITE_BLUE
+#define WINDOW_INPUT_TITLE_COLOR        WHITE_BLUE
 
 
 
@@ -63,7 +63,7 @@
   Layouts
  *********/
 
-#define CONFIG_FILE             ".term_debug"
+#define CONFIG_FILE             ".termvu"
 #define FIRST_LAYOUT            "FiRsT_lAyOuT"
 #define MAX_CONFIG_CATEG_LEN    20
 #define MAX_CONFIG_LABEL_LEN    20
@@ -106,28 +106,43 @@ typedef struct layout {
   Ncurses window data
  *********/
 
-#define MAX_LINES       128
-#define FILE_PATH_LEN   128
-#define WIN_INPUT_LEN   128
-#define DEBUG_BUF_LEN   4096
+#define MAX_LINES      128
+#define WATCH_LEN      84
+#define FILE_PATH_LEN  128
+#define ADDRESS_LEN    24
+#define FUNC_LEN       48
+
+typedef struct watch {
+
+    int            index;
+    char           var   [WATCH_LEN];
+    char           value [WATCH_LEN];
+    struct watch  *next;
+
+} watchpoint_t;
 
 typedef struct {
 
-    char  buff [DEBUG_BUF_LEN];
-    bool  changed;
-    int   rows;
-    int   max_cols;
-    int   scroll_row;
-    int   scroll_col;
+    char          *buff;  
+    int            buff_len;
+    int            buff_pos;
+    bool           changed;
+    int            rows;
+    int            max_cols;
+    int            scroll_row;
+    int            scroll_col;
+    watchpoint_t  *watchpoints;
 
 } buff_data_t;
 
 typedef struct {
 
     FILE  *ptr;
-    char   path [FILE_PATH_LEN];
-    bool   path_changed;
     int    line;
+    char   path [FILE_PATH_LEN];    
+    bool   path_changed;
+    char   addr [ADDRESS_LEN];
+    char   func [FUNC_LEN];
     int    line_num_digits;
     int    first_char;
     int    rows;
@@ -140,40 +155,40 @@ typedef struct {
 
 typedef struct {
 
-    WINDOW  *WIN;
-    WINDOW  *IWIN;
-    WINDOW  *DWIN;
+    WINDOW       *WIN;
+    WINDOW       *IWIN;
+    WINDOW       *DWIN;
 
-    char     code[4];
-    bool     selected;
-    bool     has_input;
-    bool     has_data_buff;     // as opposed to file
+    int           key;
+    char          code[4];
+    bool          selected;
+    bool          has_input;
+    bool          has_data_buff;     // as opposed to file
 
     // parent window
-    int      rows;                   
-    int      cols;                   
-    int      y;                      
-    int      x;                      
-    int      border [8];
+    int           rows;                   
+    int           cols;                   
+    int           y;                      
+    int           x;                      
+    int           border [8];
 
-    // input line
-    int      input_rows;
-    int      input_cols;
-    int      input_y;
-    int      input_x;
-    char    *input_title;
-    char     input_buffer [WIN_INPUT_LEN];
+    // input title
+    int           input_rows;
+    int           input_cols;
+    int           input_y;
+    int           input_x;
+    char         *input_title;
 
     // data window
-    int      data_win_rows;
-    int      data_win_cols;
-    int      data_win_y;
-    int      data_win_x;
-    int      data_win_mid_line;
+    int           data_win_rows;
+    int           data_win_cols;
+    int           data_win_y;
+    int           data_win_x;
+    int           data_win_mid_line;
 
     // buffer, file data
-    buff_data_t *buff_data;
-    file_data_t *file_data;
+    buff_data_t  *buff_data;
+    file_data_t  *file_data;
 
 } window_t;
 
@@ -183,10 +198,15 @@ typedef struct {
   Debugger
  **********/
 
-#define PIPE_READ            0
-#define PIPE_WRITE           1
-#define READER_MSG_MAX_LEN  24
-#define CMD_MAX_LEN         256
+#define PIPE_READ        0
+#define PIPE_WRITE       1
+#define DEBUG_BUF_LEN    WIN_BUF_LEN
+#define READER_BUF_LEN   4096
+#define FORMAT_BUF_LEN   20000
+#define DATA_BUF_LEN     20000
+#define CLI_BUF_LEN      20000
+#define PROGRAM_BUF_LEN  20000
+#define ASYNC_BUF_LEN    6000 
 
 enum { DEBUGGER_GDB };
 enum { READER_RECEIVING, READER_DONE };
@@ -201,23 +221,23 @@ typedef struct {
     int     stdin_pipe;
     int     stdout_pipe;
 
-    char    format_buffer  [DEBUG_BUF_LEN];
-    char    cli_buffer     [DEBUG_BUF_LEN];
-    char    program_buffer [DEBUG_BUF_LEN];
-    char    data_buffer    [DEBUG_BUF_LEN];
-    char    async_buffer   [DEBUG_BUF_LEN];
+    char    format_buffer  [FORMAT_BUF_LEN];
+    char    data_buffer    [DATA_BUF_LEN];
+    char    cli_buffer     [CLI_BUF_LEN];
+    char    program_buffer [PROGRAM_BUF_LEN];
+    char    async_buffer   [ASYNC_BUF_LEN];
 
 } debugger_t;
 
 typedef struct {
 
-    int   state;
-    char  output_line_buffer [DEBUG_BUF_LEN];
-    char *cli_buffer_ptr;
-    char *program_buffer_ptr;
-    char *data_buffer_ptr;
-    char *async_buffer_ptr;
-    int   plugin_index;
+    int    state;
+    char   output_buffer [READER_BUF_LEN];
+    char  *cli_buffer_ptr;
+    char  *program_buffer_ptr;
+    char  *data_buffer_ptr;
+    char  *async_buffer_ptr;
+    int    plugin_index;
 
 } reader_t;
 
@@ -228,17 +248,16 @@ typedef struct {
  *********/
 
 /*
-    code        - code string  (Bld, Stp, ...)
     key         - keyboard shortcut character  (b, s, ...)
+    code        - code string  (Lay, Stp, ...)
     title       - title string  ( (s)tep, (r)un, ...)
+    has_window  - plugin has a window
     window      - pointer to window_t struct if applicable
-    next        - next plugin_t struct
 */
 #define PLUGIN_CODE_LEN  3
 
 typedef struct {
 
-    int       index;
     char      key;
     char      code [4];
     char     *title;
