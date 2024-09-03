@@ -140,6 +140,8 @@ bool  find_window_string  (WINDOW *nc_window, char *string, int *y, int *x);
 
 /*
     Copy character from source to destination buff_data_t->buff (circular buffer)
+    ---------
+    TODO: implement circular buffer
 */
 #define cp_char(dest_buff_data, src_buff_data) do {\
     dest_buff_data->buff[dest_buff_data->buff_pos] = src_buff_data->buff[src_buff_data->buff_pos++];\

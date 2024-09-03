@@ -1,8 +1,8 @@
-#include <string.h>
 #include <ctype.h>
 #include <unistd.h>
 
 #include "parse_debugger_output.h"
+#include "utilities.h"
 #include "data.h"
 
 void parse_debugger_output_gdb (reader_t *reader);
@@ -151,26 +151,39 @@ parse_debugger_output_gdb (reader_t *reader)
             }
         }
 
-        // gdb output
+        // gdb cli output
         else if (is_gdb_output) {
 
-            // ==  \\\t,\n, etc. -> skip
-            if (*buff_ptr == '\\' && (isalpha(*(buff_ptr + 1)) || *(buff_ptr + 1) == '\n') ) {
-                buff_ptr += 2;
+            //  \\\t, \\\n
+            if (*buff_ptr == '\\' && isalpha(*(buff_ptr + 1))) {
+                if (*(buff_ptr + 1) == 'n') {
+                    *reader->cli_buffer_ptr++ = '\\';
+                    *reader->cli_buffer_ptr++ = 'n';
+                    buff_ptr += 2;
+                } else if (*(buff_ptr + 1) == 't') {
+                    *reader->cli_buffer_ptr++ = '\\';
+                    *reader->cli_buffer_ptr++ = 't';
+                    buff_ptr += 2;
+                } 
             }
 
-            // ==  \\\"  ->  \"
+            //  \\\"  ->  \"
             else if (*buff_ptr == '\\' && *(buff_ptr + 1) == '\"' ) {
                 buff_ptr += 1;
                 *reader->cli_buffer_ptr++ = *buff_ptr++;
             }
 
-            // ==  \"  ->  skip
+            //  \"  ->  skip
             else if (*buff_ptr == '\"') {
                 buff_ptr += 1;
             }
 
-            // ==  '>'
+            //  \\\\  ->  skip
+            else if (*buff_ptr == '\\' && *(buff_ptr + 1) == '\\' ) {
+                buff_ptr += 1;
+            }
+
+            //  '>'
             else if (*buff_ptr == '>') {
 
                 //  beginning of command output marker
@@ -207,12 +220,15 @@ parse_debugger_output_gdb (reader_t *reader)
                     break;
                 }
 
-            } // ==  '>'
+                else {
+                    *reader->cli_buffer_ptr++ = *buff_ptr++;
+                }
+            }
 
-            // == char
             else {
                 *reader->cli_buffer_ptr++ = *buff_ptr++;
             }
+
         } // is_gdb_output
 
         // program output

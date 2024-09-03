@@ -54,6 +54,10 @@ get_watchpoint_data_gdb (state_t *state)
         data_ptr = state->debugger->data_buffer;
         watch_val = watch->value;
 
+        FILE *fp = fopen ("debug.out", "w");
+        fwrite (src_ptr, 1, strlen(src_ptr), fp);
+        fclose (fp);
+
         // index
         *dest_ptr++ = '(';
         dest_ptr += sprintf (dest_ptr, "%d", watch->index);
@@ -65,12 +69,16 @@ get_watchpoint_data_gdb (state_t *state)
 
         if (strstr (data_ptr, "error") == NULL) {
 
-            // value
-                // skip hex value or '='
+            win->buff_data->buff_pos = 0;
+
+            // skip hex value or '='
             ptr = src_ptr;
             src_ptr = strstr (src_ptr, hex);
             if (src_ptr != NULL) {
-                src_ptr += strlen (hex);
+                while (*src_ptr != ' ') {
+                    *dest_ptr++  = *src_ptr;
+                    *watch_val++ = *src_ptr++;
+                }
             } else {
                 src_ptr = ptr;
                 src_ptr = strstr (src_ptr, "=");
@@ -79,32 +87,18 @@ get_watchpoint_data_gdb (state_t *state)
 
             src_ptr = strstr (src_ptr, " ");
 
+            // copy value
             while (*src_ptr != '\n') {
 
-                // ==  \\\t,\n, etc. -> skip
-                if (*src_ptr == '\\' && (isalpha(*(src_ptr + 1)) || *(src_ptr + 1) == '\n') ) {
-                    src_ptr += 2;
-                }
-
-                // ==  \\\"  ->  \"
-                else if (*src_ptr == '\\' && *(src_ptr + 1) == '\"' ) {
-                    src_ptr += 1;
-                    *dest_ptr++  = *src_ptr;
-                    *watch_val++ = *src_ptr++;
-                }
-
-                /*
-                // ==  \"  ->  skip
-                else if (*src_ptr == '\"') {
-                    src_ptr += 1;
-                }
-                */
-
-                else {
-                    *dest_ptr++  = *src_ptr;
-                    *watch_val++ = *src_ptr++;
-                }
+                *dest_ptr++  = *src_ptr;
+                *watch_val++ = *src_ptr++;
             }
+
+            // remove trailing newline character
+            if (*(dest_ptr - 1) == 'n' && *(dest_ptr - 2) == '\\') {
+                dest_ptr -= 2;
+            }
+
             *dest_ptr++ = '\n';
         }
 

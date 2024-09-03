@@ -1,4 +1,0 @@
-#!/bin/bash
-
-gdbserver localhost:12346 term_debug_dev
-

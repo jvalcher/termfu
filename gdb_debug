@@ -1,4 +1,5 @@
 #!/bin/bash
 
-gdb --tui --quiet -x .gdbterm term_debug_dev
-
+tmux splitw -h -p 50 "gdbserver :12345 ./term_debug_dev ./misc/hello 0"
+tmux selectp -t 0
+gdb --tui --quiet -x .gdbterm

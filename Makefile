@@ -9,8 +9,8 @@
 # 	make colors	- check if current terminal can display colors
 #
 
-B_FILE_DEV=		term_debug_dev
-B_FILE_PROD=	term_debug
+B_FILE_DEV=		termvu_dev
+B_FILE_PROD=	termvu
 
 CC=				gcc
 FLAGS=			-Wall -Wextra -MMD

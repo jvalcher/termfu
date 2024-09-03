@@ -112,6 +112,15 @@ typedef struct layout {
 #define ADDRESS_LEN    24
 #define FUNC_LEN       48
 
+#define Asm_BUF_LEN    32768
+#define Brk_BUF_LEN    4096
+#define Dbg_BUF_LEN    32768
+#define LcV_BUF_LEN    16384
+#define Prg_BUF_LEN    32768
+#define Reg_BUF_LEN    16384
+#define Wat_BUF_LEN    4096
+
+
 typedef struct watch {
 
     int            index;

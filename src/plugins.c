@@ -49,14 +49,6 @@ Plugins
 #include "data.h"
 #include "utilities.h"
 
-#define Asm_BUF_LEN  20000 
-#define Brk_BUF_LEN  4000
-#define Dbg_BUF_LEN  20000
-#define LcV_BUF_LEN  10000
-#define Prg_BUF_LEN  20000
-#define Reg_BUF_LEN  8000
-#define Wat_BUF_LEN  4000
-
 
 
 /*
@@ -101,7 +93,15 @@ get_plugin_code (int plugin_index)
 int win_plugins[]      = { Asm, Brk, Dbg, LcV, Prg, Reg, Src, Wat };
 int win_file_plugins[] = { Src };
 
-int win_buff_plugins[] = { Asm, Brk, Dbg, LcV, Prg, Reg, Wat };
+int win_buff_plugins[] = {
+    Asm,
+    Brk,
+    Dbg,
+    LcV,
+    Prg,
+    Reg,
+    Wat
+};
 int win_buff_len[] = {
     Asm_BUF_LEN,
     Brk_BUF_LEN,
@@ -184,6 +184,7 @@ allocate_plugin_windows (state_t *state)
         win->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t));
         win->buff_data->buff = (char*) malloc (win_buff_len[i]);
         win->buff_data->buff_len = win_buff_len[i];
+        win->buff_data->buff_pos = 0;
         win->buff_data->scroll_col = 1;
         win->buff_data->scroll_row = 1;
         win->buff_data->changed = true;

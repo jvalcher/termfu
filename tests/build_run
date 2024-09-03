@@ -20,7 +20,9 @@ gcc -g -Wall -Wextra $(ncursesw5-config --cflags) \
     ../src/update_window_data/get_assembly_data.c\
     ../src/update_window_data/get_breakpoint_data.c\
     ../src/update_window_data/get_debugger_output.c\
+    ../src/update_window_data/get_local_vars.c\
     ../src/update_window_data/get_program_output.c\
+    ../src/update_window_data/get_register_data.c\
     ../src/update_window_data/get_source_path_line_memory.c\
     ../src/update_window_data/get_watchpoint_data.c\
 \

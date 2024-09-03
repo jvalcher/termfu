@@ -52,6 +52,8 @@ get_assembly_data_gdb (state_t *state)
     // create buffer
     if (strstr (src_ptr, "error") == NULL) {
 
+        state->plugins[Asm]->win->buff_data->buff_pos = 0;
+
         // address
         while ((src_ptr = strstr (src_ptr, key_address)) != NULL) {
             src_ptr += strlen (key_address);

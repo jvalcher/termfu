@@ -8,12 +8,13 @@
 #include "../data.h"
 #include "../plugins.h"
 #include "../display_lines.h"
-#include "../utilities.h"
 
 #include "get_assembly_data.h"
 #include "get_breakpoint_data.h"
 #include "get_debugger_output.h"
+#include "get_local_vars.h"
 #include "get_program_output.h"
+#include "get_register_data.h"
 #include "get_source_path_line_memory.h"
 #include "get_watchpoint_data.h"
 
@@ -62,12 +63,14 @@ update_window (int      plugin_index,
         data_position = END_DATA;
         break;
     case LcV:
+        get_local_vars (state);
         break;
     case Prg:
         get_program_output (state);
         data_position = END_DATA;
         break;
     case Reg:
+        get_register_data (state);
         break;
     case Src:
         get_source_path_line_memory (state);
