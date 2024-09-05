@@ -96,7 +96,7 @@ get_label_layout (char     *label,
         } 
         layouts = layouts->next;
     } while (layouts != NULL);
-    pfeme ("Layout \"%s\" not found", label);
+    pfeme ("Layout \"%s\" not found\n", label);
 }
 
 
@@ -235,7 +235,7 @@ calculate_layout (layout_t *layout,
 
                 curr_window = state->plugins[plugin_index]->win;
                 if (curr_window == NULL) {
-                    pfeme ("No window allocated for plugin %s (code: %s, index: %d)",
+                    pfeme ("No window allocated for plugin %s (code: %s, index: %d)\n",
                             state->plugins[plugin_index]->title,
                             state->plugins[plugin_index]->code,
                             plugin_index);
@@ -431,7 +431,7 @@ render_header_titles (layout_t *layout,
         title_str_ch_left -= strlen (curr_title) + 2;
             //
         if (title_str_ch_left < 1) {
-            pfeme ("To many header titles in row %d", row + 1);
+            pfeme ("To many header titles in row %d\n", row + 1);
         } else {
             strcat (titles_str, curr_title);
             strcat (titles_str, "  ");

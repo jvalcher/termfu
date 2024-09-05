@@ -39,7 +39,7 @@ choose_layout (state_t *state)
     curr_layout = state->layouts;
         //
     do {
-        cols = (cols > (int) strlen (curr_layout->label) + 2) ? cols : strlen (curr_layout->label) + 2;
+        cols = (cols > (int) strlen (curr_layout->label) + 2) ? cols : (int) strlen (curr_layout->label) + 2;
         ++rows;
         ++num_options;
         curr_layout = curr_layout->next;

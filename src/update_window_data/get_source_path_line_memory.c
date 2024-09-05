@@ -29,8 +29,6 @@ get_source_path_line_memory_gdb (state_t *state)
 {
     char *src_ptr,
          *dest_ptr,
-         *addr_ptr,
-         *func_ptr,
          *prev_ptr;
     window_t *win;
     bool is_running;

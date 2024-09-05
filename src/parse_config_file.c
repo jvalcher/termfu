@@ -56,7 +56,7 @@ parse_config_file (state_t *state)
 
     FILE *fp = open_config_file ();
     if (fp == NULL) {
-        pfeme ("Failed to open configuration file");
+        pfeme ("Failed to open configuration file\n");
     }
 
     // parse config file
@@ -142,12 +142,12 @@ allocate_plugins (state_t *state)
 {
     state->plugins = (plugin_t**) malloc (state->num_plugins * sizeof (plugin_t*));
     if (state->plugins == NULL) {
-        pfeme ("plugin_t pointer array allocation failed");
+        pfeme ("plugin_t pointer array allocation failed\n");
     }
     for (int i = 0; i < state->num_plugins; i++) {
         state->plugins [i] = (plugin_t*) malloc (sizeof (plugin_t));
         if (state->plugins [i] == NULL) {
-            pfeme ("plugin_t pointer allocation failed");
+            pfeme ("plugin_t pointer allocation failed\n");
         }
     }
 }
@@ -176,8 +176,7 @@ static void get_category_and_label (FILE *file,
                                     char *label)
 {
     int i,
-        ch = 0,
-        n;
+        ch = 0;
 
     do {
         // category

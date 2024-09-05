@@ -22,7 +22,6 @@ run_plugin (int      plugin_index,
         case Nxt:
         case Run:
         case Stp:
-        case Unt: 
         case Qut:
             send_debugger_command (plugin_index, state); 
             break;
@@ -41,7 +40,6 @@ run_plugin (int      plugin_index,
             }
             break;
 
-        // other
         case Lay: 
             choose_layout (state);
             break;

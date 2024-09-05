@@ -39,14 +39,15 @@ get_assembly_data_gdb (state_t *state)
     src_ptr  = state->debugger->data_buffer;
     dest_buff = state->plugins[Asm]->win->buff_data;
 
-    // send debugger command
     cmd = concatenate_strings (3, "-data-disassemble -f ",
                                   state->plugins[Src]->win->file_data->path,
                                   " -l 1 -- 0\n");
+
     insert_output_start_marker (state);
     send_command (state, cmd);
     insert_output_end_marker (state);
     parse_debugger_output (state);
+
     free (cmd);
 
     // create buffer

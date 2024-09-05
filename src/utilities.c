@@ -22,7 +22,7 @@ logd (const char *formatted_string, ...)
     if (debug_out_ptr == NULL) {
         debug_out_ptr = fopen (DEBUG_OUT_PATH, "w");
         if (debug_out_ptr == NULL) {
-            pfeme ("Unable to open debug output file");
+            pfeme ("Unable to open debug output file\n");
         }
     }
 

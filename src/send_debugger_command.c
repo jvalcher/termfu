@@ -69,13 +69,6 @@ send_debugger_command (int      plugin_index,
             break;
         }
         break;
-    case Unt:
-        switch (curr_debugger) {
-        case (DEBUGGER_GDB):
-            send_command (state, "-exec-until 15\n");
-            break;       // TODO: until popup
-        }
-        break;
     case Qut:
         switch (curr_debugger) {
         case (DEBUGGER_GDB):

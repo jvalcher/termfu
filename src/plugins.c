@@ -33,7 +33,6 @@ Plugins
         Nxt     Next
         Run     (Re)run program
         Stp     Step
-        Unt     Until
 
     - Misc
         ScU     Scroll window up
@@ -78,7 +77,6 @@ char *plugin_codes [] = {
     "ScU",
     "Src",
     "Stp",
-    "Unt",
     "Wat"
 };
 
@@ -145,7 +143,7 @@ allocate_plugin_windows (state_t *state)
         plugin->win = (window_t*) malloc (sizeof (window_t));
         win = plugin->win;
         if (win == NULL) {
-            pfeme ("Window malloc failed for plugin %s (code: %s, index: %d)",
+            pfeme ("Window malloc failed for plugin %s (code: %s, index: %d)\n",
                     plugin->title, plugin->code, i);
         }
         win->has_input = false;

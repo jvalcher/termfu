@@ -261,7 +261,7 @@ set_file_rows_cols (window_t *win)
     // calculate newline offsets
     win->file_data->offsets = (long*) malloc (win->file_data->rows * sizeof(long));
     if (win->file_data->offsets == NULL) {
-        pfeme ("Failed to allocate offsets array for \"%s\" (%s)", win->file_data->path, win->code);
+        pfeme ("Failed to allocate offsets array for \"%s\" (%s)\n", win->file_data->path, win->code);
     }
     win->file_data->offsets [0] = 0;
     for (int i = 1; i < win->file_data->rows; i++) {
@@ -344,6 +344,7 @@ display_lines_file (int key,
 
     // calculate first line
     print_line = win->data_win_mid_line - (win->data_win_rows / 2);
+    print_line = (print_line >= 1) ? print_line : 1;
 
     // calculate text length minux line number, spaces
     win_text_len = win->data_win_cols - win->file_data->line_num_digits - LINE_NUM_TEXT_SPACES;
