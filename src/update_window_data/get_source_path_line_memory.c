@@ -110,6 +110,7 @@ get_source_path_line_memory_gdb (state_t *state)
         while (*src_ptr != '\"') {
             *dest_ptr++ = *src_ptr++;
         }
+        *dest_ptr = '\0';
 
         if (strcmp (state->debugger->format_buffer, win->file_data->path) != 0) {
             /*
