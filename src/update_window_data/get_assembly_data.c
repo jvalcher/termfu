@@ -28,16 +28,16 @@ get_assembly_data (state_t *state)
 static void
 get_assembly_data_gdb (state_t *state)
 {
-    const char *key_address = "address=\"",
-               *key_offset  = "offset=\"",
-               *key_inst    = "inst=\"";
     char *src_ptr,
-         *dest_ptr,
          *cmd;
-    int cols;
+    int   cols;
+    const char  *key_address = "address=\"",
+                *key_offset  = "offset=\"",
+                *key_inst    = "inst=\"";
+    buff_data_t *dest_buff;
 
     src_ptr  = state->debugger->data_buffer;
-    dest_ptr = state->plugins[Asm]->win->buff_data->buff;
+    dest_buff = state->plugins[Asm]->win->buff_data;
 
     // send debugger command
     cmd = concatenate_strings (3, "-data-disassemble -f ",
@@ -52,45 +52,44 @@ get_assembly_data_gdb (state_t *state)
     // create buffer
     if (strstr (src_ptr, "error") == NULL) {
 
-        state->plugins[Asm]->win->buff_data->buff_pos = 0;
+        dest_buff->buff_pos = 0;
 
         // address
         while ((src_ptr = strstr (src_ptr, key_address)) != NULL) {
             src_ptr += strlen (key_address);
             while (*src_ptr != '\"') {
-                *dest_ptr++ = *src_ptr++;
+                cp_char (dest_buff, *src_ptr++);
             }
 
-            *dest_ptr++ = ' ';
-            *dest_ptr++ = ' ';
+            cp_char (dest_buff, ' ');
+            cp_char (dest_buff, ' ');
 
             // offset
             cols = OFFSET_COLS;
             src_ptr = strstr (src_ptr, key_offset);
             src_ptr += strlen (key_offset);
             while (*src_ptr != '\"') {
-                *dest_ptr++ = *src_ptr++;
+                cp_char (dest_buff, *src_ptr++);
                 --cols;
             }
 
             for (int i = 0; i < cols; i++) {
-                *dest_ptr++ = ' ';
+                cp_char (dest_buff, ' ');
             }
-            *dest_ptr++ = ' ';
-            *dest_ptr++ = ' ';
+            cp_char (dest_buff, ' ');
+            cp_char (dest_buff, ' ');
 
             // get command
             src_ptr = strstr (src_ptr, key_inst);
             src_ptr += strlen (key_inst);
             while (*src_ptr != '\"') {
-                *dest_ptr++ = *src_ptr++;
+                cp_char (dest_buff, *src_ptr++);
             }
 
-            *dest_ptr++ = '\n';
+            cp_char (dest_buff, '\n');
         }
-        *dest_ptr = '\0';
 
-        state->plugins[Asm]->win->buff_data->changed = true;
+        dest_buff->changed = true;
     }
 }
 

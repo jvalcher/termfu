@@ -1,3 +1,4 @@
+#include <ctype.h>
 
 #include "get_register_data.h"
 #include "../data.h"
@@ -26,12 +27,12 @@ static void
 get_register_data_gdb (state_t *state)
 {
     window_t *win;
-    char *src_ptr,
-         *dest_ptr;
+    char *src_ptr;
+    buff_data_t *dest_buff;
 
-    win      = state->plugins[Reg]->win;
-    src_ptr  = state->debugger->cli_buffer;
-    dest_ptr = win->buff_data->buff;
+    win       = state->plugins[Reg]->win;
+    src_ptr   = state->debugger->cli_buffer;
+    dest_buff = win->buff_data;
 
     // send debugger command
     insert_output_start_marker (state);
@@ -41,14 +42,23 @@ get_register_data_gdb (state_t *state)
 
     if (strstr (src_ptr, "error") == NULL) {
 
-        win->buff_data->buff_pos = 0;
+        dest_buff->buff_pos = 0;
 
         while (*src_ptr != '\0') {
-            *dest_ptr++ = *src_ptr++;
-        }
-        *dest_ptr = '\0';
 
-        win->buff_data->changed = true;
+            //  \\\t, \\\n
+            if (*src_ptr == '\\' && isalpha(*(src_ptr + 1))) {
+                if (*(src_ptr + 1) == 'n') {
+                    src_ptr += 2;
+                } 
+            }
+
+            else {
+                cp_char (dest_buff, *src_ptr++);
+            }
+        }
+
+        dest_buff->changed = true;
     }
 }
 

@@ -24,7 +24,9 @@ display_lines (int       type,
 {
     window_t *win = state->plugins[plugin_index]->win;
 
-    switch (type) {
+    if (state->plugins[plugin_index]->has_window) {
+
+        switch (type) {
 
         case BUFF_TYPE:
             if (win->buff_data->changed) {
@@ -50,7 +52,7 @@ display_lines (int       type,
                 // open new file
                 win->file_data->ptr = fopen (win->file_data->path, "r");
                 if (win->file_data->ptr == NULL) {
-                    pfeme ("Unable to open file path \"%s\" for plugin \"%s\".",
+                    pfeme ("Unable to open file path \"%s\" for plugin \"%s\".\n",
                             win->file_data->path, win->code);
                 }
 
@@ -61,9 +63,10 @@ display_lines (int       type,
 
             display_lines_file (key, win);
             break;
-    }
+        }
 
-    format_win_data (plugin_index, state);
+        format_win_data (plugin_index, state);
+    }
 }
 
 

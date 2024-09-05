@@ -36,9 +36,8 @@ int main (int argc, char *argv[])
 
     initialize_ncurses ();
 
-    state.layouts = parse_config_file (&state);
+    parse_config_file (&state);
 
-    // TODO: set first layout to first config file layout
     render_layout (FIRST_LAYOUT, &state);
 
     start_debugger (&state); 

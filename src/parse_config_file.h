@@ -10,7 +10,7 @@
    Parse external configuration file (see CONFIG_FILE in data.h) located
    in current or home directory
 */  
-layout_t *parse_config_file (state_t *state);
+void parse_config_file (state_t *state);
 
 
 

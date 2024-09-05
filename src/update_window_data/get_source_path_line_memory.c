@@ -34,6 +34,7 @@ get_source_path_line_memory_gdb (state_t *state)
          *prev_ptr;
     window_t *win;
     bool is_running;
+    file_data_t *file_data;
 
     const char *key_threads  = "threads=[",
                *key_addr     = "addr=\"",
@@ -43,9 +44,12 @@ get_source_path_line_memory_gdb (state_t *state)
 
     win = state->plugins[Src]->win;
     src_ptr = state->debugger->data_buffer;
-    addr_ptr = state->plugins[Src]->win->file_data->addr;
-    func_ptr = state->plugins[Src]->win->file_data->func;
+    file_data = win->file_data;
     is_running = true;
+
+    file_data->path_pos = 0;
+    file_data->addr_pos = 0;
+    file_data->func_pos = 0;
 
     // check if program running
     insert_output_start_marker (state);
@@ -80,12 +84,12 @@ get_source_path_line_memory_gdb (state_t *state)
     if (src_ptr != NULL) {
         src_ptr += strlen (key_addr);
         while (*src_ptr != '\"') {
-            *addr_ptr++ = *src_ptr++;
+            cp_fchar (file_data, *src_ptr++, ADDR);
         }
     } else {
         src_ptr = prev_ptr;
     }
-    *addr_ptr = '\0';
+    cp_fchar (file_data, '\0', ADDR);
 
     // function
     prev_ptr = src_ptr;
@@ -93,12 +97,12 @@ get_source_path_line_memory_gdb (state_t *state)
     if (src_ptr != NULL) {
         src_ptr += strlen (key_func);
         while (*src_ptr != '\"') {
-            *func_ptr++ = *src_ptr++;
+            cp_fchar (file_data, *src_ptr++, FUNC);
         }
     } else {
         src_ptr = prev_ptr;
     }
-    *func_ptr = '\0';
+    cp_fchar (file_data, '\0', FUNC);
     
     // absolute path
     src_ptr = strstr (src_ptr, key_fullname);
@@ -108,13 +112,18 @@ get_source_path_line_memory_gdb (state_t *state)
         while (*src_ptr != '\"') {
             *dest_ptr++ = *src_ptr++;
         }
-        *dest_ptr = '\0';
 
         if (strcmp (state->debugger->format_buffer, win->file_data->path) != 0) {
+            /*
+            while (*src_ptr != '\0') {
+                cp_fchar (file_data, *src_ptr++, PATH);
+            }
+            */
             strncpy (win->file_data->path, state->debugger->format_buffer, FILE_PATH_LEN - 1);
             win->file_data->path_changed = true;
         }
-        // TODO: else - check if file timestamp changed
+
+        // TODO: else { check if file timestamp changed }
 
         // line number
         dest_ptr = state->debugger->format_buffer;
@@ -130,5 +139,4 @@ get_source_path_line_memory_gdb (state_t *state)
             win->file_data->line = 0;
         }
     }
-
 }

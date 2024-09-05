@@ -18,7 +18,7 @@
 static FILE      *open_config_file       (void);
 static void       get_category_and_label (FILE*, char*, char*);
 static void       create_plugins         (FILE*, state_t*);
-static layout_t  *create_layout          (FILE*, char*, state_t*);
+static layout_t  *create_layout          (FILE*, char*);
 static void       allocate_plugins       (state_t*);
 static layout_t  *allocate_layout        (void);
 
@@ -33,7 +33,7 @@ extern char **win_file_names;
     - Allocate and add plugins to `plugin` *plugin_t array  (plugins.h)
     - Create, return layout_t linked list
 */
-layout_t*
+void
 parse_config_file (state_t *state)
 {
     int       num_keys;
@@ -74,7 +74,7 @@ parse_config_file (state_t *state)
 
         // create linked list of layout_t structs
         if (strcmp (category, "layout") == 0) {
-            curr_layout = create_layout (fp, label, state);
+            curr_layout = create_layout (fp, label);
             if (is_first_layout) {
                 head_layout = curr_layout;
                 is_first_layout = false;
@@ -91,7 +91,8 @@ parse_config_file (state_t *state)
 
     fclose (fp);
 
-    return head_layout;
+    state->layouts = head_layout;
+    state->curr_layout = NULL;
 }
 
 
@@ -174,8 +175,9 @@ static void get_category_and_label (FILE *file,
                                     char *category,
                                     char *label)
 {
-    int i;
-    int ch = 0;
+    int i,
+        ch = 0,
+        n;
 
     do {
         // category
@@ -279,8 +281,7 @@ static void create_plugins (FILE *file, state_t *state)
     Create new layout
 */
 static layout_t* create_layout (FILE* file,
-                                char *label,
-                                state_t *state)
+                                char *label)
 {
     int ch, next_ch;
     char *win_keys;
@@ -340,9 +341,6 @@ static layout_t* create_layout (FILE* file,
                     keys [i++] = ch;
                     num_chars += 1;
                     is_key = true;
-                    if (section == 'w') {
-                        state->plugins[state->plugin_key_index[ch]]->has_window = true;
-                    }
                 }
 
                 // add newline
@@ -377,8 +375,7 @@ static layout_t* create_layout (FILE* file,
     }
 
     // unget '>' or '['
-    //ungetc (ch, file);
-
+    ungetc (ch, file);
 
     // Calculate window segment ratio
     // --------

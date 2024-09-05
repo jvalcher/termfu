@@ -230,3 +230,72 @@ find_window_string (WINDOW *window,
     }
 }
 
+
+
+void
+cp_char (buff_data_t *dest_buff_data,
+         char ch)
+{
+    dest_buff_data->buff[dest_buff_data->buff_pos] = ch;
+    dest_buff_data->buff[dest_buff_data->buff_pos + 1] = '\0';
+
+    if (dest_buff_data->buff_pos < dest_buff_data->buff_len - 2) {
+        ++dest_buff_data->buff_pos;
+    } else {
+        dest_buff_data->buff_pos = 0;
+    }
+}
+
+
+
+void
+cp_fchar (file_data_t *dest_file_data,
+          char ch,
+          int type)
+{
+    char *buff;
+    int  *len,
+         *pos;
+
+    switch (type) {
+        case PATH:
+            buff = dest_file_data->path;
+            len = &dest_file_data->path_len;
+            pos = &dest_file_data->path_pos;
+            break;
+        case ADDR:
+            buff = dest_file_data->addr;
+            len = &dest_file_data->addr_len;
+            pos = &dest_file_data->addr_pos;
+            break;
+        case FUNC:
+            buff = dest_file_data->func;
+            len = &dest_file_data->func_len;
+            pos = &dest_file_data->func_pos;
+            break;
+    }
+
+    buff[*pos] = ch;
+    buff[*pos + 1] = '\0';
+
+    if (*pos < *len - 2) {
+        *pos += 1;
+    } 
+
+    else {
+
+        pfem ("Character copy buffer overflow");
+
+        switch (type) {
+            case PATH:
+                peme ("win->file_data->path : %s", buff);
+                break;
+            case ADDR:
+                peme ("win->file_data->addr : %s", buff);
+                break;
+            case FUNC:
+                peme ("win->file_data->func : %s", buff);
+                break;
+        }
+    }
+}

@@ -19,13 +19,21 @@ Stp : s : (s)tep
 Wat : w : (w)atch
 
 
-[ layout : GDB Debug 1 ]
+[ layout : Main ]
 
 >h
 lq
 rnscfk
 >w
-eo
-vg
+eoo
+woo
+vpd
 
+[ layout : Assembly / Registers ]
+
+>h
+lq
+rnscfk
+>w
+oag
 

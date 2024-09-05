@@ -48,6 +48,8 @@ Plugins
 #include "plugins.h"
 #include "data.h"
 #include "utilities.h"
+#include "display_lines.h"
+#include "update_window_data/_update_window_data.h"
 
 
 
@@ -135,10 +137,6 @@ allocate_plugin_windows (state_t *state)
     window_t *win;
     plugin_t *plugin;
 
-    for (i = 0; i < state->num_plugins; i++) {
-        state->plugins[i]->has_window = false;
-    }
-
     // allocate window_t structs
     for (i = 0; i < num_win_plugins; i++) {
 
@@ -162,27 +160,72 @@ allocate_plugin_windows (state_t *state)
             //
         win->has_input = true;
         win->input_title = (char*) malloc (strlen (win_input_titles[i]) + 1);
+        if (win->input_title == NULL) {
+            pfeme ("Unable to allocate window input title (\"%s\")\n", win_input_titles[i]);
+        }
         strcpy (win->input_title, win_input_titles[i]);
     }
 
     // allocate file data
     for (i = 0; i < num_win_file_plugins; i++) {
         j = win_file_plugins[i];
+
+        // set initial display position
+        switch (j) {
+            case Src:
+                state->plugins[j]->data_pos = LINE_DATA;
+                break;
+            default:
+                state->plugins[j]->data_pos = LINE_DATA;
+        }
         win = state->plugins[j]->win;
-            //
+
+        state->plugins[j]->win_type = FILE_TYPE;
         win->has_data_buff = false;
         win->file_data = (file_data_t*) malloc (sizeof (file_data_t));
+        if (win->file_data == NULL) {
+            pfeme ("Unable to allocate file_data_t (%s)\n", win->code);
+        }
+        win->file_data->path_len = FILE_PATH_LEN;
+        win->file_data->path_pos = 0;
+        win->file_data->func_len = FUNC_LEN;
+        win->file_data->func_pos = 0;
+        win->file_data->addr_len = ADDRESS_LEN;
+        win->file_data->addr_pos = 0;
         win->buff_data = NULL;
     }
 
     // allocate buffer data
     for (i = 0; i < num_win_buff_plugins; i++) {
+        
         j = win_buff_plugins[i];
         win = state->plugins[j]->win;
-            //
+
+        // set initial display position
+        switch (j) {
+            case Asm:
+            case Brk: 
+            case LcV:
+            case Reg:
+            case Wat:
+                state->plugins[j]->data_pos = BEG_DATA;
+                break;
+            case Dbg:
+            case Prg:
+                state->plugins[j]->data_pos = END_DATA;
+                break;
+        }
+
+        state->plugins[j]->win_type = BUFF_TYPE;
         win->has_data_buff = true;
         win->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t));
+        if (win->buff_data == NULL) {
+            pfeme ("Unable to allocate buff_data_t (%s)\n", win->code);
+        }
         win->buff_data->buff = (char*) malloc (win_buff_len[i]);
+        if (win->buff_data == NULL) {
+            pfeme ("Unable to allocate buff_data_t->buff (%s)\n", win->code);
+        }
         win->buff_data->buff_len = win_buff_len[i];
         win->buff_data->buff_pos = 0;
         win->buff_data->scroll_col = 1;

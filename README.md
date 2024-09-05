@@ -17,8 +17,6 @@ Unique, three-character, case-sensitive "plugin" codes are each associated with 
 [ plugins ]
 
 Asm : a : (a)ssembly
-Bak : b : (b)ack
-Bld : u : b(u)ilds
 Brk : e : br(e)akpoints
 Con : c : (c)ontinue
 Dbg : d : (d)ebug out
@@ -35,24 +33,31 @@ Src : o : s(o)urce file
 Stp : s : (s)tep
 Wat : w : (w)atch
 
-
-[ layout : gdb_debug_1 ]
+[ layout : Main ]
 
 >h
-ulbq
+lq
 rnscfk
 >w
-eooaa 
-wooaa
-vooaa
-gppdd
+eoo
+woo
+vpd
+
+[ layout : Assembly / Registers ]
+
+>h
+lq
+rnscfk
+>w
+oag
 
 ```
 
 
-### Resulting layout...
+### Resulting layouts
 
-<img src='./misc/layout.png' height='500px'>
+<img src='./misc/layout1.png' height='500px'>
+<img src='./misc/layout2.png' height='500px'>
 <br />
 
 

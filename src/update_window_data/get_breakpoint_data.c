@@ -29,12 +29,12 @@ get_breakpoint_data_gdb (state_t *state)
     const
     char *key_number   = "number=\"",
          *key_orig_loc = "original-location=\"";
-    char *src_ptr,
-         *dest_ptr;
+    char *src_ptr;
+    buff_data_t *dest_buff;
 
-    win      = state->plugins[Brk]->win;
-    src_ptr  = state->debugger->data_buffer;
-    dest_ptr = win->buff_data->buff;
+    win       = state->plugins[Brk]->win;
+    src_ptr   = state->debugger->data_buffer;
+    dest_buff = win->buff_data;
 
     // send debugger command
     insert_output_start_marker (state);
@@ -45,30 +45,30 @@ get_breakpoint_data_gdb (state_t *state)
     // create buffer
     if (strstr (src_ptr, "error") == NULL) {
 
-        win->buff_data->buff_pos = 0;
+        dest_buff->buff_pos = 0;
 
         // get breakpoint number
         while ((src_ptr = strstr (src_ptr, key_number)) != NULL) {
-           *dest_ptr++ = '(';
             src_ptr += strlen (key_number);
+            cp_char (dest_buff, '(');
             while (*src_ptr != '\"') {
-                *dest_ptr++ = *src_ptr++;
+                cp_char (dest_buff, *src_ptr++);
             }
 
-            *dest_ptr++ = ')';
-            *dest_ptr++ = ' ';
+            cp_char (dest_buff, ')');
+            cp_char (dest_buff, ' ');
 
             // get file:line
             src_ptr = strstr (src_ptr, key_orig_loc);
             src_ptr += strlen (key_orig_loc);
             while (*src_ptr != '\"') {
-                *dest_ptr++ = *src_ptr++;
+                cp_char (dest_buff, *src_ptr++);
             }
-            *dest_ptr++ = '\n';
-        }
-        *dest_ptr = '\0';
 
-        win->buff_data->changed = true;
+            cp_char (dest_buff, '\n');
+        }
+
+        dest_buff->changed = true;
     }
 }
 

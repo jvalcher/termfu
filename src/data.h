@@ -65,14 +65,14 @@
 
 #define CONFIG_FILE             ".termvu"
 #define FIRST_LAYOUT            "FiRsT_lAyOuT"
-#define MAX_CONFIG_CATEG_LEN    20
-#define MAX_CONFIG_LABEL_LEN    20
-#define MAX_KEY_STR_LEN         50
-#define MAX_LAYOUTS             10
-#define MAX_WINDOWS             10      // per layout
-#define MAX_TITLE_LEN           20
-#define MAX_ROW_SEGMENTS        10      // per layout
-#define MAX_COL_SEGMENTS        10
+#define MAX_CONFIG_CATEG_LEN    48
+#define MAX_CONFIG_LABEL_LEN    48
+#define MAX_KEY_STR_LEN         256
+#define MAX_LAYOUTS             12
+#define MAX_WINDOWS             12      // per layout
+#define MAX_TITLE_LEN           48
+#define MAX_ROW_SEGMENTS        24      // per layout
+#define MAX_COL_SEGMENTS        24
 #define MAX_SHORTCUTS           52      // a-z, A-Z
 
 /*
@@ -108,11 +108,11 @@ typedef struct layout {
 
 #define MAX_LINES      128
 #define WATCH_LEN      84
-#define FILE_PATH_LEN  128
-#define ADDRESS_LEN    24
+#define FILE_PATH_LEN  256
+#define ADDRESS_LEN    48
 #define FUNC_LEN       48
 
-#define Asm_BUF_LEN    32768
+#define Asm_BUF_LEN    131072
 #define Brk_BUF_LEN    4096
 #define Dbg_BUF_LEN    32768
 #define LcV_BUF_LEN    16384
@@ -148,10 +148,6 @@ typedef struct {
 
     FILE  *ptr;
     int    line;
-    char   path [FILE_PATH_LEN];    
-    bool   path_changed;
-    char   addr [ADDRESS_LEN];
-    char   func [FUNC_LEN];
     int    line_num_digits;
     int    first_char;
     int    rows;
@@ -159,6 +155,18 @@ typedef struct {
     int    min_mid;
     int    max_mid;
     long  *offsets;
+
+    char   path [FILE_PATH_LEN];    
+    int    path_len;
+    int    path_pos;
+    char   formatted_path [FILE_PATH_LEN];
+    bool   path_changed;
+    char   addr [ADDRESS_LEN];
+    int    addr_len;
+    int    addr_pos;
+    char   func [FUNC_LEN];
+    int    func_len;
+    int    func_pos;
 
 } file_data_t;
 
@@ -270,7 +278,9 @@ typedef struct {
     char      key;
     char      code [4];
     char     *title;
-    bool      has_window;
+    int       data_pos;         // BEG_DATA, END_DATA, LINE_DATA
+    int       win_type;         // BUFF_TYPE, FILE_TYPE
+    bool      has_window;       // in current layout
     window_t *win;
 
 } plugin_t;
@@ -281,7 +291,7 @@ typedef struct {
   State
  *******/
 
-#define INPUT_BUFF_LEN  256
+#define INPUT_BUFF_LEN   4096
 
 typedef struct {
 
@@ -289,8 +299,8 @@ typedef struct {
     int          *plugin_key_index;
     char          input_buffer [INPUT_BUFF_LEN];
 
+    layout_t     *curr_layout;
     debugger_t   *debugger;
-
     layout_t     *layouts;
     plugin_t    **plugins;
     WINDOW       *header;

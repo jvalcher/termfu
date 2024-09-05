@@ -75,6 +75,23 @@ bool  find_window_string  (WINDOW *nc_window, char *string, int *y, int *x);
 
 
 
+/*
+    Copy single character to destination buff_data_t->buff (circular)
+*/
+void cp_char (buff_data_t *dest_buff_data, char ch);
+
+
+
+/*
+    Copy single char to file_data_t-> path, addr, func (i.e. type) buffer
+*/
+enum { PATH, ADDR, FUNC };
+    //
+void cp_fchar (file_data_t *dest_file_data, char ch, int type);
+
+
+
+
 /****************
   Formatted error messages
  ****************
@@ -122,6 +139,14 @@ bool  find_window_string  (WINDOW *nc_window, char *string, int *y, int *x);
 } while (0)
 
 
+// Print formatted error message, return int
+#define pfeme(...) do { \
+    clean_up(); \
+    pfem(__VA_ARGS__); \
+    exit (EXIT_FAILURE); \
+} while (0)
+
+
 // Print error message
 #define pem(...) do { \
     fprintf (stderr, "       "); \
@@ -134,23 +159,6 @@ bool  find_window_string  (WINDOW *nc_window, char *string, int *y, int *x);
     clean_up(); \
     pem(__VA_ARGS__); \
     exit (EXIT_FAILURE); \
-} while (0)
-
-
-
-/*
-    Copy character from source to destination buff_data_t->buff (circular buffer)
-    ---------
-    TODO: implement circular buffer
-*/
-#define cp_char(dest_buff_data, src_buff_data) do {\
-    dest_buff_data->buff[dest_buff_data->buff_pos] = src_buff_data->buff[src_buff_data->buff_pos++];\
-    dest_buff_data->buff[dest_buff_data->buff_pos + 1] = '\0';\
-    if (dest_buff_data->buff_pos < dest_buff_data->buff_len - 2) {\
-        ++dest_buff_data->buff_pos;\
-    } else {\
-        dest_buff_data->buff_pos = 0;\
-    }\
 } while (0)
 
 

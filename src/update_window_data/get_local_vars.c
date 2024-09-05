@@ -30,12 +30,12 @@ get_local_vars_gdb (state_t *state)
     const
     char *key_name  = "name=\"",
          *key_value = "value=\"";
-    char *src_ptr,
-         *dest_ptr;
+    char *src_ptr;
+    buff_data_t *dest_buff;
 
-    win      = state->plugins[LcV]->win;
-    src_ptr  = state->debugger->data_buffer;
-    dest_ptr = win->buff_data->buff;
+    win       = state->plugins[LcV]->win;
+    src_ptr   = state->debugger->data_buffer;
+    dest_buff = win->buff_data;
 
     // send debugger command
     insert_output_start_marker (state);
@@ -45,17 +45,17 @@ get_local_vars_gdb (state_t *state)
 
     if (strstr (src_ptr, "error") == NULL) {
 
-        win->buff_data->buff_pos = 0;
+        dest_buff->buff_pos = 0;
 
         while ((src_ptr = strstr (src_ptr, key_name)) != NULL) {
             src_ptr += strlen (key_name);
             while (*src_ptr != '\"') {
-                *dest_ptr++ = *src_ptr++;
+                cp_char (dest_buff, *src_ptr++);
             }
 
-            *dest_ptr++ = ' ';
-            *dest_ptr++ = '=';
-            *dest_ptr++ = ' ';
+            cp_char (dest_buff, ' ');
+            cp_char (dest_buff, '=');
+            cp_char (dest_buff, ' ');
 
             // get path:line
             src_ptr = strstr (src_ptr, key_value);
@@ -65,12 +65,12 @@ get_local_vars_gdb (state_t *state)
                 //  \\\t, \\\n
                 if (*src_ptr == '\\' && isalpha(*(src_ptr + 1))) {
                     if (*(src_ptr + 1) == 'n') {
-                        *dest_ptr++ = '\\';
-                        *dest_ptr++ = 'n';
+                        cp_char (dest_buff, '\\');
+                        cp_char (dest_buff, 'n');
                         src_ptr += 2;
                     } else if (*(src_ptr + 1) == 't') {
-                        *dest_ptr++ = '\\';
-                        *dest_ptr++ = 't';
+                        cp_char (dest_buff, '\\');
+                        cp_char (dest_buff, 't');
                         src_ptr += 2;
                     } 
                 }
@@ -78,7 +78,7 @@ get_local_vars_gdb (state_t *state)
                 //  \\\"  ->  \"
                 else if (*src_ptr == '\\' && *(src_ptr + 1) == '\"' ) {
                     src_ptr += 1;
-                    *dest_ptr++  = *src_ptr++;
+                    cp_char (dest_buff, *src_ptr++);
                 }
 
                 //  \\\\  ->  skip
@@ -92,14 +92,14 @@ get_local_vars_gdb (state_t *state)
                 }
 
                 else {
-                    *dest_ptr++  = *src_ptr++;
+                    cp_char (dest_buff, *src_ptr++);
                 }
             }
-            *dest_ptr++ = '\n';
-        }
-        *dest_ptr = '\0';
 
-        win->buff_data->changed = true;
+            cp_char (dest_buff, '\n');
+        }
+
+        dest_buff->changed = true;
     }
 }
 

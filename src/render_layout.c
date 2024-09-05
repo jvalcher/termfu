@@ -15,8 +15,9 @@
 #include "render_layout.h"
 #include "data.h"
 #include "utilities.h"
+#include "plugins.h"
 
-//static void      free_nc_window_data      (state_t*);
+static void      free_nc_window_data   (state_t*);
 static layout_t *get_label_layout      (char*, layout_t*);
 static void      calculate_layout      (layout_t*, state_t*);
 static void      render_header         (layout_t*, state_t*);
@@ -40,23 +41,21 @@ void
 render_layout (char     *label,
                state_t  *state)
 {
-    layout_t *layout;
+    if (state->curr_layout != NULL) {
+        free_nc_window_data (state);
+    }
 
-    // TODO: free Ncurses windows when switching layouts
-    // free_nc_window_data()
+    state->curr_layout = get_label_layout (label, state->layouts);
 
-    layout = get_label_layout (label, state->layouts);
+    calculate_layout (state->curr_layout, state);
 
-    calculate_layout (layout, state);
-
-    render_header  (layout, state);
+    render_header (state->curr_layout, state);
 
     render_windows (state);
 }
 
 
 
-/*
 static void
 free_nc_window_data (state_t *state)
 {
@@ -64,22 +63,22 @@ free_nc_window_data (state_t *state)
 
         if (state->plugins[i]->has_window) {
 
-            // input WINDOW
+            // Ncurses WINDOWs
             if (state->plugins[i]->win->IWIN) {
                 delwin (state->plugins[i]->win->IWIN);
             }
-
-            // data WINDOW
             if (state->plugins[i]->win->DWIN) {
                 delwin (state->plugins[i]->win->DWIN);
             }
+            if (state->plugins[i]->win->WIN) {
+                delwin (state->plugins[i]->win->WIN);
+            }
+            refresh ();
 
-            // parent WINDOW
-            delwin (state->plugins[i]->win->WIN);
+            state->plugins[i]->has_window = false;
         }
     }
 }
-*/
 
 
 
@@ -214,6 +213,13 @@ calculate_layout (layout_t *layout,
 
     layout_matrix = (char**) layout->win_matrix;
 
+    // clear window statuses
+    for (i = 0; i < state->num_plugins; i++) {
+        if (state->plugins[i]->win != NULL) {
+            state->plugins[i]->has_window = false;
+        }
+    }
+
     // Set window_t structs data
     for (y = 0; y < row_ratio; y++) {
         for (x = 0; x < col_ratio; x++) {
@@ -224,6 +230,8 @@ calculate_layout (layout_t *layout,
                 key = layout_matrix [y][x];
 
                 plugin_index = state->plugin_key_index [(int)key];
+
+                state->plugins[plugin_index]->has_window = true;
 
                 curr_window = state->plugins[plugin_index]->win;
                 if (curr_window == NULL) {
@@ -341,7 +349,7 @@ render_header (layout_t *layout,
 static void 
 render_windows (state_t *state)
 {
-    int       i;
+    int i;
 
     for (i = 0; i < state->num_plugins; i++) {
         if (state->plugins[i]->has_window) {

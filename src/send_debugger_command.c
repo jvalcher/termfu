@@ -97,8 +97,9 @@ send_debugger_command (int      plugin_index,
         insert_output_end_marker (state);
         parse_debugger_output (state);
 
-        update_windows (state, 2, Dbg, Prg);                        // Use output from last parse
-        update_windows (state, 6, Src, Asm, Brk, LcV, Reg, Wat);    // Src first to update info
+        // update Dbg, Prg windows using last parse
+        // update Src first to update info
+        update_windows (state, 8, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Wat);    // Src first to update info
     }
 
     pulse_header_title_color (plugin_index, state, OFF);

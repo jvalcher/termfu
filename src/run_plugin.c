@@ -5,6 +5,7 @@
 #include "plugins.h"
 #include "send_debugger_command.h"
 #include "select_window.h"
+#include "choose_layout.h"
 
 
 
@@ -40,9 +41,9 @@ run_plugin (int      plugin_index,
             }
             break;
 
-        // popup windows
+        // other
         case Lay: 
-            //TODO: open_popup_window (plugin_index, state);
+            choose_layout (state);
             break;
     }
 }
