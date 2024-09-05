@@ -11,7 +11,7 @@ A multi-language TUI debugger
 Unique, three-character, case-sensitive "plugin" codes are each associated with a specific debugger action or window. The codes are bound to user-defined shortcut keys. The keys are then used to create custom ASCII-art layouts.
 <br />
 
-### Example configuration...
+### Example configuration
 
 ```
 [ plugins ]
