@@ -12,7 +12,7 @@ An easy-to-configure, multi-language terminal debugger
 | `gdb`  | `pdb`... |
 | :----: | :----: |
 
-<br /><br />
+<br />
 
 ## Configuration
 
