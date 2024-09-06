@@ -2,9 +2,9 @@
 # termvu
 
 A fast, easy-to-configure, multi-language terminal debugger
-<br /><br />
+<br><br>
 <img src='./misc/layout1.png' height='400px'>
-<br /><br />
+<br><br>
 
 ## Support
 
@@ -13,32 +13,32 @@ A fast, easy-to-configure, multi-language terminal debugger
 | `gdb`      | C, C++, D, Go, Objective-C, <br>Fortran, OpenCL C, Pascal, <br>Rust, assembly, Modula-2, Ada |
 | `pdb`      | Python (in development) |
 
-<br />
+<br>
 
 ## Usage
-<br />
+<br>
 
 `$ termvu -d gdb a.out`
-<br /><br />
+<br><br>
 
 ## Configuration
 
 Unique, three-character, case-sensitive "plugin" codes are each associated with a specific debugger action or window. The codes are bound to user-defined shortcut keys. The keys are then used to create custom ASCII-art layouts.
-<br /><br />
+<br><br>
 
 Run the program from the same directory as the configuration file.
-<br />
+<br>
 
 `./.termvu` 
-<br /><br />
+<br><br>
 
 ### Plugins
-<br />
+<br>
 
 | Plugin Code  | Type | Description |
 | ----- | ----- | ----- |
 | Asm | Window | Assembly code |
-| Brk | Window | Breakpoints |
+| Brk | Window | Breakpoints <br>`(c)reate` `(d)elete` |
 | Con | Header | Continue |
 | Dbg | Window | Debugger output |
 | Fin | Header | Finish |
@@ -53,22 +53,24 @@ Run the program from the same directory as the configuration file.
 | Src | Window | Source file |
 | Stp | Header | Step |
 | Unt | Header | Until (popup window) |
-| Wat | Window | Watchpoints |
+| Wat | Window | Watchpoints <br>`(c)reate` `(d)elete` |
 
-<br />
+<br>
 
 ### Configuration sections
-<br />
+<br>
+
+Adding parentheses around a character in the `<(t)itle>` changes the character's color
+<br><br>
 
 | Section   | Description |
 | :----:    |  :----: |
-| `plugins` | `<plugin code>` : `<key binding>` : `<title>` <br> Adding parentheses around a character in the <(__t__)itle> changes the character's color |
+| `plugins` | `<plugin code>` : `<key binding>` : `<title>` |
 | `layout`  | `[ layout : <title> ]` <br>`>h` -> header commands, `>w` == windows |
-
-<br />
+<br>
 
 ### Example configuration
-<br />
+<br>
 
 ```
 [ plugins ]
@@ -116,13 +118,13 @@ oag
 
 ### Resulting layouts
 
-<img src='./misc/layout1.png' height='500px'>
-<img src='./misc/layout2.png' height='500px'>
-<br />
+<img src='./misc/layout1.png' height='400px'>
+<img src='./misc/layout2.png' height='400px'>
+<br>
 
 
 ## Scripts
-<br />
+<br>
 
 | Command                | Description |
 |------------------------|-------------|
@@ -135,5 +137,5 @@ oag
 | `make todo`            | Print source code tags  (`TODO`, `FIXME`, etc.) |
 | `make colors`	         | Check if current terminal can display colors with Ncurses |
 
-<br /><br />
+<br><br>
 
