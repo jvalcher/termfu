@@ -35,26 +35,26 @@ Run the program from the same directory as the configuration file.
 ### Plugins
 <br>
 
-| Plugin Code  | Type | Description |
-| ----- | ----- | ----- |
+| Plugin | Type  | Description |
+| -----  | ----- | ----- |
 | Asm | Window | Assembly code |
-| Brk | Window | Breakpoints <br>`(c)reate` `(d)elete` |
+| Brk | Window | Breakpoints |
 | Con | Header | Continue |
 | Dbg | Window | Debugger output |
 | Fin | Header | Finish |
 | Kil | Header | Kill |
-| Lay | Header | Choose layout (popup window) |
+| Lay | Header | Choose layout |
 | LcV | Window | Local variables |
 | Nxt | Header | Next |
 | Prg | Window | Program CLI output |
-| Prm | Header | Debugger prompt (popup window) |
+| Prm | Header | Debugger prompt |
 | Qut | Header | Quit termvu |
 | Reg | Window | Registers |
 | Run | Header | Run program |
 | Src | Window | Source file |
 | Stp | Header | Step |
-| Unt | Header | Until (popup window) |
-| Wat | Window | Watchpoints <br>`(c)reate` `(d)elete` |
+| Unt | Header | Until |
+| Wat | Window | Watchpoints |
 
 <br>
 
