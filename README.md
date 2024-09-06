@@ -3,14 +3,14 @@
 
 A fast, easy-to-configure, multi-language terminal debugger
 <br /><br />
-*** __In development__ ***
-<br /><br />
 <img src='./misc/layout1.png' height='400px'>
 <br /><br />
 
-## Supported debuggers
-| `gdb`  | `pdb`... |
-| :----: | :----: |
+## Support
+| `Debugger` | `Languages` |
+|   :----:   | :----: |
+| `gdb`      | C,  C++,  D,  Go,  Objective-C,  Fortran,  OpenCL C,  Pascal,  Rust,  assembly,  Modula-2,  Ada |
+| `pdb`...   | Python |
 
 <br />
 
@@ -39,27 +39,24 @@ Reg : g : re(g)isters
 Run : r : (r)un
 Src : o : s(o)urce file
 Stp : s : (s)tep
+Unt : u : (u)ntil
 Wat : w : (w)atch
-
 
 [ layout : Main ]
 
 >h
 lq
-rnscfk
-
+rnscufk
 >w
 eooaa
 wooaa
 vppdd
 
-
 [ layout : Assembly / Registers ]
 
 >h
 lq
-rnscfk
-
+rnscufk
 >w
 oag
 ```
