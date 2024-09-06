@@ -57,7 +57,7 @@ dev: FLAGS   += $(DEV_FLAGS)
 dev: C_FILES += $(C_UPDATE_FILES)
 dev: C_FILES += $(C_POPUP_FILES)
 dev: clean_dev $(B_FILE_DEV)
-	./$(B_FILE_DEV) ./misc/hello
+	./$(B_FILE_DEV) -d gdb ./misc/hello
 	@echo ""
 
 
@@ -78,7 +78,7 @@ test: C_TEST_FILES += $(C_UPDATE_FILES)
 test: C_TEST_FILES += $(C_POPUP_FILES)
 test: clean_test $(B_FILE_TEST)
 	@echo ""
-	./$(B_FILE_TEST) ./misc/hello
+	./$(B_FILE_TEST) -d gdb ./misc/hello
 	@echo ""
 
 

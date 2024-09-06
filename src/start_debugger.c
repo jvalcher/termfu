@@ -26,22 +26,11 @@ char *gdb_cmd[] = {"gdb", "--quiet", "--interpreter=mi", NULL, NULL};
 void
 start_debugger (state_t *state)
 {
-    configure_debugger (state->debugger);
-
     start_debugger_proc (state);
 
     insert_output_end_marker (state);
 
     parse_debugger_output (state);
-}
-
-
-
-static void
-configure_debugger (debugger_t *debugger)
-{
-    // TODO: Get debugger via command line flag
-    debugger->curr = DEBUGGER_GDB;
 }
 
 
@@ -71,6 +60,10 @@ start_debugger_proc (state_t *state)
             cmd = gdb_cmd;      // TODO: see globals
             cmd [GDB_PROG_INDEX] = debugger->prog_path;
             break;
+        case UNKNOWN:
+        default:
+            pfem ("Unknown debugger \"%d\"\n", debugger->curr);
+            peme ("Usage: termvu -d gdb a.out\n");
     }
 
     // fork

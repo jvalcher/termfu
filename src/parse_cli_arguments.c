@@ -1,3 +1,5 @@
+#include <unistd.h>
+
 #include "data.h"
 #include "utilities.h"
 
@@ -9,17 +11,36 @@
 void
 parse_cli_arguments (int argc,
                      char *argv[],
-                     debugger_t *debugger)
+                     state_t *state)
 {
-    // TODO: add flag options
-        // -h  - help
-        // -d  - choose debugger
-        // -f  - config file path (optional)
-        // -l  - set initial layout (optional)
-    if (argc > 1) {
-        debugger->prog_path = argv [1];
+    int opt;
+    debugger_t *debugger = state->debugger;
+
+    debugger->curr = UNKNOWN;
+
+    // flags
+    while ((opt = getopt(argc, argv, "d:")) != -1) {
+        switch (opt) {
+
+            // debugger
+            case 'd':
+                if (strcmp (optarg, "gdb") == 0) {
+                    debugger->curr = DEBUGGER_GDB;
+                } else {
+                    pfeme ("Unrecognized debugger \"%s\"\n", optarg);
+                }
+                break;
+
+            default:
+                pfeme ("Unrecognized flag \"%d\"\n", opt);
+        }
+    }
+
+    // program
+    if (optind < argc) {
+        debugger->prog_path = argv[optind];
     } else {
-        pfeme ("Usage:  term_debug a.out\n");
+        pfeme ("Usage: \"termvu -d gdb a.out\"\n");
     }
 }
 

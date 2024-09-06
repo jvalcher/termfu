@@ -32,17 +32,17 @@ int main (int argc, char *argv[])
     debugger_t debugger;
     state.debugger = &debugger;
 
-    parse_cli_arguments (argc, argv, &debugger);
+    parse_cli_arguments (argc, argv, &state);
 
     initialize_ncurses ();
 
     parse_config_file (&state);
 
-    render_layout (FIRST_LAYOUT, &state);
-
     // CURRENT: persist watches, breaks; .termvu must be in CWD; debugger cli popup
 
     start_debugger (&state); 
+
+    render_layout (FIRST_LAYOUT, &state);
 
     set_signals ();
 

@@ -5,7 +5,7 @@
 
 
 
-void parse_cli_arguments (int argc, char *argv[], debugger_t *debugger);
+void parse_cli_arguments (int argc, char *argv[], state_t *state);
 
 
 

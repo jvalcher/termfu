@@ -126,6 +126,7 @@ void cp_fchar (file_data_t *dest_file_data, char ch, int type);
 
 // Print formatted error message
 #define pfem(...) do { \
+    clean_up(); \
 \
     fprintf (stderr, "\
 \033[1;31m%s\033[1;0m \
@@ -140,15 +141,6 @@ void cp_fchar (file_data_t *dest_file_data, char ch, int type);
 
 // Print formatted error message, exit
 #define pfeme(...) do { \
-    clean_up(); \
-    pfem(__VA_ARGS__); \
-    exit (EXIT_FAILURE); \
-} while (0)
-
-
-// Print formatted error message, return int
-#define pfeme(...) do { \
-    clean_up(); \
     pfem(__VA_ARGS__); \
     exit (EXIT_FAILURE); \
 } while (0)
@@ -163,7 +155,6 @@ void cp_fchar (file_data_t *dest_file_data, char ch, int type);
 
 // Print error message, exit
 #define peme(...) do { \
-    clean_up(); \
     pem(__VA_ARGS__); \
     exit (EXIT_FAILURE); \
 } while (0)

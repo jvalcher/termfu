@@ -216,7 +216,7 @@ typedef struct {
 #define PROGRAM_BUF_LEN  65536
 #define ASYNC_BUF_LEN    65536 
 
-enum { DEBUGGER_GDB };
+enum { UNKNOWN, DEBUGGER_GDB };
 enum { READER_RECEIVING, READER_DONE };
 
 

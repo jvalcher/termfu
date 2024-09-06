@@ -2,21 +2,22 @@
 
 Asm : a : (a)ssembly
 Brk : e : br(e)akpoints
-Con : c : (c)ontinue
 Dbg : d : (d)ebug out
+LcV : v : local (v)ars
+Prg : p : (p)rogram out
+Reg : g : re(g)isters
+Src : o : s(o)urce file
+Wat : w : (w)atch
+
+Lay : l : (l)ayouts
+Qut : q : (q)uit
+Run : r : (r)un
+Nxt : n : (n)ext
+Stp : s : (s)tep
+Con : c : (c)ontinue
+Unt : u : (u)ntil
 Fin : f : (f)inish
 Kil : k : (k)ill
-Lay : l : (l)ayouts
-LcV : v : local (v)ars
-Nxt : n : (n)ext
-Prg : p : (p)rogram out
-Qut : q : (q)uit
-Reg : g : re(g)isters
-Run : r : (r)un
-Src : o : s(o)urce file
-Stp : s : (s)tep
-Unt : u : (u)ntil
-Wat : w : (w)atch
 
 [ layout : Main ]
 
