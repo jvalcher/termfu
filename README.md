@@ -47,6 +47,7 @@ Run the program from the same directory as the configuration file.
 | LcV | Window | Local variables |
 | Nxt | Header | Next |
 | Prg | Window | Program CLI output |
+| Prm | Header | Debugger prompt (popup window) |
 | Qut | Header | Quit termvu |
 | Reg | Window | Registers |
 | Run | Header | Run program |
@@ -84,6 +85,7 @@ Reg : g : re(g)isters
 Src : o : s(o)urce file
 Wat : w : (w)atch
 
+Prm : m : pro(m)pt
 Lay : l : (l)ayouts
 Qut : q : (q)uit
 Run : r : (r)un
@@ -97,7 +99,7 @@ Kil : k : (k)ill
 [ layout : Main ]
 
 >h
-lq
+mlq
 rnscufk
 
 >w
@@ -108,7 +110,7 @@ vppdd
 [ layout : Assembly / Registers ]
 
 >h
-lq
+mlq
 rnscufk
 
 >w

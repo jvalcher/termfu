@@ -7,6 +7,7 @@
 #include "select_window.h"
 #include "choose_layout.h"
 #include "execute_until.h"
+#include "run_custom_command.h"
 
 
 
@@ -44,6 +45,9 @@ run_plugin (int      plugin_index,
         // popup window
         case Lay: 
             choose_layout (state);
+            break;
+        case Prm: 
+            run_custom_command (state);
             break;
         case Unt: 
             execute_until (state);

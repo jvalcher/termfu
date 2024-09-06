@@ -9,6 +9,7 @@ Reg : g : re(g)isters
 Src : o : s(o)urce file
 Wat : w : (w)atch
 
+Prm : m : pro(m)pt
 Lay : l : (l)ayouts
 Qut : q : (q)uit
 Run : r : (r)un
@@ -22,7 +23,7 @@ Kil : k : (k)ill
 [ layout : Main ]
 
 >h
-lq
+mlq
 rnscufk
 >w
 eooaa
@@ -32,7 +33,7 @@ vppdd
 [ layout : Assembly / Registers ]
 
 >h
-lq
+mlq
 rnscufk
 >w
 oag

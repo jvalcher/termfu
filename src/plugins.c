@@ -21,6 +21,7 @@ Plugins
     - Pop-up window selection
 
         Lay     Layouts
+        Prm     Execute custom debugger command
         Unt     Execute until
 
     - Non-window
@@ -69,6 +70,7 @@ char *plugin_codes [] = {
     "LcV",
     "Nxt",
     "Prg",
+    "Prm",
     "Qut",
     "Reg",
     "Run",

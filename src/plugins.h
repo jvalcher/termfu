@@ -23,6 +23,7 @@ enum {
     LcV,
     Nxt,
     Prg,
+    Prm,
     Qut,
     Reg,
     Run,

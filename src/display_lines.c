@@ -425,7 +425,6 @@ format_win_data (int plugin_index,
 
     win = state->plugins[plugin_index]->win;
 
-    // assembly
     if (plugin_index == Asm) {
 
         // highlight current hex address (wherever it occurs)
@@ -456,6 +455,5 @@ format_win_data (int plugin_index,
             }
         }
     }
-
 }
 
