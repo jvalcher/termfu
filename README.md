@@ -60,7 +60,7 @@ Run the program from the same directory as the configuration file.
 ### Configuration sections
 <br>
 
-Adding parentheses around a character in the `<(t)itle>` changes the character's color
+Adding parentheses around a character in the `<(t)itle>` changes the character's color.
 <br><br>
 
 | Section   | Description |
