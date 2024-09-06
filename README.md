@@ -1,10 +1,15 @@
 
 # termvu
 
-A multi-language TUI debugger
+A multi-language Ncurses TUI debugger
+<br /><br />
 
-**\*\* In development \*\***
+## Support
 
+| Supported debuggers |
+| :--------: |
+| `gdb` |
+<br />
 
 ## Configuration
 
@@ -61,20 +66,25 @@ oag
 <br />
 
 
-### Configuration file location
+### Configuration file
 
-.termvu` <br />
- 
+Run the program from the same directory as the configuration file.
+<br />
+`./.termvu` 
+<br /><br />
 
-### Scripts
-```
-make      		       - build production binary
-make allf 		       - build production binary, print formatted error messages
-make dev		         - build development binary, run it
-make devf   	      - build development binary, print formatted error messages
-make test T=<path> - run <tests/test1.c>
-make todo          - print source code tags in source code (TODO, FIXME, etc.)
-make colors		      - check if current terminal can display colors
-```
+## Scripts
+<br />
+
+| Command                | Description |
+|------------------------|-------------|
+| `make`                 | Build production binary |
+| `make allf`            | Build production binary, print formatted error messages |
+| `make dev`	            | Build development binary, run it |
+| `make devf`            | Build development binary, print formatted error messages |
+| `make test T=<path>`   | Run `tests/test1.c` |
+| `make todo`            | Print source code tags  (`TODO`, `FIXME`, etc.) |
+| `make colors`	         | Check if current terminal can display colors |
+
 <br /><br />
 
