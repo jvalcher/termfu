@@ -2,6 +2,8 @@
 # termvu
 
 A multi-language Ncurses TUI debugger
+<br />
+<img src='./misc/layout1.png' height='500px'>
 <br /><br />
 
 ## Support
@@ -44,8 +46,8 @@ Wat : w : (w)atch
 lq
 rnscfk
 >w
-eoo
-woo
+eoa
+woa
 vpd
 
 [ layout : Assembly / Registers ]
@@ -55,7 +57,6 @@ lq
 rnscfk
 >w
 oag
-
 ```
 
 

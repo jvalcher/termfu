@@ -1,13 +1,13 @@
 
 #
 #   -------
-#   make      		   - build production binary
-#   make allf 		   - build production binary, print formatted error messages
-#   make dev		   - build development binary, run it
-#   make devf   	   - build development binary, print formatted error messages
-#   make test T=<path> - run <tests/test1.c>
-#   make todo          - print source code tags in source code (TODO, FIXME, etc.)
-#   make colors		   - check if current terminal can display colors
+#   make      		   - Build production binary
+#   make allf 		   - Build production binary, print formatted error messages
+#   make dev		   - Build development binary, run it
+#   make devf   	   - Build development binary, print formatted error messages
+#   make test T=<path> - Run <tests/test1.c>
+#   make todo          - Print source code tags in source code (TODO, FIXME, etc.)
+#   make colors		   - Check if current terminal can display colors
 #   -------
 #
 
