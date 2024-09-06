@@ -1,7 +1,10 @@
 #!/bin/bash
 
+# Run Tmux debugging session
+# Set breakpoint(s) then 'continue' execution
+# 'q' to close session, save breakpoints
+
 tmux splitw -h -p 50 "gdbserver :12347 ./termvu_dev ./misc/hello 0"
-#tmux splitw -h -p 50 "gdbserver :12345 ./termvu_dev ./termvu_dev 0"
 tmux selectp -t 0
 gdb --tui --quiet -x .gdbterm
 

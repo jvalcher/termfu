@@ -89,6 +89,7 @@ Run the program from the same directory as the configuration file.
 | `make dev`	           | Build development binary, run it |
 | `make devf`            | Build development binary, print formatted error messages |
 | `make test T=<path>`   | Run `tests/test1.c` |
+| `make debug`           | Run Tmux debugging session |
 | `make todo`            | Print source code tags  (`TODO`, `FIXME`, etc.) |
 | `make colors`	         | Check if current terminal can display colors with Ncurses |
 

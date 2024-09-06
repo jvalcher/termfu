@@ -6,6 +6,7 @@
 #   make dev		   - Build development binary, run it
 #   make devf   	   - Build development binary, print formatted error messages
 #   make test T=<path> - Run <tests/test1.c>
+#   make debug         - Run Tmux debugging session
 #   make todo          - Print source code tags in source code (TODO, FIXME, etc.)
 #   make colors		   - Check if current terminal can display colors
 #   -------
@@ -78,6 +79,12 @@ test: C_TEST_FILES += $(C_POPUP_FILES)
 test: clean_test $(B_FILE_TEST)
 	@echo ""
 	./$(B_FILE_TEST) ./misc/hello
+	@echo ""
+
+
+debug:
+	@echo ""
+	./scripts/gdb_debug
 	@echo ""
 
 
