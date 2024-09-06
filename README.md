@@ -1,17 +1,18 @@
 
 # termvu
 
-A multi-language Ncurses TUI debugger
-<br />
-<img src='./misc/layout1.png' height='500px'>
+An easy-to-configure, multi-language terminal debugger
+<br /><br />
+*** __In development__ ***
+<br /><br />
+<img src='./misc/layout1.png' height='400px'>
 <br /><br />
 
-## Support
+## Supported debuggers
+| `gdb`  | `pdb`... |
+| :----: | :----: |
 
-| Supported debuggers |
-| :--------: |
-| `gdb` |
-<br />
+<br /><br />
 
 ## Configuration
 
