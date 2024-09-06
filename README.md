@@ -40,21 +40,25 @@ Src : o : s(o)urce file
 Stp : s : (s)tep
 Wat : w : (w)atch
 
+
 [ layout : Main ]
 
 >h
 lq
 rnscfk
+
 >w
-eoa
-woa
-vpd
+eooaa
+wooaa
+vppdd
+
 
 [ layout : Assembly / Registers ]
 
 >h
 lq
 rnscfk
+
 >w
 oag
 ```
