@@ -7,40 +7,90 @@ A fast, easy-to-configure, multi-language terminal debugger
 <br /><br />
 
 ## Support
+
 | `Debugger` | `Languages` |
 |   :----:   | :----: |
-| `gdb`      | C,  C++,  D,  Go,  Objective-C,  Fortran,  OpenCL C,  Pascal,  Rust,  assembly,  Modula-2,  Ada |
+| `gdb`      | C, C++, D, Go, Objective-C, <br>Fortran, OpenCL C, Pascal, <br>Rust, assembly, Modula-2, Ada |
 | `pdb`...   | Python |
 
 <br />
 
+## Usage
+<br />
+
+`$ termvu -d gdb a.out`
+<br /><br />
+
 ## Configuration
 
 Unique, three-character, case-sensitive "plugin" codes are each associated with a specific debugger action or window. The codes are bound to user-defined shortcut keys. The keys are then used to create custom ASCII-art layouts.
+<br /><br />
+
+Run the program from the same directory as the configuration file.
+<br />
+
+`./.termvu` 
+<br /><br />
+
+### Plugins
+<br />
+
+| Plugin Code  | Type | Description |
+| ----- | ----- | ----- |
+| Asm | Window | Assembly code |
+| Brk | Window | Breakpoints |
+| Con | Header | Continue |
+| Dbg | Window | Debugger output |
+| Fin | Header | Finish |
+| Kil | Header | Kill |
+| Lay | Header | Choose layout (popup window) |
+| LcV | Window | Local variables |
+| Nxt | Header | Next |
+| Prg | Window | Program CLI output |
+| Qut | Header | Quit termvu |
+| Reg | Window | Registers |
+| Run | Header | Run program |
+| Src | Window | Source file |
+| Stp | Header | Step |
+| Unt | Header | Until (popup window) |
+| Wat | Window | Watchpoints |
+
+<br />
+
+### Configuration sections
+<br />
+
+| Section   | Description |
+| :----:    |  :----: |
+| `plugins` | `<plugin code>` : `<key binding>` : `<title>` <br> Adding parentheses around a character in the <(__t__)itle> changes the character's color |
+| `layout`  | `[ layout : <title> ]` <br>`>h` -> header commands, `>w` == windows |
+
 <br />
 
 ### Example configuration
+<br />
 
 ```
 [ plugins ]
 
 Asm : a : (a)ssembly
 Brk : e : br(e)akpoints
-Con : c : (c)ontinue
 Dbg : d : (d)ebug out
+LcV : v : local (v)ars
+Prg : p : (p)rogram out
+Reg : g : re(g)isters
+Src : o : s(o)urce file
+Wat : w : (w)atch
+
+Lay : l : (l)ayouts
+Qut : q : (q)uit
+Run : r : (r)un
+Nxt : n : (n)ext
+Stp : s : (s)tep
+Con : c : (c)ontinue
+Unt : u : (u)ntil
 Fin : f : (f)inish
 Kil : k : (k)ill
-Lay : l : (l)ayouts
-LcV : v : local (v)ars
-Nxt : n : (n)ext
-Prg : p : (p)rogram out
-Qut : q : (q)uit
-Reg : g : re(g)isters
-Run : r : (r)un
-Src : o : s(o)urce file
-Stp : s : (s)tep
-Unt : u : (u)ntil
-Wat : w : (w)atch
 
 [ layout : Main ]
 
@@ -70,13 +120,6 @@ oag
 <img src='./misc/layout2.png' height='500px'>
 <br />
 
-
-### Configuration file
-
-Run the program from the same directory as the configuration file.
-<br />
-`./.termvu` 
-<br /><br />
 
 ## Scripts
 <br />
