@@ -1,7 +1,7 @@
 
 # termvu
 
-An easy-to-configure, multi-language terminal debugger
+A fast, easy-to-configure, multi-language terminal debugger
 <br /><br />
 *** __In development__ ***
 <br /><br />
