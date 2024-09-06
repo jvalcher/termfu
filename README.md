@@ -1,8 +1,9 @@
 
 # termvu
 
-A fast, easy-to-configure, multi-language terminal debugger
+A fast, multi-language terminal debugger that allows for the creation of multiple custom layouts
 <br><br>
+
 <img src='./misc/layout1.png' height='400px'>
 <br><br>
 
