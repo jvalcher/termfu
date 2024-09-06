@@ -68,7 +68,7 @@ Adding parentheses around a character in the `<(t)itle>` changes the character's
 | Section   | Description |
 | :----:    |  :----: |
 | `plugins` | `<plugin code>` : `<key binding>` : `<title>` |
-| `layout`  | `[ layout : <title> ]` <br>`>h` -> header commands, `>w` == windows |
+| `layout`  | `[ layout : <title> ]` <br>`>h` : header commands,  `>w` : windows |
 <br>
 
 ### Example configuration
