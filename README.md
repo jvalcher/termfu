@@ -86,11 +86,11 @@ Run the program from the same directory as the configuration file.
 |------------------------|-------------|
 | `make`                 | Build production binary |
 | `make allf`            | Build production binary, print formatted error messages |
-| `make dev`	            | Build development binary, run it |
+| `make dev`	           | Build development binary, run it |
 | `make devf`            | Build development binary, print formatted error messages |
 | `make test T=<path>`   | Run `tests/test1.c` |
 | `make todo`            | Print source code tags  (`TODO`, `FIXME`, etc.) |
-| `make colors`	         | Check if current terminal can display colors |
+| `make colors`	         | Check if current terminal can display colors with Ncurses |
 
 <br /><br />
 
