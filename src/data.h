@@ -14,6 +14,7 @@
  ******/
 
 #define PROGRAM_NAME     "termvu"       // TODO: rename program
+#define CONFIG_NAME      ".termvu" 
 #define DEBUG_OUT_PATH   "debug.out"
 #define PARENT_PROCESS   0
 #define CHILD_PROCESS    1
@@ -63,7 +64,6 @@
   Layouts
  *********/
 
-#define CONFIG_FILE             ".termvu"
 #define FIRST_LAYOUT            "FiRsT_lAyOuT"
 #define MAX_CONFIG_CATEG_LEN    48
 #define MAX_CONFIG_LABEL_LEN    48
@@ -107,7 +107,6 @@ typedef struct layout {
  *********/
 
 #define MAX_LINES      128
-#define WATCH_LEN      84
 #define FILE_PATH_LEN  256
 #define ADDRESS_LEN    48
 #define FUNC_LEN       48
@@ -120,29 +119,20 @@ typedef struct layout {
 #define Reg_BUF_LEN    16384
 #define Wat_BUF_LEN    4096
 
-
-typedef struct watch {
-
-    int            index;
-    char           var   [WATCH_LEN];
-    char           value [WATCH_LEN];
-    struct watch  *next;
-
-} watchpoint_t;
-
 typedef struct {
 
-    char          *buff;  
-    int            buff_len;
-    int            buff_pos;
-    bool           changed;
-    int            rows;
-    int            max_cols;
-    int            scroll_row;
-    int            scroll_col;
-    watchpoint_t  *watchpoints;
+    char  *buff;  
+    int    buff_len;
+    int    buff_pos;
+    bool   changed;
+    int    rows;
+    int    max_cols;
+    int    scroll_row;
+    int    scroll_col;
+    bool   new_data;
 
 } buff_data_t;
+
 
 typedef struct {
 
@@ -169,6 +159,7 @@ typedef struct {
     int    func_pos;
 
 } file_data_t;
+
 
 typedef struct {
 
@@ -218,15 +209,16 @@ typedef struct {
 #define PIPE_READ        0
 #define PIPE_WRITE       1
 #define DEBUG_BUF_LEN    WIN_BUF_LEN
-#define READER_BUF_LEN   4096
-#define FORMAT_BUF_LEN   20000
-#define DATA_BUF_LEN     20000
-#define CLI_BUF_LEN      20000
-#define PROGRAM_BUF_LEN  20000
-#define ASYNC_BUF_LEN    6000 
+#define READER_BUF_LEN   8192
+#define FORMAT_BUF_LEN   65536
+#define DATA_BUF_LEN     65536
+#define CLI_BUF_LEN      65536
+#define PROGRAM_BUF_LEN  65536
+#define ASYNC_BUF_LEN    65536 
 
 enum { DEBUGGER_GDB };
 enum { READER_RECEIVING, READER_DONE };
+
 
 typedef struct {
 
@@ -245,6 +237,7 @@ typedef struct {
     char    async_buffer   [ASYNC_BUF_LEN];
 
 } debugger_t;
+
 
 typedef struct {
 
@@ -291,19 +284,45 @@ typedef struct {
   State
  *******/
 
-#define INPUT_BUFF_LEN   4096
+#define FILE_LEN        84
+#define ABS_PATH_LEN    256
+#define BREAK_LEN       256
+#define WATCH_LEN       84
+#define INPUT_BUFF_LEN  4096
+
+
+typedef struct breakpoint {
+
+    char  path_line [BREAK_LEN];
+    struct breakpoint *next;
+
+} breakpoint_t;
+
+
+typedef struct watchpoint {
+
+    int   index;
+    char  var   [WATCH_LEN];
+    char  value [WATCH_LEN];
+    struct watchpoint *next;
+
+} watchpoint_t;
+
 
 typedef struct {
 
-    int           num_plugins;
-    int          *plugin_key_index;
-    char          input_buffer [INPUT_BUFF_LEN];
+    int            num_plugins;
+    int           *plugin_key_index;
+    char           input_buffer [INPUT_BUFF_LEN];
 
-    layout_t     *curr_layout;
-    debugger_t   *debugger;
-    layout_t     *layouts;
-    plugin_t    **plugins;
-    WINDOW       *header;
+    layout_t      *curr_layout;
+    debugger_t    *debugger;
+    layout_t      *layouts;
+    plugin_t     **plugins;
+    WINDOW        *header;
+
+    watchpoint_t  *watchpoints;
+    breakpoint_t  *breakpoints;
 
 } state_t;
 

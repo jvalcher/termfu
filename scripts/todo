@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Output all source code tags recursively from CWD
+
+CWD="src/"
+
+grep -rn \
+\
+    -e "NOTE: " \
+    -e "OPTIMIZE: " \
+    -e "TODO: " \
+    -e "HACK: " \
+    -e "XXX: " \
+    -e "FIXME: " \
+    -e "BUG: " \
+\
+    $CWD 2>/dev/null --color=auto | \
+\
+    sed \
+    -e "s/^.[^:]*\?/\x1b[1;36m&\x1b[0m/g" \
+    -e "s/NOTE/\x1b[0;33m&\x1b[0m/g" \
+    -e "s/OPTIMIZE/\x1b[0;33m&\x1b[0m/g" \
+    -e "s/TODO/\x1b[2;32m&\x1b[0m/g" \
+    -e "s/HACK/\x1b[0;34m&\x1b[0m/g" \
+    -e "s/XXX/\x1b[0;35m&\x1b[0m/g" \
+    -e "s/FIXME/\x1b[0;36m&\x1b[0m/g" \
+    -e "s/BUG/\x1b[0;31m&\x1b[0m/g"
+

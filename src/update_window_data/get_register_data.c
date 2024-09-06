@@ -50,7 +50,14 @@ get_register_data_gdb (state_t *state)
             if (*src_ptr == '\\' && isalpha(*(src_ptr + 1))) {
                 if (*(src_ptr + 1) == 'n') {
                     src_ptr += 2;
+                } else if (*(src_ptr + 1) == 't') {
+                    src_ptr += 2;
                 } 
+            }
+
+            //  \\\\  ->  '\\'
+            else if (*src_ptr == '\\' && *(src_ptr + 1) == '\\' ) {
+                src_ptr += 1;
             }
 
             else {

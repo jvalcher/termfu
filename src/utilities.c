@@ -48,6 +48,32 @@ void clean_up (void)
 
 
 
+void
+persist_data (state_t *state)
+{
+    breakpoint_t *curr_break;
+    watchpoint_t *curr_watch;
+
+    // watchpoints
+    curr_watch = state->watchpoints;
+    do {
+        logd ("(%d) %s = %s\n",
+                curr_watch->index, curr_watch->var, curr_watch->value);
+        curr_watch = curr_watch->next;
+    } while (curr_watch != NULL);
+    
+    logd ("\n");
+
+    // breakpoints
+    curr_break = state->breakpoints;
+    do {
+        logd ("%s\n", curr_break->path_line);
+        curr_break = curr_break->next;
+    } while (curr_break != NULL);
+}
+
+
+
 char*
 concatenate_strings (int num_strs, ...)
 {

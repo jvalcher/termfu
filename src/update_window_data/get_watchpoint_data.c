@@ -37,7 +37,7 @@ get_watchpoint_data_gdb (state_t *state)
 
     win      = state->plugins[Wat]->win;
     dest_ptr = win->buff_data->buff;
-    watch    = win->buff_data->watchpoints;
+    watch    = state->watchpoints;
 
     // create buffer, add values
     while (watch != NULL) {

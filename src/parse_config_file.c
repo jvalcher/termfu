@@ -99,39 +99,14 @@ parse_config_file (state_t *state)
 /*
     Open config file
     ---------
-    Checks in this order:
-
-        // TODO: check config file flag location
-        PWD/.term_debug
-        HOME/.term_debug
+    PWD/.term_debug
 */
 static FILE* open_config_file (void)
 {
-    char cwd[100];
-    char cwd_path[130];
-    char home_path[130];
-    FILE *file = NULL;
-
-    // check current working directory
-    if (getcwd (cwd, sizeof (cwd)) != NULL) {
-        snprintf (cwd_path, sizeof (cwd_path), "%s/%s", cwd, CONFIG_FILE);
-        file = fopen (cwd_path, "r");
-    }
-
-    // check in user's home directory
+    FILE *file = fopen (CONFIG_NAME, "r");
     if (file == NULL) {
-        char *home = getenv ("HOME");
-        snprintf (home_path, sizeof (home_path), "%s/%s", home, CONFIG_FILE);
-        file = fopen (home_path, "r");
+        pfeme ("Unable to find config file \"./%s\"\n", CONFIG_NAME);
     }
-
-    // if no config file found, exit
-    if (file == NULL) {
-        pfem  ("Unable to find config file:\n");
-        pem  ("%s/.term_debug\n", cwd_path);
-        peme ("%s/.term_debug\n", home_path);
-    }
-
     return file;
 }
 
@@ -223,7 +198,7 @@ static void create_plugins (FILE *file, state_t *state)
               key,
               plugin_index;
     char      title [MAX_TITLE_LEN],
-              code[PLUGIN_CODE_LEN + 1];
+              code  [PLUGIN_CODE_LEN + 1];
     bool      title_started;
     plugin_t *curr_plugin = NULL;
 
@@ -237,7 +212,7 @@ static void create_plugins (FILE *file, state_t *state)
                 code[j] = key;
                 key = fgetc (file);
             }
-            code[PLUGIN_CODE_LEN] = '\0';
+            code [PLUGIN_CODE_LEN] = '\0';
 
             plugin_index = get_plugin_code_index (code, state);
             curr_plugin = state->plugins [plugin_index];

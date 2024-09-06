@@ -1,7 +1,7 @@
 #include "../src/data.h"
 #include "../src/start_debugger.h"
 #include "../src/parse_cli_arguments.h"
-#include "../src/popup_window_commands/breakpoints.h"
+#include "../src/get_popup_window_input/popup_breakpoints.h"
 
 
 
@@ -37,9 +37,9 @@ main (int argc, char *argv[])
     */
 
     // print breakpoints
-    curr_break = state->debugger->breakpoints;
+    curr_break = state->breakpoints;
     while (curr_break != NULL) {
-        mvwprintw (stdscr, row, 3, "%d: %s", curr_break->index, curr_break->location);
+        mvwprintw (stdscr, row, 3, "%s", curr_break->path_line);
         curr_break = curr_break->next;
         row += 2;
     }
@@ -50,9 +50,9 @@ main (int argc, char *argv[])
     delete_breakpoint (state);
 
     // print breakpoints
-    curr_break = state->debugger->breakpoints;
+    curr_break = state->breakpoints;
     while (curr_break != NULL) {
-        mvwprintw (stdscr, row, 3, "%d: %s", curr_break->index, curr_break->location);
+        mvwprintw (stdscr, row, 3, "%s", curr_break->path_line);
         curr_break = curr_break->next;
         row += 2;
     }

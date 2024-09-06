@@ -1,102 +1,123 @@
 
 #
-# Commands:
-# -------
-# 	make      	- build prod binary
-# 	make dev	- build dev binary, run it
-# 	make devf   - build dev binary with formatted error messages
-# 	make debug  - build dev binary with DEBUG flag (no ncurses), run it
-# 	make colors	- check if current terminal can display colors
+#   -------
+#   make      		   - build production binary
+#   make allf 		   - build production binary, print formatted error messages
+#   make dev		   - build development binary, run it
+#   make devf   	   - build development binary, print formatted error messages
+#   make test T=<path> - run <tests/test1.c>
+#   make todo          - print source code tags in source code (TODO, FIXME, etc.)
+#   make colors		   - check if current terminal can display colors
+#   -------
 #
 
-B_FILE_DEV=		termvu_dev
-B_FILE_PROD=	termvu
 
-CC=				gcc
-FLAGS=			-Wall -Wextra -MMD
-PROD_FLAGS=		-O3
-DEV_FLAGS=		-g
-DEBUG_FLAGS=	-D DEBUG -g
-DEV_F_FLAGS=	-g -fdiagnostics-format=json
+B_FILE_PROD    = termvu
+B_FILE_DEV     = termvu_dev
+B_FILE_TEST    = termvu_test
 
-NCURSES_CFLAGS 	:= $(shell ncurses5-config --cflags)
-NCURSES_LIBS 	:= $(shell ncurses5-config --libs)
+CC             = gcc
+FLAGS          = -Wall -Wextra
+PROD_FLAGS     = -O3
+DEV_FLAGS      = -g
+FORMAT_FLAGS   = -fdiagnostics-format=json
 
-C_FILES=		$(wildcard ./src/*.c)
-O_FILES=		$(patsubst ./src/%.c, ./obj/%.o, $(C_FILES))
-CU_FILES=		$(wildcard ./src/update_window_data/*.c)
-OU_FILES=		$(patsubst ./src/update_window_data/%.c, ./obj/%.o, $(CU_FILES))
-CP_FILES=		$(wildcard ./src/get_popup_window_input/*.c)
-OP_FILES=		$(patsubst ./src/get_popup_window_input/%.c, ./obj/%.o, $(CP_FILES))
+NCURSES_CFLAGS = $(shell ncurses5-config --cflags)
+NCURSES_LIBS   = $(shell ncurses5-config --libs)
 
-D_FILES= 		$(patsubst ./src/%.c, ./obj/%.d, $(C_FILES)) \
-				$(patsubst ./src/update_window_data/%.c, ./obj/%.d, $(CU_FILES)) \
-				$(patsubst ./src/get_popup_window_input/%.c, ./obj/%.d, $(CP_FILES))
-
-.PHONY: clean colors all dev debug
+C_FILES        = $(wildcard ./src/*.c)
+C_TEST_FILES   = $(filter-out ./src/main.c, $(wildcard ./src/*.c))
+C_UPDATE_FILES = $(wildcard ./src/update_window_data/*.c)
+C_POPUP_FILES  = $(wildcard ./src/get_popup_window_input/*.c)
 
 
-# final
-#
-all: FLAGS += $(PROD_FLAGS)
-all: clean $(B_FILE_PROD)
+.PHONY: all allf dev devf test todo colors clean_prod clean_dev clean_test
+
+
+all: FLAGS   += $(PROD_FLAGS)
+all: C_FILES += $(C_UPDATE_FILES)
+all: C_FILES += $(C_POPUP_FILES)
+all: clean_prod $(B_FILE_PROD)
 	@echo ""
 
-dev: FLAGS += $(DEV_FLAGS)
-dev: clean $(B_FILE_DEV)
+
+allf:
 	@echo ""
+	./scripts/make_format
+	@echo ""
+
+allformat: FLAGS   += $(FORMAT_FLAGS)
+allformat: C_FILES += $(C_UPDATE_FILES)
+allformat: C_FILES += $(C_POPUP_FILES)
+allformat: clean_prod $(B_FILE_PROD)
+
+
+dev: FLAGS   += $(DEV_FLAGS)
+dev: C_FILES += $(C_UPDATE_FILES)
+dev: C_FILES += $(C_POPUP_FILES)
+dev: clean_dev $(B_FILE_DEV)
 	./$(B_FILE_DEV) ./misc/hello
 	@echo ""
 
-debug: FLAGS += $(DEBUG_FLAGS)
-debug: clean $(B_FILE_DEV)
+
+devf:
 	@echo ""
-	./$(B_FILE_DEV) ./misc/hello
+	./scripts/make_format
 	@echo ""
 
-devf: FLAGS += $(DEV_F_FLAGS)
-devf: clean $(B_FILE_DEV)
+devformat: FLAGS   += $(FORMAT_FLAGS)
+devformat: C_FILES += $(C_UPDATE_FILES)
+devformat: C_FILES += $(C_POPUP_FILES)
+devformat: clean_dev $(B_FILE_DEV)
+
+
+test: FLAGS        += $(DEV_FLAGS)
+test: C_TEST_FILES += $(T)
+test: C_TEST_FILES += $(C_UPDATE_FILES)
+test: C_TEST_FILES += $(C_POPUP_FILES)
+test: clean_test $(B_FILE_TEST)
 	@echo ""
+	./$(B_FILE_TEST) ./misc/hello
+	@echo ""
+
+
+todo:
+	@echo ""
+	./scripts/todo
+	@echo ""
+
 
 colors:
-	./scripts/run ./scripts/colors_test.c
-	@rm ./scripts/colors_test
-
-
-# binary
-#
-$(B_FILE_PROD): $(O_FILES) $(OU_FILES) $(OP_FILES)
 	@echo ""
-	$(CC) -o $@ $^ $(NCURSES_LIBS)
-
-$(B_FILE_DEV): $(O_FILES) $(OU_FILES) $(OP_FILES)
+	./scripts/run ./tests/colors_test.c
 	@echo ""
-	$(CC) -o $@ $^ $(NCURSES_LIBS)
+	rm ./scripts/colors_test
+	@echo ""
 
 
-# objects
-#
-obj/%.o: src/%.c
-	$(CC) $(FLAGS) $(NCURSES_CFLAGS) -c -o $@ $<
-
-obj/%.o: src/get_popup_window_input/%.c
-	$(CC) $(FLAGS) $(NCURSES_CFLAGS) -c -o $@ $<
-
-obj/%.o: src/update_window_data/%.c
-	$(CC) $(FLAGS) $(NCURSES_CFLAGS) -c -o $@ $<
-
-
-# d files
-#
--include $(D_FILES)
+clean_prod:
+	@echo ""
+	rm -f $(B_FILE_PROD)
+	@echo ""
+clean_dev:
+	@echo ""
+	rm -f $(B_FILE_DEV)
+	@echo ""
+clean_test:
+	@echo ""
+	rm -f $(B_FILE_TEST)
+	@echo ""
 
 
+$(B_FILE_PROD):
+	$(CC) $(FLAGS) $(NCURSES_CFLAGS) $(C_FILES) -o $(B_FILE_PROD) $(NCURSES_LIBS)
+	@echo ""
 
-# clean
-#
-clean:
-	rm -f ./obj/*
-	rm -f ./term_debug
-	rm -f ./term_debug_dev
+$(B_FILE_DEV):
+	$(CC) $(FLAGS) $(NCURSES_CFLAGS) $(C_FILES) -o $(B_FILE_DEV) $(NCURSES_LIBS)
+	@echo ""
+
+$(B_FILE_TEST):
+	$(CC) $(FLAGS) $(NCURSES_CFLAGS) $(C_TEST_FILES) -o $(B_FILE_TEST) $(NCURSES_LIBS)
 	@echo ""
 

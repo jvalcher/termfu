@@ -40,6 +40,8 @@ int main (int argc, char *argv[])
 
     render_layout (FIRST_LAYOUT, &state);
 
+    // CURRENT: persist watches, breaks; .termvu must be in CWD; debugger cli popup
+
     start_debugger (&state); 
 
     set_signals ();

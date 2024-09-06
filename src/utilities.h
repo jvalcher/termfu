@@ -34,6 +34,13 @@ void  clean_up  (void);
 
 
 /*
+    Add breakpoints, watchpoints to config file
+*/
+void persist_data (state_t *state);
+
+
+
+/*
     Concatenate variable number of strings
     -------
     - Returns pointer to created string

@@ -46,9 +46,9 @@ insert_watchpoint_gdb (state_t *state)
     if (strlen (state->input_buffer) > 0) {
 
         // first watchpoint
-        if (state->plugins[Wat]->win->buff_data->watchpoints == NULL) {
-            state->plugins[Wat]->win->buff_data->watchpoints = (watchpoint_t*) malloc (sizeof (watchpoint_t));
-            watch = state->plugins[Wat]->win->buff_data->watchpoints;
+        if (state->watchpoints == NULL) {
+            state->watchpoints = (watchpoint_t*) malloc (sizeof (watchpoint_t));
+            watch = state->watchpoints;
             watch->index = 1;
             watch->var[0] = '\0';
             strncpy (watch->var, state->input_buffer, WATCH_LEN - 1);
@@ -57,7 +57,7 @@ insert_watchpoint_gdb (state_t *state)
 
         // new watchpoint
         else {
-            watch = state->plugins[Wat]->win->buff_data->watchpoints;
+            watch = state->watchpoints;
             index = watch->index;
             while (watch->next != NULL) {
                 watch = watch->next; 
@@ -81,7 +81,7 @@ delete_watchpoint_gdb (state_t *state)
     watchpoint_t *prev_watch,
                  *watch;
 
-    watch = state->plugins[Wat]->win->buff_data->watchpoints;
+    watch = state->watchpoints;
     prev_watch = watch;
 
     get_popup_window_input  ("Delete watchpoint (index): ", state->input_buffer);
@@ -90,8 +90,8 @@ delete_watchpoint_gdb (state_t *state)
 
         // delete watchpoint
         if (watch->index == atoi (state->input_buffer)) {
-            if (watch == state->plugins[Wat]->win->buff_data->watchpoints) {
-                state->plugins[Wat]->win->buff_data->watchpoints = watch->next;
+            if (watch == state->watchpoints) {
+                state->watchpoints = watch->next;
             } else {
                 prev_watch->next = watch->next;
             }

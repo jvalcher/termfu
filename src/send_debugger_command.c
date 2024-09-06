@@ -92,7 +92,9 @@ send_debugger_command (int      plugin_index,
 
         // update Dbg, Prg windows using last parse
         // update Src first to update info
-        update_windows (state, 8, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Wat);    // Src first to update info
+        state->plugins[Dbg]->win->buff_data->new_data = true;
+        state->plugins[Prg]->win->buff_data->new_data = true;
+        update_windows (state, 8, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Wat);
     }
 
     pulse_header_title_color (plugin_index, state, OFF);

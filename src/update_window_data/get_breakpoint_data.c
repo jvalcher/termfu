@@ -25,16 +25,30 @@ get_breakpoint_data (state_t *state)
 static void
 get_breakpoint_data_gdb (state_t *state)
 {
+    int i;
     window_t *win;
-    const
-    char *key_number   = "number=\"",
-         *key_orig_loc = "original-location=\"";
-    char *src_ptr;
+    const char *key_number   = "number=\"",
+               *key_orig_loc = "original-location=\"";
+    char *src_ptr,
+          break_buff [BREAK_LEN];
     buff_data_t *dest_buff;
+    breakpoint_t *tmp_break,
+                 *curr_break;
 
     win       = state->plugins[Brk]->win;
     src_ptr   = state->debugger->data_buffer;
     dest_buff = win->buff_data;
+
+    // free breakpoints
+    if (state->breakpoints != NULL) {
+        curr_break = state->breakpoints;
+        do {
+            tmp_break = curr_break->next;
+            free (curr_break);
+            curr_break = tmp_break;  
+        } while (curr_break != NULL);
+    }
+    state->breakpoints = NULL;
 
     // send debugger command
     insert_output_start_marker (state);
@@ -59,10 +73,27 @@ get_breakpoint_data_gdb (state_t *state)
             cp_char (dest_buff, ' ');
 
             // get file:line
+            i = 0;
             src_ptr = strstr (src_ptr, key_orig_loc);
             src_ptr += strlen (key_orig_loc);
             while (*src_ptr != '\"') {
+
+                break_buff [i++] = *src_ptr;
                 cp_char (dest_buff, *src_ptr++);
+            }
+            break_buff [i] = '\0';
+
+            // allocate breakpoint
+            if (state->breakpoints == NULL) {
+                curr_break = (breakpoint_t*) malloc (sizeof (breakpoint_t));
+                state->breakpoints = curr_break;
+                strncpy (curr_break->path_line, break_buff, BREAK_LEN - 1);
+                curr_break->next = NULL;
+            } else {
+                curr_break->next = (breakpoint_t*) malloc (sizeof (breakpoint_t));
+                curr_break = curr_break->next;
+                strncpy (curr_break->path_line, break_buff, BREAK_LEN - 1);
+                curr_break->next = NULL;
             }
 
             cp_char (dest_buff, '\n');

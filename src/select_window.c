@@ -116,6 +116,14 @@ select_window (int      plugin_index,
                     break;
                 }
                 break;
+            case Src:
+                switch (key) {
+                case 'c':
+                    insert_watchpoint (state);
+                    in_loop = false;
+                    break;
+                }
+                break;
             case Wat:
                 switch (key) {
                 case 'd':

@@ -1,0 +1,9 @@
+#!./venv/bin/python
+import sys
+import os
+import subprocess
+from format_gcc_output import format_gcc_output
+
+command = 'make devformat'
+format_gcc_output (command)
+

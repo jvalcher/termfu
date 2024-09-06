@@ -77,6 +77,7 @@ get_source_path_line_memory_gdb (state_t *state)
     }
 
     // memory address
+    file_data->addr_pos = 0;
     prev_ptr = src_ptr;
     src_ptr = strstr (src_ptr, key_addr);
     if (src_ptr != NULL) {
@@ -90,6 +91,7 @@ get_source_path_line_memory_gdb (state_t *state)
     cp_fchar (file_data, '\0', ADDR);
 
     // function
+    file_data->func_pos = 0;
     prev_ptr = src_ptr;
     src_ptr = strstr (src_ptr, key_func);
     if (src_ptr != NULL) {
@@ -113,15 +115,9 @@ get_source_path_line_memory_gdb (state_t *state)
         *dest_ptr = '\0';
 
         if (strcmp (state->debugger->format_buffer, win->file_data->path) != 0) {
-            /*
-            while (*src_ptr != '\0') {
-                cp_fchar (file_data, *src_ptr++, PATH);
-            }
-            */
             strncpy (win->file_data->path, state->debugger->format_buffer, FILE_PATH_LEN - 1);
             win->file_data->path_changed = true;
         }
-
         // TODO: else { check if file timestamp changed }
 
         // line number

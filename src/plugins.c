@@ -184,10 +184,13 @@ allocate_plugin_windows (state_t *state)
         if (win->file_data == NULL) {
             pfeme ("Unable to allocate file_data_t (%s)\n", win->code);
         }
+        win->file_data->path[0]  = '\0';
         win->file_data->path_len = FILE_PATH_LEN;
         win->file_data->path_pos = 0;
+        win->file_data->func[0]  = '\0';
         win->file_data->func_len = FUNC_LEN;
         win->file_data->func_pos = 0;
+        win->file_data->addr[0]  = '\0';
         win->file_data->addr_len = ADDRESS_LEN;
         win->file_data->addr_pos = 0;
         win->buff_data = NULL;

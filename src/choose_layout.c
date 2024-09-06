@@ -69,6 +69,7 @@ choose_layout (state_t *state)
     data_popup_win_sel = derwin (parent_popup_win_sel, rows - 2, cols - 2, 1, 1);
 
     // print options
+    // TODO: highlight current layout on initial open
     new_layout = false;
     curr_layout = state->layouts;
     curr_option = 0;

@@ -1,5 +1,5 @@
 */*.out
-term_debug*
+termvu*
 core
 ncurses.h
 tags
@@ -13,9 +13,6 @@ __pycache__
 make_dev*
 
 .gdb*
-
-obj/*
-!obj/.gitkeep
 
 build.log
 tags

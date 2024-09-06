@@ -47,6 +47,7 @@ get_local_vars_gdb (state_t *state)
 
         dest_buff->buff_pos = 0;
 
+        // variable
         while ((src_ptr = strstr (src_ptr, key_name)) != NULL) {
             src_ptr += strlen (key_name);
             while (*src_ptr != '\"') {
@@ -57,12 +58,12 @@ get_local_vars_gdb (state_t *state)
             cp_char (dest_buff, '=');
             cp_char (dest_buff, ' ');
 
-            // get path:line
+            // value
             src_ptr = strstr (src_ptr, key_value);
             src_ptr += strlen (key_value);
-            while (*src_ptr != '}') {
+            while ( *src_ptr != '}' ) {
 
-                //  \\\t, \\\n
+                //  \\\t, \\\n  ->  \t, \n
                 if (*src_ptr == '\\' && isalpha(*(src_ptr + 1))) {
                     if (*(src_ptr + 1) == 'n') {
                         cp_char (dest_buff, '\\');
@@ -81,12 +82,12 @@ get_local_vars_gdb (state_t *state)
                     cp_char (dest_buff, *src_ptr++);
                 }
 
-                //  \\\\  ->  skip
+                //  \\\\  ->  '\\'
                 else if (*src_ptr == '\\' && *(src_ptr + 1) == '\\' ) {
                     src_ptr += 1;
                 }
 
-                //  \"  ->  skip
+                //  \"  ->  _
                 else if (*src_ptr == '\"') {
                     src_ptr += 1;
                 }
@@ -94,6 +95,11 @@ get_local_vars_gdb (state_t *state)
                 else {
                     cp_char (dest_buff, *src_ptr++);
                 }
+            }
+
+            // ..., 4, 5 '}'
+            if (*(src_ptr + 1) == '\"') {
+                cp_char (dest_buff, '}');
             }
 
             cp_char (dest_buff, '\n');
