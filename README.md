@@ -12,7 +12,7 @@ A fast, multi-language terminal debugger that allows for the creation of multipl
 | `Debugger` | `Languages` |
 |   :----:   | :----: |
 | `gdb`      | C, C++, D, Go, Objective-C, <br>Fortran, OpenCL C, Pascal, <br>Rust, assembly, Modula-2, Ada |
-| `pdb`      | Python (in development) |
+| `pdb`      | Python <br>(_in development_) |
 
 <br>
 
