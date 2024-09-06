@@ -1,3 +1,7 @@
+'''
+    Repository:  https://github.com/jvalcher/gcc_error_formatter
+'''
+
 import subprocess
 import sys
 import json
