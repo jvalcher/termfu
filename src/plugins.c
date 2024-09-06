@@ -21,6 +21,7 @@ Plugins
     - Pop-up window selection
 
         Lay     Layouts
+        Unt     Execute until
 
     - Non-window
 
@@ -77,6 +78,7 @@ char *plugin_codes [] = {
     "ScU",
     "Src",
     "Stp",
+    "Unt",
     "Wat"
 };
 

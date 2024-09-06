@@ -63,6 +63,8 @@ parse_config_file (state_t *state)
     is_first_layout = true;
     while ((ch = fgetc (fp)) != EOF) {
 
+        // TODO: add newline, inline #comment functionality
+
         // get category and label of section
         if (ch == '[') 
             get_category_and_label (fp, category, label);

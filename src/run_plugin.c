@@ -6,6 +6,7 @@
 #include "send_debugger_command.h"
 #include "select_window.h"
 #include "choose_layout.h"
+#include "execute_until.h"
 
 
 
@@ -26,7 +27,7 @@ run_plugin (int      plugin_index,
             send_debugger_command (plugin_index, state); 
             break;
                   
-        // windows
+        // window
         case Asm:
         case Brk:
         case Dbg:
@@ -40,8 +41,12 @@ run_plugin (int      plugin_index,
             }
             break;
 
+        // popup window
         case Lay: 
             choose_layout (state);
+            break;
+        case Unt: 
+            execute_until (state);
             break;
     }
 }
