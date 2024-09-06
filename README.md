@@ -25,7 +25,7 @@ A fast, multi-language terminal debugger that allows for the creation of multipl
 ## Configuration
 
 Unique, three-character, case-sensitive plugin codes are each associated with a specific debugger action or window. The codes are bound to user-defined shortcut keys. The keys are then used to create custom ASCII-art layouts.
-<br><br>
+<br>
 
 Run the program from the same directory as the configuration file.
 <br>
