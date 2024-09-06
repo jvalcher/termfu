@@ -66,9 +66,7 @@ oag
 .termvu` <br />
  
 
-## Build
-
-### Production
+### Scripts
 ```
 make      		       - build production binary
 make allf 		       - build production binary, print formatted error messages
