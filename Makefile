@@ -63,7 +63,7 @@ dev: clean_dev $(B_FILE_DEV)
 
 devf:
 	@echo ""
-	./scripts/make_format
+	@./scripts/make_format
 	@echo ""
 
 devformat: FLAGS   += $(FORMAT_FLAGS)
