@@ -47,13 +47,12 @@ insert_breakpoint_gdb (state_t *state)
     get_popup_window_input  ("Insert breakpoint: ", state->input_buffer);
 
     cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
-
-    // send breakpoint command
+        //
     insert_output_start_marker (state);
     send_command (state, cmd);
     insert_output_end_marker (state);
     parse_debugger_output (state);
-
+        //
     free (cmd);
 }
 

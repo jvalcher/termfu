@@ -27,11 +27,12 @@ A fast, multi-language terminal debugger that allows for the creation of multipl
 Unique, three-character, case-sensitive plugin codes are each associated with a specific debugger action or window. The codes are bound to user-defined keys. The keys are then used to create custom ASCII-art layouts.
 <br>
 
-Run the program from the same directory as the configuration file.
+Run the program in the same directory as the configuration file `.termvu` 
 <br>
 
-`./.termvu` 
+Breakpoints and watchpoints are persisted in `.termvu_data`.
 <br><br>
+
 
 ### Plugins
 <br>
