@@ -25,7 +25,7 @@ A fast, multi-language TUI debugger that allows for the creation of multiple cus
 
 # Configuration
 
-Unique, three-character, case-sensitive plugin codes are each associated with a specific debugger action or window. The codes are bound to user-defined keys. The keys are then used to create custom ASCII-art layouts.
+Unique, three-character, case-sensitive plugin codes are each associated with a specific debugger action or window. The codes are bound to user-defined keys. The keys are then used to create custom ASCII-art layouts that can be switched between.
 <br>
 
 Run the program in the same directory as the configuration file `.termvu`. Breakpoints and watchpoints are persisted in `.termvu_data`.
