@@ -15,10 +15,8 @@
 #include "utilities.h"
 #include "insert_output_marker.h"
 
-static void   configure_debugger          (debugger_t*);
 static void   start_debugger_proc         (state_t*);
 
-// TODO: get debugger commands via configuration file
 # define GDB_PROG_INDEX  3
 char *gdb_cmd[] = {"gdb", "--quiet", "--interpreter=mi", NULL, NULL};
 
