@@ -5,7 +5,7 @@ A fast, multi-language TUI debugger that allows for the creation of multiple cus
 <br><br>
 
 <img src='./misc/layout1.png' height='400px'>
-<br><br>
+<br>
 
 
 ## Support
@@ -23,7 +23,7 @@ A fast, multi-language TUI debugger that allows for the creation of multiple cus
 <br><br>
 
 
-## Configuration
+# Configuration
 
 Unique, three-character, case-sensitive plugin codes are each associated with a specific debugger action or window. The codes are bound to user-defined keys. The keys are then used to create custom ASCII-art layouts.
 <br>
@@ -117,6 +117,8 @@ rnscufk
 >w
 oag
 ```
+<br>
+
 
 ### Resulting layouts
 
@@ -126,7 +128,6 @@ oag
 
 
 ## Scripts
-<br>
 
 | Command                | Description |
 |------------------------|-------------|
