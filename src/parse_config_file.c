@@ -15,8 +15,6 @@
 #include "plugins.h"
 #include "utilities.h"
 
-static FILE      *open_config_file       (void);
-static void       get_category_and_label (FILE*, char*, char*);
 static void       create_plugins         (FILE*, state_t*);
 static layout_t  *create_layout          (FILE*, char*);
 static void       allocate_plugins       (state_t*);
@@ -36,6 +34,7 @@ extern char **win_file_names;
 void
 parse_config_file (state_t *state)
 {
+    FILE *fp;
     int       num_keys;
     char      ch;
     bool      is_first_layout = true;
@@ -54,7 +53,7 @@ parse_config_file (state_t *state)
 
     allocate_plugin_windows (state);
 
-    FILE *fp = open_config_file ();
+    fp = open_config_file ();
     if (fp == NULL) {
         pfeme ("Failed to open configuration file\n");
     }
@@ -65,17 +64,17 @@ parse_config_file (state_t *state)
 
         // TODO: add newline, inline #comment functionality
 
-        // get category and label of section
-        if (ch == '[') 
+        if (ch == '[') {
             get_category_and_label (fp, category, label);
+        }
 
-        // create plugins
-        if (strcmp (category, "plugins") == 0) {
+        // create state->plugins
+        if (strcmp (category, CONFIG_PLUGINS_LABEL) == 0) {
             create_plugins (fp, state);
         }
 
-        // create linked list of layout_t structs
-        if (strcmp (category, "layout") == 0) {
+        // create linked list of state->layouts
+        if (strcmp (category, CONFIG_LAYOUTS_LABEL) == 0) {
             curr_layout = create_layout (fp, label);
             if (is_first_layout) {
                 head_layout = curr_layout;
@@ -96,22 +95,6 @@ parse_config_file (state_t *state)
     state->layouts = head_layout;
     state->curr_layout = NULL;
 }
-
-
-/*
-    Open config file
-    ---------
-    PWD/.term_debug
-*/
-static FILE* open_config_file (void)
-{
-    FILE *file = fopen (CONFIG_NAME, "r");
-    if (file == NULL) {
-        pfeme ("Unable to find config file \"./%s\"\n", CONFIG_NAME);
-    }
-    return file;
-}
-
 
 
 static void
@@ -139,48 +122,6 @@ allocate_layout (void)
         pfeme ("layout_t allocation failed\n");
     }
     return layout;
-}
-
-
-
-/*
-    Get category and label
-    -------
-        [ <categ> : <label> ]
-*/
-static void get_category_and_label (FILE *file,
-                                    char *category,
-                                    char *label)
-{
-    int i,
-        ch = 0;
-
-    do {
-        // category
-        i = 0;
-        while (((ch = fgetc (file)) != ':'  &&
-                                 ch != ']') &&
-                                  i <  MAX_CONFIG_CATEG_LEN - 1) {
-            if (ch != ' ')
-                category [i++] = ch;
-        }
-        category [i] = '\0'; 
-
-        // if no label, break
-        if (ch == ']') {
-            label = "\0";
-            break;
-        }
-
-        // label
-        i = 0;
-        while ((ch = fgetc (file)) != ']' &&
-                    i < MAX_CONFIG_LABEL_LEN - 1) {
-            label [i++] = ch;
-        }
-        label [i] = '\0';
-
-    } while (ch != ']');
 }
 
 
@@ -256,8 +197,9 @@ static void create_plugins (FILE *file, state_t *state)
 /*
     Create new layout
 */
-static layout_t* create_layout (FILE* file,
-                                char *label)
+static layout_t*
+create_layout (FILE* file,
+               char *label)
 {
     int ch, next_ch;
     char *win_keys;
