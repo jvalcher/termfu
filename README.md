@@ -34,9 +34,6 @@ Run the program in the same directory as the configuration file `.termvu`. Break
 
 ### Plugins
 
-All window data is scrollable.
-<br>
-
 | Plugin | Type  | Description |
 | -----  | ----- | ----- |
 | Asm | Window | Assembly code |
@@ -121,6 +118,9 @@ oag
 
 
 ### Resulting layouts
+
+All window data is scrollable.
+<br>
 
 <img src='./misc/layout1.png' height='400px'>
 <img src='./misc/layout2.png' height='400px'>
