@@ -72,7 +72,7 @@ Adding parentheses around a character in the `<(t)itle>` changes the character's
 | `layout`  | `[ layout : <title> ]` <br>`>h` : header commands,  `>w` : windows |
 <br>
 
-### Example configuration
+### Example `.termvu` configuration
 <br>
 
 ```
