@@ -13,11 +13,19 @@
   Main
  ******/
 
-#define PROGRAM_NAME     "termvu"       // TODO: rename program
-#define CONFIG_NAME      ".termvu" 
-#define DEBUG_OUT_PATH   "debug.out"
-#define PARENT_PROCESS   0
-#define CHILD_PROCESS    1
+#define PROGRAM_NAME          "termvu"
+#define DEBUG_OUT_FILE        ".debug.out"
+
+
+
+/***********************
+  Config, persist files
+ ***********************/
+
+#define CONFIG_FILE           ".termvu" 
+#define CONFIG_PLUGINS_LABEL  "plugins"
+#define CONFIG_LAYOUTS_LABEL  "layout"
+#define PERSIST_FILE          ".termvu_data"
 
 
 
