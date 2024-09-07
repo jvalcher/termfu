@@ -17,6 +17,7 @@
 #include "update_window_data/get_source_path_line_memory.h"
 #include "update_window_data/_update_window_data.h"
 #include "plugins.h"
+#include "persist_data.h"
 
 static void  initialize_ncurses          (void);
 static void  set_signals                 ();
@@ -38,8 +39,6 @@ int main (int argc, char *argv[])
 
     parse_config_file (&state);
 
-    // CURRENT: persist watches, breaks; .termvu must be in CWD; debugger cli popup
-
     start_debugger (&state); 
 
     render_layout (FIRST_LAYOUT, &state);
@@ -48,10 +47,14 @@ int main (int argc, char *argv[])
 
     update_initial_window_data (&state);
 
+    get_persisted_data (&state);
+
     while (debugger.running) {
         key = getch ();
         run_plugin (state.plugin_key_index[key], &state);
     }
+
+    persist_data (&state);
 
     clean_up ();
 
