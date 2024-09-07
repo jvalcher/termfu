@@ -54,10 +54,6 @@ get_watchpoint_data_gdb (state_t *state)
         data_ptr = state->debugger->data_buffer;
         watch_val = watch->value;
 
-        FILE *fp = fopen ("debug.out", "w");
-        fwrite (src_ptr, 1, strlen(src_ptr), fp);
-        fclose (fp);
-
         // index
         *dest_ptr++ = '(';
         dest_ptr += sprintf (dest_ptr, "%d", watch->index);
@@ -89,10 +85,10 @@ get_watchpoint_data_gdb (state_t *state)
 
             // copy value
             while (*src_ptr != '\n') {
-
                 *dest_ptr++  = *src_ptr;
                 *watch_val++ = *src_ptr++;
             }
+            *watch_val = '\0';
 
             // remove trailing newline character
             if (*(dest_ptr - 1) == 'n' && *(dest_ptr - 2) == '\\') {
@@ -107,8 +103,6 @@ get_watchpoint_data_gdb (state_t *state)
             strcpy (dest_ptr, "none\n");
             dest_ptr += 5;
         }
-
-        *watch_val = '\0';
 
         watch = watch->next;
     }
