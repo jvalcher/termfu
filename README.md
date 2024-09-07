@@ -5,10 +5,9 @@ A fast, multi-language TUI debugger that allows for the creation of multiple cus
 <br><br>
 
 <img src='./misc/layout1.png' height='400px'>
-<br>
 
 
-## Support
+### Support
 
 | `Debugger` | `Languages` |
 |   :----:   | :----: |
@@ -19,11 +18,18 @@ A fast, multi-language TUI debugger that allows for the creation of multiple cus
 
 ## Usage
 
+### Installation
+
+`$ make`
+<br>
+
+### Run
+
 `$ termvu -d gdb a.out`
 <br><br>
 
 
-# Configuration
+## Configuration
 
 Each unique, three-character, case-sensitive plugin code corresponds to a specific debugger action or window. These codes are mapped to user-defined keys, which are used to create custom ASCII-art layouts that users can switch between.
 <br>
@@ -34,8 +40,8 @@ Run the program in the same directory as the configuration file `.termvu`. Break
 
 ### Plugins
 
-| Plugin | Type  | Description |
-| -----  | ----- | ----- |
+| Code  | Type  | Description |
+| ----- | ----- | ----- |
 | Asm | Window | Assembly code |
 | Brk | Window | Breakpoints |
 | Con | Header | Continue |
