@@ -75,6 +75,7 @@ concatenate_strings (int num_strs, ...)
 
 
 
+// TODO: separate functions for sending commands with and without output markers
 void
 send_command (state_t *state,
               char *command)

@@ -93,12 +93,14 @@ choose_layout (state_t *state)
         // navigate up/down
         switch (ch) {
 
+            case 'k':
             case KEY_UP:
                 if (curr_option > 0) {
                     --curr_option;
                 }
                 break;
 
+            case 'j':
             case KEY_DOWN:
                 if (curr_option < num_options) {
                     ++curr_option;
@@ -144,6 +146,7 @@ choose_layout:
 
     if (new_layout) {
         render_layout (curr_layout->label, state);
+        // FIX: on program start, switching back to Main layout messes up source file data
         update_windows (state, 8, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Wat);
     }
 }

@@ -118,26 +118,26 @@ void get_category_and_label (FILE *file, char *category, char *label);
 /****************
   Formatted error messages
  ****************
+  Single message, exit:
+  
+      pfeme ("Unknown character \"%c\" \n", ch);
+  
+      ERROR: src_file.c : func() : 10
+              Unknown character "c"
+  
+  Multiple messages, exit;
+  
+      pfem ("Unknown character \"%c\" \n", ch);
+      pem  ("Check README.md for more details"); 
+      peme ("Exiting...");
+  
+      ERROR: src_file.c : func() : 10
+              Unknown character "c"
+              Check README.md for more details
+              Exiting...
+               
  - TODO: implement stack error tracing in all functions
     - Display popen output
-
-    Single message, exit:
-
-        pfeme ("Unknown character \"%c\" \n", ch);
-
-        ERROR: src_file.c : func() : 10
-               Unknown character "c"
-
-    Multiple messages, exit;
-
-        pfem ("Unknown character \"%c\" \n", ch);
-        pem  ("Check README.md for more details"); 
-        peme ("Exiting...");
-
-        ERROR: src_file.c : func() : 10
-               Unknown character "c"
-               Check README.md for more details
-               Exiting...
 */
 
 // Print formatted error message

@@ -125,8 +125,6 @@ display_lines_buff (int      key,
 
     switch (key) {
 
-        // TODO: add persist scroll location option
-
         case BEG_DATA:
             win->buff_data->scroll_row = 1;
             win->buff_data->scroll_col = 1;
@@ -317,6 +315,7 @@ display_lines_file (int key,
     wclear (win->DWIN);
 
     // shift mid_line, first_char
+    // TODO: page up/down, home, end
     switch (key) {
 
         case BEG_DATA:
@@ -360,8 +359,6 @@ display_lines_file (int key,
                 ? 0
                 : win->file_data->first_char - 1;
             break;
-
-        // TODO: file scroll for page up/down, home, end
     }
 
     // calculate first line

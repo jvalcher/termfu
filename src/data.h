@@ -96,7 +96,7 @@
 */
 typedef struct layout {
 
-    char            label [MAX_CONFIG_LABEL_LEN];        // TODO: allocate
+    char            label [MAX_CONFIG_LABEL_LEN];
     WINDOW         *header;
     char            hdr_key_str [MAX_KEY_STR_LEN];
     char            win_key_str [MAX_KEY_STR_LEN];

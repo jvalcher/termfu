@@ -55,7 +55,7 @@ start_debugger_proc (state_t *state)
     // set command
     switch (debugger->curr) {
         case (DEBUGGER_GDB):
-            cmd = gdb_cmd;      // TODO: see globals
+            cmd = gdb_cmd;
             cmd [GDB_PROG_INDEX] = debugger->prog_path;
             break;
         case UNKNOWN:

@@ -46,22 +46,27 @@ select_window (int      plugin_index,
 
         // TODO: pg up/down, home, end
         switch (key) {
+        case 'k':
         case KEY_UP:
             display_lines (type, KEY_UP, plugin_index, state);
             key_not_pressed = false;
             break;
+        case 'j':
         case KEY_DOWN:
             display_lines (type, KEY_DOWN, plugin_index, state);
             key_not_pressed = false;
             break;
+        case 'l':
         case KEY_RIGHT:
             display_lines (type, KEY_RIGHT, plugin_index, state);
             key_not_pressed = false;
             break;
+        case 'h':
         case KEY_LEFT:
             display_lines (type, KEY_LEFT, plugin_index, state);
             key_not_pressed = false;
             break;
+        case 'q':
         case ESC:
             in_loop = false;
             key_not_pressed = false;
@@ -103,7 +108,6 @@ select_window (int      plugin_index,
             }
 
             // plugin window keys
-            // TODO: Add plugins for each window action so they can be customized
             switch (plugin_index) {
             case Brk:
                 switch (key) {

@@ -118,7 +118,7 @@ get_source_path_line_memory_gdb (state_t *state)
             strncpy (win->file_data->path, state->debugger->format_buffer, FILE_PATH_LEN - 1);
             win->file_data->path_changed = true;
         }
-        // TODO: else { check if file timestamp changed }
+        // TODO: else if { file timestamp changed, path_changed = true }
 
         // line number
         dest_ptr = state->debugger->format_buffer;

@@ -34,8 +34,6 @@ execute_until_gdb (state_t *state)
     char *cmd_base = "-exec-until ";
     char *cmd;
 
-    // TODO: get program CLI output
-
     get_popup_window_input  ("Execute until: ", state->input_buffer);
 
     cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
