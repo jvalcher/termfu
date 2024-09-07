@@ -18,7 +18,7 @@
 
 
 /*
-    Log formatted string to DEBUG_OUT_PATH for debugging
+    Log formatted string to DEBUG_OUT_FILE for debugging
     --------
     Same usage as printf()
 */
@@ -95,6 +95,22 @@ void cp_char (buff_data_t *dest_buff_data, char ch);
 enum { PATH, ADDR, FUNC };
     //
 void cp_fchar (file_data_t *dest_file_data, char ch, int type);
+
+
+
+/*
+   Open ./CONFIG_FILE
+*/
+FILE *open_config_file (void);
+
+
+
+/*
+    Get category and label
+    -------
+        [ <categ> : <label> ]
+*/
+void get_category_and_label (FILE *file, char *category, char *label);
 
 
 
