@@ -31,6 +31,7 @@ get_assembly_data_gdb (state_t *state)
 {
     window_t *win;
     char *src_ptr,
+         *dest_ptr,
          *data_ptr,
          *cmd,
          *func,
@@ -99,8 +100,22 @@ get_assembly_data_gdb (state_t *state)
                 cp_char (dest_buff, *src_ptr++);
             }
         }
-
+        
         dest_buff->changed = true;
+    }
+
+    // set current line ('=>')
+    dest_ptr = win->buff_data->buff;
+    win->buff_data->scroll_row = 1;
+    while (*dest_ptr != '\0') {
+        if ( *dest_ptr      == '=' &&
+            *(dest_ptr + 1) == '>') {
+            break;
+        }
+        if (*dest_ptr == '\n') {
+            ++win->buff_data->scroll_row;
+        }
+        ++dest_ptr;
     }
 }
 

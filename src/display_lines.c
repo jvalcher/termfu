@@ -31,6 +31,10 @@ display_lines (int       type,
         case BUFF_TYPE:
             if (win->buff_data->changed) {
                 set_buff_rows_cols (win);
+                if (plugin_index != Asm) {
+                    win->buff_data->scroll_row = 1;
+                }
+                win->buff_data->scroll_col = 1;
                 win->buff_data->changed = false;
             }
 
@@ -92,9 +96,6 @@ set_buff_rows_cols (window_t *win)
         }
         ++buff_ptr;
     }
-    
-    win->buff_data->scroll_row = 1;
-    win->buff_data->scroll_col = 1;
 }
 
 
@@ -108,7 +109,11 @@ display_lines_buff (int      key,
            *newline_ptr;
     int     wy,
             wx,
-            data_row;
+            data_row,
+            win_rows,
+            win_mid_row,
+            scroll_row,
+            buff_rows;
     window_t *win;
 
     win = state->plugins[plugin_index]->win;
@@ -134,6 +139,23 @@ display_lines_buff (int      key,
                 win->buff_data->scroll_row = win->buff_data->rows - win->data_win_rows;
             }
             win->buff_data->scroll_col = 1;
+            break;
+
+        case ROW_DATA:
+            win_rows = win->data_win_rows;
+            win_mid_row = win->data_win_rows / 2;
+            buff_rows = win->buff_data->rows;
+            scroll_row = win->buff_data->scroll_row;
+                //
+            win->buff_data->scroll_col = 1;
+                //
+            if (scroll_row <= win_mid_row) {
+                win->buff_data->scroll_row = 1;
+            } else if (scroll_row >= (buff_rows - win_mid_row)) {
+                win->buff_data->scroll_row = buff_rows - win_rows + 1;
+            } else {
+                win->buff_data->scroll_row = scroll_row - win_mid_row;
+            }
             break;
 
         case KEY_UP:
@@ -163,7 +185,7 @@ display_lines_buff (int      key,
 
     // move buffer pointer to beginning of current row
     data_row = 1;
-    while (data_row != win->buff_data->scroll_row) {
+    while (data_row < win->buff_data->scroll_row) {
         if (*buff_ptr++ == '\n') {
             ++data_row;
         }

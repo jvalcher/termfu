@@ -6,7 +6,8 @@
 
 #define BEG_DATA    0      // display beginning buffer, file data
 #define END_DATA    1      // display end of buffer, file data
-#define LINE_DATA   3      // center data on state->plugins[i]->win->file_data->line
+#define LINE_DATA   2      // center data on file_data->line
+#define ROW_DATA    3      // center data on current buff_data->scroll_row
 
 
 

@@ -209,6 +209,8 @@ allocate_plugin_windows (state_t *state)
         // set initial display position
         switch (j) {
             case Asm:
+                state->plugins[j]->data_pos = ROW_DATA;
+                break;
             case Brk: 
             case LcV:
             case Reg:
