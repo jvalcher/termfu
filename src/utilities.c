@@ -11,8 +11,6 @@ FILE *debug_out_ptr = NULL;
 
 
 
-
-
 /*
    Log debug output to file
 */
@@ -20,7 +18,7 @@ void
 logd (const char *formatted_string, ...)
 {
     if (debug_out_ptr == NULL) {
-        debug_out_ptr = fopen (DEBUG_OUT_PATH, "w");
+        debug_out_ptr = fopen (DEBUG_OUT_FILE, "w");
         if (debug_out_ptr == NULL) {
             pfeme ("Unable to open debug output file\n");
         }
@@ -36,40 +34,14 @@ logd (const char *formatted_string, ...)
 
 void clean_up (void)
 {
-    // Ncurses
+    // exit Ncurses
     curs_set (1);
     endwin ();
 
-    // debug output file
+    // close DEBUG_OUT_FILE
     if (debug_out_ptr != NULL) {
         fclose (debug_out_ptr);
     }
-}
-
-
-
-void
-persist_data (state_t *state)
-{
-    breakpoint_t *curr_break;
-    watchpoint_t *curr_watch;
-
-    // watchpoints
-    curr_watch = state->watchpoints;
-    do {
-        logd ("(%d) %s = %s\n",
-                curr_watch->index, curr_watch->var, curr_watch->value);
-        curr_watch = curr_watch->next;
-    } while (curr_watch != NULL);
-    
-    logd ("\n");
-
-    // breakpoints
-    curr_break = state->breakpoints;
-    do {
-        logd ("%s\n", curr_break->path_line);
-        curr_break = curr_break->next;
-    } while (curr_break != NULL);
 }
 
 
@@ -325,3 +297,61 @@ cp_fchar (file_data_t *dest_file_data,
         }
     }
 }
+
+
+
+FILE*
+open_config_file (void)
+{
+    FILE *file = fopen (CONFIG_FILE, "r");
+    if (file == NULL) {
+        pfeme ("Unable to find config file \"./%s\"\n", CONFIG_FILE);
+    }
+    return file;
+}
+
+
+
+/*
+    Get category and label
+    -------
+        [ <categ> : <label> ]
+*/
+void
+get_category_and_label (FILE *file,
+                        char *category,
+                        char *label)
+{
+    int i,
+        ch = 0;
+
+    do {
+        // category
+        i = 0;
+        while (((ch = fgetc (file)) != ':'  &&
+                                 ch != ']') &&
+                                  i <  MAX_CONFIG_CATEG_LEN - 1) {
+            if (ch != ' ')
+                category [i++] = ch;
+        }
+        category [i] = '\0'; 
+
+        // if no label, break
+        if (ch == ']') {
+            label = "\0";
+            break;
+        }
+
+        // label
+        i = 0;
+        while ((ch = fgetc (file)) != ']' &&
+                    i < MAX_CONFIG_LABEL_LEN - 1) {
+            label [i++] = ch;
+        }
+        label [i] = '\0';
+
+    } while (ch != ']');
+}
+
+
+
