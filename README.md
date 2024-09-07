@@ -1,7 +1,7 @@
 
 # termvu
 
-A fast, multi-language TUI debugger that allows for the creation of multiple custom layouts
+A fast, multi-language TUI debugger that allows users to create multiple custom layouts
 <br><br>
 
 <img src='./misc/layout1.png' height='400px'>
