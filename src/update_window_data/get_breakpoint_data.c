@@ -28,8 +28,10 @@ get_breakpoint_data_gdb (state_t *state)
     int i;
     window_t *win;
     const char *key_number   = "number=\"",
-               *key_orig_loc = "original-location=\"";
+               *key_orig_loc = "original-location=\"",
+               *key_nr_rows  = "nr_rows=\"";
     char *src_ptr,
+         *dest_ptr,
           break_buff [BREAK_LEN];
     buff_data_t *dest_buff;
     breakpoint_t *tmp_break,
@@ -61,42 +63,57 @@ get_breakpoint_data_gdb (state_t *state)
 
         dest_buff->buff_pos = 0;
 
-        // get breakpoint number
-        while ((src_ptr = strstr (src_ptr, key_number)) != NULL) {
-            src_ptr += strlen (key_number);
-            cp_char (dest_buff, '(');
-            while (*src_ptr != '\"') {
-                cp_char (dest_buff, *src_ptr++);
+        // get number of breakpoints
+        src_ptr = strstr (src_ptr, key_nr_rows);
+        src_ptr += strlen (key_nr_rows);
+        i = 0;
+        while (*src_ptr != '\"') {
+            break_buff[i++] = *src_ptr++;
+        }
+        break_buff[i] = '\0';
+
+        if (break_buff[0] > '0') {
+
+            // get breakpoint number
+            while ((src_ptr = strstr (src_ptr, key_number)) != NULL && break_buff[0] > '0') {
+                src_ptr += strlen (key_number);
+                cp_char (dest_buff, '(');
+                while (*src_ptr != '\"') {
+                    cp_char (dest_buff, *src_ptr++);
+                }
+
+                cp_char (dest_buff, ')');
+                cp_char (dest_buff, ' ');
+
+                // get file:line
+                i = 0;
+                src_ptr = strstr (src_ptr, key_orig_loc);
+                src_ptr += strlen (key_orig_loc);
+                while (*src_ptr != '\"') {
+                    break_buff [i++] = *src_ptr;
+                    cp_char (dest_buff, *src_ptr++);
+                }
+                break_buff [i] = '\0';
+
+                // allocate breakpoint
+                if (state->breakpoints == NULL) {
+                    curr_break = (breakpoint_t*) malloc (sizeof (breakpoint_t));
+                    state->breakpoints = curr_break;
+                    strncpy (curr_break->path_line, break_buff, BREAK_LEN - 1);
+                    curr_break->next = NULL;
+                } else {
+                    curr_break->next = (breakpoint_t*) malloc (sizeof (breakpoint_t));
+                    curr_break = curr_break->next;
+                    strncpy (curr_break->path_line, break_buff, BREAK_LEN - 1);
+                    curr_break->next = NULL;
+                }
+
+                cp_char (dest_buff, '\n');
             }
+        }
 
-            cp_char (dest_buff, ')');
-            cp_char (dest_buff, ' ');
-
-            // get file:line
-            i = 0;
-            src_ptr = strstr (src_ptr, key_orig_loc);
-            src_ptr += strlen (key_orig_loc);
-            while (*src_ptr != '\"') {
-
-                break_buff [i++] = *src_ptr;
-                cp_char (dest_buff, *src_ptr++);
-            }
-            break_buff [i] = '\0';
-
-            // allocate breakpoint
-            if (state->breakpoints == NULL) {
-                curr_break = (breakpoint_t*) malloc (sizeof (breakpoint_t));
-                state->breakpoints = curr_break;
-                strncpy (curr_break->path_line, break_buff, BREAK_LEN - 1);
-                curr_break->next = NULL;
-            } else {
-                curr_break->next = (breakpoint_t*) malloc (sizeof (breakpoint_t));
-                curr_break = curr_break->next;
-                strncpy (curr_break->path_line, break_buff, BREAK_LEN - 1);
-                curr_break->next = NULL;
-            }
-
-            cp_char (dest_buff, '\n');
+        else {
+            cp_char (dest_buff, '\0');
         }
 
         dest_buff->changed = true;
