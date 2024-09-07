@@ -43,6 +43,7 @@ insert_watchpoint_gdb (state_t *state)
     watchpoint_t *watch = NULL;
 
     get_popup_window_input  ("Create watchpoint (variable): ", state->input_buffer);
+
     if (strlen (state->input_buffer) > 0) {
 
         // first watchpoint
