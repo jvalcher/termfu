@@ -1,5 +1,6 @@
 */*.out
 termvu*
+.termvu_data
 core
 ncurses.h
 tags
@@ -12,7 +13,9 @@ venv
 __pycache__
 make_dev*
 
-.gdb*
+.gdbbreaks
+.gdb_history
+.gdbterm
 
 build.log
 tags
