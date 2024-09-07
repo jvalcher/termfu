@@ -3,6 +3,7 @@
 #include "data.h"
 #include "display_lines.h"
 #include "get_popup_window_input/popup_watchpoints.h"
+#include "update_window_data/_update_window_data.h"
 #include "utilities.h"
 #include "plugins.h"
 #include "get_popup_window_input/popup_breakpoints.h"
@@ -112,14 +113,6 @@ select_window (int      plugin_index,
                     break;
                 case 'c':
                     insert_breakpoint (state);
-                    in_loop = false;
-                    break;
-                }
-                break;
-            case Src:
-                switch (key) {
-                case 'c':
-                    insert_watchpoint (state);
                     in_loop = false;
                     break;
                 }
