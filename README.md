@@ -1,11 +1,12 @@
 
 # termvu
 
-A fast, multi-language terminal debugger that allows for the creation of multiple custom layouts
+A fast, multi-language TUI debugger that allows for the creation of multiple custom layouts
 <br><br>
 
 <img src='./misc/layout1.png' height='400px'>
 <br><br>
+
 
 ## Support
 
@@ -13,8 +14,8 @@ A fast, multi-language terminal debugger that allows for the creation of multipl
 |   :----:   | :----: |
 | `gdb`      | C, C++, D, Go, Objective-C, <br>Fortran, OpenCL C, Pascal, <br>Rust, assembly, Modula-2, Ada |
 | `pdb`      | Python <br>(_in development_) |
-
 <br>
+
 
 ## Usage
 <br>
@@ -22,19 +23,20 @@ A fast, multi-language terminal debugger that allows for the creation of multipl
 `$ termvu -d gdb a.out`
 <br><br>
 
+
 ## Configuration
 
 Unique, three-character, case-sensitive plugin codes are each associated with a specific debugger action or window. The codes are bound to user-defined keys. The keys are then used to create custom ASCII-art layouts.
 <br>
 
-Run the program in the same directory as the configuration file `.termvu` 
-<br>
-
-Breakpoints and watchpoints are persisted in `.termvu_data`.
+Run the program in the same directory as the configuration file `.termvu`. Breakpoints and watchpoints are persisted in `.termvu_data`.
 <br><br>
 
 
 ### Plugins
+<br>
+
+All window data is scrollable.
 <br>
 
 | Plugin | Type  | Description |
@@ -57,8 +59,8 @@ Breakpoints and watchpoints are persisted in `.termvu_data`.
 | Stp | Header | Step |
 | Unt | Header | Until |
 | Wat | Window | Watchpoints |
-
 <br>
+
 
 ### Configuration sections
 <br>
@@ -71,6 +73,7 @@ Adding parentheses around a character in the `<(t)itle>` changes the character's
 | `plugins` | `<plugin code>` : `<key binding>` : `<title>` |
 | `layout`  | `[ layout : <title> ]` <br>`>h` : header commands,  `>w` : windows |
 <br>
+
 
 ### Example configuration
 <br>
@@ -118,7 +121,6 @@ rnscufk
 >w
 oag
 ```
-
 
 ### Resulting layouts
 
