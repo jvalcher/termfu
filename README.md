@@ -18,7 +18,6 @@ A fast, multi-language TUI debugger that allows for the creation of multiple cus
 
 
 ## Usage
-<br>
 
 `$ termvu -d gdb a.out`
 <br><br>
@@ -34,7 +33,6 @@ Run the program in the same directory as the configuration file `.termvu`. Break
 
 
 ### Plugins
-<br>
 
 All window data is scrollable.
 <br>
@@ -63,10 +61,9 @@ All window data is scrollable.
 
 
 ### Configuration sections
-<br>
 
 Adding parentheses around a character in the `<(t)itle>` changes the character's color.
-<br><br>
+<br>
 
 | Section   | Description |
 | :----:    |  :----: |
@@ -76,7 +73,6 @@ Adding parentheses around a character in the `<(t)itle>` changes the character's
 
 
 ### Example `.termvu` configuration
-<br>
 
 ```
 [ plugins ]
