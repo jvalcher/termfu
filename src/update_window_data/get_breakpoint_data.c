@@ -31,7 +31,6 @@ get_breakpoint_data_gdb (state_t *state)
                *key_orig_loc = "original-location=\"",
                *key_nr_rows  = "nr_rows=\"";
     char *src_ptr,
-         *dest_ptr,
           break_buff [BREAK_LEN];
     buff_data_t *dest_buff;
     breakpoint_t *tmp_break,

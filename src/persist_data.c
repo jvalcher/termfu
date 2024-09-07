@@ -56,11 +56,9 @@ get_persisted_data_gdb (state_t *state)
     FILE *fp;
     int ch, i;
     watchpoint_t *watch;
-    breakpoint_t *brkpt;
-    char index_buff [8],
-         break_buff [BREAK_LEN],
-        *cmd_break = "-break-insert ",
-        *cmd;
+    char  break_buff [BREAK_LEN],
+         *cmd_break = "-break-insert ",
+         *cmd;
 
     if ((fp = fopen (PERSIST_FILE, "r")) != NULL) {
 
