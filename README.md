@@ -18,13 +18,17 @@ A fast, multi-language TUI debugger that allows users to easily create and switc
 
 ## Usage
 
-### Installation
+### Dependencies
+The installation script uses ncurses6.
+<br><br>
+`$ sudo apt-get install libncurses-dev gdb`
+<br>
 
+### Installation
 `$ make`
 <br>
 
 ### Run
-
 `$ termvu -d gdb a.out`
 <br><br>
 
