@@ -1,3 +1,6 @@
+[ command ]
+gdb --quiet --interpreter=mi misc/hello
+
 [ plugins ]
 
 Asm : a : (a)ssembly

@@ -23,6 +23,7 @@
  ***********************/
 
 #define CONFIG_FILE           ".termvu" 
+#define CONFIG_COMMAND_LABEL  "command"
 #define CONFIG_PLUGINS_LABEL  "plugins"
 #define CONFIG_LAYOUTS_LABEL  "layout"
 #define PERSIST_FILE          ".termvu_data"
@@ -224,7 +225,7 @@ typedef struct {
 #define PROGRAM_BUF_LEN  65536
 #define ASYNC_BUF_LEN    65536 
 
-enum { UNKNOWN, DEBUGGER_GDB };
+enum { DEBUGGER_GDB };
 enum { READER_RECEIVING, READER_DONE };
 
 
@@ -325,6 +326,7 @@ typedef struct {
 
     layout_t      *curr_layout;
     debugger_t    *debugger;
+    char         **command;
     layout_t      *layouts;
     plugin_t     **plugins;
     WINDOW        *header;

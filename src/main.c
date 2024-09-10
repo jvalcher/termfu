@@ -8,7 +8,6 @@
 #include "data.h"
 #include "update_window_data/get_assembly_data.h"
 #include "utilities.h"
-#include "parse_cli_arguments.h"
 #include "parse_config_file.h"
 #include "render_layout.h"
 #include "start_debugger.h"
@@ -25,15 +24,14 @@ static void  update_initial_window_data  (state_t*);
 
 
 
-int main (int argc, char *argv[]) 
+int
+main (void) 
 {
     int key;
 
     state_t state;
     debugger_t debugger;
     state.debugger = &debugger;
-
-    parse_cli_arguments (argc, argv, &state);
 
     initialize_ncurses ();
 

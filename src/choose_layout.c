@@ -146,7 +146,8 @@ choose_layout:
 
     if (new_layout) {
         render_layout (curr_layout->label, state);
-        // FIX: on program start, switching back to Main layout messes up source file data
+
+        // FIX: on start before running program, switching away from and back to Main layout messes up source file data
         update_windows (state, 8, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Wat);
     }
 }

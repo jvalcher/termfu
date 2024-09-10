@@ -82,6 +82,7 @@ Adding parentheses around a character in the `<(t)itle>` changes the character's
 
 | Section   | Description |
 | :----:    |  :----: |
+| `command` | Debugger command |
 | `plugins` | `<plugin code>` : `<key binding>` : `<title>` |
 | `layout`  | `[ layout : <title> ]` <br>`>h` : header commands,  `>w` : windows |
 <br>
@@ -90,6 +91,9 @@ Adding parentheses around a character in the `<(t)itle>` changes the character's
 ### Example `.termvu` configuration
 
 ```
+[ command ]
+gdb --quiet --interpreter=mi misc/hello
+
 [ plugins ]
 
 Asm : a : (a)ssembly

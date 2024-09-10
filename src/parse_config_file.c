@@ -15,13 +15,18 @@
 #include "plugins.h"
 #include "utilities.h"
 
-static void       create_plugins         (FILE*, state_t*);
-static layout_t  *create_layout          (FILE*, char*);
-static void       allocate_plugins       (state_t*);
-static layout_t  *allocate_layout        (void);
+static char      **create_command    (FILE*, state_t*);
+static void        create_plugins    (FILE*, state_t*);
+static layout_t   *create_layout     (FILE*, char*);
+static void        allocate_plugins  (state_t*);
+static layout_t   *allocate_layout   (void);
 
 extern char **plugin_codes;
 extern char **win_file_names;
+
+// indexes matches enum in data.h
+// { DEBUGGER_GDB }
+char *debuggers[] = { "gdb" };
 
 
 
@@ -34,15 +39,15 @@ extern char **win_file_names;
 void
 parse_config_file (state_t *state)
 {
-    FILE *fp;
+    FILE     *fp;
     int       num_keys;
-    char      ch;
     bool      is_first_layout = true;
     layout_t *prev_layout = NULL,
              *curr_layout = NULL,
              *head_layout = NULL;
-    char      category [MAX_CONFIG_CATEG_LEN] = {'\0'};
-    char      label    [MAX_CONFIG_LABEL_LEN] = {'\0'};
+    char      ch,
+              category [MAX_CONFIG_CATEG_LEN] = {'\0'},
+              label    [MAX_CONFIG_LABEL_LEN] = {'\0'};
 
     num_keys = (int)'z' + 1;
     state->plugin_key_index = (int*) malloc (num_keys * sizeof (int));
@@ -66,6 +71,11 @@ parse_config_file (state_t *state)
 
         if (ch == '[') {
             get_category_and_label (fp, category, label);
+        }
+
+        // create state->command
+        if (strcmp (category, CONFIG_COMMAND_LABEL) == 0) {
+            state->command = create_command (fp, state);
         }
 
         // create state->plugins
@@ -110,6 +120,86 @@ allocate_plugins (state_t *state)
             pfeme ("plugin_t pointer allocation failed\n");
         }
     }
+}
+
+
+
+static char**
+create_command (FILE *fp,
+                state_t *state)
+{
+    char **cmd_arr,
+           buff [48];
+    int ch, n, i,
+        num_debuggers;
+    long save_fp;
+    bool first_word,
+         debugger_supported;
+    
+    // count words
+    do {
+        ch = fgetc (fp);
+    } while (!isalpha (ch));
+        //
+    ungetc (ch, fp);
+    save_fp = ftell (fp);
+    getc (fp);
+        //
+    n = 1;  
+    do {
+        if (ch == ' ') {
+            ++n;
+        }
+    } while ((ch = fgetc (fp)) != '\n');
+    ++n;    // execvp NULL
+
+    cmd_arr = (char**) malloc (n * sizeof (char*));
+
+
+    // create array
+    fseek (fp, save_fp, SEEK_SET);
+    n = 0;  
+    i = 0;
+    first_word = true;
+    debugger_supported = false;
+    num_debuggers = sizeof (debuggers) / sizeof (debuggers [0]);
+
+    while ((ch = fgetc (fp)) != '\n' && ch != EOF) {
+
+        if (ch != ' ') {
+
+            // get word
+            i = 0;
+            do {
+                buff [i++] = ch;
+            } while ((ch = fgetc (fp)) != ' ' && ch != '\n');
+            buff [i] = '\0';
+
+            logd ("%s\n", buff);
+
+            // check if debugger supported
+            if (first_word) {
+                for (i = 0; i < num_debuggers; i++) {
+                    if (strcmp (debuggers [i], buff) == 0) {
+                        state->debugger->curr = i;
+                        debugger_supported = true;
+                    }
+                }
+                if (debugger_supported == false) {
+                    pfeme ("Unrecognized debugger \"%s\"\n", buff);
+                }
+                first_word = false;
+            }
+
+            cmd_arr [n] = (char*) malloc (strlen (buff) + 1);
+            strcpy (cmd_arr [n++], buff); 
+        }
+
+    }
+
+    cmd_arr [n] = NULL;
+
+    return cmd_arr;
 }
 
 

@@ -17,8 +17,6 @@
 
 static void   start_debugger_proc         (state_t*);
 
-# define GDB_PROG_INDEX  3
-char *gdb_cmd[] = {"gdb", "--quiet", "--interpreter=mi", NULL, NULL};
 
 
 void
@@ -36,7 +34,6 @@ start_debugger (state_t *state)
 static void
 start_debugger_proc (state_t *state)
 {
-    char  **cmd;
     pid_t   debugger_pid;
     int     debug_in_pipe  [2],
             debug_out_pipe [2];
@@ -51,18 +48,6 @@ start_debugger_proc (state_t *state)
     }
     debugger->stdin_pipe  = debug_in_pipe [PIPE_WRITE];
     debugger->stdout_pipe = debug_out_pipe [PIPE_READ];
-
-    // set command
-    switch (debugger->curr) {
-        case (DEBUGGER_GDB):
-            cmd = gdb_cmd;
-            cmd [GDB_PROG_INDEX] = debugger->prog_path;
-            break;
-        case UNKNOWN:
-        default:
-            pfem ("Unknown debugger \"%d\"\n", debugger->curr);
-            peme ("Usage: termvu -d gdb a.out\n");
-    }
 
     // fork
     debugger_pid = fork ();
@@ -82,7 +67,7 @@ start_debugger_proc (state_t *state)
         close (debug_out_pipe [PIPE_WRITE]);
         close (debug_out_pipe [PIPE_READ]);
 
-        execvp (cmd[0], cmd);
+        execvp (state->command[0], state->command);
 
         pfeme ("Debugger start failed\n");
     }
