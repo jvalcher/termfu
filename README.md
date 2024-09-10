@@ -137,7 +137,7 @@ oag
 
 ### Resulting layouts
 
-All window data is scrollable using arrow keys or `hjkl`.
+Window data is scrollable using arrow keys or `hjkl`.
 <br>
 
 <img src='./misc/layout1.png' height='400px'>
