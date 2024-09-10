@@ -1,8 +1,11 @@
 [ command ]
+
+#python3 -m pdb misc/gcd.py
 gdb --quiet --interpreter=mi misc/hello
 
 [ plugins ]
 
+# windows
 Asm : a : (a)ssembly
 Brk : e : br(e)akpoints
 Dbg : d : (d)ebug out
@@ -12,6 +15,7 @@ Reg : g : re(g)isters
 Src : o : s(o)urce file
 Wat : w : (w)atch
 
+# header commands
 Prm : m : pro(m)pt
 Lay : l : (l)ayouts
 Qut : q : (q)uit
@@ -25,16 +29,18 @@ Kil : k : (k)ill
 
 [ layout : Main ]
 
+# header command layout
 >h
 mlq
 rnscufk
+
+# ASCII window layout
 >w
 eooaa
 wooaa
 vppdd
 
 [ layout : Assembly / Registers ]
-
 >h
 mlq
 rnscufk

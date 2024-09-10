@@ -1,4 +1,0 @@
-gdb
---quiet
---interpreter=mi
-misc/hello

@@ -105,16 +105,6 @@ FILE *open_config_file (void);
 
 
 
-/*
-    Get category and label
-    -------
-        [ <categ> : <label> ]
-*/
-void get_category_and_label (FILE *file, char *category, char *label);
-
-
-
-
 /****************
   Formatted error messages
  ****************
@@ -174,6 +164,13 @@ void get_category_and_label (FILE *file, char *category, char *label);
     pem(__VA_ARGS__); \
     exit (EXIT_FAILURE); \
 } while (0)
+
+
+
+/*
+    Check, skip newline comments
+*/
+#define check_for_comment(ch, fp)  if ((ch) == ('#')) {while (((ch) = fgetc (fp)) != ('\n')) {;}}
 
 
 

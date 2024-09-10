@@ -36,7 +36,7 @@ make
 
 ### Run test file
 ```
-(cd misc && ./build_hello) && ./termvu -d gdb misc/hello
+(cd misc && ./build_hello) && ./termvu misc/hello
 ```
 <br><br>
 
@@ -90,6 +90,9 @@ Adding parentheses around a character in the `<(t)itle>` changes the character's
 
 ### Example `.termvu` configuration
 
+Only newline comments are allowed, not inline.
+<br>
+
 ```
 [ command ]
 
@@ -97,6 +100,7 @@ gdb --quiet --interpreter=mi misc/hello
 
 [ plugins ]
 
+# windows
 Asm : a : (a)ssembly
 Brk : e : br(e)akpoints
 Dbg : d : (d)ebug out
@@ -106,6 +110,7 @@ Reg : g : re(g)isters
 Src : o : s(o)urce file
 Wat : w : (w)atch
 
+# header commands
 Prm : m : pro(m)pt
 Lay : l : (l)ayouts
 Qut : q : (q)uit
@@ -119,21 +124,21 @@ Kil : k : (k)ill
 
 [ layout : Main ]
 
+# header commands layout
 >h
 mlq
 rnscufk
 
+# ASCII window layout
 >w
 eooaa
 wooaa
 vppdd
 
 [ layout : Assembly / Registers ]
-
 >h
 mlq
 rnscufk
-
 >w
 oag
 ```

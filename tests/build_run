@@ -2,17 +2,19 @@
 
 gcc -g -Wall -Wextra $(ncursesw5-config --cflags) \
 \
+    ../src/choose_layout.c\
     ../src/display_lines.c\
-    ../src/parse_config_file.c\
-    ../src/render_layout.c\
-    ../src/run_plugin.c\
-    ../src/plugins.c\
-    ../src/send_debugger_command.c\
-    ../src/select_window.c\
-    ../src/pulse_header_title_color.c\
+    ../src/execute_until.c\
     ../src/insert_output_marker.c\
-    ../src/parse_cli_arguments.c\
+    ../src/parse_config_file.c\
     ../src/parse_debugger_output.c\
+    ../src/plugins.c\
+    ../src/pulse_header_title_color.c\
+    ../src/render_layout.c\
+    ../src/run_custom_command.c\
+    ../src/run_plugin.c\
+    ../src/select_window.c\
+    ../src/send_debugger_command.c\
     ../src/start_debugger.c\
     ../src/utilities.c\
 \

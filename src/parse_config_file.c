@@ -15,11 +15,12 @@
 #include "plugins.h"
 #include "utilities.h"
 
-static char      **create_command    (FILE*, state_t*);
-static void        create_plugins    (FILE*, state_t*);
-static layout_t   *create_layout     (FILE*, char*);
-static void        allocate_plugins  (state_t*);
-static layout_t   *allocate_layout   (void);
+static void        get_category_and_label (FILE *file, char *category, char *label);
+static char      **create_command         (FILE*, state_t*);
+static void        create_plugins         (FILE*, state_t*);
+static layout_t   *create_layout          (FILE*, char*);
+static void        allocate_plugins       (state_t*);
+static layout_t   *allocate_layout        (void);
 
 extern char **plugin_codes;
 extern char **win_file_names;
@@ -58,8 +59,7 @@ parse_config_file (state_t *state)
 
     allocate_plugin_windows (state);
 
-    fp = open_config_file ();
-    if (fp == NULL) {
+    if ((fp = open_config_file ()) == NULL) {
         pfeme ("Failed to open configuration file\n");
     }
 
@@ -67,7 +67,12 @@ parse_config_file (state_t *state)
     is_first_layout = true;
     while ((ch = fgetc (fp)) != EOF) {
 
-        // TODO: add newline, inline #comment functionality
+        // newline comment
+        if (ch == ('#')) {
+            while ((ch = fgetc (fp)) != ('\n')) {
+                ;
+            }
+        }
 
         if (ch == '[') {
             get_category_and_label (fp, category, label);
@@ -107,6 +112,7 @@ parse_config_file (state_t *state)
 }
 
 
+
 static void
 allocate_plugins (state_t *state)
 {
@@ -120,6 +126,49 @@ allocate_plugins (state_t *state)
             pfeme ("plugin_t pointer allocation failed\n");
         }
     }
+}
+
+
+
+/*
+    Get category and label
+    -------
+        [ <categ> : <label> ]
+*/
+static void
+get_category_and_label (FILE *file,
+                        char *category,
+                        char *label)
+{
+    int i,
+        ch = 0;
+
+    do {
+        // category
+        i = 0;
+        while (((ch = fgetc (file)) != ':'  &&
+                                 ch != ']') &&
+                                  i <  MAX_CONFIG_CATEG_LEN - 1) {
+            if (ch != ' ')
+                category [i++] = ch;
+        }
+        category [i] = '\0'; 
+
+        // if no label, break
+        if (ch == ']') {
+            label = "\0";
+            break;
+        }
+
+        // label
+        i = 0;
+        while ((ch = fgetc (file)) != ']' &&
+                    i < MAX_CONFIG_LABEL_LEN - 1) {
+            label [i++] = ch;
+        }
+        label [i] = '\0';
+
+    } while (ch != ']');
 }
 
 
@@ -139,6 +188,11 @@ create_command (FILE *fp,
     // count words
     do {
         ch = fgetc (fp);
+        if (ch == ('#')) {
+            while ((ch = fgetc (fp)) != ('\n')) {
+                ;
+            }
+        }
     } while (!isalpha (ch));
         //
     ungetc (ch, fp);
@@ -174,8 +228,6 @@ create_command (FILE *fp,
                 buff [i++] = ch;
             } while ((ch = fgetc (fp)) != ' ' && ch != '\n');
             buff [i] = '\0';
-
-            logd ("%s\n", buff);
 
             // check if debugger supported
             if (first_word) {
@@ -236,6 +288,12 @@ static void create_plugins (FILE *file, state_t *state)
     plugin_t *curr_plugin = NULL;
 
     while ((key = fgetc (file)) != '[' && key != EOF) {
+
+        if (key == ('#')) {
+            while ((key = fgetc (file)) != ('\n')) {
+                ;
+            }
+        }
 
         // if letter
         if (isalpha (key)) {
@@ -310,8 +368,15 @@ create_layout (FILE* file,
     // parse
     while ((ch = fgetc(file)) != '[' && ch != EOF) {
 
+        if (ch == ('#')) {
+            while ((ch = fgetc (file)) != ('\n')) {
+                ;
+            }
+        }
+
         // set section (h, w)
-        if (ch == '>') {
+        else if (ch == '>') {
+
             next_ch = fgetc (file);
             switch (next_ch) {
                 case 'h':
@@ -321,65 +386,67 @@ create_layout (FILE* file,
                     section = 'w';
                     break;
             }
-        }
 
-        // parse header or window section
-        if (section == 'w' || section == 'h') {
+            // parse header or window section
+            if (section == 'w' || section == 'h') {
 
-            i = 0;
-            num_chars = 0;
+                i = 0;
+                num_chars = 0;
 
-            if (section == 'h')
-                layout->num_hdr_key_rows = 0;
+                if (section == 'h')
+                    layout->num_hdr_key_rows = 0;
 
-            // create header/window key string
-            //
-            //   >w
-            //   ssb
-            //   ssw
-            //   ccr     -->  "ssb\nssw\nccr\n"
-            //
-            while ((ch = fgetc (file)) != '>' && 
-                    ch != '[' && 
-                    ch != EOF &&
-                    num_chars <= MAX_KEY_STR_LEN) {
+                // create header/window key string
+                //
+                //   >w
+                //   ssb
+                //   ssw
+                //   ccr     -->  "ssb\nssw\nccr\n"
+                //
+                while ((ch = fgetc (file)) != '>' && 
+                        ch != '[' && 
+                        ch != '#' &&
+                        ch != EOF &&
+                        num_chars <= MAX_KEY_STR_LEN) {
 
-                // add key
-                if (isalpha(ch)) {
-                    keys [i++] = ch;
-                    num_chars += 1;
-                    is_key = true;
+                    // add key
+                    if (isalpha(ch)) {
+                        keys [i++] = ch;
+                        num_chars += 1;
+                        is_key = true;
+                    }
+
+                    // add newline
+                    else if (ch == '\n' && 
+                            is_key == true && 
+                            keys [i-1] != '\n' &&
+                            i != 0) {
+
+                        if (section == 'h')
+                            layout->num_hdr_key_rows += 1;
+
+                        keys [i++] = ch;
+                        num_chars += 1;
+                    } 
+                }
+                keys [i] = '\0';
+
+                // add string to layout
+                if (section == 'h') {
+                    strncpy ((char *)layout->hdr_key_str, keys, num_chars + 1);
+                } else {
+                    strncpy ((char *)layout->win_key_str, keys, num_chars + 1);
+                    win_keys = layout->win_key_str;
                 }
 
-                // add newline
-                else if (ch == '\n' && 
-                         is_key == true && 
-                         keys [i-1] != '\n' &&
-                         i != 0) {
+                // unget '>' or '['
+                ungetc (ch, file);
 
-                    if (section == 'h')
-                        layout->num_hdr_key_rows += 1;
-
-                    keys [i++] = ch;
-                    num_chars += 1;
-                } 
+                num_chars = 0;
             }
-            keys [i] = '\0';
-
-            // add string to layout
-            if (section == 'h') {
-                strncpy ((char *)layout->hdr_key_str, keys, num_chars + 1);
-            } else {
-                strncpy ((char *)layout->win_key_str, keys, num_chars + 1);
-                win_keys = layout->win_key_str;
-            }
-
-            // unget '>' or '['
-            ungetc (ch, file);
-
-            num_chars = 0;
+            section = '\0';
         }
-        section = '\0';
+
     }
 
     // unget '>' or '['

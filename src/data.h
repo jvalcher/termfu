@@ -14,7 +14,7 @@
  ******/
 
 #define PROGRAM_NAME          "termvu"
-#define DEBUG_OUT_FILE        ".debug.out"
+#define DEBUG_OUT_FILE        "debug.out"
 
 
 
@@ -74,8 +74,8 @@
  *********/
 
 #define FIRST_LAYOUT            "FiRsT_lAyOuT"
-#define MAX_CONFIG_CATEG_LEN    48
-#define MAX_CONFIG_LABEL_LEN    48
+#define MAX_CONFIG_CATEG_LEN    128
+#define MAX_CONFIG_LABEL_LEN    128
 #define MAX_KEY_STR_LEN         256
 #define MAX_LAYOUTS             12
 #define MAX_WINDOWS             12      // per layout
