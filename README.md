@@ -23,7 +23,7 @@ A fast, multi-language TUI debugger that allows users to easily create and switc
 `$ sudo apt-get install libncurses-dev gdb`
 <br>
 
-The Makefile uses ncurses6.
+The Makefile uses `ncurses6`.
 <br>
 
 ### Installation
