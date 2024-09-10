@@ -90,7 +90,7 @@ Adding parentheses around a character in the `<(t)itle>` changes the character's
 
 ### Example `.termvu` configuration
 
-Only newline comments are allowed, not inline.
+Only newline, not inline, comments are supported.
 <br>
 
 ```
