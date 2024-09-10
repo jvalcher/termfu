@@ -20,18 +20,24 @@ A fast, multi-language TUI debugger that allows users to easily create and switc
 
 ### Dependencies
 
-`$ sudo apt-get install python3 libncurses-dev gdb`
+```
+sudo apt-get install libncurses-dev gdb
+```
 <br>
 
-The Makefile uses ncurses6.
-<br>
+The Makefile uses `ncurses6`.
+<br><br>
 
 ### Installation
-`$ make`
+```
+make
+```
 <br>
 
-### Run
-`$ termvu -d gdb a.out`
+### Run test file
+```
+(cd misc && ./build_hello) && ./termvu -d gdb misc/hello
+```
 <br><br>
 
 
