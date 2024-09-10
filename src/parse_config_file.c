@@ -24,7 +24,7 @@ static layout_t   *allocate_layout   (void);
 extern char **plugin_codes;
 extern char **win_file_names;
 
-// indexes matches enum in data.h
+// indexes match enums in data.h
 // { DEBUGGER_GDB }
 char *debuggers[] = { "gdb" };
 
