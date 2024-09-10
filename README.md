@@ -19,9 +19,11 @@ A fast, multi-language TUI debugger that allows users to easily create and switc
 ## Usage
 
 ### Dependencies
-The installation script uses ncurses6.
-<br><br>
+
 `$ sudo apt-get install libncurses-dev gdb`
+<br>
+
+The Makefile uses ncurses6.
 <br>
 
 ### Installation
@@ -129,7 +131,7 @@ oag
 
 ### Resulting layouts
 
-All window data is scrollable.
+All window data is scrollable using arrow keys or `hjkl`.
 <br>
 
 <img src='./misc/layout1.png' height='400px'>
