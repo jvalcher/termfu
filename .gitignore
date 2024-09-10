@@ -4,7 +4,6 @@ termvu*
 core
 ncurses.h
 tags
-hello*
 debug_*
 ToDo.md
 debug.out
