@@ -21,7 +21,7 @@ A fast, multi-language TUI debugger that allows users to easily create and switc
 ### Dependencies
 
 ```
-sudo apt-get install python3 libncurses-dev gdb
+sudo apt-get install libncurses-dev gdb
 ```
 <br>
 
