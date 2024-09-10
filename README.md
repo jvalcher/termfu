@@ -92,6 +92,7 @@ Adding parentheses around a character in the `<(t)itle>` changes the character's
 
 ```
 [ command ]
+
 gdb --quiet --interpreter=mi misc/hello
 
 [ plugins ]
