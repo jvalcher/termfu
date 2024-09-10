@@ -54,24 +54,24 @@ Run the program in the same directory as the configuration file `.termvu`. Break
 
 | Code  | Type  | Description |
 | ----- | ----- | ----- |
-| Asm | Window | Assembly code |
-| Brk | Window | Breakpoints |
-| Con | Header | Continue |
-| Dbg | Window | Debugger output |
-| Fin | Header | Finish |
-| Kil | Header | Kill |
-| Lay | Header | Choose layout |
-| LcV | Window | Local variables |
-| Nxt | Header | Next |
-| Prg | Window | Program CLI output |
-| Prm | Header | Debugger prompt |
-| Qut | Header | Quit termvu |
-| Reg | Window | Registers |
-| Run | Header | Run program |
-| Src | Window | Source file |
-| Stp | Header | Step |
-| Unt | Header | Until |
-| Wat | Window | Watchpoints |
+| `Asm` | Window | Assembly code |
+| `Brk` | Window | Breakpoints |
+| `Con` | Header | Continue |
+| `Dbg` | Window | Debugger output |
+| `Fin` | Header | Finish |
+| `Kil` | Header | Kill |
+| `Lay` | Header | Choose layout |
+| `LcV` | Window | Local variables |
+| `Nxt` | Header | Next |
+| `Prg` | Window | Program CLI output |
+| `Prm` | Header | Debugger prompt |
+| `Qut` | Header | Quit termvu |
+| `Reg` | Window | Registers |
+| `Run` | Header | Run program |
+| `Src` | Window | Source file |
+| `Stp` | Header | Step |
+| `Unt` | Header | Until |
+| `Wat` | Window | Watchpoints |
 <br>
 
 
