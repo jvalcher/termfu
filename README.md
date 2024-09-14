@@ -36,7 +36,7 @@ make
 
 ### Run test files
 
-Comment out the undesired command in the provided `.termvu` configuration file.
+Comment out the undesired command in the provided `.termfu` configuration file.
 
 GDB
 <br>
