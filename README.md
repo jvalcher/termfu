@@ -1,5 +1,5 @@
 
-# termvu
+# termfu
 
 A fast, multi-language TUI debugger that allows users to easily create and switch between custom layouts
 <br><br>
