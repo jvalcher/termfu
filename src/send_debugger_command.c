@@ -20,7 +20,7 @@ send_debugger_command (int      plugin_index,
                        state_t *state)
 {
     bool exiting = false;
-    int curr_debugger = state->debugger->curr;
+    int debugger_index = state->debugger->index;
 
     pulse_header_title_color (plugin_index, state, ON);
 
@@ -28,51 +28,45 @@ send_debugger_command (int      plugin_index,
 
     switch (plugin_index) {
     case Con:
-        switch (curr_debugger) {
-        case (DEBUGGER_GDB):
-            send_command (state, "-exec-continue\n");
-            break;
+        switch (debugger_index) {
+        case (DEBUGGER_GDB): send_command (state, "-exec-continue\n"); break;
+        case (DEBUGGER_PDB): send_command (state, "continue\n"); break;
         }
         break;
     case Fin:
-        switch (curr_debugger) {
-        case (DEBUGGER_GDB):
-            send_command (state, "-exec-finish\n");
-            break;
+        switch (debugger_index) {
+        case (DEBUGGER_GDB): send_command (state, "-exec-finish\n"); break;
+        case (DEBUGGER_PDB): send_command (state, "return\n"); break;
         }
         break;
     case Kil:
-        switch (curr_debugger) {
-        case (DEBUGGER_GDB):
-            send_command (state, "kill\n");
-            break;
+        switch (debugger_index) {
+        case (DEBUGGER_GDB): send_command (state, "kill\n"); break;
+        case (DEBUGGER_PDB): send_command (state, "restart\n"); break;
         }
         break;
     case Nxt:
-        switch (curr_debugger) {
-        case (DEBUGGER_GDB):
-            send_command (state, "-exec-next\n");
-            break;
+        switch (debugger_index) {
+        case (DEBUGGER_GDB): send_command (state, "-exec-next\n"); break;
+        case (DEBUGGER_PDB): send_command (state, "next\n"); break;
         }
         break;
     case Stp:
-        switch (curr_debugger) {
-        case (DEBUGGER_GDB):
-            send_command (state, "step\n");
-            break;
+        switch (debugger_index) {
+        case (DEBUGGER_GDB): send_command (state, "step\n"); break;
+        case (DEBUGGER_PDB): send_command (state, "step\n"); break;
         }
         break;
     case Run:
-        switch (curr_debugger) {
-        case (DEBUGGER_GDB): 
-            send_command (state, "-exec-run\n");
-            break;
+        switch (debugger_index) {
+        case (DEBUGGER_GDB): send_command (state, "-exec-run\n"); break;
+        case (DEBUGGER_PDB): send_command (state, "restart\n"); break;
         }
         break;
     case Qut:
-        switch (curr_debugger) {
-        case (DEBUGGER_GDB):
-            send_command (state, "-gdb-exit\n");
+        switch (debugger_index) {
+        case (DEBUGGER_GDB): send_command (state, "-gdb-exit\n"); break;
+        case (DEBUGGER_PDB): send_command (state, "quit\n"); break;
         }
         state->debugger->running = false;
         exiting = true;
@@ -81,7 +75,7 @@ send_debugger_command (int      plugin_index,
     if (!exiting) {
 
         // flush program stdout
-        switch (curr_debugger) {
+        switch (debugger_index) {
         case DEBUGGER_GDB:
             send_command (state, "call ((void(*)(int))fflush)(0)\n");
             break;

@@ -8,18 +8,60 @@
 
 
 static void get_breakpoint_data_gdb (state_t *state);
+static void get_breakpoint_data_pdb (state_t *state);
 
 
 
 void
 get_breakpoint_data (state_t *state)
 {
-    switch (state->debugger->curr) {
+    breakpoint_t *tmp_break,
+                 *curr_break;
+
+    // free current breakpoints
+    if (state->breakpoints != NULL) {
+        curr_break = state->breakpoints;
+        do {
+            tmp_break = curr_break->next;
+            free (curr_break);
+            curr_break = tmp_break;  
+        } while (curr_break != NULL);
+    }
+    state->breakpoints = NULL;
+
+    switch (state->debugger->index) {
         case (DEBUGGER_GDB):
             get_breakpoint_data_gdb (state);
             break;
+        case (DEBUGGER_PDB):
+            get_breakpoint_data_pdb (state);
+            break;
     }
 }
+
+
+
+static void
+allocate_breakpoint (state_t *state,
+                     char    *break_buff)
+{
+    breakpoint_t *curr_break = state->breakpoints;
+
+    if (state->breakpoints == NULL) {
+        curr_break = (breakpoint_t*) malloc (sizeof (breakpoint_t));
+        state->breakpoints = curr_break;
+    } else {
+        while (curr_break->next != NULL) {
+            curr_break = curr_break->next;
+        }
+        curr_break->next = (breakpoint_t*) malloc (sizeof (breakpoint_t));
+        curr_break = curr_break->next;
+    }
+
+    strncpy (curr_break->path_line, break_buff, BREAK_LEN - 1);
+    curr_break->next = NULL;
+}
+
 
 
 static void
@@ -33,23 +75,10 @@ get_breakpoint_data_gdb (state_t *state)
     char *src_ptr,
           break_buff [BREAK_LEN];
     buff_data_t *dest_buff;
-    breakpoint_t *tmp_break,
-                 *curr_break;
 
     win       = state->plugins[Brk]->win;
     src_ptr   = state->debugger->data_buffer;
     dest_buff = win->buff_data;
-
-    // free breakpoints
-    if (state->breakpoints != NULL) {
-        curr_break = state->breakpoints;
-        do {
-            tmp_break = curr_break->next;
-            free (curr_break);
-            curr_break = tmp_break;  
-        } while (curr_break != NULL);
-    }
-    state->breakpoints = NULL;
 
     // send debugger command
     insert_output_start_marker (state);
@@ -94,18 +123,7 @@ get_breakpoint_data_gdb (state_t *state)
                 }
                 break_buff [i] = '\0';
 
-                // allocate breakpoint
-                if (state->breakpoints == NULL) {
-                    curr_break = (breakpoint_t*) malloc (sizeof (breakpoint_t));
-                    state->breakpoints = curr_break;
-                    strncpy (curr_break->path_line, break_buff, BREAK_LEN - 1);
-                    curr_break->next = NULL;
-                } else {
-                    curr_break->next = (breakpoint_t*) malloc (sizeof (breakpoint_t));
-                    curr_break = curr_break->next;
-                    strncpy (curr_break->path_line, break_buff, BREAK_LEN - 1);
-                    curr_break->next = NULL;
-                }
+                allocate_breakpoint (state, break_buff);
 
                 cp_char (dest_buff, '\n');
             }
@@ -121,4 +139,84 @@ get_breakpoint_data_gdb (state_t *state)
 
 
 
+static void
+get_breakpoint_data_pdb (state_t *state)
+{
+    int          i;
+    window_t    *win;
+    char        *src_ptr,
+                 break_buff [BREAK_LEN];
+    buff_data_t *dest_buff;
 
+    const char  *at_str    = "at ",
+                *break_str = "breakpoint",
+                *hit_str   = "\tbreakpoint already hit",
+                *num_str   = "Num ";
+
+    win       = state->plugins[Brk]->win;
+    src_ptr   = state->debugger->cli_buffer;
+    dest_buff = win->buff_data;
+
+    dest_buff->buff_pos = 0;
+    dest_buff->changed = true;
+
+    insert_output_start_marker (state);
+    send_command (state, "break\n");
+    insert_output_end_marker (state);
+    parse_debugger_output (state);
+
+    if (strstr (src_ptr, break_str) != NULL) {
+
+        while (*src_ptr != '\0') {
+
+            // skip table header
+            if (strncmp (src_ptr, num_str, strlen (num_str)) == 0 ||
+                strncmp (src_ptr, hit_str, strlen (hit_str)) == 0   ) {
+                while (*src_ptr != '\n') {
+                    ++src_ptr;
+                }
+            }
+
+            else if (*src_ptr != '\n' && *src_ptr != '\'') {
+
+                // index
+                cp_char (dest_buff, '(');
+                do {
+                    cp_char (dest_buff, *src_ptr++);
+                } while (*src_ptr != ' ');
+
+                cp_char (dest_buff, ')');
+                cp_char (dest_buff, ' ');
+
+                // path:line
+                i = 0;
+                src_ptr = strstr (src_ptr, at_str);
+                src_ptr += strlen (at_str);
+                while (*src_ptr != '\n') {
+                    break_buff [i++] = *src_ptr;
+                    cp_char (dest_buff, *src_ptr++);
+                }
+                break_buff [i] = '\0';
+
+                allocate_breakpoint (state, break_buff);
+
+                cp_char (dest_buff, '\n');
+            }
+
+            else {
+                ++src_ptr;
+            }
+        }
+
+        // remove final newline
+        if (dest_buff->buff [strlen (dest_buff->buff) - 1] == '\n') {
+            dest_buff->buff [strlen (dest_buff->buff) - 1] = '\0';
+        }
+    } 
+
+    else {
+        dest_buff->buff[0] = '\0';
+    }
+
+    win->buff_data->changed = true;;
+}

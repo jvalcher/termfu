@@ -4,17 +4,22 @@
 #include "../data.h"
 #include "../plugins.h"
 #include "../utilities.h"
+#include "_no_buff_data.h"
 
 static void get_program_output_gdb (state_t *state);
+static void get_program_output_pdb (state_t *state);
 
 
 
 void
 get_program_output (state_t *state)
 {
-    switch (state->debugger->curr) {
+    switch (state->debugger->index) {
         case (DEBUGGER_GDB):
             get_program_output_gdb (state);
+            break;
+        case (DEBUGGER_PDB):
+            get_program_output_pdb (state);
             break;
     }
 }
@@ -45,4 +50,11 @@ get_program_output_gdb (state_t *state)
 
 
 
+static void
+get_program_output_pdb (state_t *state)
+{
+    no_buff_data (Prg, state); 
+
+    state->plugins[Prg]->win->buff_data->changed = true;
+}
 

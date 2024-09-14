@@ -10,10 +10,9 @@
 void 
 insert_output_start_marker (state_t *state)
 {
-    switch (state->debugger->curr) {
-        case (DEBUGGER_GDB):
-            send_command (state, "echo >START\n");
-            break;
+    switch (state->debugger->index) {
+        case (DEBUGGER_GDB): send_command (state, "echo >START\n"); break;
+        case (DEBUGGER_PDB): send_command (state, "p \">START\"\n"); break;
     }
 }
 
@@ -24,10 +23,9 @@ insert_output_start_marker (state_t *state)
 void
 insert_output_end_marker (state_t *state)
 {
-    switch (state->debugger->curr) {
-        case (DEBUGGER_GDB):
-            send_command (state,"echo >END\n");
-            break;
+    switch (state->debugger->index) {
+        case (DEBUGGER_GDB): send_command (state,"echo >END\n"); break;
+        case (DEBUGGER_PDB): send_command (state, "p \">END\"\n"); break;
     }
 }
 

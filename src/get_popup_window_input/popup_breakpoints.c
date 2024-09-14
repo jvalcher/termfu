@@ -8,18 +8,32 @@
 #include "../update_window_data/_update_window_data.h"
 #include "../plugins.h"
 
-static void insert_breakpoint_gdb (state_t *state);
-static void delete_breakpoint_gdb (state_t *state);
 
 
 void
 insert_breakpoint (state_t *state)
 {
-    switch (state->debugger->curr) {
-        case DEBUGGER_GDB:
-            insert_breakpoint_gdb (state);
-            break;
+    char *cmd_base_gdb = "-break-insert ",
+         *cmd_base_pdb = "break ",
+         *cmd_base,
+         *cmd;
+
+    get_popup_window_input  ("Insert breakpoint: ", state->input_buffer);
+
+    switch (state->debugger->index) {
+        case DEBUGGER_GDB: cmd_base = cmd_base_gdb; break;
+        case DEBUGGER_PDB: cmd_base = cmd_base_pdb; break;
     }
+
+    cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
+
+    insert_output_start_marker (state);
+    send_command (state, cmd);
+    insert_output_end_marker (state);
+    parse_debugger_output (state);
+
+    free (cmd);
+
     update_window (Brk, state);
 }
 
@@ -28,44 +42,18 @@ insert_breakpoint (state_t *state)
 void
 delete_breakpoint (state_t *state)
 {
-    switch (state->debugger->curr) {
-        case DEBUGGER_GDB:
-            delete_breakpoint_gdb (state);
-            break;
-    }
-    update_window (Brk, state);
-}
-
-
-
-static void
-insert_breakpoint_gdb (state_t *state)
-{
-    char *cmd_base = "-break-insert ";
-    char *cmd;
-
-    get_popup_window_input  ("Insert breakpoint: ", state->input_buffer);
-
-    cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
-        //
-    insert_output_start_marker (state);
-    send_command (state, cmd);
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
-        //
-    free (cmd);
-}
-
-
-
-static void
-delete_breakpoint_gdb (state_t *state)
-{
-    char *cmd_base = "-break-delete ";
-    char *cmd;
+    char *cmd_base_gdb = "-break-delete ",
+         *cmd_base_pdb = "clear ",
+         *cmd_base,
+         *cmd;
 
     get_popup_window_input  ("Delete breakpoint: ", state->input_buffer);
 
+    switch (state->debugger->index) {
+        case DEBUGGER_GDB: cmd_base = (char*) cmd_base_gdb; break;
+        case DEBUGGER_PDB: cmd_base = (char*) cmd_base_pdb; break;
+    }
+
     cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
 
     insert_output_start_marker (state);
@@ -74,5 +62,7 @@ delete_breakpoint_gdb (state_t *state)
     parse_debugger_output (state);
 
     free (cmd);
+
+    update_window (Brk, state);
 }
 

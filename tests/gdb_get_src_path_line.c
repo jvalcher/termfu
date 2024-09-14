@@ -1,6 +1,5 @@
 #include "../src/data.h"
 #include "../src/start_debugger.h"
-#include "../src/parse_cli_arguments.h"
 #include "../src/update_window_data/get_source_file_and_line_number.h"
 #include "../src/plugins.h"
 #include "../src/insert_output_marker.h"

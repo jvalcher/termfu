@@ -27,7 +27,7 @@ extern char **win_file_names;
 
 // indexes match enums in data.h
 // { DEBUGGER_GDB }
-char *debuggers[] = { "gdb" };
+char *debuggers[] = { "gdb", "pdb" };
 
 
 
@@ -182,8 +182,7 @@ create_command (FILE *fp,
     int ch, n, i,
         num_debuggers;
     long save_fp;
-    bool first_word,
-         debugger_supported;
+    bool debugger_supported;
     
     // count words
     do {
@@ -214,7 +213,6 @@ create_command (FILE *fp,
     fseek (fp, save_fp, SEEK_SET);
     n = 0;  
     i = 0;
-    first_word = true;
     debugger_supported = false;
     num_debuggers = sizeof (debuggers) / sizeof (debuggers [0]);
 
@@ -228,25 +226,27 @@ create_command (FILE *fp,
                 buff [i++] = ch;
             } while ((ch = fgetc (fp)) != ' ' && ch != '\n');
             buff [i] = '\0';
+            if (ch == '\n') {
+                ungetc (ch, fp);
+            }
 
             // check if debugger supported
-            if (first_word) {
+            if (debugger_supported == false) {
                 for (i = 0; i < num_debuggers; i++) {
                     if (strcmp (debuggers [i], buff) == 0) {
-                        state->debugger->curr = i;
+                        state->debugger->index = i;  // index matches data.h enum  { DEBUGGER_GDB, ... }
+                        strncpy (state->debugger->title, debuggers [i], DEBUG_TITLE_LEN - 1);
                         debugger_supported = true;
                     }
                 }
-                if (debugger_supported == false) {
-                    pfeme ("Unrecognized debugger \"%s\"\n", buff);
-                }
-                first_word = false;
             }
 
             cmd_arr [n] = (char*) malloc (strlen (buff) + 1);
             strcpy (cmd_arr [n++], buff); 
         }
-
+    }
+    if (debugger_supported == false) {
+        pfeme ("Debugger not supported\n");
     }
 
     cmd_arr [n] = NULL;

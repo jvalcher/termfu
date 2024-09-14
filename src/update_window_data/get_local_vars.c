@@ -6,21 +6,27 @@
 #include "../parse_debugger_output.h"
 #include "../utilities.h"
 #include "../plugins.h"
+#include "_no_buff_data.h"
 
 
 static void get_local_vars_gdb (state_t *state);
+static void get_local_vars_pdb (state_t *state);
 
 
 
 void
 get_local_vars (state_t *state)
 {
-    switch (state->debugger->curr) {
+    switch (state->debugger->index) {
         case (DEBUGGER_GDB):
             get_local_vars_gdb (state);
             break;
+        case (DEBUGGER_PDB):
+            get_local_vars_pdb (state);
+            break;
     }
 }
+
 
 
 static void
@@ -111,5 +117,14 @@ get_local_vars_gdb (state_t *state)
 
 
 
+/*
+   No PDB command for this
+*/
+static void
+get_local_vars_pdb (state_t *state)
+{
+    no_buff_data (LcV, state); 
 
+    state->plugins[LcV]->win->buff_data->changed = true;
+}
 

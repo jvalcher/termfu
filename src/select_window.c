@@ -29,12 +29,7 @@ select_window (int      plugin_index,
     bool          in_loop         = true,
                   key_not_pressed = true;
 
-    // set window type
-    if (state->plugins[plugin_index]->win->has_data_buff) {
-        type = BUFF_TYPE;
-    } else {
-        type = FILE_TYPE;
-    }
+    type = state->plugins[plugin_index]->win_type;
 
     select_window_color (plugin_index, state);
 
@@ -46,31 +41,31 @@ select_window (int      plugin_index,
 
         // TODO: pg up/down, home, end
         switch (key) {
-        case 'k':
-        case KEY_UP:
-            display_lines (type, KEY_UP, plugin_index, state);
-            key_not_pressed = false;
-            break;
-        case 'j':
-        case KEY_DOWN:
-            display_lines (type, KEY_DOWN, plugin_index, state);
-            key_not_pressed = false;
-            break;
-        case 'l':
-        case KEY_RIGHT:
-            display_lines (type, KEY_RIGHT, plugin_index, state);
-            key_not_pressed = false;
-            break;
-        case 'h':
-        case KEY_LEFT:
-            display_lines (type, KEY_LEFT, plugin_index, state);
-            key_not_pressed = false;
-            break;
-        case 'q':
-        case ESC:
-            in_loop = false;
-            key_not_pressed = false;
-            break;
+            case 'k':
+            case KEY_UP:
+                display_lines (type, KEY_UP, plugin_index, state);
+                key_not_pressed = false;
+                break;
+            case 'j':
+            case KEY_DOWN:
+                display_lines (type, KEY_DOWN, plugin_index, state);
+                key_not_pressed = false;
+                break;
+            case 'l':
+            case KEY_RIGHT:
+                display_lines (type, KEY_RIGHT, plugin_index, state);
+                key_not_pressed = false;
+                break;
+            case 'h':
+            case KEY_LEFT:
+                display_lines (type, KEY_LEFT, plugin_index, state);
+                key_not_pressed = false;
+                break;
+            case 'q':
+            case ESC:
+                in_loop = false;
+                key_not_pressed = false;
+                break;
         }
 
         // custom keys
@@ -89,51 +84,33 @@ select_window (int      plugin_index,
                 continue;
             }
 
-            // custom navigation
-            else if (key == state->plugins[ScU]->key) {
-                display_lines (type, KEY_UP, plugin_index, state);
-                continue;
-            } 
-            else if (key == state->plugins[ScD]->key) {
-                display_lines (type, KEY_DOWN, plugin_index, state);
-                continue;
-            } 
-            else if (key == state->plugins[ScL]->key) {
-                display_lines (type, KEY_LEFT, plugin_index, state);
-                continue;
-            } 
-            else if (key == state->plugins[ScR]->key) {
-                display_lines (type, KEY_RIGHT, plugin_index, state);
-                continue;
-            }
-
             // plugin window keys
             switch (plugin_index) {
-            case Brk:
-                switch (key) {
-                case 'd': 
-                    delete_breakpoint (state);
-                    in_loop = false;
+                case Brk:
+                    switch (key) {
+                        case 'd': 
+                            delete_breakpoint (state);
+                            in_loop = false;
+                            break;
+                        case 'c':
+                            insert_breakpoint (state);
+                            in_loop = false;
+                            break;
+                    }
                     break;
-                case 'c':
-                    insert_breakpoint (state);
-                    in_loop = false;
+                case Wat:
+                    switch (key) {
+                        case 'd':
+                            delete_watchpoint (state);
+                            in_loop = false;
+                            break;
+                        case 'c':
+                            insert_watchpoint (state);
+                            in_loop = false;
+                            break;
+                        }
+                    }
                     break;
-                }
-                break;
-            case Wat:
-                switch (key) {
-                case 'd':
-                    delete_watchpoint (state);
-                    in_loop = false;
-                    break;
-                case 'c':
-                    insert_watchpoint (state);
-                    in_loop = false;
-                    break;
-                }
-                break;
-            }
         }
 
         key_not_pressed = true;

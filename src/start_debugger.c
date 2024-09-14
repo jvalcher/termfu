@@ -53,8 +53,7 @@ start_debugger_proc (state_t *state)
     debugger_pid = fork ();
     if (debugger_pid  == -1)
     {
-        perror ("Debugger fork");
-        exit (EXIT_FAILURE);
+        pfeme ("Debugger fork failed\n");
     }
 
     // start debugger
@@ -63,9 +62,16 @@ start_debugger_proc (state_t *state)
         dup2  (debug_in_pipe  [PIPE_READ], STDIN_FILENO);
         close (debug_in_pipe  [PIPE_READ]);
         close (debug_in_pipe  [PIPE_WRITE]);
+
         dup2  (debug_out_pipe [PIPE_WRITE], STDOUT_FILENO);
         close (debug_out_pipe [PIPE_WRITE]);
         close (debug_out_pipe [PIPE_READ]);
+
+        /*
+        dev_null = open ("/dev/null", O_WRONLY);
+        dup2  (dev_null, STDERR_FILENO);
+        close (dev_null);
+        */
 
         execvp (state->command[0], state->command);
 

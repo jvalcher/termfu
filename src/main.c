@@ -6,14 +6,11 @@
 #include <semaphore.h>
 
 #include "data.h"
-#include "update_window_data/get_assembly_data.h"
 #include "utilities.h"
 #include "parse_config_file.h"
 #include "render_layout.h"
 #include "start_debugger.h"
 #include "run_plugin.h"
-#include "display_lines.h"
-#include "update_window_data/get_source_path_line_memory.h"
 #include "update_window_data/_update_window_data.h"
 #include "plugins.h"
 #include "persist_data.h"
@@ -28,9 +25,9 @@ int
 main (void) 
 {
     int key;
-
     state_t state;
     debugger_t debugger;
+
     state.debugger = &debugger;
 
     initialize_ncurses ();
@@ -61,13 +58,10 @@ main (void)
 
 
 
-/*
-    Initialize Ncurses
-*/
-void
+static void
 initialize_ncurses (void)
 {
-    initscr();         // initialize Ncurses
+    initscr();
 
     if (has_colors()) {
         start_color();
@@ -89,24 +83,14 @@ initialize_ncurses (void)
 
 
 
-/*
-    Update initial window data
-*/
 static void
 update_initial_window_data (state_t *state)
 {
-    get_source_path_line_memory (state);
-    display_lines (FILE_TYPE, LINE_DATA, Src, state);
-
-    get_assembly_data (state);
-    display_lines (BUFF_TYPE, BEG_DATA, Asm, state);
+    update_windows (state, 2, Src, Asm);
 }
 
 
 
-/*
-    Signal handlers
-*/
 static void
 sigint_handler (int sig_num)
 {

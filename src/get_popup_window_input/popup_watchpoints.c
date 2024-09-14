@@ -6,38 +6,10 @@
 #include "../update_window_data/_update_window_data.h"
 #include "../plugins.h"
 
-static void insert_watchpoint_gdb (state_t *state);
-static void delete_watchpoint_gdb (state_t *state);
 
 
 void
 insert_watchpoint (state_t *state)
-{
-    switch (state->debugger->curr) {
-        case DEBUGGER_GDB:
-            insert_watchpoint_gdb (state);
-            break;
-    }
-    update_window (Wat, state);
-}
-
-
-
-void
-delete_watchpoint (state_t *state)
-{
-    switch (state->debugger->curr) {
-        case DEBUGGER_GDB:
-            delete_watchpoint_gdb (state);
-            break;
-    }
-    update_window (Wat, state);
-}
-
-
-
-static void
-insert_watchpoint_gdb (state_t *state)
 {
     int index;
     watchpoint_t *watch = NULL;
@@ -72,12 +44,14 @@ insert_watchpoint_gdb (state_t *state)
             watch->next = NULL;
         }
     }
+
+    update_window (Wat, state);
 }
 
 
 
-static void
-delete_watchpoint_gdb (state_t *state)
+void
+delete_watchpoint (state_t *state)
 {
     watchpoint_t *prev_watch,
                  *watch;
@@ -103,4 +77,7 @@ delete_watchpoint_gdb (state_t *state)
         prev_watch = watch;
         watch = watch->next; 
     }
+
+    update_window (Wat, state);
 }
+

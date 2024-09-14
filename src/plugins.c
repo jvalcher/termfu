@@ -35,12 +35,6 @@ Plugins
         Nxt     Next
         Run     (Re)run program
         Stp     Step
-
-    - Misc
-        ScU     Scroll window up
-        ScD     Scroll window down
-        ScL     Scroll window left
-        ScR     Scroll window right
 */
 
 #include <string.h>
@@ -74,10 +68,6 @@ char *plugin_codes [] = {
     "Qut",
     "Reg",
     "Run",
-    "ScD",
-    "ScL",
-    "ScR",
-    "ScU",
     "Src",
     "Stp",
     "Unt",
@@ -184,10 +174,13 @@ allocate_plugin_windows (state_t *state)
 
         state->plugins[j]->win_type = FILE_TYPE;
         win->has_data_buff = false;
+
         win->file_data = (file_data_t*) malloc (sizeof (file_data_t));
         if (win->file_data == NULL) {
             pfeme ("Unable to allocate file_data_t (%s)\n", win->code);
         }
+
+        win->file_data->path_changed = true;
         win->file_data->path[0]  = '\0';
         win->file_data->path_len = FILE_PATH_LEN;
         win->file_data->path_pos = 0;
@@ -205,6 +198,7 @@ allocate_plugin_windows (state_t *state)
         
         j = win_buff_plugins[i];
         win = state->plugins[j]->win;
+        state->plugins[j]->win_type = BUFF_TYPE;
 
         // set initial display position
         switch (j) {
@@ -223,8 +217,6 @@ allocate_plugin_windows (state_t *state)
                 break;
         }
 
-        state->plugins[j]->win_type = BUFF_TYPE;
-        win->has_data_buff = true;
         win->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t));
         if (win->buff_data == NULL) {
             pfeme ("Unable to allocate buff_data_t (%s)\n", win->code);
@@ -233,8 +225,10 @@ allocate_plugin_windows (state_t *state)
         if (win->buff_data == NULL) {
             pfeme ("Unable to allocate buff_data_t->buff (%s)\n", win->code);
         }
-        win->buff_data->buff_len = win_buff_len[i];
+
+        win->has_data_buff = true;
         win->buff_data->buff_pos = 0;
+        win->buff_data->buff_len = win_buff_len[i];
         win->buff_data->scroll_col = 1;
         win->buff_data->scroll_row = 1;
         win->buff_data->changed = true;

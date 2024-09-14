@@ -13,9 +13,9 @@
 #
 
 
-B_FILE_PROD    = termvu
-B_FILE_DEV     = termvu_dev
-B_FILE_TEST    = termvu_test
+B_FILE_PROD    = termfu
+B_FILE_DEV     = termfu_dev
+B_FILE_TEST    = termfu_test
 
 CC             = gcc
 FLAGS          = -Wall -Wextra

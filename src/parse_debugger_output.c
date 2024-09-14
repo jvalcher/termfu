@@ -6,6 +6,7 @@
 #include "data.h"
 
 void parse_debugger_output_gdb (reader_t *reader);
+void parse_debugger_output_pdb (reader_t *reader);
 
 
 void 
@@ -38,10 +39,9 @@ parse_debugger_output (state_t *state)
         reader.output_buffer [bytes_read] = '\0';
 
         // parse output
-        switch (state->debugger->curr) {
-            case DEBUGGER_GDB:
-                parse_debugger_output_gdb (&reader);
-                break;
+        switch (state->debugger->index) {
+            case DEBUGGER_GDB: parse_debugger_output_gdb (&reader); break;
+            case DEBUGGER_PDB: parse_debugger_output_pdb (&reader); break;
         }
 
         switch (reader.state) {
@@ -251,3 +251,76 @@ parse_debugger_output_gdb (reader_t *reader)
         }
     }
 }
+
+
+
+/*
+    All pdb output goes into state->debugger->cli_buffer
+*/
+void
+parse_debugger_output_pdb (reader_t *reader)
+{
+    char *buff_ptr;
+
+    buff_ptr = reader->output_buffer;
+
+    while (*buff_ptr != '\0') {
+
+
+        if (*buff_ptr == '>') {
+
+            //  beginning of command output marker
+            //
+            //      ">START\n"
+            //
+            if (*(buff_ptr + 1) == 'S' && 
+                *(buff_ptr + 2) == 'T' && 
+                *(buff_ptr + 3) == 'A' && 
+                *(buff_ptr + 4) == 'R' && 
+                *(buff_ptr + 5) == 'T') {
+
+                buff_ptr += 7;
+                reader->state = READER_RECEIVING;
+            }
+
+            //  end of command output marker
+            //
+            //     ">END\n"
+            //
+            else if (*(buff_ptr + 1) == 'E' && 
+                     *(buff_ptr + 2) == 'N' && 
+                     *(buff_ptr + 3) == 'D') {
+
+                *reader->program_buffer_ptr = '\0';
+                *reader->cli_buffer_ptr = '\0';
+                *reader->data_buffer_ptr = '\0';
+                *reader->async_buffer_ptr = '\0';
+
+                reader->state = READER_DONE;
+
+                break;
+            }
+            
+            else {
+                *reader->cli_buffer_ptr++ = *buff_ptr++;
+            }
+        }
+
+        // skip prompt
+        else if ( *buff_ptr      == '\n' &&
+                 *(buff_ptr + 1) == '('  &&
+                 *(buff_ptr + 2) == 'P'  &&
+                 *(buff_ptr + 3) == 'd'  &&
+                 *(buff_ptr + 4) == 'b'  &&
+                 *(buff_ptr + 5) == ')')
+        {
+            buff_ptr += 6;
+            *buff_ptr = '\n';
+        }
+
+        else {
+            *reader->cli_buffer_ptr++ = *buff_ptr++;
+        }
+    }
+}
+

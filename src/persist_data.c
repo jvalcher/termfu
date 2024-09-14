@@ -9,39 +9,12 @@
 #include "parse_debugger_output.h"
 #include "utilities.h"
 
-static void          get_persisted_data_gdb (state_t *state);
-static void          persist_data_gdb (state_t *state);
 static watchpoint_t *create_watchpoint (state_t *state);
 
 
 
-void
-get_persisted_data (state_t *state)
-{
-    switch (state->debugger->curr) {
-        case DEBUGGER_GDB:
-            get_persisted_data_gdb (state);
-            break;
-    }
-    update_windows (state, 2, Wat, Brk);
-}
-
-
-
-void
-persist_data (state_t *state)
-{
-    switch (state->debugger->curr) {
-        case DEBUGGER_GDB:
-            persist_data_gdb (state);
-            break;
-    }
-}
-
-
-
 /*
-    Get GDB persisted data
+    Get persisted data from PERSIST_FILE
 
     Format:
     ------
@@ -51,14 +24,21 @@ persist_data (state_t *state)
     <file>:<line>
 */
 void
-get_persisted_data_gdb (state_t *state)
+get_persisted_data (state_t *state)
 {
     FILE *fp;
     int ch, i;
     watchpoint_t *watch;
     char  break_buff [BREAK_LEN],
-         *cmd_break = "-break-insert ",
+         *cmd_base_gdb = "-break-insert ",
+         *cmd_base_pdb = "break ",
+         *cmd_base,
          *cmd;
+
+    switch (state->debugger->index) {
+        case DEBUGGER_GDB: cmd_base = cmd_base_gdb; break;
+        case DEBUGGER_PDB: cmd_base = cmd_base_pdb; break;
+    }
 
     if ((fp = fopen (PERSIST_FILE, "r")) != NULL) {
 
@@ -91,9 +71,9 @@ get_persisted_data_gdb (state_t *state)
 
                 // breakpoints
                 else if (ch == 'b') {
-                    while ((ch = fgetc (fp)) != EOF) {
+                    while ((ch = fgetc (fp)) != EOF && ch != '[') {
 
-                        if (isalnum (ch)) {
+                        if (isalnum (ch) || ch == '/') {
 
                             // get breakpoint <path>:<line>
                             i = 0;
@@ -104,13 +84,13 @@ get_persisted_data_gdb (state_t *state)
                             break_buff [i] = '\0';
 
                             // insert breakpoint
-                            cmd = concatenate_strings (3, cmd_break, break_buff, "\n");    
-                                //
+                            cmd = concatenate_strings (3, cmd_base, break_buff, "\n");    
+
                             insert_output_start_marker (state);
                             send_command (state, cmd);
                             insert_output_end_marker (state);
                             parse_debugger_output (state);
-                                //
+
                             free (cmd);
                         }
                     }
@@ -121,12 +101,14 @@ get_persisted_data_gdb (state_t *state)
 
         fclose (fp);
     }
+    
+    update_windows (state, 2, Wat, Brk);
 }
 
 
 
-static void
-persist_data_gdb (state_t *state)
+void
+persist_data (state_t *state)
 {
     FILE *fp;
     breakpoint_t *curr_break;
@@ -160,6 +142,8 @@ persist_data_gdb (state_t *state)
             curr_break = curr_break->next;
         } while (curr_break != NULL);
     }
+
+    fclose (fp);
 }
 
 

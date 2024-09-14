@@ -8,23 +8,23 @@
 #include "../parse_debugger_output.h"
 #include "../utilities.h"
 
-void  get_source_path_line_memory_gdb  (state_t *state);
+static void  get_source_path_line_memory_gdb  (state_t *state);
+static void  get_source_path_line_memory_pdb  (state_t *state);
 
 
 
 void
 get_source_path_line_memory (state_t *state)
 {
-    switch (state->debugger->curr) {
-        case (DEBUGGER_GDB):
-            get_source_path_line_memory_gdb (state);
-            break;
+    switch (state->debugger->index) {
+        case (DEBUGGER_GDB): get_source_path_line_memory_gdb (state); break;
+        case (DEBUGGER_PDB): get_source_path_line_memory_pdb (state); break;
     }
 }
 
 
 
-void
+static void
 get_source_path_line_memory_gdb (state_t *state)
 {
     char *src_ptr,
@@ -56,10 +56,12 @@ get_source_path_line_memory_gdb (state_t *state)
     parse_debugger_output (state);
 
         // get number of threads
+    prev_ptr = src_ptr;
     src_ptr = strstr (src_ptr, key_threads);
     if (src_ptr != NULL) {
         src_ptr += strlen (key_threads);
     } else {
+        src_ptr = prev_ptr;
         *src_ptr = ']';
     }
 
@@ -134,4 +136,60 @@ get_source_path_line_memory_gdb (state_t *state)
             win->file_data->line = 0;
         }
     }
+}
+
+
+
+static void
+get_source_path_line_memory_pdb (state_t *state)
+{
+    char *src_ptr,
+         *format_ptr,
+         *line_ptr;
+    window_t *win;
+    file_data_t *file_data;
+
+    const char *curr_path_symbol = "\n> ",
+               *caret_str        = "<string>";
+
+    win = state->plugins[Src]->win;
+    file_data = win->file_data;
+    src_ptr   = state->debugger->cli_buffer;
+    line_ptr  = state->debugger->format_buffer;
+
+    file_data->path_pos = 0;
+    file_data->func_pos = 0;
+
+    insert_output_start_marker (state);
+    send_command (state, "where\n");
+    insert_output_end_marker (state);
+    parse_debugger_output (state);
+
+    src_ptr = strstr (src_ptr, curr_path_symbol);
+    src_ptr += strlen (curr_path_symbol);
+
+    // path
+    format_ptr = state->debugger->format_buffer;
+    while (*src_ptr != '(') {
+        *format_ptr++ = *src_ptr++;
+    }
+    *format_ptr = '\0';
+    ++src_ptr;
+
+    if (strcmp (state->debugger->format_buffer, caret_str) != 0) {
+
+        if (strcmp (state->debugger->format_buffer, win->file_data->path) != 0) {
+            strncpy (win->file_data->path, state->debugger->format_buffer, FILE_PATH_LEN - 1);
+            win->file_data->path_changed = true;
+        }
+
+        // line number
+        do {
+            *line_ptr++ = *src_ptr++;
+        } while (*src_ptr != ')');
+        *line_ptr = '\0';
+            //
+        win->file_data->line = atoi (state->debugger->format_buffer);
+    }
+
 }

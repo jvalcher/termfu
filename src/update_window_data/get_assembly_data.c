@@ -2,6 +2,7 @@
 #include <ctype.h>
 
 #include "get_assembly_data.h"
+#include "_no_buff_data.h"
 #include "../data.h"
 #include "../insert_output_marker.h"
 #include "../parse_debugger_output.h"
@@ -12,15 +13,19 @@
 
 
 static void get_assembly_data_gdb (state_t *state);
+static void get_assembly_data_pdb (state_t *state);
 
 
 
 void
 get_assembly_data (state_t *state)
 {
-    switch (state->debugger->curr) {
+    switch (state->debugger->index) {
         case (DEBUGGER_GDB):
             get_assembly_data_gdb (state);
+            break;
+        case (DEBUGGER_PDB):
+            get_assembly_data_pdb (state);
             break;
     }
 }
@@ -121,4 +126,11 @@ get_assembly_data_gdb (state_t *state)
 
 
 
+static void
+get_assembly_data_pdb (state_t *state)
+{
+    no_buff_data (Asm, state); 
+
+    state->plugins[Asm]->win->buff_data->changed = true;
+}
 

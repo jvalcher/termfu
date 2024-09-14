@@ -2,8 +2,10 @@
 #include <string.h>
 #include <ncurses.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "display_lines.h"
+#include "data.h"
 #include "utilities.h"
 #include "plugins.h"
 #include "update_window_data/_update_window_data.h"
@@ -29,7 +31,9 @@ display_lines (int       type,
         switch (type) {
 
         case BUFF_TYPE:
+
             if (win->buff_data->changed) {
+
                 set_buff_rows_cols (win);
                 if (plugin_index != Asm) {
                     win->buff_data->scroll_row = 1;
@@ -113,7 +117,8 @@ display_lines_buff (int      key,
             win_rows,
             win_mid_row,
             scroll_row,
-            buff_rows;
+            buff_rows,
+            len;
     window_t *win;
 
     win = state->plugins[plugin_index]->win;
@@ -192,7 +197,7 @@ display_lines_buff (int      key,
     // print buffer lines
     while ((newline_ptr = strchr(buff_ptr, '\n')) != NULL && wy < win->data_win_rows) {
 
-        int len = newline_ptr - buff_ptr;
+        len = newline_ptr - buff_ptr;
 
         if (len >= win->buff_data->scroll_col) {
             if (len - win->buff_data->scroll_col > win->data_win_cols) {
@@ -214,25 +219,26 @@ display_lines_buff (int      key,
 
     // print last line if needed
     if (*buff_ptr != '\0' && wy <= win->data_win_rows) {
-        int len = strlen (buff_ptr);
 
-        if (len > win->buff_data->scroll_col) {
+        len = strlen (buff_ptr);
+
+        if (len > (win->buff_data->scroll_col - 1)) {
+
             if (len - win->buff_data->scroll_col > win->data_win_cols) {
                 len = win->data_win_cols;
             } else {
-                len = len - win->buff_data->scroll_col;
+                len = len - win->buff_data->scroll_col + 1;
             }
 
-            mvwprintw(win->DWIN, wy, wx, "%.*s", len, buff_ptr + win->buff_data->scroll_col);
+            if (strncmp (buff_ptr, NO_DATA_MSG, strlen (NO_DATA_MSG)) == 0) {
 
-            // remove formatting
-            switch (plugin_index) {
-            case Asm:
-                if ((buff_ptr = strstr (win->buff_data->buff, state->plugins[Src]->win->file_data->addr)) != NULL) {
-                    
-                }
+                // FIX: Italics not supported by terminal?
+                wattron (win->DWIN, A_ITALIC);
             }
 
+            mvwprintw(win->DWIN, wy, wx, "%.*s", len, buff_ptr + win->buff_data->scroll_col - 1);
+
+            wattroff (win->DWIN, A_ITALIC);
 
         } else {
             mvwprintw(win->DWIN, wy, wx, " ");
@@ -450,6 +456,7 @@ format_win_data (int plugin_index,
         si = 0;
         getmaxyx (win->DWIN, rows, cols);
         needle = state->plugins[Src]->win->file_data->addr;
+
         for (i = 0; i < rows; i++) {
             for (j = 0; j < cols; j++) {
                 ch = mvwinch (win->DWIN, i, j);

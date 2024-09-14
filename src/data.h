@@ -3,9 +3,6 @@
 #define DATA_H
 
 #include <ncurses.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <semaphore.h>
 
 
 
@@ -13,20 +10,13 @@
   Main
  ******/
 
-#define PROGRAM_NAME          "termvu"
-#define DEBUG_OUT_FILE        "debug.out"
-
-
-
-/***********************
-  Config, persist files
- ***********************/
-
-#define CONFIG_FILE           ".termvu" 
+#define PROGRAM_NAME          "termfu"
+#define CONFIG_FILE           ".termfu" 
+#define PERSIST_FILE          ".termfu_data"
 #define CONFIG_COMMAND_LABEL  "command"
 #define CONFIG_PLUGINS_LABEL  "plugins"
 #define CONFIG_LAYOUTS_LABEL  "layout"
-#define PERSIST_FILE          ".termvu_data"
+#define DEBUG_OUT_FILE        "debug.out"
 
 
 
@@ -115,6 +105,7 @@ typedef struct layout {
   Ncurses window data
  *********/
 
+#define NO_DATA_MSG    "Window not supported in "
 #define MAX_LINES      128
 #define FILE_PATH_LEN  256
 #define ADDRESS_LEN    48
@@ -217,6 +208,7 @@ typedef struct {
 
 #define PIPE_READ        0
 #define PIPE_WRITE       1
+#define DEBUG_TITLE_LEN  8
 #define DEBUG_BUF_LEN    WIN_BUF_LEN
 #define READER_BUF_LEN   8192
 #define FORMAT_BUF_LEN   65536
@@ -225,13 +217,14 @@ typedef struct {
 #define PROGRAM_BUF_LEN  65536
 #define ASYNC_BUF_LEN    65536 
 
-enum { DEBUGGER_GDB };
+enum { DEBUGGER_GDB, DEBUGGER_PDB };
 enum { READER_RECEIVING, READER_DONE };
 
 
 typedef struct {
 
-    int     curr;
+    int     index;
+    char    title [DEBUG_TITLE_LEN];
     bool    running;
     char  **cmd;
     char   *prog_path;
