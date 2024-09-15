@@ -11,7 +11,6 @@
 
 #define OFFSET_COLS 4
 
-
 static void get_assembly_data_gdb (state_t *state);
 static void get_assembly_data_pdb (state_t *state);
 

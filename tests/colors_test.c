@@ -16,25 +16,24 @@
 int main(void)
 {
     initscr();
+    curs_set(0);
 
     if (has_colors()) {
 
         start_color();
 
-        printw("\nTerminal colors enabled\n\n");
+        printw("\nTerminal colors enabled\n");
 
-        printw("\n---------------\n");
-        printw("\nTERMINAL COLORS ENABLED\n\n");
-        printw("\n---------------\n");
+        printw("---------------\n\n\n");
 
         printw("Available\n");
         printw("---------\n");
         printw("%d colors\n", COLORS);
-        printw("%d color pairs\n", COLOR_PAIRS);
+        printw("%d color pairs\n\n\n", COLOR_PAIRS);
         refresh();
 
-        printw("\n\nBackground");
-        printw("\n------------\n");
+        printw("Background\n");
+        printw("------------\n");
 
         printw("Reversed... ");
         refresh();
@@ -44,19 +43,8 @@ int main(void)
         napms(1000);
         init_pair(11, 7, 0);
         bkgd(COLOR_PAIR(11));
-        printw("back to normal\n");
+        printw("back to normal\n\n\n");
         refresh();
-
-        printw("\".\" dot background... skipped\n\n\n");
-        /*  "." dots background
-        printw("\".\" background... ");
-        bkgd('.');
-        refresh();
-        napms(1000);
-        bkgd(' ' | COLOR_PAIR(11));
-        printw("\tback to normal\n\n\n");
-        refresh();
-        */
 
         printw("Notify\n");
         printw("------------\n");
@@ -86,6 +74,7 @@ int main(void)
         refresh();
         attron(A_REVERSE);
         PRINT_COLOR(2, 0, "COLOR_GREEN");
+        attroff(A_REVERSE);
 
         printw("\n\nMixed colors");
         printw("\n------------\n");
@@ -94,20 +83,23 @@ int main(void)
             // create RGB color 34  (pink: 100, 75, 75)
             init_color(34, 1000, 750, 750);
             PRINT_COLOR(34, 0, "pink: 100, 75, 75");
+            printw ("\n\n\n");
         } else {
-            printw("can_change_color() returned false: \nTerminal unable to mix colors\n");
+            printw("can_change_color() returned false: terminal unable to mix colors\n\n\n");
         }
 
 
     // terminal colors not enabled
     } else {
-        printw("Terminal unable to display colors\n");
+        printw("\nTerminal unable to display colors\n\n");
         refresh();
     }
 
-    printw("\n\nPress any key to quit\n");
+    printw("Press any key to quit\n");
     refresh();
     getch();
+
+    curs_set(1);
     endwin();
 
     return 0;

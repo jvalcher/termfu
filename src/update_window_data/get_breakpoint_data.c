@@ -80,13 +80,11 @@ get_breakpoint_data_gdb (state_t *state)
     src_ptr   = state->debugger->data_buffer;
     dest_buff = win->buff_data;
 
-    // send debugger command
     insert_output_start_marker (state);
     send_command (state, "-break-info\n");
     insert_output_end_marker (state);
     parse_debugger_output (state);
 
-    // create buffer
     if (strstr (src_ptr, "error") == NULL) {
 
         dest_buff->buff_pos = 0;
@@ -104,8 +102,10 @@ get_breakpoint_data_gdb (state_t *state)
 
             // get breakpoint number
             while ((src_ptr = strstr (src_ptr, key_number)) != NULL && break_buff[0] > '0') {
-                src_ptr += strlen (key_number);
+
                 cp_char (dest_buff, '(');
+
+                src_ptr += strlen (key_number);
                 while (*src_ptr != '\"') {
                     cp_char (dest_buff, *src_ptr++);
                 }

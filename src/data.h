@@ -105,7 +105,7 @@ typedef struct layout {
   Ncurses window data
  *********/
 
-#define NO_DATA_MSG    "Window not supported in "
+#define NO_DATA_MSG    "Not supported by "
 #define MAX_LINES      128
 #define FILE_PATH_LEN  256
 #define ADDRESS_LEN    48
@@ -226,7 +226,6 @@ typedef struct {
     int     index;
     char    title [DEBUG_TITLE_LEN];
     bool    running;
-    char  **cmd;
     char   *prog_path;
 
     int     stdin_pipe;

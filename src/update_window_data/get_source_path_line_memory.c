@@ -17,8 +17,12 @@ void
 get_source_path_line_memory (state_t *state)
 {
     switch (state->debugger->index) {
-        case (DEBUGGER_GDB): get_source_path_line_memory_gdb (state); break;
-        case (DEBUGGER_PDB): get_source_path_line_memory_pdb (state); break;
+        case (DEBUGGER_GDB):
+            get_source_path_line_memory_gdb (state);
+            break;
+        case (DEBUGGER_PDB):
+            get_source_path_line_memory_pdb (state);
+            break;
     }
 }
 
@@ -188,7 +192,6 @@ get_source_path_line_memory_pdb (state_t *state)
             *line_ptr++ = *src_ptr++;
         } while (*src_ptr != ')');
         *line_ptr = '\0';
-            //
         win->file_data->line = atoi (state->debugger->format_buffer);
     }
 

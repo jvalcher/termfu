@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "../src/data.h"
 #include "../src/parse_debugger_output.h"
 
@@ -38,8 +40,7 @@ main (void)
     // parse output
     parse_debugger_output_pdb (&reader);
 
-    printf ("CLI:\n\n'''\n%s\n'''\n\n", state->debugger->cli_buffer);
-    printf ("PROGRAM: \n\n'''\n%s\n'''\n\n", state->debugger->program_buffer);
+    printf ("\n\nCLI:\n\n'''\n%s\n'''\n\n", state->debugger->cli_buffer);
 
 
     return 0;

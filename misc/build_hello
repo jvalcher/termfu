@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
-gcc -g hello.c hello_2.c -o hello
+gcc -g hello.c hello2.c -o hello
 

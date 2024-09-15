@@ -1,17 +1,32 @@
-#!/bin/bash
+#!/bin/sh
 
 #
-# Run Tmux debugging session
+# Run tmux GDB debugging session
 # ---------
+# Ncurses programs have a problem receiving user input when run in a different terminal via GDB's tty command.
+# This script solves that issue at the expense of having to quit and rerun it in order to restart the session.
 #
-# $ make debug
+# Usage: 
 #
-# Set breakpoint(s), etc. then 'continue' execution
-# 'q' to close session, save breakpoints
+#   - Uses `termfu_dev` built by `make dev` or `make devf`
+#
+#   $ make debug
+#
+#   - Set (b)reakpoints, etc. then (c)ontinue execution
+#   - Switch to program's tmux pane on right to send key commands
+#       - Switch pane: Ctrl+b -> right/left arrow
+#       - Handle disabled typing (e.g. ncurses error)
+#           - Exit pane: Ctrl+b -> x -> y
+#           - or
+#           - Respawn pane: add `bind r respawn-pane -k` to `~/.tmux.conf`; Ctrl+b -> r
+#   - (q)uit session
 #
 
+if [ -z $TMUX ]; then
+    tmux
+fi
 
-tmux splitw -h -p 50 "gdbserver :12347 ./termvu_dev -d gdb ./misc/hello 0"
+tmux splitw -h -p 50 "gdbserver :12347 ./termfu_dev 0"
 tmux selectp -t 0
 gdb --tui --quiet -x .gdbtarget
 

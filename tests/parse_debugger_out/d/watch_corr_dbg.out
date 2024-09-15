@@ -1,4 +1,0 @@
-Num     Type           Disp Enb Address            What
-2       hw watchpoint  keep y                      n
-3       hw watchpoint  keep y                      str1
-4       hw watchpoint  keep y                      str2

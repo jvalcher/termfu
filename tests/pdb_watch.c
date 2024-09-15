@@ -34,7 +34,7 @@ main (void)
     get_watchpoint_data (state);
 
     putchar ('\n');
-    printf ("No watchpoints: \"%s\"\n\n", win->buff_data->buff);
+    printf ("No watchpoints: \n\"\n%s\n\"\n\n", win->buff_data->buff);
 
     // create watchpoints
     insert_watchpoint_pdb (state, "num1");
@@ -48,11 +48,12 @@ main (void)
         printf ("(%d) %s\n", watch->index, watch->var);
         watch = watch->next;
     } while (watch != NULL);
+    putchar ('\n');
 
     // watchpoints, not running
     get_watchpoint_data (state);
 
-    printf ("Watchpoints, not running: \n\"%s\"\n\n", win->buff_data->buff);
+    printf ("Watchpoints, not running: \n\"\n%s\n\"\n\n", win->buff_data->buff);
 
     // watchpoints, running
     insert_output_start_marker (state);
@@ -67,7 +68,7 @@ main (void)
 
     get_watchpoint_data (state);
 
-    printf ("Watchpoints, running: \n\"%s\"\n\n", win->buff_data->buff);
+    printf ("Watchpoints, running: \n\"\n%s\n\"\n\n", win->buff_data->buff);
 
     return 0;
 }

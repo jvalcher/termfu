@@ -75,6 +75,7 @@ update_window (int      plugin_index,
 
     display_lines (state->plugins[plugin_index]->win_type,
                    state->plugins[plugin_index]->data_pos,
-                   plugin_index, state);
+                   plugin_index,
+                   state);
 }
 

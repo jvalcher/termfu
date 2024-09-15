@@ -1,6 +1,6 @@
 
-#ifndef HELLO_2_H
-#define HELLO_2_H
+#ifndef HELLO2_H
+#define HELLO2_H
 
 void print_message (int n);
 

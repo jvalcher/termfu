@@ -3,16 +3,13 @@
 
 #include "data.h"
 
-enum { LAYOUTS };
-
 
 
 /*
-    Choose different layout from .termvu configuration file
+    Choose different layout from CONFIG_FILE
 */
 void  choose_layout  (state_t *state);
 
 
 
 #endif
-

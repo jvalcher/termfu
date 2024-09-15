@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Output all source code tags recursively from CWD
 

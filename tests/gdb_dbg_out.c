@@ -1,6 +1,5 @@
 #include "../src/data.h"
 #include "../src/plugins.h"
-#include "../src/parse_cli_arguments.h"
 #include "../src/start_debugger.h"
 #include "../src/insert_output_marker.h"
 #include "../src/utilities.h"
@@ -9,54 +8,62 @@
 
 
 int
-main (int argc, char *argv[])
+main (void)
 {
     state_t *state = (state_t*) malloc (sizeof (state_t));
+    set_num_plugins (state);
     state->debugger = (debugger_t*) malloc (sizeof (debugger_t));
-    state->plugins = (plugin_t**) malloc (sizeof (plugin_t*));
+    state->plugins = (plugin_t**) malloc (sizeof (plugin_t*) * state->num_plugins);
     state->plugins[Dbg] = (plugin_t*) malloc (sizeof (plugin_t));
     state->plugins[Dbg]->win = (window_t*) malloc (sizeof (window_t));
-    state->plugins[Dbg]->win->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t));
     window_t *win = state->plugins[Dbg]->win;
+    win->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t));
+    win->buff_data->buff = (char*) malloc (sizeof (char) * Dbg_BUF_LEN);
+    win->buff_data->buff_pos = 0;
+    win->buff_data->buff_len = Dbg_BUF_LEN;
+    win->buff_data->new_data = true;
+    state->debugger->index = DEBUGGER_GDB;
 
-    // start debugger
-    parse_cli_arguments (argc, argv, state->debugger);
+    char *cmd[] = {"gdb", "--quiet", "--interpreter=mi", "../misc/hello"};
+    state->command = cmd;
+
     start_debugger (state);
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
 
-    // get debugger output
+    putchar ('\n');
+
+    win->buff_data->new_data = true;
     insert_output_start_marker (state);
     send_command (state, "-break-insert main\n");
     insert_output_end_marker (state);
     parse_debugger_output (state);
-
+    printf ("-break-insert CLI: \n\n%s\n\n", state->debugger->cli_buffer);
     get_debugger_output (state);
-    printf ("%s", win->buff_data->buff);
     
+    win->buff_data->new_data = true;
     insert_output_start_marker (state);
     send_command (state, "-exec-run\n");
     insert_output_end_marker (state);
     parse_debugger_output (state);
-
+    printf ("-exec-run CLI: \n\n%s\n\n", state->debugger->cli_buffer);
     get_debugger_output (state);
-    printf ("%s", win->buff_data->buff);
     
+    win->buff_data->new_data = true;
     insert_output_start_marker (state);
     send_command (state, "-exec-next\n");
     insert_output_end_marker (state);
     parse_debugger_output (state);
-
+    printf ("-exec-next CLI: \n\n%s\n\n", state->debugger->cli_buffer);
     get_debugger_output (state);
-    printf ("%s", win->buff_data->buff);
     
+    win->buff_data->new_data = true;
     insert_output_start_marker (state);
     send_command (state, "-exec-continue\n");
     insert_output_end_marker (state);
     parse_debugger_output (state);
-
+    printf ("-exec-continue CLI: \n\n%s\n\n", state->debugger->cli_buffer);
     get_debugger_output (state);
-    printf ("%s", win->buff_data->buff);
+
+    printf ("DBG OUT: \n\n%s\n\n", win->buff_data->buff);
 
     return 0;
 }

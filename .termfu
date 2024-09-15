@@ -1,7 +1,8 @@
 [ command ]
 
-python -m pdb misc/gcd.py
-#gdb --quiet --interpreter=mi misc/hello
+#python -m pdb misc/gcd.py
+gdb --quiet --interpreter=mi misc/hello
+
 
 [ plugins ]
 

@@ -145,9 +145,9 @@ choose_layout:
     keypad (stdscr, FALSE);
 
     if (new_layout) {
+
         render_layout (curr_layout->label, state);
 
-        // FIX: on start before running program, switching away from and back to Main layout messes up source file data
         update_windows (state, 8, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Wat);
     }
 }

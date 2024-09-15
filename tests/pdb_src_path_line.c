@@ -17,11 +17,10 @@ main (void)
     state->plugins[Src]->win = (window_t*) malloc (sizeof (window_t));
     window_t *win = state->plugins[Src]->win;
     win->file_data = (file_data_t*) malloc (sizeof (file_data_t));
+    state->debugger->index = DEBUGGER_PDB;
 
     char *cmd[] = {"python3", "-m", "pdb", "../misc/gcd.py", NULL };
-
     state->command = cmd;
-    state->debugger->index = DEBUGGER_PDB;
 
     start_debugger (state);
 

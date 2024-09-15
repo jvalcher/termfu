@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 
 #include "popup_watchpoints.h"
 #include "_get_popup_window_input.h"

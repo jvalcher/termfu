@@ -1,23 +1,14 @@
 */*.out
-termvu*
-.termvu_data
+termfu*
+.termfu_data
 core
-ncurses.h
 tags
-debug_*
-ToDo.md
 debug.out
+progr.out
 
 venv
 __pycache__
-make_dev*
 
 .gdbbreaks
 .gdb_history
 .gdbterm
-
-build.log
-tags
-
-tests/parse_debugger_out/d/debug.out
-tests/parse_debugger_out/d/progr.out

@@ -1,9 +1,5 @@
 #include <signal.h>
 #include <ncurses.h>
-#include <termio.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <semaphore.h>
 
 #include "data.h"
 #include "utilities.h"
@@ -19,13 +15,16 @@ static void  initialize_ncurses          (void);
 static void  set_signals                 ();
 static void  update_initial_window_data  (state_t*);
 
+// TODO: implement changes, scripts, documentation to allow termfu to be debugged by termfu
+// TODO: re-render layout on terminal screen size change
+
 
 
 int
 main (void) 
 {
-    int key;
-    state_t state;
+    int        key;
+    state_t    state;
     debugger_t debugger;
 
     state.debugger = &debugger;

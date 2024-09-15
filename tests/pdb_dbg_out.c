@@ -19,7 +19,7 @@ main (void)
     window_t *win = state->plugins[Dbg]->win;
     win->buff_data->buff = (char*) malloc (sizeof (char) * Dbg_BUF_LEN);
 
-    win->buff_data->buff_len = Brk_BUF_LEN;
+    win->buff_data->buff_len = Dbg_BUF_LEN;
     state->debugger->index = DEBUGGER_PDB;
     char *cmd[] = {"python3", "-m", "pdb", "../misc/gcd.py", NULL };
     state->command = cmd;

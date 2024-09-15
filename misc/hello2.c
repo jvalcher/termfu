@@ -1,6 +1,7 @@
 
 #include <stdio.h>
-#include "hello_2.h"
+
+#include "hello2.h"
 
 
 void print_message (int n)

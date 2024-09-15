@@ -1,4 +1,0 @@
-Num     Type           Disp Enb Address            What
-1       breakpoint     keep y   0x0000555555555175 in main at hello.c:9
-2       breakpoint     keep y   0x000055555555518b in main at hello.c:12
-3       breakpoint     keep y   0x00005555555551c1 in main at hello.c:14
