@@ -1,5 +1,0 @@
-#!/bin/bash
-
-gdb --tui --quiet -x .gdbterm a.out
-
-
