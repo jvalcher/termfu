@@ -11,7 +11,7 @@ A fast, multi-language TUI debugger that allows users to create and switch betwe
 
 | Debugger   | Languages |
 |   :----:   | -----     |
-| [GDB]([https://ftp.gnu.org/old-gnu/Manuals/gdb/html_chapter/gdb_22.html](https://sourceware.org/gdb/)) | C, C++, D, Go, Objective-C, <br>Fortran, OpenCL C, Pascal, <br>Rust, assembly, Modula-2, Ada |
+| [GDB](https://ftp.gnu.org/old-gnu/Manuals/gdb/html_chapter/gdb_22.html](https://sourceware.org/gdb/)) | C, C++, D, Go, Objective-C, <br>Fortran, OpenCL C, Pascal, <br>Rust, assembly, Modula-2, Ada |
 | [PDB](https://docs.python.org/3/library/pdb.html) | Python |
 <br>
 
