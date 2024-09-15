@@ -167,11 +167,4 @@ FILE *open_config_file (void);
 
 
 
-/*
-    Check, skip newline comments
-*/
-#define check_for_comment(ch, fp)  if ((ch) == ('#')) {while (((ch) = fgetc (fp)) != ('\n')) {;}}
-
-
-
 #endif
