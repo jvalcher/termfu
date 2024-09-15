@@ -64,12 +64,6 @@ start_debugger_proc (state_t *state)
         close (debug_out_pipe [PIPE_WRITE]);
         close (debug_out_pipe [PIPE_READ]);
 
-        /*
-        dev_null = open ("/dev/null", O_WRONLY);
-        dup2  (dev_null, STDERR_FILENO);
-        close (dev_null);
-        */
-
         execvp (state->command[0], state->command);
 
         pfeme ("Debugger start failed\n");
