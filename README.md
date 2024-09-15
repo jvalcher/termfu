@@ -1,7 +1,7 @@
 
 # termfu
 
-A fast, multi-language TUI debugger that allows users to create and switch between custom layouts
+A fast, multi-language TUI debugger that allows users to easily create and switch between custom layouts
 <br><br>
 
 <img src='./misc/layout1.png' height='400px'>
@@ -37,6 +37,7 @@ make
 ### Run test files
 
 Comment out the undesired command in the provided `.termfu` configuration file. Remove the data persistence file `.termfu_data` when switching between debuggers.
+<br>
 
 | Debugger | Command |
 | :-----:  | -----   |
@@ -44,20 +45,23 @@ Comment out the undesired command in the provided `.termfu` configuration file. 
 | PDB      | `./termfu` |
 <br>
 
+### Run
+
+Copy the executable to the desired binary directory (e.g. `/usr/bin`). The program must be run in the same directory as its `.termfu` configuration file. Breakpoints and watchpoints are persisted in `.termfu_data`.
+<br>
+
+
 
 ## Configuration
 
 Each unique, three-character, case-sensitive plugin code corresponds to a specific debugger action or window. These codes are mapped to user-defined keys, which are used to create custom ASCII-art layouts that users can switch between.
 <br>
 
-Run the program in the same directory as the configuration file `.termfu`. Breakpoints and watchpoints are persisted in `.termfu_data`.
-<br><br>
-
-
 ### Plugins
 
-Header Commands
+__Header Commands__
 <br>
+
 | Code    | Description |
 | :-----: | ------ |
 | Con     | Continue |
@@ -72,8 +76,13 @@ Header Commands
 | Unt     | Until |
 <br>
 
-Windows
+__Windows__
 <br>
+
+Window data is scrollable using arrow or `hjkl` keys.
+<br>
+
+
 | Code    | Description        | GDB                | PDB                |
 | :-----: | -----              | :-----:            | :------:           |
 | Asm     | Assembly code      | :heavy_check_mark: |                    |   
@@ -108,7 +117,7 @@ Adding parentheses around a character in a `<(t)itle>` changes the character's c
 
 ### Example `.termfu` configuration
 
-Only newline comments are supported, not inline.
+Only newline `# comments` are supported, not inline.
 <br>
 
 ```
@@ -147,7 +156,7 @@ Kil : k : (k)ill
 mlq
 rnscufk
 
-# ASCII window layout
+# ASCII-art window layout
 >w
 eooaa
 wooaa
@@ -165,9 +174,6 @@ oag
 
 ### Resulting layouts
 
-Window data is scrollable using arrow or `hjkl` keys.
-<br>
-
 <img src='./misc/layout1.png' height='400px'>
 <img src='./misc/layout2.png' height='400px'>
 <br>
@@ -175,7 +181,7 @@ Window data is scrollable using arrow or `hjkl` keys.
 
 ## Contributing
 
-Minor fixes can be submitted as a pull request. Please create an issue for any significant fixes, changes, or additions. New debugger implementations are welcome.
+Minor fixes can be submitted as a pull request. Create an issue for any significant fixes, changes, or additions. Stick with existing code conventions. New debugger implementations are welcome.
 <br>
 
 Run `make todo` to view `TODO`, `FIX`, etc. tags in the source code.
