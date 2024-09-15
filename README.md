@@ -150,7 +150,7 @@ Kil : k : (k)ill
 
 [ layout : Main ]
 
-# header commands layout
+# header commands
 >h
 mlq
 rnscufk
