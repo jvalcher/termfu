@@ -21,7 +21,7 @@ A fast, multi-language TUI debugger that allows users to create and switch betwe
 ### Dependencies
 
 ```
-sudo apt-get install libncurses-dev gdb
+sudo apt-get install libncurses-dev gdb pdb
 ```
 <br>
 
