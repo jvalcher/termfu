@@ -48,8 +48,7 @@ Comment out the undesired command in the provided `.termfu` configuration file. 
 ### Run
 
 Copy the executable to the desired binary directory (e.g. `/usr/bin`). The program must be run in the same directory as its `.termfu` configuration file. Breakpoints and watchpoints are persisted in `.termfu_data`.
-<br>
-
+<br><br>
 
 
 ## Configuration
