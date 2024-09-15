@@ -16,8 +16,6 @@ parse_debugger_output (state_t *state)
     int bytes_read = 0;
     reader_t reader;
 
-    reader.state = READER_RECEIVING;
-
     state->debugger->cli_buffer[0] = '\0';
     state->debugger->program_buffer[0] = '\0';
     state->debugger->data_buffer[0] = '\0';
@@ -27,6 +25,8 @@ parse_debugger_output (state_t *state)
     reader.program_buffer_ptr = state->debugger->program_buffer;
     reader.data_buffer_ptr = state->debugger->data_buffer;
     reader.async_buffer_ptr = state->debugger->async_buffer;
+
+    reader.state = READER_RECEIVING;
 
     while (running) 
     {
@@ -40,14 +40,18 @@ parse_debugger_output (state_t *state)
 
         // parse output
         switch (state->debugger->index) {
-            case DEBUGGER_GDB: parse_debugger_output_gdb (&reader); break;
-            case DEBUGGER_PDB: parse_debugger_output_pdb (&reader); break;
+            case DEBUGGER_GDB:
+                parse_debugger_output_gdb (&reader);
+                break;
+            case DEBUGGER_PDB:
+                parse_debugger_output_pdb (&reader);
+                break;
         }
 
+        // set reader state
         switch (reader.state) {
             case READER_RECEIVING:
                 break;
-
             case READER_DONE:
                 running = false;
                 break;
@@ -216,7 +220,6 @@ parse_debugger_output_gdb (reader_t *reader)
                     *reader->async_buffer_ptr = '\0';
 
                     reader->state = READER_DONE;
-
                     break;
                 }
 
@@ -260,12 +263,9 @@ parse_debugger_output_gdb (reader_t *reader)
 void
 parse_debugger_output_pdb (reader_t *reader)
 {
-    char *buff_ptr;
-
-    buff_ptr = reader->output_buffer;
+    char *buff_ptr = reader->output_buffer;
 
     while (*buff_ptr != '\0') {
-
 
         if (*buff_ptr == '>') {
 
@@ -297,7 +297,6 @@ parse_debugger_output_pdb (reader_t *reader)
                 *reader->async_buffer_ptr = '\0';
 
                 reader->state = READER_DONE;
-
                 break;
             }
             
