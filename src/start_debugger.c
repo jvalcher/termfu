@@ -12,7 +12,7 @@
 #include "utilities.h"
 #include "insert_output_marker.h"
 
-static void   start_debugger_proc         (state_t*);
+static void start_debugger_proc (state_t*);
 
 
 
