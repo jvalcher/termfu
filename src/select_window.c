@@ -84,8 +84,9 @@ select_window (int      plugin_index,
                 continue;
             }
 
-            // plugin window keys
+            // window commands
             switch (plugin_index) {
+
                 case Brk:
                     switch (key) {
                         case 'd': 
@@ -98,6 +99,7 @@ select_window (int      plugin_index,
                             break;
                     }
                     break;
+
                 case Wat:
                     switch (key) {
                         case 'd':
@@ -112,7 +114,6 @@ select_window (int      plugin_index,
                     }
                     break;
         }
-
         key_not_pressed = true;
     }
 
@@ -123,11 +124,11 @@ select_window (int      plugin_index,
 
 
 
+// TODO: change top, right, left borders color
+// - corrected corner characters stored in state->plugins[x]->win->border
+
 /*
     Change Ncurses window title color to indicate focus
-    ----------- 
-    // TODO: change top, right, left borders color
-    // - corrected corner characters stored in state->plugins[xxx]->win->border
 */
 static void
 select_window_color (int      plugin_index,
@@ -138,8 +139,6 @@ select_window_color (int      plugin_index,
 
     curr_win = state->plugins[plugin_index]->win;
     curr_title = state->plugins[plugin_index]->title;
-
-    curr_win->selected = true;
 
     size_t i;
     int    x, y;
@@ -177,8 +176,6 @@ select_window_color (int      plugin_index,
 static void
 deselect_window_color (void)
 {
-
-    curr_win->selected = false;
 
     size_t i;
     int x, y;

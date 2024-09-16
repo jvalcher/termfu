@@ -81,5 +81,3 @@ start_debugger_proc (state_t *state)
     }
 }
 
-
-
