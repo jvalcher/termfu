@@ -179,7 +179,7 @@ oag
 ### Tool spotlight
 - Run `make todo` to view `TODO`, `FIX`, etc. tags in the source code.
 - The `logd()` function allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
-- The `make debug` script starts a `tmux`-based `GDB` debugging session. This is also a good way to understand how the program works. See the comments in `scripts/gdb_debug` for usage.
+- The `make debug` script starts a `tmux`-based `GDB` debugging session. This is also a good way to explore the program. See the comments in `scripts/gdb_debug` for usage.
 
 ### Run test files
 - `# Comment` out the undesired command in the provided `.termfu` configuration file.
