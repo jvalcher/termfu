@@ -7,14 +7,13 @@
 
 #include "utilities.h"
 #include "data.h"
+#include "insert_output_marker.h"
+#include "parse_debugger_output.h"
 
 FILE *debug_out_ptr = NULL;
 
 
 
-/*
-   Log debug output to file
-*/
 void
 logd (const char *formatted_string, ...)
 {
@@ -76,7 +75,6 @@ concatenate_strings (int num_strs, ...)
 
 
 
-// TODO: separate functions for sending commands with and without output markers
 void
 send_command (state_t *state,
               char *command)
@@ -85,6 +83,24 @@ send_command (state_t *state,
     if (bytes == 0) {
         pfeme ("No bytes written to debugger process");
     }
+}
+
+
+
+void
+send_command_mp (state_t *state,
+                 char *command)
+{
+    insert_output_start_marker (state);
+
+    size_t bytes = write (state->debugger->stdin_pipe, command, strlen (command));
+    if (bytes == 0) {
+        pfeme ("No bytes written to debugger process");
+    }
+
+    insert_output_end_marker (state);
+
+    parse_debugger_output (state);
 }
 
 
