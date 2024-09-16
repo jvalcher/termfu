@@ -14,10 +14,11 @@ static watchpoint_t *create_watchpoint (state_t *state);
 
 
 /*
-    Get persisted data from PERSIST_FILE
-
-    Format:
+    Format
     ------
+    >w  watchpoints
+    >b  breakpoints
+
     >w
     <index>:<variable>
     >b
@@ -36,8 +37,12 @@ get_persisted_data (state_t *state)
          *cmd;
 
     switch (state->debugger->index) {
-        case DEBUGGER_GDB: cmd_base = cmd_base_gdb; break;
-        case DEBUGGER_PDB: cmd_base = cmd_base_pdb; break;
+        case DEBUGGER_GDB:
+            cmd_base = cmd_base_gdb;
+            break;
+        case DEBUGGER_PDB:
+            cmd_base = cmd_base_pdb;
+            break;
     }
 
     if ((fp = fopen (PERSIST_FILE, "r")) != NULL) {
@@ -86,10 +91,7 @@ get_persisted_data (state_t *state)
                             // insert breakpoint
                             cmd = concatenate_strings (3, cmd_base, break_buff, "\n");    
 
-                            insert_output_start_marker (state);
-                            send_command (state, cmd);
-                            insert_output_end_marker (state);
-                            parse_debugger_output (state);
+                            send_command_mp (state, cmd);
 
                             free (cmd);
                         }
@@ -100,6 +102,10 @@ get_persisted_data (state_t *state)
         }
 
         fclose (fp);
+    }
+
+    else {
+        pfeme ("Unable to open persist file \"%s\"\n", PERSIST_FILE);
     }
     
     update_windows (state, 2, Wat, Brk);
