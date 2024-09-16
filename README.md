@@ -44,7 +44,7 @@ termfu
 
 
 ## Configuration
-Each three-character, case-sensitive plugin code corresponds to a specific action or window. These codes are mapped to keys, which are used to create custom layouts that users can switch between. 
+Each three-character, case-sensitive plugin code corresponds to a specific action or window. These codes are mapped to keys, which are used as shortcuts and to create custom layouts. 
 <br>
 
 ### Plugins
