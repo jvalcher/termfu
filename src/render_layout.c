@@ -475,8 +475,6 @@ render_window (window_t *win)
         win->input_cols = win->cols - 2;
         win->input_y = 1;
         win->input_x = 1;
-        left_spaces = (win->input_cols - strlen(win->input_title)) / 2;
-        right_spaces = win->input_cols - strlen(win->input_title) - left_spaces;
         win->IWIN = allocate_subwin (win->WIN,
                                      win->input_rows,
                                      win->input_cols,
@@ -485,8 +483,15 @@ render_window (window_t *win)
         if (win->IWIN == NULL) {
             pfeme  ("Unable to create input window\n");
         }
+
+        left_spaces = (win->input_cols - strlen(win->input_title)) / 2;
+        right_spaces = win->input_cols - strlen(win->input_title) - left_spaces;
+        left_spaces = left_spaces > 0 ? left_spaces : 0;
+        right_spaces = right_spaces > 0 ? left_spaces : 0;
         wattron   (win->IWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
-        mvwprintw (win->IWIN, 0, 0, "%*c%s%*c", left_spaces, ' ', win->input_title, right_spaces, ' ');
+        mvwprintw (win->IWIN, 0, 0, "%*c%.*s%*c", left_spaces, ' ',
+                                                  win->input_cols, win->input_title,
+                                                  right_spaces, ' ');
         wattroff  (win->IWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
         wrefresh  (win->IWIN);
     }
