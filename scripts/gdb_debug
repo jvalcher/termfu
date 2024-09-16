@@ -5,7 +5,7 @@
 # ---------
 # Ncurses programs have a problem receiving user input when run in a different terminal via GDB's tty command.
 # This script solves that issue at the expense of having to quit and rerun it in order to restart the program.
-# In addition to debugging the program, it is also a good way to step through the code to see how it works.
+# In addition to debugging the program, it is also a good way to explore the code base.
 #
 # Usage: 
 #

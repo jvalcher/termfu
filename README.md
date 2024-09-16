@@ -177,7 +177,7 @@ oag
 
 ## Contributing
 
-New debugger implementations as well as debugger and non-debugger tool plugins are welcome. Minor patches can be submitted as a pull request. Create an issue before embarking on any significant fixes, optimizations, changes, or additions. Check if an issue exists before creating a new one. Use existing code conventions.
+New debugger implementations as well as other debugging-related tool plugins are welcome. Minor patches can be submitted as a pull request. Create an issue before submitting any major fixes, optimizations, changes, or additions. Check if an issue exists before creating a new one. Use existing code conventions.
 <br>
 
 Run `make todo` to view `TODO`, `FIX`, etc. tags in the source code.
