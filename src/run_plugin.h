@@ -7,9 +7,7 @@
 
 
 /*
-    Run debugger commands or enter window loop
-    ----------
-    Used in main() program loop
+    Run debugger command or enter window loop
 */
 void run_plugin (int plugin_index, state_t *state);
 
