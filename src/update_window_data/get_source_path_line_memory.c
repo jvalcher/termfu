@@ -1,5 +1,5 @@
-
 #include <ncurses.h>
+#include <libgen.h>
 
 #include "get_source_path_line_memory.h"
 #include "../data.h"
@@ -33,7 +33,10 @@ get_source_path_line_memory_gdb (state_t *state)
 {
     char *src_ptr,
          *dest_ptr,
-         *prev_ptr;
+         *prev_ptr,
+         *basefile;
+    int   left_spaces,
+          right_spaces;
     window_t *win;
     bool is_running;
     file_data_t *file_data;
@@ -120,11 +123,26 @@ get_source_path_line_memory_gdb (state_t *state)
         }
         *dest_ptr = '\0';
 
+        // path changed
         if (strcmp (state->debugger->format_buffer, win->file_data->path) != 0) {
+
+            // path
             strncpy (win->file_data->path, state->debugger->format_buffer, FILE_PATH_LEN - 1);
             win->file_data->path_changed = true;
-        }
-        // TODO: else if { file timestamp changed, path_changed = true }
+            
+            // update window title
+            basefile = basename (win->file_data->path);
+            left_spaces = (win->input_cols - strlen (basefile)) / 2;
+            right_spaces = win->input_cols - strlen (basefile) - left_spaces;
+            left_spaces = left_spaces > 0 ? left_spaces : 0;
+            right_spaces = right_spaces > 0 ? left_spaces : 0;
+            wattron   (win->IWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
+            mvwprintw (win->IWIN, 0, 0, "%*c%.*s%*c", left_spaces, ' ',
+                                                      win->input_cols, basefile,
+                                                      right_spaces, ' ');
+            wattroff  (win->IWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
+            wrefresh  (win->IWIN);
+        } 
 
         // line number
         dest_ptr = state->debugger->format_buffer;
