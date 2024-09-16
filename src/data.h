@@ -3,6 +3,7 @@
 #define DATA_H
 
 #include <ncurses.h>
+#include <time.h>
 
 
 
@@ -210,6 +211,7 @@ typedef struct {
 #define PIPE_WRITE       1
 #define DEBUG_TITLE_LEN  8
 #define DEBUG_BUF_LEN    WIN_BUF_LEN
+#define PROGRAM_PATH_LEN 256
 #define READER_BUF_LEN   8192
 #define FORMAT_BUF_LEN   65536
 #define DATA_BUF_LEN     65536
@@ -226,7 +228,8 @@ typedef struct {
     int     index;
     char    title [DEBUG_TITLE_LEN];
     bool    running;
-    char   *prog_path;
+    char    prog_path [PROGRAM_PATH_LEN];
+    time_t  prog_update_time;
 
     int     stdin_pipe;
     int     stdout_pipe;
