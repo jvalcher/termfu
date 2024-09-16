@@ -20,23 +20,15 @@ static char      **create_command         (FILE*, state_t*);
 static void        create_plugins         (FILE*, state_t*);
 static layout_t   *create_layout          (FILE*, char*);
 static void        allocate_plugins       (state_t*);
-static layout_t   *allocate_layout        (void);
 
 extern char **plugin_codes;
 extern char **win_file_names;
 
-// indexes match enums in data.h
-// { DEBUGGER_GDB }
+// indexes match enums in data.h  { DEBUGGER_GDB, DEBUGGER_PDB}
 char *debuggers[] = { "gdb", "pdb" };
 
 
 
-/*
-    Parse CONFIG_FILE data
-    --------------
-    - Allocate and add plugins to `plugin` *plugin_t array  (plugins.h)
-    - Create, return layout_t linked list
-*/
 void
 parse_config_file (state_t *state)
 {
@@ -65,6 +57,7 @@ parse_config_file (state_t *state)
 
     // parse config file
     is_first_layout = true;
+        //
     while ((ch = fgetc (fp)) != EOF) {
 
         // newline comment
@@ -117,9 +110,11 @@ static void
 allocate_plugins (state_t *state)
 {
     state->plugins = (plugin_t**) malloc (state->num_plugins * sizeof (plugin_t*));
+
     if (state->plugins == NULL) {
         pfeme ("plugin_t pointer array allocation failed\n");
     }
+
     for (int i = 0; i < state->num_plugins; i++) {
         state->plugins [i] = (plugin_t*) malloc (sizeof (plugin_t));
         if (state->plugins [i] == NULL) {
@@ -193,11 +188,11 @@ create_command (FILE *fp,
             }
         }
     } while (!isalpha (ch));
-        //
+
     ungetc (ch, fp);
     save_fp = ftell (fp);
     getc (fp);
-        //
+
     n = 1;  
     do {
         if (ch == ' ') {
@@ -207,7 +202,6 @@ create_command (FILE *fp,
     ++n;    // execvp NULL
 
     cmd_arr = (char**) malloc (n * sizeof (char*));
-
 
     // create array
     fseek (fp, save_fp, SEEK_SET);
@@ -230,11 +224,14 @@ create_command (FILE *fp,
                 ungetc (ch, fp);
             }
 
-            // check if debugger supported
+            // check if word == supported debugger
             if (debugger_supported == false) {
+
                 for (i = 0; i < num_debuggers; i++) {
+
+                    // set state->debugger->index and ->title
                     if (strcmp (debuggers [i], buff) == 0) {
-                        state->debugger->index = i;  // index matches data.h enum  { DEBUGGER_GDB, ... }
+                        state->debugger->index = i;
                         strncpy (state->debugger->title, debuggers [i], DEBUG_TITLE_LEN - 1);
                         debugger_supported = true;
                     }
@@ -252,18 +249,6 @@ create_command (FILE *fp,
     cmd_arr [n] = NULL;
 
     return cmd_arr;
-}
-
-
-
-static layout_t*
-allocate_layout (void)
-{
-    layout_t *layout = (layout_t*) malloc (sizeof (layout_t));
-    if (layout == NULL) {
-        pfeme ("layout_t allocation failed\n");
-    }
-    return layout;
 }
 
 
@@ -298,18 +283,20 @@ static void create_plugins (FILE *file, state_t *state)
         // if letter
         if (isalpha (key)) {
 
-            // get code
+            // plugin code
             for (j = 0; j < PLUGIN_CODE_LEN; j++) {
                 code[j] = key;
                 key = fgetc (file);
             }
             code [PLUGIN_CODE_LEN] = '\0';
 
-            plugin_index = get_plugin_code_index (code, state);
+            if ((plugin_index = get_plugin_code_index (code, state)) == -1) {
+                pfeme ("Unable to find index for plugin code \"%s\"\n", code);
+            }
             curr_plugin = state->plugins [plugin_index];
             strcpy (curr_plugin->code, code);
 
-            // set key
+            // key binding
             ungetc (key, file);
             while ((key = fgetc (file)) != ':') {;}
             while ((key = fgetc (file)) != ':') {
@@ -318,10 +305,10 @@ static void create_plugins (FILE *file, state_t *state)
                 }
             }
 
-            // set plugin_key_index
+            // set state->plugin_key_index
             state->plugin_key_index [(int) curr_plugin->key] = plugin_index;
 
-            // set title
+            // title
             i = 0;
             title_started = false;
             while ((key = fgetc (file)) != '\n' && i < (MAX_CONFIG_LABEL_LEN - 1)) {
@@ -349,9 +336,8 @@ static layout_t*
 create_layout (FILE* file,
                char *label)
 {
-    int ch, next_ch;
+    int ch, section_ch;
     char *win_keys;
-    char section = 0;
     int num_chars = 0;
     bool is_key = false;
     char keys [MAX_KEY_STR_LEN] = {0};
@@ -359,7 +345,10 @@ create_layout (FILE* file,
     layout_t* layout = NULL;
 
     // allocate layout
-    layout = allocate_layout ();
+    layout = (layout_t*) malloc (sizeof (layout_t));
+    if (layout == NULL) {
+        pfeme ("layout_t allocation failed for layout \"%s\"\n", label);
+    }
     layout->next = NULL;
 
     // add layout label
@@ -374,26 +363,18 @@ create_layout (FILE* file,
             }
         }
 
-        // set section (h, w)
+        // section h, w
         else if (ch == '>') {
 
-            next_ch = fgetc (file);
-            switch (next_ch) {
-                case 'h':
-                    section = 'h';
-                    break;
-                case 'w':
-                    section = 'w';
-                    break;
-            }
+            section_ch = fgetc (file);
 
             // parse header or window section
-            if (section == 'w' || section == 'h') {
+            if (section_ch == 'w' || section_ch == 'h') {
 
                 i = 0;
                 num_chars = 0;
 
-                if (section == 'h')
+                if (section_ch == 'h')
                     layout->num_hdr_key_rows = 0;
 
                 // create header/window key string
@@ -422,7 +403,7 @@ create_layout (FILE* file,
                             keys [i-1] != '\n' &&
                             i != 0) {
 
-                        if (section == 'h')
+                        if (section_ch == 'h')
                             layout->num_hdr_key_rows += 1;
 
                         keys [i++] = ch;
@@ -432,7 +413,7 @@ create_layout (FILE* file,
                 keys [i] = '\0';
 
                 // add string to layout
-                if (section == 'h') {
+                if (section_ch == 'h') {
                     strncpy ((char *)layout->hdr_key_str, keys, num_chars + 1);
                 } else {
                     strncpy ((char *)layout->win_key_str, keys, num_chars + 1);
@@ -444,7 +425,7 @@ create_layout (FILE* file,
 
                 num_chars = 0;
             }
-            section = '\0';
+            section_ch = '\0';
         }
 
     }
@@ -454,10 +435,10 @@ create_layout (FILE* file,
 
     // Calculate window segment ratio
     // --------
-    // A "segment" refers to the space needed for each window symbol character
+    // A "segment" refers to the space needed for each window key shortcut
     // in terms of the terminal's rows and columns. The following calculations
     // remain the same regardless of the current screen/pane's dimensions. They
-    // are used by render_layout() to create the Ncurses header and windows.
+    // are used by render_layout() to create the ncurses header and windows.
     //     
     //     ssbb
     //     ssww
