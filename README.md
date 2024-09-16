@@ -50,7 +50,7 @@ Copy the executable to the desired binary directory (e.g. `/usr/bin`). The progr
 
 ## Configuration
 
-Each unique, three-character, case-sensitive plugin code corresponds to a specific debugger action or window. These codes are mapped to user-defined keys, which are used to create custom ASCII-art layouts that users can switch between.
+Each three-character, case-sensitive plugin code corresponds to a specific action or window. These codes are mapped to user-defined keys, which are used to create custom layouts that users can switch between.
 <br>
 
 ### Plugins
