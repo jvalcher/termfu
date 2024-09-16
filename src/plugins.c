@@ -76,14 +76,6 @@ char *plugin_codes [] = {
 
 
 
-char*
-get_plugin_code (int plugin_index)
-{
-    return plugin_codes [plugin_index];
-}
-
-
-
 int win_plugins[]      = { Asm, Brk, Dbg, LcV, Prg, Reg, Src, Wat };
 int win_file_plugins[] = { Src };
 
@@ -113,7 +105,7 @@ int win_input_plugins[] = {
 };
 char *win_input_titles[] = {
     "(c)reate  (d)elete",
-    "",
+    "",                         // set dynamically
     "(c)reate  (d)elete"
 };
 
@@ -131,7 +123,7 @@ allocate_plugin_windows (state_t *state)
     window_t *win;
     plugin_t *plugin;
 
-    // allocate window_t structs
+    // window_t structs
     for (i = 0; i < num_win_plugins; i++) {
 
         j = win_plugins[i];
@@ -142,26 +134,26 @@ allocate_plugin_windows (state_t *state)
             pfeme ("Window malloc failed for plugin %s (code: %s, index: %d)\n",
                     plugin->title, plugin->code, i);
         }
-        win->has_input = false;
+        win->has_topbar = false;
         win->key = j;
         strcpy (win->code, plugin_codes[j]);
     }
 
-    // set input windows
+    // topbar subwindow data
     for (i = 0; i < num_win_input_plugins; i++) {
         j = win_input_plugins[i];
         win = state->plugins[j]->win;
             //
-        win->has_input = true;
+        win->has_topbar = true;
 
-        win->input_title = (char*) malloc (strlen (win_input_titles[i]) + 1);
-        if (win->input_title == NULL) {
+        win->topbar_title = (char*) malloc (strlen (win_input_titles[i]) + 1);
+        if (win->topbar_title == NULL) {
             pfeme ("Unable to allocate window input title (\"%s\")\n", win_input_titles[i]);
         }
-        strcpy (win->input_title, win_input_titles[i]);
+        strcpy (win->topbar_title, win_input_titles[i]);
     }
 
-    // allocate file data
+    // file_data_t
     for (i = 0; i < num_win_file_plugins; i++) {
         j = win_file_plugins[i];
 
@@ -196,7 +188,7 @@ allocate_plugin_windows (state_t *state)
         win->buff_data = NULL;
     }
 
-    // allocate buffer data
+    // buff_data_t
     for (i = 0; i < num_win_buff_plugins; i++) {
         
         j = win_buff_plugins[i];
@@ -258,9 +250,12 @@ get_plugin_code_index (char    *code,
         mi,
         ei = state->num_plugins - 1, 
         r;
+
     while (si <= ei) {
+
         mi = si + (ei - si) / 2;
         r = strcmp (plugin_codes [mi], code);
+
         if (r == 0) {
             return mi;
         } else if (r < 0) {
