@@ -1,5 +1,5 @@
-#ifndef WATCHPOINTS_H
-#define WATCHPOINTS_H
+#ifndef POPUP_WATCHPOINTS_H
+#define POPUP_WATCHPOINTS_H
 
 #include "../data.h"
 
