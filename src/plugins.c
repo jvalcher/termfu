@@ -108,10 +108,12 @@ int win_buff_len[] = {
 
 int win_input_plugins[] = {
     Brk,
+    Src,
     Wat
 };
 char *win_input_titles[] = {
     "(c)reate  (d)elete",
+    "",
     "(c)reate  (d)elete"
 };
 
@@ -151,6 +153,7 @@ allocate_plugin_windows (state_t *state)
         win = state->plugins[j]->win;
             //
         win->has_input = true;
+
         win->input_title = (char*) malloc (strlen (win_input_titles[i]) + 1);
         if (win->input_title == NULL) {
             pfeme ("Unable to allocate window input title (\"%s\")\n", win_input_titles[i]);
