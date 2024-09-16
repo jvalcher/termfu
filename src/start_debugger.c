@@ -11,6 +11,7 @@
 #include "parse_debugger_output.h"
 #include "utilities.h"
 #include "insert_output_marker.h"
+#include "update_window_data/get_binary_path_time.h"
 
 static void start_debugger_proc (state_t*);
 
@@ -24,6 +25,8 @@ start_debugger (state_t *state)
     insert_output_end_marker (state);
 
     parse_debugger_output (state);
+
+    get_binary_path_time (state);
 }
 
 
