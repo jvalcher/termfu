@@ -450,6 +450,8 @@ format_win_data (int plugin_index,
 
     win = state->plugins[plugin_index]->win;
 
+    // TODO: Replace source file line number with colored "B2" breakpoint index number
+
     if (plugin_index == Asm) {
 
         // highlight current hex address (wherever it occurs)
