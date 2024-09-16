@@ -230,17 +230,10 @@ display_lines_buff (int      key,
                 len = len - win->buff_data->scroll_col + 1;
             }
 
-            if (strncmp (buff_ptr, NO_DATA_MSG, strlen (NO_DATA_MSG)) == 0) {
-
-                // FIX: Italics not supported by terminal?
-                wattron (win->DWIN, A_ITALIC);
-            }
-
             mvwprintw(win->DWIN, wy, wx, "%.*s", len, buff_ptr + win->buff_data->scroll_col - 1);
+        } 
 
-            wattroff (win->DWIN, A_ITALIC);
-
-        } else {
+        else {
             mvwprintw(win->DWIN, wy, wx, " ");
         }
     }
