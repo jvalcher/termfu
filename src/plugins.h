@@ -36,13 +36,6 @@ enum {
 
 
 /*
-   Get plugin code from its index
-*/
-char* get_plugin_code (int plugin_index);
-
-
-
-/*
     Calculate and set number of plugins
     ---------
     Used in parse_config_file()
