@@ -5,6 +5,7 @@ core
 tags
 debug.out
 progr.out
+misc/hello
 
 venv
 __pycache__
