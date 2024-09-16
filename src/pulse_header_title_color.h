@@ -16,7 +16,7 @@ enum {
 /*
    Pulse header title color on/off
    -------
-   Finds and switches header title strings on and off to indicate usage
+   - Finds and switches header title strings on and off to indicate usage
 */
 void pulse_header_title_color (int plugin_index, state_t *state, int pulse_state);
 
