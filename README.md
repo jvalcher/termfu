@@ -70,7 +70,7 @@ __Header Commands__
 | Nxt     | Next |
 | Prm     | Debugger prompt |
 | Qut     | Quit |
-| Run     | Run program |
+| Run     | Run program (reload binary if needed) |
 | Stp     | Step |
 | Unt     | Until |
 <br>
@@ -180,7 +180,7 @@ oag
 
 ## Contributing
 
-Minor fixes can be submitted as a pull request. Create an issue for any significant fixes, changes, or additions. Stick with existing code conventions. New debugger implementations are welcome.
+New debugger implementations as well as debugger and non-debugger tool plugins are welcome. Minor patches can be submitted as a pull request. Create an issue before embarking on any significant fixes, optimizations, changes, or additions. Check if an issue exists before creating a new one. Use existing code conventions.
 <br>
 
 Run `make todo` to view `TODO`, `FIX`, etc. tags in the source code.
@@ -189,7 +189,7 @@ Run `make todo` to view `TODO`, `FIX`, etc. tags in the source code.
 The `logd()` function allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
 <br>
 
-The `make debug` script requires `tmux`. See the comments in `scripts/gdb_debug` for usage.
+The `make debug` script starts a `tmux`-based `GDB` debugging session. This is also a good way to explore the code base. See the comments in `scripts/gdb_debug` for usage.
 <br>
 
 
@@ -200,10 +200,10 @@ The `make debug` script requires `tmux`. See the comments in `scripts/gdb_debug`
 | Command        | Description |
 | --------       | -------     |
 | `make`         | Build production binary |
-| `make dev`	   | Build development binary, run it |
+| `make dev`	   | Build development binary|
 | `make devf`    | Build development binary, print formatted error messages |
 | `make todo`    | Print source code tags  (`TODO`, `FIXME`, etc.) |
-| `make debug`   | Run tmux debugging session  (see `scripts/gdb_debug`) |
+| `make debug`   | Start tmux GDB debugging session  (see `scripts/gdb_debug`) |
 | `make colors`	 | Check if current terminal can display colors with Ncurses |
 <br>
 
