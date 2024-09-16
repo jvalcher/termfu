@@ -105,6 +105,15 @@ FILE *open_config_file (void);
 
 
 
+/*
+    Compare file's previously-saved update time with its current time
+    -------
+    - Returns true if updated, false otherwise
+*/
+bool file_was_updated (time_t file_mtime, char *file_path);
+
+
+
 /****************
   Formatted error messages
  ****************
@@ -126,9 +135,10 @@ FILE *open_config_file (void);
               Check README.md for more details
               Exiting...
                
- - TODO: implement stack error tracing in all functions
-    - Display popen output
 */
+
+// TODO: implement stack error tracing in all functions
+    // include popen output
 
 // Print formatted error message
 #define pfem(...) do { \

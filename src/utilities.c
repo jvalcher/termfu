@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdarg.h>
+#include <sys/stat.h>
 
 #include "utilities.h"
 #include "data.h"
@@ -313,3 +314,15 @@ open_config_file (void)
 
 
 
+bool
+file_was_updated (time_t file_mtime,
+                  char *file_path)
+{
+    struct stat file_stat;
+
+    if (stat (file_path, &file_stat) != 0) {
+        pfeme ("Unable to check status of \"%s\"", file_path);
+    }
+
+    return file_mtime < file_stat.st_mtim.tv_sec;
+}
