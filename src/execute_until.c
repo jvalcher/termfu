@@ -21,21 +21,24 @@ execute_until (state_t *state)
 
     get_popup_window_input  ("Execute until: ", state->input_buffer);
 
-    switch (state->debugger->index) {
-        case DEBUGGER_GDB: cmd_base = cmd_base_gdb; break;
-        case DEBUGGER_PDB: cmd_base = cmd_base_pdb; break;
+    if (strlen (state->input_buffer) > 0) {
+
+        switch (state->debugger->index) {
+            case DEBUGGER_GDB: cmd_base = cmd_base_gdb; break;
+            case DEBUGGER_PDB: cmd_base = cmd_base_pdb; break;
+        }
+        cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
+
+        insert_output_start_marker (state);
+        send_command (state, cmd);
+        insert_output_end_marker (state);
+        parse_debugger_output (state);
+
+        free (cmd);
+
+        state->plugins[Dbg]->win->buff_data->new_data = true;
+        state->plugins[Prg]->win->buff_data->new_data = true;
+        update_windows (state, 8, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Wat);
     }
-    cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
-
-    insert_output_start_marker (state);
-    send_command (state, cmd);
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
-
-    free (cmd);
-
-    state->plugins[Dbg]->win->buff_data->new_data = true;
-    state->plugins[Prg]->win->buff_data->new_data = true;
-    update_windows (state, 8, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Wat);
 }
 
