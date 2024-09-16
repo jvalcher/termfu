@@ -2,7 +2,7 @@
 <h1 align="center">termfu</h1>
 <p align="center">A fast, multi-language TUI debugger that allows users to easily create and switch between custom layouts</p>
 <br>
-<p align="center"><img margin-left="auto" src="./misc/layout1.png" width="500px"></p>
+<p align="center"><img margin-left="auto" src="./misc/layout1.png" width="700px"></p>
 <br>
 
 
