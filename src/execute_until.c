@@ -19,7 +19,7 @@ execute_until (state_t *state)
          *cmd_base,
          *cmd;
 
-    get_popup_window_input  ("Execute until: ", state->input_buffer);
+    get_popup_window_input  ("Execute until (line, filename:line): ", state->input_buffer);
 
     if (strlen (state->input_buffer) > 0) {
 
