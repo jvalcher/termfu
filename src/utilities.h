@@ -34,13 +34,6 @@ void  clean_up  (void);
 
 
 /*
-    Add breakpoints, watchpoints to config file
-*/
-void persist_data (state_t *state);
-
-
-
-/*
     Concatenate variable number of strings
     -------
     - Returns pointer to created string
@@ -174,13 +167,6 @@ bool file_was_updated (time_t file_mtime, char *file_path);
     pem(__VA_ARGS__); \
     exit (EXIT_FAILURE); \
 } while (0)
-
-
-
-/*
-    Check, skip newline comments
-*/
-#define check_for_comment(ch, fp)  if ((ch) == ('#')) {while (((ch) = fgetc (fp)) != ('\n')) {;}}
 
 
 
