@@ -172,7 +172,6 @@ oag
 - Bug fixes and optimizations are welcome.
 - New debugger implementations and plugins are welcome.
 - Other debugging-related tool plugin ideas should be presented in an issue for approval and discussion before submitting a PR.
-- PRs should address only one issue. Do not make other unrelated changes.
 - Blank space and comment PRs have a high probability of being closed.
 - Use existing code conventions.
 
