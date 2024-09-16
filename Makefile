@@ -6,7 +6,6 @@
 #   make devf   	   - Build development binary, print formatted error messages
 #   make debug         - Run Tmux debugging session (see scripts/gdb_debug)
 #   make todo          - Print source code tags in source code (TODO, FIXME, etc.)
-#   make colors		   - Check if current terminal can display colors
 #   -------
 #
 
@@ -29,7 +28,7 @@ C_UPDATE_FILES = $(wildcard ./src/update_window_data/*.c)
 C_POPUP_FILES  = $(wildcard ./src/get_popup_window_input/*.c)
 
 
-.PHONY: all dev devf devformat debug todo colors clean_prod clean_dev
+.PHONY: all dev devf devformat debug todo clean_prod clean_dev
 
 
 all: FLAGS   += $(PROD_FLAGS)
@@ -61,13 +60,6 @@ debug:
 todo:
 	@echo ""
 	./scripts/todo
-	@echo ""
-
-colors:
-	@echo ""
-	./scripts/run ./tests/colors_test.c
-	@echo ""
-	rm ./tests/colors_test
 	@echo ""
 
 clean_prod:

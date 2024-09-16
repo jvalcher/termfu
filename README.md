@@ -205,7 +205,6 @@ PDB
 | `make devf`    | Build development binary, print formatted error messages |
 | `make todo`    | Print source code tags  (`TODO`, `FIXME`, etc.) |
 | `make debug`   | Start tmux GDB debugging session  (see `scripts/gdb_debug`) |
-| `make colors`	 | Check if current terminal can display colors with Ncurses |
 <br>
 
 `./tests/Makefile`
