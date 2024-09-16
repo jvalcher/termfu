@@ -115,7 +115,7 @@ bool file_was_updated (time_t file_mtime, char *file_path);
       pfeme ("Unknown character \"%c\" \n", ch);
   
       ERROR: src_file.c : func() : 10
-              Unknown character "c"
+             Unknown character "c"
   
   Multiple messages, exit;
   
@@ -124,14 +124,10 @@ bool file_was_updated (time_t file_mtime, char *file_path);
       peme ("Exiting...");
   
       ERROR: src_file.c : func() : 10
-              Unknown character "c"
-              Check README.md for more details
-              Exiting...
-               
+             Unknown character "c"
+             Check README.md for more details
+             Exiting...
 */
-
-// TODO: implement stack error tracing in all functions
-    // include popen output
 
 // Print formatted error message
 #define pfem(...) do { \
