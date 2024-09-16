@@ -7,15 +7,9 @@
 #include <stdbool.h>
 #include <ncurses.h>
 
-#ifdef DEBUG
-#include <sys/ioctl.h>
-#include <unistd.h>
-#endif
-
 #include "render_layout.h"
 #include "data.h"
 #include "utilities.h"
-#include "plugins.h"
 
 static void      free_nc_window_data   (state_t*);
 static layout_t *get_label_layout      (char*, layout_t*);
@@ -23,8 +17,6 @@ static void      calculate_layout      (layout_t*, state_t*);
 static void      render_header         (layout_t*, state_t*);
 static void      render_windows        (state_t*);
 static void      render_header_titles  (layout_t*, state_t*);
-static WINDOW   *allocate_window       (int, int, int, int);
-static WINDOW   *allocate_subwin       (WINDOW*, int, int, int, int);
 static void      render_window         (window_t*);
 static void      render_window_titles  (state_t*);
 static void      fix_corners           (state_t*);
@@ -96,6 +88,7 @@ get_label_layout (char     *label,
         } 
         layouts = layouts->next;
     } while (layouts != NULL);
+
     pfeme ("Layout \"%s\" not found\n", label);
 }
 
@@ -241,8 +234,6 @@ calculate_layout (layout_t *layout,
                             plugin_index);
                 }
 
-                curr_window->selected  = false;
-
                 // Calculate rows, cols
                 //           
                 //         ┌──a
@@ -316,26 +307,30 @@ static void
 render_header (layout_t *layout, 
                state_t *state)
 {
-    WINDOW *header = allocate_window (header_offset, COLS, 0, 0);
-    state->header = header;
+    WINDOW *header;
+
+    state->header = newwin (header_offset, COLS, 0, 0);
+    if (state->header == NULL) {
+        pfeme ("Unable to create header window for layout \"%s\"\n", layout->label);
+    }
+    header = state->header;
     int title_len  = strlen (PROGRAM_NAME);
 
-    // print
-        // program name
+    // program name
     wattron (header, COLOR_PAIR(MAIN_TITLE_COLOR) | A_BOLD);
     mvwprintw (header, 1, 2, "%s", PROGRAM_NAME);
     wattrset (header, A_NORMAL);
 
-        // colon
+    // colon
     wattron (header, COLOR_PAIR(WHITE_BLACK));
     mvwprintw (header, 1, title_len + 3, "%s", ":");
 
-        // current layout
+    // current layout
     wattron (header, COLOR_PAIR(LAYOUT_TITLE_COLOR));
     mvwprintw (header, 1, title_len + 4, "%s", layout->label);
     attrset (A_NORMAL);
 
-    refresh();
+    refresh ();
     wrefresh (header);
 
     render_header_titles (layout, state);
@@ -453,62 +448,79 @@ render_window (window_t *win)
     int left_spaces, right_spaces;
 
     // parent window
-    win->WIN = allocate_window (win->rows, 
-                                win->cols, 
-                                win->y + header_offset, 
-                                win->x);
-    if (win->WIN == NULL) {
-        pfeme  ("Unable to create window\n");
+    win->WIN = newwin (win->rows, 
+                       win->cols, 
+                       win->y + header_offset, 
+                       win->x);
+    if (win == NULL) {
+        pfeme ("Unable to create window \"%s\" (rows: %d, cols: %d, y: %d, x: %d)\n",
+                    win->code, win->rows, win->cols, win->y, win->x);
     }
     wattron  (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
     wborder  (win->WIN, 0,0,0,0,0,0,0,0);
     wattroff (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
     wrefresh (win->WIN);
 
-    // input title subwindow
-    win->input_rows = 0;
-    win->input_y = 0;
-    win->input_cols = 0;
-    win->input_x = 0;
-    if (win->has_input) {
-        win->input_rows = 1;
-        win->input_cols = win->cols - 2;
-        win->input_y = 1;
-        win->input_x = 1;
-        win->IWIN = allocate_subwin (win->WIN,
-                                     win->input_rows,
-                                     win->input_cols,
-                                     win->input_y,
-                                     win->input_x);
+    // topbar subwindow
+    win->topbar_rows = 0;
+    win->topbar_y = 0;
+    win->topbar_cols = 0;
+    win->topbar_x = 0;
+
+    if (win->has_topbar) {
+
+        win->topbar_rows = 1;
+        win->topbar_cols = win->cols - 2;
+        win->topbar_y = 1;
+        win->topbar_x = 1;
+
+        win->IWIN = derwin (win->WIN,
+                            win->topbar_rows,
+                            win->topbar_cols,
+                            win->topbar_y,
+                            win->topbar_x);
         if (win->IWIN == NULL) {
-            pfeme  ("Unable to create input window\n");
+            pfeme  ("Unable to create topbar subwindow for \"%s\" (rows: %d, cols: %d, y: %d, x: %d)\n",
+                            win->code,
+                            win->topbar_rows,
+                            win->topbar_cols,
+                            win->topbar_y,
+                            win->topbar_x);
         }
 
-        left_spaces = (win->input_cols - strlen(win->input_title)) / 2;
-        right_spaces = win->input_cols - strlen(win->input_title) - left_spaces;
+        left_spaces = (win->topbar_cols - strlen(win->topbar_title)) / 2;
+        right_spaces = win->topbar_cols - strlen(win->topbar_title) - left_spaces;
         left_spaces = left_spaces > 0 ? left_spaces : 0;
         right_spaces = right_spaces > 0 ? left_spaces : 0;
+
         wattron   (win->IWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
         mvwprintw (win->IWIN, 0, 0, "%*c%.*s%*c", left_spaces, ' ',
-                                                  win->input_cols, win->input_title,
+                                                  win->topbar_cols, win->topbar_title,
                                                   right_spaces, ' ');
         wattroff  (win->IWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
         wrefresh  (win->IWIN);
     }
 
     // data subwindow
-    win->data_win_rows = win->rows - win->input_rows - 2;
+    win->data_win_rows = win->rows - win->topbar_rows - 2;
     win->data_win_cols = win->cols - 2;
-    win->data_win_y = win->input_y + 1;
+    win->data_win_y = win->topbar_y + 1;
     win->data_win_x = 1;
-    win->DWIN = allocate_subwin (win->WIN,
-                                 win->data_win_rows,
-                                 win->data_win_cols,
-                                 win->data_win_y,
-                                 win->data_win_x);
+
+    win->DWIN = derwin (win->WIN,
+                        win->data_win_rows,
+                        win->data_win_cols,
+                        win->data_win_y,
+                        win->data_win_x);
     if (win->DWIN == NULL) {
-        pfeme  ("Unable to create data window\n");
+        pfeme  ("Unable to create data subwindow for \"%s\" (rows: %d, cols: %d, y: %d, x: %d)\n",
+                        win->code,
+                        win->data_win_rows,
+                        win->data_win_cols,
+                        win->data_win_y,
+                        win->data_win_x);
     }
+
     wrefresh (win->DWIN);
 }
 
@@ -736,42 +748,5 @@ render_window_titles (state_t *state)
         refresh();
         wrefresh(Win);
     }
-}
-
-
-
-/*
-    Allocate Ncurses window
-*/
-static WINDOW* 
-allocate_window (int rows,
-                 int cols,
-                 int y,
-                 int x)
-{
-    WINDOW *win = newwin (rows, cols, y, x);
-    if (win == NULL)
-        pfeme ("Unable to create window (rows: %d, cols: %d, y: %d, x: %d)\n",
-                    rows, cols, y, x);
-    return win;
-}
-
-
-
-/*
-   Allocate Ncurses subwindow
-*/
-static WINDOW* 
-allocate_subwin (WINDOW* parent_win,
-                 int rows,
-                 int cols,
-                 int y,
-                 int x)
-{
-    WINDOW *win = derwin (parent_win, rows, cols, y, x);
-    if (win == NULL)
-        pfeme ("Unable to create subwindow (rows: %d, cols: %d, y: %d, x: %d)\n",
-                    rows, cols, y, x);
-    return win;
 }
 
