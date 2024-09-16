@@ -16,7 +16,6 @@ static void  set_signals                 ();
 static void  update_initial_window_data  (state_t*);
 
 // TODO: implement changes, scripts, documentation to allow termfu to be debugged by termfu
-// TODO: check timestamp, reload binary when changed
 // TODO: re-render layout on terminal screen size change
 
 
