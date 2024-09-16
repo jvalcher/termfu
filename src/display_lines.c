@@ -2,7 +2,7 @@
 #include <string.h>
 #include <ncurses.h>
 #include <stdlib.h>
-#include <ctype.h>
+#include <libgen.h>
 
 #include "display_lines.h"
 #include "data.h"
@@ -443,10 +443,13 @@ format_win_data (int plugin_index,
     int       i, j, 
               m, n,
               ch,
-              rows, cols;
+              rows, cols,
+              left_spaces,
+              right_spaces;
     size_t    k, si;
     window_t *win;
-    char     *needle;
+    char     *needle,
+             *basefile;
 
     win = state->plugins[plugin_index]->win;
 
@@ -482,6 +485,22 @@ format_win_data (int plugin_index,
                 }
             }
         }
+    }
+
+    else if (plugin_index == Src) {
+            
+        // update window title
+        basefile = basename (win->file_data->path);
+        left_spaces = (win->input_cols - strlen (basefile)) / 2;
+        right_spaces = win->input_cols - strlen (basefile) - left_spaces;
+        left_spaces = left_spaces > 0 ? left_spaces : 0;
+        right_spaces = right_spaces > 0 ? left_spaces : 0;
+        wattron   (win->IWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
+        mvwprintw (win->IWIN, 0, 0, "%*c%.*s%*c", left_spaces, ' ',
+                                                  win->input_cols, basefile,
+                                                  right_spaces, ' ');
+        wattroff  (win->IWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
+        wrefresh  (win->IWIN);
     }
 }
 
