@@ -21,16 +21,17 @@ insert_breakpoint (state_t *state)
     get_popup_window_input  ("Insert breakpoint: ", state->input_buffer);
 
     switch (state->debugger->index) {
-        case DEBUGGER_GDB: cmd_base = cmd_base_gdb; break;
-        case DEBUGGER_PDB: cmd_base = cmd_base_pdb; break;
+        case DEBUGGER_GDB:
+            cmd_base = cmd_base_gdb;
+            break;
+        case DEBUGGER_PDB:
+            cmd_base = cmd_base_pdb;
+            break;
     }
 
     cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
 
-    insert_output_start_marker (state);
-    send_command (state, cmd);
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
+    send_command_mp (state, cmd);
 
     free (cmd);
 
@@ -50,8 +51,12 @@ delete_breakpoint (state_t *state)
     get_popup_window_input  ("Delete breakpoint: ", state->input_buffer);
 
     switch (state->debugger->index) {
-        case DEBUGGER_GDB: cmd_base = (char*) cmd_base_gdb; break;
-        case DEBUGGER_PDB: cmd_base = (char*) cmd_base_pdb; break;
+        case DEBUGGER_GDB:
+            cmd_base = (char*) cmd_base_gdb;
+            break;
+        case DEBUGGER_PDB:
+            cmd_base = (char*) cmd_base_pdb;
+            break;
     }
 
     cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
