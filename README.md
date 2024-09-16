@@ -34,7 +34,7 @@ make
 
 ### Run test files
 
-Comment out the undesired command in the provided `.termfu` configuration file. Remove the data persistence file `.termfu_data` when switching between debuggers.
+`# Comment` out the undesired command in the provided `.termfu` configuration file. Remove the data persistence file `.termfu_data` when switching between debuggers.
 <br>
 
 | Debugger | Command |
