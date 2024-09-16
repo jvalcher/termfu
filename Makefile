@@ -19,7 +19,7 @@ CC             = gcc
 FLAGS          = -Wall -Wextra
 PROD_FLAGS     = -O3
 DEV_FLAGS      = -g
-FORMAT_FLAGS   = -fdiagnostics-format=json
+FORMAT_FLAGS   = -g -fdiagnostics-format=json
 
 NCURSES_CFLAGS = $(shell ncurses5-config --cflags)
 NCURSES_LIBS   = $(shell ncurses5-config --libs)
