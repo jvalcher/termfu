@@ -1,12 +1,5 @@
-/*
-    ------------
-    Misc functions
-    ------------
-*/
-
 #ifndef UTILITIES_H
 #define UTILITIES_H
-
 
 #include <stdio.h>
 #include <string.h>
@@ -18,9 +11,9 @@
 
 
 /*
-    Log formatted string to DEBUG_OUT_FILE for debugging
+    Log formatted string to DEBUG_OUT_FILE for debugging inside Ncurses
     --------
-    Same usage as printf()
+    - Same usage as printf()
 */
 void logd (const char *formatted_string, ...);
 
@@ -45,12 +38,15 @@ char  *concatenate_strings  (int num_strings, ...);
 
 /*
     Send debugger command string
-    ------
-    - Must include '\n' at end
-    - Parses output into state->debugger->debugger_buffer, program_buffer
 */
 void  send_command  (state_t *state, char *command_string);
 
+
+
+/*
+    Send debugger command string with start, end markers and parse output
+*/
+void send_command_mp (state_t *state, char *command);
 
 
 
@@ -83,7 +79,9 @@ void cp_char (buff_data_t *dest_buff_data, char ch);
 
 
 /*
-    Copy single char to file_data_t-> path, addr, func (i.e. type) buffer
+    Copy single char to  state->plugins[Src]->win->file_data_t->path, ->addr, ->func  buffers
+    --------
+    type: PATH, ADDR, FUNC
 */
 enum { PATH, ADDR, FUNC };
     //

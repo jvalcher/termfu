@@ -5,6 +5,9 @@
 
 
 
+/*
+    Display message in windows not supported by current debugger
+*/
 void no_buff_data (int plugin_index, state_t *state);
 
 
