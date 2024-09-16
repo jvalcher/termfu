@@ -2,7 +2,7 @@
 #
 #   -------
 #   make      		   - Build production binary
-#   make dev		   - Build development binary, run it
+#   make dev		   - Build development binary
 #   make devf   	   - Build development binary, print formatted error messages
 #   make debug         - Run Tmux debugging session (see scripts/gdb_debug)
 #   make todo          - Print source code tags in source code (TODO, FIXME, etc.)
