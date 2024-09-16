@@ -44,7 +44,6 @@ dev: FLAGS   += $(DEV_FLAGS)
 dev: C_FILES += $(C_UPDATE_FILES)
 dev: C_FILES += $(C_POPUP_FILES)
 dev: clean_dev $(B_FILE_DEV)
-	./$(B_FILE_DEV)
 	@echo ""
 
 
