@@ -79,16 +79,16 @@ Window data is scrollable using arrow or `hjkl` keys.
 <br>
 
 
-| Code    | Description        | GDB                | PDB                |
-| :-----: | -----              | :-----:            | :------:           |
-| Asm     | Assembly code      | :heavy_check_mark: |                    |   
-| Brk     | Breakpoints        | :heavy_check_mark: | :heavy_check_mark: |
-| Dbg     | Debugger output    | :heavy_check_mark: | :heavy_check_mark: |
-| LcV     | Local variables    | :heavy_check_mark: |                    |
-| Prg     | Program CLI output | :heavy_check_mark: |                    |
-| Reg     | Registers          | :heavy_check_mark: |                    |
-| Src     | Source file        | :heavy_check_mark: | :heavy_check_mark: |
-| Wat     | Watchpoints        | :heavy_check_mark: | :heavy_check_mark: |
+| Code    | Description      | GDB                | PDB                |
+| :-----: | -----            | :-----:            | :------:           |
+| Asm     | Assembly code    | :heavy_check_mark: |                    |   
+| Brk     | Breakpoints      | :heavy_check_mark: | :heavy_check_mark: |
+| Dbg     | Debugger output  | :heavy_check_mark: | :heavy_check_mark: |
+| LcV     | Local variables  | :heavy_check_mark: |                    |
+| Prg     | Program output   | :heavy_check_mark: |                    |
+| Reg     | Registers        | :heavy_check_mark: |                    |
+| Src     | Source file      | :heavy_check_mark: | :heavy_check_mark: |
+| Wat     | Watchpoints      | :heavy_check_mark: | :heavy_check_mark: |
 <br>
 
 
