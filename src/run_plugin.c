@@ -28,7 +28,7 @@ run_plugin (int      plugin_index,
             send_debugger_command (plugin_index, state); 
             break;
                   
-        // window
+        // window loop
         case Asm:
         case Brk:
         case Dbg:
