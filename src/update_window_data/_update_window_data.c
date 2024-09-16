@@ -1,7 +1,3 @@
-
-/*
-    Send window data update commands
-*/
 #include <stdarg.h>
 
 #include "_update_window_data.h"
