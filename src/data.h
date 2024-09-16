@@ -7,10 +7,6 @@
 
 
 
-/******
-  Main
- ******/
-
 #define PROGRAM_NAME          "termfu"
 #define CONFIG_FILE           ".termfu" 
 #define PERSIST_FILE          ".termfu_data"
@@ -68,28 +64,13 @@
 #define MAX_CONFIG_CATEG_LEN    128
 #define MAX_CONFIG_LABEL_LEN    128
 #define MAX_KEY_STR_LEN         256
-#define MAX_LAYOUTS             12
-#define MAX_WINDOWS             12      // per layout
 #define MAX_TITLE_LEN           48
 #define MAX_ROW_SEGMENTS        24      // per layout
 #define MAX_COL_SEGMENTS        24
-#define MAX_SHORTCUTS           52      // a-z, A-Z
 
-/*
-    label             - layout label string
-    header            - Ncurses WINDOW struct for header
-    hdr_key_str       - header plugin key string  ("ssb\nssw\nccr\n")
-    win_key_str       - window plugin key string  ("ssb\nssw\nccr\n")
-    num_hdr_key_rows  - number of header rows needed for key strings
-    win_matrix        - window key segment* matrix
-    row_ratio         - y segment ratio for layout matrix
-    col_ratio         - x segment ratio for layout matrix
-    next              - next layout_t struct
-*/
 typedef struct layout {
 
     char            label [MAX_CONFIG_LABEL_LEN];
-    WINDOW         *header;
     char            hdr_key_str [MAX_KEY_STR_LEN];
     char            win_key_str [MAX_KEY_STR_LEN];
     int             num_hdr_key_rows;
@@ -107,11 +88,9 @@ typedef struct layout {
  *********/
 
 #define NO_DATA_MSG    "Not supported by "
-#define MAX_LINES      128
 #define FILE_PATH_LEN  256
 #define ADDRESS_LEN    48
 #define FUNC_LEN       48
-
 #define Asm_BUF_LEN    131072
 #define Brk_BUF_LEN    4096
 #define Dbg_BUF_LEN    32768
@@ -133,7 +112,6 @@ typedef struct {
     bool   new_data;
 
 } buff_data_t;
-
 
 typedef struct {
 
@@ -161,7 +139,6 @@ typedef struct {
 
 } file_data_t;
 
-
 typedef struct {
 
     WINDOW       *WIN;
@@ -170,8 +147,7 @@ typedef struct {
 
     int           key;
     char          code[4];
-    bool          selected;
-    bool          has_input;
+    bool          has_topbar;
     bool          has_data_buff;     // as opposed to file
 
     // parent window
@@ -182,11 +158,11 @@ typedef struct {
     int           border [8];
 
     // input title
-    int           input_rows;
-    int           input_cols;
-    int           input_y;
-    int           input_x;
-    char         *input_title;
+    int           topbar_rows;
+    int           topbar_cols;
+    int           topbar_y;
+    int           topbar_x;
+    char         *topbar_title;
 
     // data window
     int           data_win_rows;
@@ -210,7 +186,6 @@ typedef struct {
 #define PIPE_READ        0
 #define PIPE_WRITE       1
 #define DEBUG_TITLE_LEN  8
-#define DEBUG_BUF_LEN    WIN_BUF_LEN
 #define PROGRAM_PATH_LEN 256
 #define READER_BUF_LEN   8192
 #define FORMAT_BUF_LEN   65536
@@ -221,7 +196,6 @@ typedef struct {
 
 enum { DEBUGGER_GDB, DEBUGGER_PDB };
 enum { READER_RECEIVING, READER_DONE };
-
 
 typedef struct {
 
@@ -242,7 +216,6 @@ typedef struct {
 
 } debugger_t;
 
-
 typedef struct {
 
     int    state;
@@ -261,19 +234,12 @@ typedef struct {
   Plugins
  *********/
 
-/*
-    key         - keyboard shortcut character  (b, s, ...)
-    code        - code string  (Lay, Stp, ...)
-    title       - title string  ( (s)tep, (r)un, ...)
-    has_window  - plugin has a window
-    window      - pointer to window_t struct if applicable
-*/
 #define PLUGIN_CODE_LEN  3
 
 typedef struct {
 
     char      key;
-    char      code [4];
+    char      code [PLUGIN_CODE_LEN + 1];
     char     *title;
     int       data_pos;         // BEG_DATA, END_DATA, LINE_DATA
     int       win_type;         // BUFF_TYPE, FILE_TYPE
@@ -288,12 +254,9 @@ typedef struct {
   State
  *******/
 
-#define FILE_LEN        84
-#define ABS_PATH_LEN    256
 #define BREAK_LEN       256
 #define WATCH_LEN       84
 #define INPUT_BUFF_LEN  4096
-
 
 typedef struct breakpoint {
 
@@ -301,7 +264,6 @@ typedef struct breakpoint {
     struct breakpoint *next;
 
 } breakpoint_t;
-
 
 typedef struct watchpoint {
 
@@ -312,19 +274,20 @@ typedef struct watchpoint {
 
 } watchpoint_t;
 
-
 typedef struct {
 
     int            num_plugins;
     int           *plugin_key_index;
     char           input_buffer [INPUT_BUFF_LEN];
 
+    layout_t      *layouts;
     layout_t      *curr_layout;
+    WINDOW        *header;
+
     debugger_t    *debugger;
     char         **command;
-    layout_t      *layouts;
+
     plugin_t     **plugins;
-    WINDOW        *header;
 
     watchpoint_t  *watchpoints;
     breakpoint_t  *breakpoints;
