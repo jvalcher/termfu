@@ -2,7 +2,6 @@
 #include <unistd.h>
 
 #include "parse_debugger_output.h"
-#include "utilities.h"
 #include "data.h"
 
 void parse_debugger_output_gdb (reader_t *reader);
@@ -256,6 +255,10 @@ parse_debugger_output_gdb (reader_t *reader)
 }
 
 
+
+// TODO: send pdb program output to state->debugger->program_buffer
+//  - Some debugger output has start markers (e.g. >, ->) but some does not
+//  - Must identify and filter all these individually
 
 /*
     All pdb output goes into state->debugger->cli_buffer
