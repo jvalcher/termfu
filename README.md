@@ -1,56 +1,49 @@
 
-# termfu
-
-A fast, multi-language TUI debugger that allows users to easily create and switch between custom layouts
-<br><br>
-
-<img src='./misc/layout1.png' height='400px'>
-
-
-### Support
-
-| Debugger   | Languages |
-|   :----:   | -----     |
-| [GDB](https://sourceware.org/gdb/) | C, C++, D, Go, Objective-C, <br>Fortran, OpenCL C, Pascal, <br>Rust, assembly, Modula-2, Ada |
-| [PDB](https://docs.python.org/3/library/pdb.html) | Python |
+<h1 align="center">termfu</h1>
+<p align="center">A fast, multi-language TUI debugger that allows users to easily create and switch between custom layouts</p>
+<br>
+<p align="center"><img margin-left="auto" src="./misc/layout1.png" width="500px"></p>
 <br>
 
 
-## Usage
+## Support
+
+| Debugger   | Languages |
+|   :----:   | -----     |
+| [GDB](https://sourceware.org/gdb/) | C, C++, D, Go, Objective-C, Fortran, OpenCL C, Pascal, Rust, assembly, Modula-2, Ada |
+| [PDB](https://docs.python.org/3/library/pdb.html) | Python |
+<br>
+
+## Install from source
 
 ### Dependencies
 
 The Makefile uses `ncurses6`.
-<br>
-
 ```
 sudo apt-get install libncurses-dev gdb pdb
 ```
-
 ### Build
 ```
 make
 ```
+Copy `termfu` to the desired executable directory (e.g. `/usr/bin`). 
+<br><br>
 
-### Run test files
 
-`# Comment` out the undesired command in the provided `.termfu` configuration file. Remove the data persistence file `.termfu_data` when switching between debuggers.
-<br>
-
-| Debugger | Command |
-| :-----:  | -----   |
-| GDB      | `(cd misc && ./build_hello) && ./termfu` |
-| PDB      | `./termfu` |
-
-### Run
-
-Copy the executable to the desired binary directory (e.g. `/usr/bin`). The program must be run in the same directory as its `.termfu` configuration file. Breakpoints and watchpoints are persisted in `.termfu_data`.
+## Usage
+```
+termfu
+```
+- The program must be run in the same directory as its `.termfu` configuration file.
+- Breakpoints and watchpoints are persisted in `.termfu_data`. 
+- The header and window titles in the provided `.termfu` configuration file display their keyboard shortcut in parentheses.
+- Window data is scrollable using arrow or `hjkl` keys.
+- Use `pro(m)pt` to input custom commands.
 <br><br>
 
 
 ## Configuration
-
-Each three-character, case-sensitive plugin code corresponds to a specific action or window. These codes are mapped to user-defined keys, which are used to create custom layouts that users can switch between.
+Each three-character, case-sensitive plugin code corresponds to a specific action or window. These codes are mapped to keys, which are used to create custom layouts that users can switch between. 
 <br>
 
 ### Plugins
@@ -75,10 +68,6 @@ __Header Commands__
 __Windows__
 <br>
 
-Window data is scrollable using arrow or `hjkl` keys.
-<br>
-
-
 | Code    | Description      | GDB                | PDB                |
 | :-----: | -----            | :-----:            | :------:           |
 | Asm     | Assembly code    | :heavy_check_mark: |                    |   
@@ -94,20 +83,21 @@ Window data is scrollable using arrow or `hjkl` keys.
 
 ### Configuration sections
 
-Adding parentheses around a character in a `<(t)itle>` changes the character's color.
-<br>
-Only newline `# comments` are supported, not inline.
+- Adding parentheses around a character in a `<(t)itle>` changes the character's color.
+- Only newline `# comments` are supported, not inline.
 <br>
 
 | Section   | Description |
 | :----:    |  :----: |
-| `command` | Debugger command |
-| `plugins` | `<plugin code>` : `<key binding>` : `<title>` |
-| `layout`  | `[ layout : <title> ]` <br>`>h` : header commands,  `>w` : windows |
+| command | Debugger command |
+| plugins | \<plugin code\> : \<key binding\> : \<title\> |
+| layout  | \[ layout : <title> \] <br>`>h` : header commands,  `>w` : windows |
 <br>
 
+### Commands
+
 | Debugger | Command |
-| -----    | ------  |
+| :-----:  | ------  |
 | GDB      | `gdb --interpreter=mi ...` |
 | PDB      | `python -m pdb ...` |
 <br>
@@ -177,18 +167,35 @@ oag
 
 ## Contributing
 
-New debugger implementations as well as other debugging-related tool plugins are welcome. Minor patches can be submitted as a pull request. Create an issue before submitting any major fixes, optimizations, changes, or additions. Check if an issue exists before creating a new one. Use existing code conventions.
-<br>
+### General Guidelines
+- An issue should be created for any major changes. If at all unsure about whether a PR will be accepted, submit an issue first.
+- Bug fixes and optimizations are welcome.
+- New debugger implementations and plugins are welcome.
+- Other debugging-related tool plugin ideas should be presented in an issue for approval before submitting a PR.
+- PRs that are complex and add large numbers of lines run the risk of not being reviewed or merged. Break up large submissions into smaller PRs. For example, plugin functions and tests for a new debugger implementation can be submitted individually before they are integrated into the program.
+- Whitespace changes will be closed.
+- Comment changes will be closed unless addressing something egregious.
+- PRs should address only one issue. Do not make other unrelated changes.
+- Use existing code conventions.
 
-Run `make todo` to view `TODO`, `FIX`, etc. tags in the source code.
-<br>
+### Tool spotlight
+- Run `make todo` to view `TODO`, `FIX`, etc. tags in the source code.
+- The `logd()` function allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
+- The `make debug` script starts a `tmux`-based `GDB` debugging session. This is also a good way to understand how the program works. See the comments in `scripts/gdb_debug` for usage.
 
-The `logd()` function allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
-<br>
+### Run test files
+- `# Comment` out the undesired command in the provided `.termfu` configuration file.
+- Remove the data persistence file `.termfu_data` when switching between debuggers.
 
-The `make debug` script starts a `tmux`-based `GDB` debugging session. This is also a good way to explore the code base. See the comments in `scripts/gdb_debug` for usage.
-<br>
+GDB   
+```
+(cd misc && ./build_hello) && ./termfu
+```
 
+PDB
+```
+./termfu
+```
 
 ### Scripts
 
