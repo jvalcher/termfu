@@ -20,19 +20,17 @@ A fast, multi-language TUI debugger that allows users to easily create and switc
 
 ### Dependencies
 
+The Makefile uses `ncurses6`.
+<br>
+
 ```
 sudo apt-get install libncurses-dev gdb pdb
 ```
-<br>
-
-The Makefile uses `ncurses6`.
-<br><br>
 
 ### Installation
 ```
 make
 ```
-<br>
 
 ### Run test files
 
@@ -43,7 +41,6 @@ Comment out the undesired command in the provided `.termfu` configuration file. 
 | :-----:  | -----   |
 | GDB      | `(cd misc && ./build_hello) && ./termfu` |
 | PDB      | `./termfu` |
-<br>
 
 ### Run
 
@@ -99,6 +96,8 @@ Window data is scrollable using arrow or `hjkl` keys.
 
 Adding parentheses around a character in a `<(t)itle>` changes the character's color.
 <br>
+Only newline `# comments` are supported, not inline.
+<br>
 
 | Section   | Description |
 | :----:    |  :----: |
@@ -116,13 +115,11 @@ Adding parentheses around a character in a `<(t)itle>` changes the character's c
 
 ### Example `.termfu` configuration
 
-Only newline `# comments` are supported, not inline.
-<br>
 
 ```
 [ command ]
 
-gdb --quiet --interpreter=mi misc/hello
+gdb --interpreter=mi misc/hello
 
 [ plugins ]
 
@@ -150,7 +147,7 @@ Kil : k : (k)ill
 
 [ layout : Main ]
 
-# header commands
+# header commands layout
 >h
 mlq
 rnscufk
