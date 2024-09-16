@@ -16,12 +16,7 @@ run_custom_command (state_t *state)
     get_popup_window_input  (">> ", state->input_buffer);
 
     cmd = concatenate_strings (2, state->input_buffer, "\n");    
-
-    insert_output_start_marker (state);
-    send_command (state, cmd);
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
-
+    send_command_mp (state, cmd);
     free (cmd);
     
     state->plugins[Dbg]->win->buff_data->new_data = true;
