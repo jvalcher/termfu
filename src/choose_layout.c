@@ -148,6 +148,7 @@ choose_layout:
 
         render_layout (curr_layout->label, state);
 
+        state->plugins[Src]->win->file_data->path_changed = true;
         update_windows (state, 8, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Wat);
     }
 }
