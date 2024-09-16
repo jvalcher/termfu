@@ -36,9 +36,10 @@ termfu
 ```
 - The program must be run in the same directory as its `.termfu` configuration file.
 - Breakpoints and watchpoints are persisted in `.termfu_data`. 
-- The header and window titles in the provided `.termfu` configuration file display their keyboard shortcut in parentheses.
-- Window data is scrollable using arrow or `hjkl` keys.
-- Use `pro(m)pt` to input custom commands.
+- The header and window titles in the provided `.termfu` configuration file display their keyboard shortcuts in parentheses.
+- Select a window and scroll through the data using arrow or `hjkl` keys.
+- Switch layouts with `(l)ayouts`.
+- Send custom debugger commands with `pro(m)pt`.
 <br><br>
 
 
