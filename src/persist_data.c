@@ -104,10 +104,6 @@ get_persisted_data (state_t *state)
         fclose (fp);
     }
 
-    else {
-        pfeme ("Unable to open persist file \"%s\"\n", PERSIST_FILE);
-    }
-    
     update_windows (state, 2, Wat, Brk);
 }
 
