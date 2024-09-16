@@ -43,11 +43,7 @@ get_local_vars_gdb (state_t *state)
     src_ptr   = state->debugger->data_buffer;
     dest_buff = win->buff_data;
 
-    // send debugger command
-    insert_output_start_marker (state);
-    send_command (state, "-stack-list-locals 1\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
+    send_command_mp (state, "-stack-list-locals 1\n");
 
     if (strstr (src_ptr, "error") == NULL) {
 
@@ -117,9 +113,6 @@ get_local_vars_gdb (state_t *state)
 
 
 
-/*
-   No PDB command for this
-*/
 static void
 get_local_vars_pdb (state_t *state)
 {

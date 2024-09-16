@@ -5,7 +5,7 @@
 
 
 
-void  get_breakpoint_data  (state_t *state);
+void get_breakpoint_data (state_t *state);
 
 void insert_breakpoint (state_t *state);
 

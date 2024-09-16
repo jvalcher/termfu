@@ -41,6 +41,9 @@ get_breakpoint_data (state_t *state)
 
 
 
+/*
+    Allocate breakpoint_t struct to state->breakpoints linked list
+*/
 static void
 allocate_breakpoint (state_t *state,
                      char    *break_buff)
@@ -67,18 +70,17 @@ allocate_breakpoint (state_t *state,
 static void
 get_breakpoint_data_gdb (state_t *state)
 {
-    int i;
-    window_t *win;
+    int          i;
+    char        *src_ptr,
+                 break_buff [BREAK_LEN];
+    buff_data_t *dest_buff;
+    
     const char *key_number   = "number=\"",
                *key_orig_loc = "original-location=\"",
                *key_nr_rows  = "nr_rows=\"";
-    char *src_ptr,
-          break_buff [BREAK_LEN];
-    buff_data_t *dest_buff;
 
-    win       = state->plugins[Brk]->win;
     src_ptr   = state->debugger->data_buffer;
-    dest_buff = win->buff_data;
+    dest_buff = state->plugins[Brk]->win->buff_data;
 
     insert_output_start_marker (state);
     send_command (state, "-break-info\n");
@@ -160,16 +162,13 @@ get_breakpoint_data_pdb (state_t *state)
     dest_buff->buff_pos = 0;
     dest_buff->changed = true;
 
-    insert_output_start_marker (state);
-    send_command (state, "break\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
+    send_command_mp (state, "break\n");
 
     if (strstr (src_ptr, break_str) != NULL) {
 
         while (*src_ptr != '\0') {
 
-            // skip table header
+            // skip table header line
             if (strncmp (src_ptr, num_str, strlen (num_str)) == 0 ||
                 strncmp (src_ptr, hit_str, strlen (hit_str)) == 0   ) {
                 while (*src_ptr != '\n') {

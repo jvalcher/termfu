@@ -39,11 +39,7 @@ get_register_data_gdb (state_t *state)
     src_ptr   = state->debugger->cli_buffer;
     dest_buff = win->buff_data;
 
-    // send debugger command
-    insert_output_start_marker (state);
-    send_command (state, "info registers\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
+    send_command_mp (state, "info registers\n");
 
     if (strstr (src_ptr, "error") == NULL) {
 

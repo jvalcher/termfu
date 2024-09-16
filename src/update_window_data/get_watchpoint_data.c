@@ -44,16 +44,14 @@ get_watchpoint_data_gdb (state_t *state)
     watch    = state->watchpoints;
 
     win->buff_data->buff_pos = 0;
+    win->buff_data->changed = true;
 
     // create buffer, add values
     while (watch != NULL) {
 
         // send watchpoint command
         cmd = concatenate_strings (3, "print ", watch->var, "\n");    
-        insert_output_start_marker (state);
-        send_command (state, cmd);
-        insert_output_end_marker (state);
-        parse_debugger_output (state);
+        send_command_mp (state, cmd);
         free (cmd);
 
         src_ptr  = state->debugger->cli_buffer;
@@ -111,8 +109,6 @@ get_watchpoint_data_gdb (state_t *state)
         watch = watch->next;
     }
     *dest_ptr = '\0';
-
-    win->buff_data->changed = true;
 }
 
 
@@ -141,12 +137,8 @@ get_watchpoint_data_pdb (state_t *state)
 
         while (watch != NULL) {
 
-            // send watchpoint command
             cmd = concatenate_strings (3, "p ", watch->var, "\n");    
-            insert_output_start_marker (state);
-            send_command (state, cmd);
-            insert_output_end_marker (state);
-            parse_debugger_output (state);
+            send_command_mp (state, cmd);
             free (cmd);
 
             // index

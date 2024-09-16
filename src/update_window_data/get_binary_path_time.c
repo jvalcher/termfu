@@ -37,10 +37,7 @@ get_binary_path_time_gdb (state_t *state)
     src_ptr  = state->debugger->cli_buffer;
     dest_ptr = state->debugger->prog_path;
 
-    insert_output_start_marker (state);
-    send_command (state, "info file\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
+    send_command_mp (state, "info file\n");
 
     if ((src_ptr = strstr (src_ptr, path_str)) != NULL) {
 
@@ -61,7 +58,7 @@ get_binary_path_time_gdb (state_t *state)
     }
 
     else {
-        pfeme ("Unable to get source file path\n");
+        pfeme ("Unable to locate source file path string in debugger output\n");
     }
 }
 

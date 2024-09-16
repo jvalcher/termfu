@@ -34,12 +34,12 @@ static void
 get_assembly_data_gdb (state_t *state)
 {
     window_t *win;
-    char *src_ptr,
-         *dest_ptr,
-         *data_ptr,
-         *cmd,
-         *func,
-         *main = "main";
+    char     *src_ptr,
+             *dest_ptr,
+             *data_ptr,
+             *cmd,
+             *func,
+             *main = "main";
     buff_data_t *dest_buff;
     file_data_t *src_data;
 
@@ -52,12 +52,7 @@ get_assembly_data_gdb (state_t *state)
     // send debugger command
     func = (src_data->func[0] == '\0') ? main : src_data->func;
     cmd = concatenate_strings (3, "disassemble ", func, " \n");
-        //
-    insert_output_start_marker (state);
-    send_command (state, cmd);
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
-        //
+    send_command_mp (state, cmd);
     free (cmd);
 
     if (strstr (data_ptr, "error") == NULL) {

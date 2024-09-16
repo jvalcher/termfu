@@ -53,10 +53,7 @@ get_source_path_line_memory_gdb (state_t *state)
     file_data->func_pos = 0;
 
     // check if program running
-    insert_output_start_marker (state);
-    send_command (state, "-thread-info\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
+    send_command_mp (state, "-thread-info\n");
 
         // get number of threads
     prev_ptr = src_ptr;
@@ -72,10 +69,7 @@ get_source_path_line_memory_gdb (state_t *state)
     // if no threads or program not running
     if (*src_ptr == ']') {
 
-        insert_output_start_marker (state);
-        send_command (state, "-file-list-exec-source-files\n");
-        insert_output_end_marker (state);
-        parse_debugger_output (state);
+        send_command_mp (state, "-file-list-exec-source-files\n");
 
         src_ptr = state->debugger->data_buffer;
         is_running = false;
@@ -163,10 +157,7 @@ get_source_path_line_memory_pdb (state_t *state)
     file_data->path_pos = 0;
     file_data->func_pos = 0;
 
-    insert_output_start_marker (state);
-    send_command (state, "where\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
+    send_command_mp (state, "where\n");
 
     src_ptr = strstr (src_ptr, curr_path_symbol);
     src_ptr += strlen (curr_path_symbol);
