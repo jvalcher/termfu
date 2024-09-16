@@ -7,11 +7,10 @@
 
 
 /*
-   Render Ncurses layouts
+   Render Ncurses layout <layout_title>
    ----------
    - Calculates and renders Ncurses header and windows (no data)
      based on configuration file settings set in parse_config_file()
-   - layout_title set in CONFIG_FILE (see data.h, parse_config_file.c)
 */
 void render_layout (char *layout_title, state_t *state);
 
