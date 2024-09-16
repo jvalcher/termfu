@@ -259,7 +259,6 @@ set_file_rows_cols (window_t *win)
     win->file_data->max_cols = 0;
 
     // calculate rows, max columns
-    // TODO: combine row, max column, offsets calculations into single loop
     while (fgets(line, sizeof(line), win->file_data->ptr) != NULL) {
         line_len = strlen(line);
         if (win->file_data->max_cols < line_len) {
@@ -364,7 +363,7 @@ display_lines_file (int key,
     print_line = win->data_win_mid_line - (win->data_win_rows / 2);
     print_line = (print_line >= 1) ? print_line : 1;
 
-    // calculate text length minux line number, spaces
+    // calculate text length minus line number, spaces
     win_text_len = win->data_win_cols - win->file_data->line_num_digits - LINE_NUM_TEXT_SPACES;
 
     // print lines
@@ -423,7 +422,6 @@ display_lines_file (int key,
         }
     }
 
-    refresh ();
     wrefresh(win->DWIN);
 }
 
@@ -445,8 +443,6 @@ format_win_data (int plugin_index,
              *basefile;
 
     win = state->plugins[plugin_index]->win;
-
-    // TODO: Replace source file line number with colored "B2" breakpoint index number
 
     if (plugin_index == Asm) {
 
@@ -482,15 +478,18 @@ format_win_data (int plugin_index,
 
     else if (plugin_index == Src) {
             
-        // update window title
+        // TODO: Replace source file line number with colored "b2" breakpoint index number
+
+        // print current source code file in top bar
         basefile = basename (win->file_data->path);
-        left_spaces = (win->input_cols - strlen (basefile)) / 2;
-        right_spaces = win->input_cols - strlen (basefile) - left_spaces;
+        left_spaces = (win->topbar_cols - strlen (basefile)) / 2;
+        right_spaces = win->topbar_cols - strlen (basefile) - left_spaces;
         left_spaces = left_spaces > 0 ? left_spaces : 0;
         right_spaces = right_spaces > 0 ? left_spaces : 0;
+            //
         wattron   (win->IWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
         mvwprintw (win->IWIN, 0, 0, "%*c%.*s%*c", left_spaces, ' ',
-                                                  win->input_cols, basefile,
+                                                  win->topbar_cols, basefile,
                                                   right_spaces, ' ');
         wattroff  (win->IWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
         wrefresh  (win->IWIN);
