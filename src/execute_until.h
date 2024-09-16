@@ -5,6 +5,9 @@
 
 
 
+/*
+    Continue program execution until line, path:line
+*/
 void execute_until (state_t *state);
 
 
