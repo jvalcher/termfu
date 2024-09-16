@@ -169,14 +169,12 @@ oag
 ## Contributing
 
 ### General Guidelines
-- An issue should be created for any major changes. If at all unsure about whether a PR will be accepted, submit an issue first.
+- If unsure that a PR will be accepted, __create an issue__.
 - Bug fixes and optimizations are welcome.
 - New debugger implementations and plugins are welcome.
-- Other debugging-related tool plugin ideas should be presented in an issue for approval before submitting a PR.
-- PRs that are complex and add large numbers of lines run the risk of not being reviewed or merged. Break up large submissions into smaller PRs. For example, plugin functions and tests for a new debugger implementation can be submitted individually before they are integrated into the program.
-- Whitespace changes will be closed.
-- Comment changes will be closed unless addressing something egregious.
+- Other debugging-related tool plugin ideas should be presented in an issue for approval and discussion before submitting a PR.
 - PRs should address only one issue. Do not make other unrelated changes.
+- Blank space and comment PRs have a high probability of being closed.
 - Use existing code conventions.
 
 ### Tool spotlight
