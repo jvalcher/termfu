@@ -36,7 +36,6 @@ termfu
 ```
 - The program must be run in the same directory as its `.termfu` configuration file.
 - Breakpoints and watchpoints are persisted in `.termfu_data`. 
-- The header and window titles in the provided `.termfu` configuration file display their keyboard shortcuts in parentheses.
 - Select a window and scroll through the data using arrow or `hjkl` keys.
 - Switch layouts with `(l)ayouts`.
 - Send custom debugger commands with `pro(m)pt`.
@@ -173,14 +172,13 @@ oag
 - Bug fixes and optimizations are welcome.
 - New debugger implementations and plugins are welcome.
 - Other debugging-related tool plugin ideas should be presented in an issue for approval and discussion before submitting a PR.
-- PRs should address only one issue. Do not make other unrelated changes.
 - Blank space and comment PRs have a high probability of being closed.
 - Use existing code conventions.
 
 ### Tool spotlight
 - Run `make todo` to view `TODO`, `FIX`, etc. tags in the source code.
 - The `logd()` function allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
-- The `make debug` script starts a `tmux`-based `GDB` debugging session. This is also a good way to understand how the program works. See the comments in `scripts/gdb_debug` for usage.
+- The `make debug` script starts a `tmux`-based `GDB` debugging session. This is also a good way to explore the program. See the comments in `scripts/gdb_debug` for usage.
 
 ### Run test files
 - `# Comment` out the undesired command in the provided `.termfu` configuration file.
