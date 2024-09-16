@@ -10,8 +10,7 @@ int main (void)
             
     char *str1 = "Hello, ",
          *str2 = "world!\n",
-         *str3 = "This is a long line of characters that might not fit in the window",
-         *str4 = "String changed...";
+         *str3 = "This is a long line of characters that might not fit in the window";
 
     printf ("%s", str1);
     printf ("%s", str2);
