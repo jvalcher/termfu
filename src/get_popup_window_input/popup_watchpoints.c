@@ -64,7 +64,6 @@ delete_watchpoint (state_t *state)
 
     while (watch != NULL) {
 
-        // delete watchpoint
         if (watch->index == atoi (state->input_buffer)) {
             if (watch == state->watchpoints) {
                 state->watchpoints = watch->next;
