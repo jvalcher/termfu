@@ -15,9 +15,6 @@ static void  initialize_ncurses          (void);
 static void  set_signals                 ();
 static void  update_initial_window_data  (state_t*);
 
-// TODO: implement changes, scripts, documentation to allow termfu to be debugged by termfu
-// TODO: re-render layout on terminal screen size change
-
 
 
 int
@@ -102,4 +99,8 @@ set_signals (void)
 {
     signal (SIGINT, sigint_handler);    // Ctrl-C
 }
+
+
+// TODO: implement changes, scripts, documentation to allow termfu to be debugged by termfu
+// TODO: re-render layout on terminal screen size change
 
