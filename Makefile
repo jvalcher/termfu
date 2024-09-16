@@ -13,7 +13,6 @@
 
 B_FILE_PROD    = termfu
 B_FILE_DEV     = termfu_dev
-B_FILE_TEST    = termfu_test
 
 CC             = gcc
 FLAGS          = -Wall -Wextra
@@ -30,7 +29,7 @@ C_UPDATE_FILES = $(wildcard ./src/update_window_data/*.c)
 C_POPUP_FILES  = $(wildcard ./src/get_popup_window_input/*.c)
 
 
-.PHONY: all allf dev devf todo colors clean_prod clean_dev
+.PHONY: all dev devf devformat debug todo colors clean_prod clean_dev
 
 
 all: FLAGS   += $(PROD_FLAGS)
@@ -39,36 +38,30 @@ all: C_FILES += $(C_POPUP_FILES)
 all: clean_prod $(B_FILE_PROD)
 	@echo ""
 
-
 dev: FLAGS   += $(DEV_FLAGS)
 dev: C_FILES += $(C_UPDATE_FILES)
 dev: C_FILES += $(C_POPUP_FILES)
 dev: clean_dev $(B_FILE_DEV)
 	@echo ""
 
-
 devf:
 	@echo ""
-	@./scripts/make_format
-	@echo ""
+	@./scripts/make_format_dev
 
 devformat: FLAGS   += $(FORMAT_FLAGS)
 devformat: C_FILES += $(C_UPDATE_FILES)
 devformat: C_FILES += $(C_POPUP_FILES)
 devformat: clean_dev $(B_FILE_DEV)
 
-
 debug:
 	@echo ""
 	./scripts/gdb_debug
 	@echo ""
 
-
 todo:
 	@echo ""
 	./scripts/todo
 	@echo ""
-
 
 colors:
 	@echo ""
@@ -76,7 +69,6 @@ colors:
 	@echo ""
 	rm ./tests/colors_test
 	@echo ""
-
 
 clean_prod:
 	@echo ""
