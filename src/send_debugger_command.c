@@ -67,7 +67,6 @@ send_debugger_command (int      plugin_index,
             break;
         case (DEBUGGER_PDB):
             send_command (state, "restart\n");
-            // TODO: check if main source file changed
             state->plugins[Src]->win->file_data->path_changed = true;
             break;
         }
