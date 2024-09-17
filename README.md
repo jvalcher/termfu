@@ -167,7 +167,7 @@ oag
 
 ## Releases
 
-- __v1.0__ - _09-17-2024_ - Initial release providing basic GDB, PDB functionality
+- __v0.1__ - _09-17-2024_ - Initial release providing basic GDB, PDB functionality
 <br>
 
 ## Contributing
