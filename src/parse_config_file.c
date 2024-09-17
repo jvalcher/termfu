@@ -256,7 +256,7 @@ create_command (FILE *fp,
 /*
     Create plugins
     -------
-    - Allocate and add to `plugin` array in plugins.h
+    - Allocate and add plugins to state->plugins
 
         [ plugins ]
         Lay: l : (l)ayout
@@ -280,7 +280,6 @@ static void create_plugins (FILE *file, state_t *state)
             }
         }
 
-        // if letter
         if (isalpha (key)) {
 
             // plugin code
