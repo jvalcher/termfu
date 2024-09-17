@@ -103,7 +103,7 @@ get_breakpoint_data_gdb (state_t *state)
         if (break_buff[0] > '0') {
 
             // get breakpoint number
-            while ((src_ptr = strstr (src_ptr, key_number)) != NULL && break_buff[0] > '0') {
+            while ((src_ptr = strstr (src_ptr, key_number)) != NULL) {
 
                 cp_char (dest_buff, '(');
 
