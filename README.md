@@ -174,7 +174,7 @@ oag
 
 ### General Guidelines
 - For any significant contributions outside of minor patches, open an issue first for approval and discussion.
-- Bug fixes, optimizations, new debugger implementations, new plugins -- debugger and otherwise -- are welcome.
+- Bug fixes, optimizations, new debugger implementations, new plugins are welcome.
 - Blank space and comment PRs have a high probability of being closed.
 - Use existing code conventions.
 
