@@ -26,6 +26,7 @@ sudo apt-get install libncurses-dev gdb pdb
 ```
 make
 ```
+<br>
 Copy `termfu` to the desired executable directory (e.g. `/usr/bin`). 
 <br><br>
 
@@ -34,7 +35,7 @@ Copy `termfu` to the desired executable directory (e.g. `/usr/bin`).
 ```
 termfu
 ```
-- The program must be run in the same directory as its `.termfu` configuration file.
+- The program must be run in the same directory as the `.termfu` configuration file.
 - Breakpoints and watchpoints are persisted in `.termfu_data`. 
 - Select a window and scroll through the data using arrow or `hjkl` keys.
 - Switch layouts with `(l)ayouts`.
@@ -85,7 +86,6 @@ __Windows__
 
 - Adding parentheses around a character in a `<(t)itle>` changes the character's color.
 - Only newline `# comments` are supported, not inline.
-<br>
 
 | Section   | Description |
 | :----:    |  :----: |
@@ -101,7 +101,6 @@ __Windows__
 | GDB      | `gdb --interpreter=mi ...` |
 | PDB      | `python -m pdb ...` |
 <br>
-
 
 ### Example `.termfu` configuration
 
@@ -168,10 +167,8 @@ oag
 ## Contributing
 
 ### General Guidelines
-- If unsure that a PR will be accepted, __create an issue__.
-- Bug fixes and optimizations are welcome.
-- New debugger implementations and plugins are welcome.
-- Other debugging-related tool plugin ideas should be presented in an issue for approval and discussion before submitting a PR.
+- For any significant contributions outside of minor patches, open an issue first for approval and discussion.
+- Bug fixes, optimizations, new debugger implementations, new plugins -- debugger and otherwise -- are welcome.
 - Blank space and comment PRs have a high probability of being closed.
 - Use existing code conventions.
 
