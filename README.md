@@ -167,10 +167,8 @@ oag
 ## Contributing
 
 ### General Guidelines
-- If unsure that a PR will be accepted, __create an issue__.
-- Bug fixes and optimizations are welcome.
-- New debugger implementations and plugins are welcome.
-- Other debugging-related tool plugin ideas should be presented in an issue for approval and discussion before submitting a PR.
+- For any significant contributions outside of minor patches, open an issue first for approval and discussion.
+- Bug fixes, optimizations, new debugger implementations, new plugins -- debugger and otherwise -- are welcome.
 - Blank space and comment PRs have a high probability of being closed.
 - Use existing code conventions.
 
