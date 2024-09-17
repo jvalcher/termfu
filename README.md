@@ -27,7 +27,8 @@ sudo apt-get install libncurses-dev gdb pdb
 make
 ```
 <br>
-Copy `termfu` to the desired executable directory (e.g. `/usr/bin`). 
+
+Copy `termfu` to the desired executable directory, e.g. `/usr/bin`. 
 <br><br>
 
 
