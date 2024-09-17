@@ -165,6 +165,10 @@ oag
 <img src='./misc/layout2.png' height='400px'>
 <br>
 
+## Releases
+
+- __v0.1__ - _09-16-2024_ - Initial release providing basic GDB, PDB functionality
+<br>
 
 ## Contributing
 
