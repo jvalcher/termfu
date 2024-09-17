@@ -36,6 +36,7 @@ Copy `termfu` to the desired executable directory (e.g. `/usr/bin`).
 termfu
 ```
 - The program must be run in the same directory as the `.termfu` configuration file.
+- Insert the debugger command and create your layout(s) (see below).
 - Breakpoints and watchpoints are persisted in `.termfu_data`. 
 - Select a window and scroll through the data using arrow or `hjkl` keys.
 - Switch layouts with `(l)ayouts`.
