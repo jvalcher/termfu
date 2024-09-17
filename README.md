@@ -187,12 +187,12 @@ oag
 - `# Comment` out the undesired command in the provided `.termfu` configuration file.
 - You will need to `clear (a)ll` breakpoints and watchpoints when switching debuggers.
 
-GDB   
+__GDB__   
 ```
 (cd misc && ./build_hello) && ./termfu
 ```
 
-PDB
+__PDB__
 ```
 ./termfu
 ```
