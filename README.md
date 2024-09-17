@@ -196,6 +196,7 @@ __PDB__
 ```
 ./termfu
 ```
+<br>
 
 ### Scripts
 
