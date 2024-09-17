@@ -180,7 +180,7 @@ oag
 
 ### Run test files
 - `# Comment` out the undesired command in the provided `.termfu` configuration file.
-- Remove the data persistence file `.termfu_data` when switching between debuggers.
+- Remove the data persistence file `.termfu_data` when switching between debuggers or delete them inside the program.
 
 GDB   
 ```
