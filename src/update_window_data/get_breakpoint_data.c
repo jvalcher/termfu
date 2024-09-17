@@ -1,14 +1,12 @@
 #include "get_breakpoint_data.h"
 #include "../data.h"
-#include "../insert_output_marker.h"
-#include "../parse_debugger_output.h"
 #include "../utilities.h"
 #include "../plugins.h"
-#include "../display_lines.h"
-
 
 static void get_breakpoint_data_gdb (state_t *state);
 static void get_breakpoint_data_pdb (state_t *state);
+
+#define INDEX_BUFF_LEN  8
 
 
 
@@ -46,7 +44,8 @@ get_breakpoint_data (state_t *state)
 */
 static void
 allocate_breakpoint (state_t *state,
-                     char    *break_buff)
+                     char    *break_buff,
+                     char    *index_buff)
 {
     breakpoint_t *curr_break = state->breakpoints;
 
@@ -61,6 +60,7 @@ allocate_breakpoint (state_t *state,
         curr_break = curr_break->next;
     }
 
+    strncpy (curr_break->index, index_buff, INDEX_BUFF_LEN - 1);
     strncpy (curr_break->path_line, break_buff, BREAK_LEN - 1);
     curr_break->next = NULL;
 }
@@ -72,7 +72,8 @@ get_breakpoint_data_gdb (state_t *state)
 {
     int          i;
     char        *src_ptr,
-                 break_buff [BREAK_LEN];
+                 break_buff [BREAK_LEN],
+                 index_buff [INDEX_BUFF_LEN];
     buff_data_t *dest_buff;
     
     const char *key_number   = "number=\"",
@@ -82,10 +83,7 @@ get_breakpoint_data_gdb (state_t *state)
     src_ptr   = state->debugger->data_buffer;
     dest_buff = state->plugins[Brk]->win->buff_data;
 
-    insert_output_start_marker (state);
-    send_command (state, "-break-info\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
+    send_command_mp (state, "-break-info\n");
 
     if (strstr (src_ptr, "error") == NULL) {
 
@@ -107,10 +105,13 @@ get_breakpoint_data_gdb (state_t *state)
 
                 cp_char (dest_buff, '(');
 
+                i = 0;
                 src_ptr += strlen (key_number);
                 while (*src_ptr != '\"') {
+                    index_buff [i++] = *src_ptr;
                     cp_char (dest_buff, *src_ptr++);
                 }
+                index_buff [i] = '\0';
 
                 cp_char (dest_buff, ')');
                 cp_char (dest_buff, ' ');
@@ -125,7 +126,7 @@ get_breakpoint_data_gdb (state_t *state)
                 }
                 break_buff [i] = '\0';
 
-                allocate_breakpoint (state, break_buff);
+                allocate_breakpoint (state, break_buff, index_buff);
 
                 cp_char (dest_buff, '\n');
             }
@@ -147,7 +148,8 @@ get_breakpoint_data_pdb (state_t *state)
     int          i;
     window_t    *win;
     char        *src_ptr,
-                 break_buff [BREAK_LEN];
+                 break_buff [BREAK_LEN],
+                 index_buff [INDEX_BUFF_LEN];
     buff_data_t *dest_buff;
 
     const char  *at_str    = "at ",
@@ -178,11 +180,15 @@ get_breakpoint_data_pdb (state_t *state)
 
             else if (*src_ptr != '\n' && *src_ptr != '\'') {
 
-                // index
                 cp_char (dest_buff, '(');
+
+                // index
+                i = 0;
                 do {
+                    index_buff [i++] = *src_ptr;
                     cp_char (dest_buff, *src_ptr++);
                 } while (*src_ptr != ' ');
+                index_buff [i] = '\0';
 
                 cp_char (dest_buff, ')');
                 cp_char (dest_buff, ' ');
@@ -197,7 +203,7 @@ get_breakpoint_data_pdb (state_t *state)
                 }
                 break_buff [i] = '\0';
 
-                allocate_breakpoint (state, break_buff);
+                allocate_breakpoint (state, break_buff, index_buff);
 
                 cp_char (dest_buff, '\n');
             }
@@ -214,7 +220,7 @@ get_breakpoint_data_pdb (state_t *state)
     } 
 
     else {
-        dest_buff->buff[0] = '\0';
+        cp_char (dest_buff, '\0');
     }
 
     win->buff_data->changed = true;;

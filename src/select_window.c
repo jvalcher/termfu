@@ -97,6 +97,10 @@ select_window (int      plugin_index,
                             insert_breakpoint (state);
                             in_loop = false;
                             break;
+                        case 'a':
+                            clear_all_breakpoints (state);
+                            in_loop = false;
+                            break;
                     }
                     break;
 
@@ -108,6 +112,10 @@ select_window (int      plugin_index,
                             break;
                         case 'c':
                             insert_watchpoint (state);
+                            in_loop = false;
+                            break;
+                        case 'a':
+                            clear_all_watchpoints (state);
                             in_loop = false;
                             break;
                         }

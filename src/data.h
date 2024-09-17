@@ -157,7 +157,7 @@ typedef struct {
     int           x;                      
     int           border [8];
 
-    // input title
+    // topbar title
     int           topbar_rows;
     int           topbar_cols;
     int           topbar_y;
@@ -260,6 +260,7 @@ typedef struct {
 
 typedef struct breakpoint {
 
+    char  index [8];
     char  path_line [BREAK_LEN];
     struct breakpoint *next;
 

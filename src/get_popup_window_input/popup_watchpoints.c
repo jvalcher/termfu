@@ -81,3 +81,21 @@ delete_watchpoint (state_t *state)
     update_window (Wat, state);
 }
 
+
+
+void
+clear_all_watchpoints (state_t *state)
+{
+    watchpoint_t *tmp_watch,
+                 *watch;
+
+    watch = state->watchpoints;
+    while (watch != NULL) {
+        tmp_watch = watch->next;
+        free (watch);
+        watch = tmp_watch; 
+    }
+    state->watchpoints = NULL;
+
+    update_window (Wat, state);
+}

@@ -26,9 +26,8 @@ Plugins
 
     - Non-window
 
-        EMP     Empty function
+        EMP     empty index
         Qut     Quit
-
         Con     Continue
         Fin     Finish
         Kil     Kill
@@ -104,9 +103,9 @@ int win_input_plugins[] = {
     Wat
 };
 char *win_input_titles[] = {
-    "(c)reate  (d)elete",
-    "",                         // set dynamically
-    "(c)reate  (d)elete"
+    "(c)reate  (d)elete  clear (a)ll",
+    "",                                     // set dynamically
+    "(c)reate  (d)elete  clear (a)ll"
 };
 
 
