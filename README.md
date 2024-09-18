@@ -80,6 +80,7 @@ __Windows__
 | Prg     | Program output   | :heavy_check_mark: |                    |
 | Reg     | Registers        | :heavy_check_mark: |                    |
 | Src     | Source file      | :heavy_check_mark: | :heavy_check_mark: |
+| Stk     | Stack            | :heavy_check_mark: |                    |
 | Wat     | Watchpoints      | :heavy_check_mark: | :heavy_check_mark: |
 <br>
 
