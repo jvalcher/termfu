@@ -38,12 +38,12 @@ Copy `termfu` to the desired executable directory, e.g. `/usr/bin`.
 ```
 termfu
 ```
-- Otherwise, choose the desired configuration file path.
+- Set the configuration file with `-f` and the data persistance file with `-d`.
 ```
-termfu -f config/.termfu_01
+termfu -f .termfu_01 -d .termfu_01_data
 ```
 - Configure the debugger command and layout(s) inside the configuration file.
-- Breakpoints and watchpoints are persisted in `.termfu_data`. 
+- Breakpoints and watchpoints are persisted in `.termfu_data` unless set by the `-d` flag. 
 - Select a window and scroll through the data using arrow or `hjkl` keys.
 - Switch layouts with `(l)ayouts`.
 - Send custom debugger commands with `pro(m)pt`.
@@ -196,8 +196,8 @@ wpT
 - Run the `make configs` script to create all needed configuration files in `misc/` for running the included sample binaries or scripts (`make run_dev_gdb`, etc.) and for debugging. Feel free to edit the `scripts/create_configs` script to customize layouts, change the target binary, add plugins, etc. However, do __NOT__ include your customized script in a PR.
 - All watchpoints and breakpoints will be persisted in `_data` files alongside their relevant configuration files in `misc/`.
 - Run `make todo` to print all source file tags, such as `TODO`, `FIX`, etc.
-- The `make debug` script starts a `tmux`-based `GDB` TUI debugging session. See the comments in `scripts/gdb_debug_tui` for usage.
-- The `make server` and `make target` scripts allow `termfu` to debug itself. See the comments in `scripts/gdb_debug_server` for usage. __Note__: stepping through the program using these scripts is currently slow. There is an `OPTIMIZE` source tag for speeding this up.
+- The `make debug` script starts a `tmux`-based `GDB` TUI debugging session.
+- The `make server` and `make target` scripts allow `termfu` to debug itself. __Note__: stepping through the program using these scripts is currently slow. There is an `OPTIMIZE` source tag for speeding this up.
 - The `logd()` function in `src/utilities.h` allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
 - It is recommended to create a shortcut for refreshing your terminal screen, as `ncurses` will make a mess of it when not shut down properly. For example, add `bind r respawn-pane -k` to `~/.tmux.conf` to refresh your `tmux` pane with `Ctrl+b` then `r`.
 
