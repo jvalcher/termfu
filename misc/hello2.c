@@ -6,6 +6,8 @@
 
 void print_message (int n)
 {
-    printf ("There are %d days left before the event.\n", n);
+    const char* msg = "Have a wonderful day!";
+
+    printf ("There are %d days left before the event. %s\n", n, msg);
 }
 

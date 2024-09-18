@@ -2,13 +2,13 @@
 
 #include "get_watchpoint_data.h"
 #include "../data.h"
-#include "../insert_output_marker.h"
-#include "../parse_debugger_output.h"
 #include "../utilities.h"
 #include "../plugins.h"
 
 static void get_watchpoint_data_gdb (state_t *state);
 static void get_watchpoint_data_pdb (state_t *state);
+
+#define INDEX_BUF_LEN  8
 
 
 
@@ -30,18 +30,21 @@ get_watchpoint_data (state_t *state)
 static void
 get_watchpoint_data_gdb (state_t *state)
 {
+    int i, last_char_offset;
     window_t *win;
     watchpoint_t *watch;
     const char *hex = "0x";
     char *cmd, *ptr,
          *src_ptr,
-         *dest_ptr,
          *data_ptr,
-         *watch_val;
+         *watch_val,
+         *dest_ptr,
+          index_buff [INDEX_BUF_LEN];
+    buff_data_t *dest_data;
 
-    win      = state->plugins[Wat]->win;
-    dest_ptr = win->buff_data->buff;
-    watch    = state->watchpoints;
+    win       = state->plugins[Wat]->win;
+    dest_data = win->buff_data;
+    watch     = state->watchpoints;
 
     win->buff_data->buff_pos = 0;
     win->buff_data->changed = true;
@@ -58,14 +61,27 @@ get_watchpoint_data_gdb (state_t *state)
         data_ptr = state->debugger->data_buffer;
         watch_val = watch->value;
 
+        cp_char (dest_data, '(');
+
         // index
-        *dest_ptr++ = '(';
-        dest_ptr += sprintf (dest_ptr, "%d", watch->index);
-        *dest_ptr++ = ')';
-        *dest_ptr++ = ' ';
+        i = 0;
+        snprintf (index_buff, INDEX_BUF_LEN - 1, "%d", watch->index);
+        while (index_buff [i] != '\0') {
+            cp_char (dest_data, index_buff [i++]);
+        }
+
+        cp_char (dest_data, ')');
+        cp_char (dest_data, ' ');
 
         // variable
-        dest_ptr += sprintf (dest_ptr, "%s = ", watch->var);
+        i = 0;
+        while (watch->var[i] != '\0') {
+            cp_char (dest_data, watch->var[i++]);
+        }
+
+        cp_char (dest_data, ' ');
+        cp_char (dest_data, '=');
+        cp_char (dest_data, ' ');
 
         if (strstr (data_ptr, "error") == NULL) {
 
@@ -73,10 +89,15 @@ get_watchpoint_data_gdb (state_t *state)
             ptr = src_ptr;
             src_ptr = strstr (src_ptr, hex);
             if (src_ptr != NULL) {
+                i = 0;
                 while (*src_ptr != ' ') {
-                    *dest_ptr++  = *src_ptr;
-                    *watch_val++ = *src_ptr++;
+                    cp_char (dest_data, *src_ptr);
+                    if (i < WATCH_LEN) {
+                        watch_val [i++] = *src_ptr;
+                    }
+                    ++src_ptr;
                 }
+                watch_val [i] = '\0';
             } else {
                 src_ptr = ptr;
                 src_ptr = strstr (src_ptr, "=");
@@ -86,29 +107,37 @@ get_watchpoint_data_gdb (state_t *state)
             src_ptr = strstr (src_ptr, " ");
 
             // copy value
+            i = 0;
             while (*src_ptr != '\n') {
-                *dest_ptr++  = *src_ptr;
-                *watch_val++ = *src_ptr++;
+                cp_char (dest_data, *src_ptr);
+                if (i < WATCH_LEN) {
+                    watch_val [i++] = *src_ptr;
+                } 
+                ++src_ptr;
             }
-            *watch_val = '\0';
+            watch_val [i] = '\0';
 
             // remove trailing newline character
-            if (*(dest_ptr - 1) == 'n' && *(dest_ptr - 2) == '\\') {
-                dest_ptr -= 2;
+            dest_ptr = win->buff_data->buff;
+            last_char_offset = win->buff_data->buff_pos - 1;
+            if (*(dest_ptr + last_char_offset) == 'n' && *(dest_ptr + (last_char_offset - 1)) == '\\') {
+                win->buff_data->buff_pos -= 2;
             }
 
-            *dest_ptr++ = '\n';
+            cp_char (dest_data, '\n');
         }
 
         else {
             strcpy (watch->value, "none");
-            strcpy (dest_ptr, "none\n");
-            dest_ptr += 5;
+            i = 0;
+            while (watch->value [i] != '\0') {
+                cp_char (dest_data, watch->value [i++]);
+            }
+            cp_char (dest_data, '\n');
         }
 
         watch = watch->next;
     }
-    *dest_ptr = '\0';
 }
 
 

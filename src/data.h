@@ -97,6 +97,7 @@ typedef struct layout {
 #define LcV_BUF_LEN    16384
 #define Prg_BUF_LEN    32768
 #define Reg_BUF_LEN    16384
+#define Stk_BUF_LEN    16384
 #define Wat_BUF_LEN    4096
 
 typedef struct {

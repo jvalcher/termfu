@@ -16,6 +16,7 @@ Plugins
         Prg     Program output
         Reg     Registers
         Src     Source file
+        Stk     Stack frames
         Wat     Watchpoints
 
     - Pop-up window selection
@@ -68,6 +69,7 @@ char *plugin_codes [] = {
     "Reg",
     "Run",
     "Src",
+    "Stk",
     "Stp",
     "Unt",
     "Wat"
@@ -75,7 +77,7 @@ char *plugin_codes [] = {
 
 
 
-int win_plugins[]      = { Asm, Brk, Dbg, LcV, Prg, Reg, Src, Wat };
+int win_plugins[]      = { Asm, Brk, Dbg, LcV, Prg, Reg, Src, Stk, Wat };
 int win_file_plugins[] = { Src };
 
 int win_buff_plugins[] = {
@@ -85,6 +87,7 @@ int win_buff_plugins[] = {
     LcV,
     Prg,
     Reg,
+    Stk,
     Wat
 };
 int win_buff_len[] = {
@@ -94,6 +97,7 @@ int win_buff_len[] = {
     LcV_BUF_LEN,
     Prg_BUF_LEN,
     Reg_BUF_LEN,
+    Stk_BUF_LEN,
     Wat_BUF_LEN
 };
 
@@ -202,6 +206,7 @@ allocate_plugin_windows (state_t *state)
             case Brk: 
             case LcV:
             case Reg:
+            case Stk:
             case Wat:
                 state->plugins[j]->data_pos = BEG_DATA;
                 break;

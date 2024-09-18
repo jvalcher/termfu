@@ -12,6 +12,7 @@
 #include "get_program_output.h"
 #include "get_register_data.h"
 #include "get_source_path_line_memory.h"
+#include "get_stack_data.h"
 #include "get_watchpoint_data.h"
 
 void  update_window  (int, state_t*);
@@ -63,6 +64,9 @@ update_window (int      plugin_index,
             break;
         case Src:
             get_source_path_line_memory (state);
+            break;
+        case Stk:
+            get_stack_data (state);
             break;
         case Wat:
             get_watchpoint_data (state);

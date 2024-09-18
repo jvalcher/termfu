@@ -36,6 +36,7 @@ run_plugin (int      plugin_index,
         case Prg:
         case Reg:
         case Src:
+        case Stk:
         case Wat: 
             if (state->plugins[plugin_index]->has_window) {
                 select_window (plugin_index, state);

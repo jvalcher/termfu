@@ -72,17 +72,6 @@ send_debugger_command (int      plugin_index,
             }
             break;
 
-        case Stp:
-            switch (debugger_index) {
-                case (DEBUGGER_GDB):
-                    send_command (state, "step\n");
-                    break;
-                case (DEBUGGER_PDB):
-                    send_command (state, "step\n");
-                    break;
-            }
-            break;
-
         case Run:
             switch (debugger_index) {
                 case (DEBUGGER_GDB):
@@ -94,6 +83,17 @@ send_debugger_command (int      plugin_index,
                 case (DEBUGGER_PDB):
                     send_command (state, "restart\n");
                     state->plugins[Src]->win->file_data->path_changed = true;
+                    break;
+            }
+            break;
+
+        case Stp:
+            switch (debugger_index) {
+                case (DEBUGGER_GDB):
+                    send_command (state, "step\n");
+                    break;
+                case (DEBUGGER_PDB):
+                    send_command (state, "step\n");
                     break;
             }
             break;
@@ -127,7 +127,7 @@ send_debugger_command (int      plugin_index,
         // update Src next to provide data for remaining windows
         state->plugins[Dbg]->win->buff_data->new_data = true;
         state->plugins[Prg]->win->buff_data->new_data = true;
-        update_windows (state, 8, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Wat);
+        update_windows (state, 9, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Stk, Wat);
     }
 
     pulse_header_title_color (plugin_index, state, OFF);

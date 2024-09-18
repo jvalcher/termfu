@@ -28,6 +28,7 @@ enum {
     Reg,
     Run,
     Src,
+    Stk,
     Stp,
     Unt,
     Wat
