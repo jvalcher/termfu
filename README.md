@@ -1,6 +1,6 @@
 
 <h1 align="center">termfu</h1>
-<p align="center">A fast, multi-language TUI debugger that allows users to easily create and switch between custom layouts</p>
+<p align="center">An easy-to-use, multi-language terminal debugger that allows users to create and switch between custom layouts</p>
 <br>
 <p align="center"><img margin-left="auto" src="./misc/layout1.png" width="700px"></p>
 <br>
@@ -20,7 +20,7 @@
 
 The Makefile uses `ncurses6`.
 ```
-sudo apt-get install libncurses-dev gdb pdb
+sudo apt-get install libncurses-dev gdb pdb make
 ```
 ### Build
 ```
@@ -37,7 +37,7 @@ Copy `termfu` to the desired executable directory, e.g. `/usr/bin`.
 termfu
 ```
 - The program must be run in the same directory as a `.termfu` configuration file.
-- Insert the debugger command and create your layout(s)  (see below).
+- Configure the debugger command and layout(s).
 - Breakpoints and watchpoints are persisted in `.termfu_data`. 
 - Select a window and scroll through the data using arrow or `hjkl` keys.
 - Switch layouts with `(l)ayouts`.
@@ -167,7 +167,7 @@ oag
 
 ## Releases
 
-- __v0.1__ - _09-16-2024_ - Initial release providing basic GDB, PDB functionality
+- __v1.0__ - _09-17-2024_ - Initial release providing basic GDB, PDB functionality
 <br>
 
 ## Contributing
@@ -185,17 +185,18 @@ oag
 
 ### Run test files
 - `# Comment` out the undesired command in the provided `.termfu` configuration file.
-- Remove the data persistence file `.termfu_data` when switching between debuggers or delete any saved breakpoints and watchpoints inside the program.
+- You will need to `clear (a)ll` breakpoints and watchpoints when switching debuggers.
 
-GDB   
+__GDB__   
 ```
 (cd misc && ./build_hello) && ./termfu
 ```
 
-PDB
+__PDB__
 ```
 ./termfu
 ```
+<br>
 
 ### Scripts
 
