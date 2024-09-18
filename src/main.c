@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include <signal.h>
 #include <ncurses.h>
 
@@ -7,10 +8,11 @@
 #include "render_layout.h"
 #include "start_debugger.h"
 #include "run_plugin.h"
+#include "persist_data.h"
 #include "update_window_data/_update_window_data.h"
 #include "plugins.h"
-#include "persist_data.h"
 
+static void  get_cli_arguments           (int, char*[], state_t*);
 static void  initialize_ncurses          (void);
 static void  set_signals                 ();
 static void  update_initial_window_data  (state_t*);
@@ -18,13 +20,16 @@ static void  update_initial_window_data  (state_t*);
 
 
 int
-main (void) 
+main (int   argc,
+      char *argv[]) 
 {
     int        key;
     state_t    state;
     debugger_t debugger;
 
     state.debugger = &debugger;
+
+    get_cli_arguments (argc, argv, &state);
 
     initialize_ncurses ();
 
@@ -50,6 +55,28 @@ main (void)
     clean_up ();
 
     return 0;
+}
+
+
+
+static void
+get_cli_arguments (int   argc,
+                   char *argv[],
+                   state_t *state)
+{
+    int opt;
+    extern char *optarg;
+
+    state->config_path[0] = '\0';
+
+    char *optstring = "f:";
+    while ((opt = getopt (argc, argv, optstring)) != -1) {
+        switch (opt) {
+            case 'f':
+                strncpy (state->config_path, optarg, CONFIG_PATH_LEN - 1);
+                break;
+        }
+    }
 }
 
 

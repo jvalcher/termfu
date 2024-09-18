@@ -318,18 +318,6 @@ cp_fchar (file_data_t *dest_file_data,
 
 
 
-FILE*
-open_config_file (void)
-{
-    FILE *file = fopen (CONFIG_FILE, "r");
-    if (file == NULL) {
-        pfeme ("Unable to find config file \"./%s\"\n", CONFIG_FILE);
-    }
-    return file;
-}
-
-
-
 bool
 file_was_updated (time_t file_mtime,
                   char *file_path)
@@ -337,7 +325,7 @@ file_was_updated (time_t file_mtime,
     struct stat file_stat;
 
     if (stat (file_path, &file_stat) != 0) {
-        pfeme ("Unable to check status of \"%s\"", file_path);
+        return false;
     }
 
     return file_mtime < file_stat.st_mtim.tv_sec;

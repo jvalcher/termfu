@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <time.h>
 #include <unistd.h>
 #include <stdbool.h>
 #include <ncurses.h>
@@ -15,6 +16,7 @@
 #include "plugins.h"
 #include "utilities.h"
 
+static FILE*       open_config_file       (state_t*);
 static void        get_category_and_label (FILE *file, char *category, char *label);
 static char      **create_command         (FILE*, state_t*);
 static void        create_plugins         (FILE*, state_t*);
@@ -51,9 +53,7 @@ parse_config_file (state_t *state)
 
     allocate_plugin_windows (state);
 
-    if ((fp = open_config_file ()) == NULL) {
-        pfeme ("Failed to open configuration file\n");
-    }
+    fp = open_config_file (state);
 
     // parse config file
     is_first_layout = true;
@@ -121,6 +121,30 @@ allocate_plugins (state_t *state)
             pfeme ("plugin_t pointer allocation failed\n");
         }
     }
+}
+
+
+
+static FILE*
+open_config_file (state_t *state)
+{
+    FILE *file = NULL;
+
+    // CONFIG_FILE
+    if (state->config_path[0] == '\0') {
+        if ((file = fopen (CONFIG_FILE, "r")) == NULL) {
+            pfeme ("Unable to find config file \"./%s\"\n", CONFIG_FILE);
+        }
+    } 
+
+    // state->config_path
+    else {
+        if ((file = fopen (state->config_path, "r")) == NULL) {
+            pfeme ("Unable to find config file \"./%s\"\n", state->config_path);
+        }
+    }
+
+    return file;
 }
 
 

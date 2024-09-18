@@ -90,13 +90,6 @@ void cp_fchar (file_data_t *dest_file_data, char ch, int type);
 
 
 /*
-   Open ./CONFIG_FILE
-*/
-FILE *open_config_file (void);
-
-
-
-/*
     Compare file's previously-saved update time with its current time
     -------
     - Returns true if updated, false otherwise
