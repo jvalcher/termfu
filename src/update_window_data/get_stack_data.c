@@ -30,7 +30,8 @@ static void
 get_stack_data_gdb (state_t *state)
 {
     window_t *win;
-    char *src_ptr;
+    char     *src_ptr,
+             *tmp_ptr;
     buff_data_t *dest_buff;
 
     win       = state->plugins[Stk]->win;
@@ -67,6 +68,7 @@ get_stack_data_gdb (state_t *state)
             }
 
             cp_char (dest_buff, ' ');
+            cp_char (dest_buff, ' ');
 
             // func
             src_ptr  = strstr (src_ptr, func_key);
@@ -76,21 +78,29 @@ get_stack_data_gdb (state_t *state)
             }
 
             cp_char (dest_buff, ' ');
+            cp_char (dest_buff, '-');
+            cp_char (dest_buff, '-');
+            cp_char (dest_buff, ' ');
 
             // file
+            tmp_ptr = src_ptr;
             src_ptr  = strstr (src_ptr, file_key);
-            src_ptr += strlen (file_key);
-            while (*src_ptr != '\"') {
-                cp_char (dest_buff, *src_ptr++);
-            }
+            if (src_ptr != NULL) {
+                src_ptr += strlen (file_key);
+                while (*src_ptr != '\"') {
+                    cp_char (dest_buff, *src_ptr++);
+                }
 
-            cp_char (dest_buff, ':');
+                cp_char (dest_buff, ':');
 
-            // line
-            src_ptr  = strstr (src_ptr, line_key);
-            src_ptr += strlen (line_key);
-            while (*src_ptr != '\"') {
-                cp_char (dest_buff, *src_ptr++);
+                // line
+                src_ptr  = strstr (src_ptr, line_key);
+                src_ptr += strlen (line_key);
+                while (*src_ptr != '\"') {
+                    cp_char (dest_buff, *src_ptr++);
+                }
+            } else {
+                src_ptr = tmp_ptr;
             }
 
             cp_char (dest_buff, '\n');

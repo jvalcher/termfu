@@ -56,10 +56,6 @@ get_binary_path_time_gdb (state_t *state)
             pfeme ("Unable to get status of file \"%s\"\n", state->debugger->prog_path);
         }
     }
-
-    else {
-        pfeme ("Unable to locate source file path string in debugger output\n");
-    }
 }
 
 

@@ -486,7 +486,7 @@ format_win_data (int plugin_index,
         right_spaces = win->topbar_cols - strlen (basefile) - left_spaces;
         left_spaces = left_spaces > 0 ? left_spaces : 0;
         right_spaces = right_spaces > 0 ? left_spaces : 0;
-            //
+
         wattron   (win->IWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
         mvwprintw (win->IWIN, 0, 0, "%*c%.*s%*c", left_spaces, ' ',
                                                   win->topbar_cols, basefile,
