@@ -147,10 +147,10 @@ rnscufk
 
 # ASCII window layout
 >w
-eeoooaa
-wwoooaa
-wwooott
-vvvppdd
+eeoooaaa
+vvoooaaa
+ttoooaaa
+wwwpppdd
 
 [ layout : Assembly / Registers ]
 >h
