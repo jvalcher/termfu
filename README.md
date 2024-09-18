@@ -122,6 +122,7 @@ LcV : v : local (v)ars
 Prg : p : (p)rogram out
 Reg : g : re(g)isters
 Src : o : s(o)urce file
+Stk : t : s(t)ack
 Wat : w : (w)atch
 
 # header commands
@@ -138,16 +139,17 @@ Kil : k : (k)ill
 
 [ layout : Main ]
 
-# header commands layout
+# header command layout
 >h
 mlq
 rnscufk
 
-# ASCII-art window layout
+# ASCII window layout
 >w
-eooaa
-wooaa
-vppdd
+eeoooaa
+wwoooaa
+wwooott
+vvvppdd
 
 [ layout : Assembly / Registers ]
 >h
@@ -155,6 +157,7 @@ mlq
 rnscufk
 >w
 oag
+
 ```
 <br>
 
