@@ -130,19 +130,17 @@ open_config_file (state_t *state)
 {
     FILE *file = NULL;
 
-    // CONFIG_FILE
-    if (state->config_path[0] == '\0') {
+    if (state->config_path[0] != '\0') {
+        if ((file = fopen (state->config_path, "r")) == NULL) {
+            pfeme ("Unable to find config file \"./%s\"\n", state->config_path);
+        }
+    } 
+
+    else {
         if ((file = fopen (CONFIG_FILE, "r")) == NULL) {
             pfeme ("Unable to find config file \"./%s\"\n", CONFIG_FILE);
         }
     } 
-
-    // state->config_path
-    else {
-        if ((file = fopen (state->config_path, "r")) == NULL) {
-            pfeme ("Unable to find config file \"./%s\"\n", state->config_path);
-        }
-    }
 
     return file;
 }

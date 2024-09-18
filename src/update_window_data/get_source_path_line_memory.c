@@ -44,7 +44,6 @@ get_source_path_line_memory_gdb (state_t *state)
                *key_line     = "line=\"";
 
     win = state->plugins[Src]->win;
-    src_ptr = state->debugger->data_buffer;
     file_data = win->file_data;
     is_running = true;
 
@@ -53,6 +52,7 @@ get_source_path_line_memory_gdb (state_t *state)
     file_data->func_pos = 0;
 
     // check if program running
+    src_ptr = state->debugger->data_buffer;
     send_command_mp (state, "-thread-info\n");
 
         // get number of threads

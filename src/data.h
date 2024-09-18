@@ -205,6 +205,7 @@ typedef struct {
     bool    running;
     char    prog_path [PROGRAM_PATH_LEN];
     time_t  prog_update_time;
+    bool    prog_exists;
 
     int     stdin_pipe;
     int     stdout_pipe;
@@ -255,9 +256,11 @@ typedef struct {
   State
  *******/
 
-#define BREAK_LEN       256
-#define WATCH_LEN       84
-#define INPUT_BUFF_LEN  4096
+#define CONFIG_PATH_LEN  128
+#define DATA_PATH_LEN    CONFIG_PATH_LEN
+#define BREAK_LEN        256
+#define WATCH_LEN        84
+#define INPUT_BUFF_LEN   4096
 
 typedef struct breakpoint {
 
@@ -280,6 +283,8 @@ typedef struct {
 
     int            num_plugins;
     int           *plugin_key_index;
+    char           config_path  [CONFIG_PATH_LEN];
+    char           data_path    [DATA_PATH_LEN];
     char           input_buffer [INPUT_BUFF_LEN];
 
     layout_t      *layouts;

@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "popup_watchpoints.h"
+#include "watchpoints.h"
 #include "_get_popup_window_input.h"
 #include "../data.h"
 #include "../update_window_data/_update_window_data.h"
@@ -99,3 +99,4 @@ clear_all_watchpoints (state_t *state)
 
     update_window (Wat, state);
 }
+

@@ -1,13 +1,11 @@
 
 #include "execute_until.h"
-#include "update_window_data/_update_window_data.h"
-#include "get_popup_window_input/_get_popup_window_input.h"
-#include "data.h"
-#include "insert_output_marker.h"
-#include "utilities.h"
-#include "parse_debugger_output.h"
-#include "update_window_data/_update_window_data.h"
-#include "plugins.h"
+#include "../update_window_data/_update_window_data.h"
+#include "_get_popup_window_input.h"
+#include "../data.h"
+#include "../utilities.h"
+#include "../update_window_data/_update_window_data.h"
+#include "../plugins.h"
 
 
 

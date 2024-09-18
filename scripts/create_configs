@@ -1,0 +1,185 @@
+#!/usr/bin/python
+
+'''
+Create configuration files
+-------
+
+dev - developer termfu session configuration
+dbg - termfu session being debugged configuration
+
+Directory: misc/...
+
+    File                 Script                 Type
+    -------------------------------------------------
+    .termfu_run_gdb      make run_dev_gdb       dev
+    .termfu_run_pdb      make run_dev_pdb       dev
+    .termfu_tui_gdb      make debug_tui_gdb     dbg
+    .termfu_tui_pdb      make debug_tui_pdb     dbg
+    .termfu_target       make target            dev
+    .termfu_server_gdb   make server_gdb        dbg
+    .termfu_server_pdb   make server_pdb        dbg
+
+'''
+
+
+
+#
+# Commands
+#
+
+cmd_label = '''
+[ command ]
+
+'''
+cmd_test_gdb_hello = 'gdb --interpreter=mi misc/hello'
+cmd_test_pdb_gcd   = 'python -m pdb misc/gcd.py'
+cmd_termfu       = 'gdb --interpreter=mi termfu_dev'
+
+cmd_run_gdb    = cmd_label + cmd_test_gdb_hello + '\n'
+cmd_run_pdb    = cmd_label + cmd_test_pdb_gcd + '\n'
+cmd_tui_gdb    = cmd_label + cmd_test_gdb_hello + '\n'
+cmd_tui_pdb    = cmd_label + cmd_test_pdb_gcd + '\n'
+cmd_target     = cmd_label + cmd_termfu + '\n'
+cmd_server_gdb = cmd_label + cmd_test_gdb_hello + '\n'
+cmd_server_pdb = cmd_label + cmd_test_pdb_gcd + '\n'
+
+
+
+#
+# Plugins
+#
+
+plugins = '''
+[ plugins ]
+
+# header commands
+Prm : m : pro(m)pt
+Trg : t : (t)arget
+Lay : l : (l)ayouts
+Qut : q : (q)uit
+Run : r : (r)un
+Nxt : n : (n)ext
+Stp : s : (s)tep
+Con : c : (c)ontinue
+Unt : u : (u)ntil
+Fin : f : (f)inish
+Kil : k : (k)ill
+
+# windows
+Asm : a : (a)ssembly
+Brk : e : br(e)akpoints
+Dbg : d : (d)ebug out
+LcV : v : local (v)ars
+Prg : p : (p)rogram out
+Reg : g : re(g)isters
+Src : o : s(o)urce file
+Stk : T : s(T)ack
+Wat : w : (w)atch
+
+'''
+
+
+#
+# Layouts
+#
+
+gdb_layout_1 = '''
+[ layout : Main ]
+
+>h
+mtlq
+rnscufk
+
+>w
+eeeooooo
+wwwooooo
+vvvooooo
+TTpppddd
+
+[ layout : Assembly / Registers ]
+
+>h
+mtlq
+rnscufk
+
+>w
+oag
+oag
+oag
+wpT
+
+'''
+
+pdb_layout_1    = '''
+[ layout : Main ]
+
+>h
+mlq
+rnscufk
+
+>w
+eoo
+eoo
+woo
+wdd
+wdd
+
+'''
+
+layout_run_gdb    = gdb_layout_1
+layout_run_pdb    = pdb_layout_1
+layout_tui_gdb    = gdb_layout_1
+layout_tui_pdb    = pdb_layout_1
+layout_target     = gdb_layout_1
+layout_server_gdb = gdb_layout_1
+layout_server_pdb = pdb_layout_1
+
+
+
+#
+# File content
+#
+
+config_run_gdb    = cmd_run_gdb + plugins + layout_run_gdb
+config_run_pdb    = cmd_run_pdb + plugins + layout_run_pdb
+config_tui_gdb    = cmd_tui_gdb + plugins + layout_tui_gdb
+config_tui_pdb    = cmd_tui_pdb + plugins + layout_tui_pdb
+config_target     = cmd_target + plugins + layout_target
+config_server_gdb = cmd_server_gdb + plugins + layout_server_gdb
+config_server_pdb = cmd_server_pdb + plugins + layout_server_pdb 
+
+
+
+#
+# File paths
+#
+
+base_path = 'misc/.termfu_'
+
+path_run_gdb    = base_path + 'run_gdb'
+path_run_pdb    = base_path + 'run_pdb'
+path_tui_gdb    = base_path + 'tui_gdb'
+path_tui_pdb    = base_path + 'tui_pdb'
+path_target     = base_path + 'target'
+path_server_gdb = base_path + 'server_gdb'
+path_server_pdb = base_path + 'server_pdb'
+
+
+
+#
+# Create files
+#
+
+def create_file (path, config):
+    with open (path, 'w') as file:
+        file.write(config)
+    print (f'Created: {path}')
+
+create_file (path_run_gdb,    config_run_gdb)
+create_file (path_run_pdb,    config_run_pdb)
+create_file (path_tui_gdb,    config_tui_gdb)
+create_file (path_tui_pdb,    config_tui_pdb)
+create_file (path_target,     config_target)
+create_file (path_server_gdb, config_server_gdb)
+create_file (path_server_pdb, config_server_pdb)
+

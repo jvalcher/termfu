@@ -59,17 +59,16 @@ display_lines (int       type,
 
                 // open new file
                 win->file_data->ptr = fopen (win->file_data->path, "r");
-                if (win->file_data->ptr == NULL) {
-                    pfeme ("Unable to open file path \"%s\" for plugin \"%s\".\n",
-                            win->file_data->path, win->code);
+                if (win->file_data->ptr != NULL) {
+                    set_file_rows_cols (win);
+                    win->file_data->path_changed = false;
                 }
-
-                set_file_rows_cols (win);
-
-                win->file_data->path_changed = false;
             }
 
-            display_lines_file (key, win);
+            if (win->file_data->ptr != NULL) {
+                display_lines_file (key, win);
+            }
+
             break;
         }
 

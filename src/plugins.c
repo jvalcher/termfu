@@ -35,6 +35,7 @@ Plugins
         Nxt     Next
         Run     (Re)run program
         Stp     Step
+        Trg     Target remote gdbserver
 */
 
 #include <string.h>
@@ -71,6 +72,7 @@ char *plugin_codes [] = {
     "Src",
     "Stk",
     "Stp",
+    "Trg",
     "Unt",
     "Wat"
 };

@@ -1,11 +1,11 @@
 */*.out
 termfu*
-.termfu_data
 core
 tags
 debug.out
 progr.out
 misc/hello
+misc/.termfu_*
 
 venv
 __pycache__

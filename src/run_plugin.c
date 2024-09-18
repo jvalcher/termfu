@@ -1,13 +1,12 @@
-#include <unistd.h>
-
 #include "run_plugin.h"
 #include "data.h"
 #include "plugins.h"
 #include "send_debugger_command.h"
 #include "select_window.h"
 #include "choose_layout.h"
-#include "execute_until.h"
 #include "run_custom_command.h"
+#include "get_popup_window_input/target_remote_server.h"
+#include "get_popup_window_input/execute_until.h"
 
 
 
@@ -49,6 +48,9 @@ run_plugin (int      plugin_index,
             break;
         case Prm: 
             run_custom_command (state);
+            break;
+        case Trg: 
+            target_remote_server (state);
             break;
         case Unt: 
             execute_until (state);

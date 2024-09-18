@@ -45,8 +45,14 @@ get_persisted_data (state_t *state)
             break;
     }
 
-    if ((fp = fopen (PERSIST_FILE, "r")) != NULL) {
+    // open file
+    if (state->data_path[0] != '\0') {
+        fp = fopen (state->data_path, "r");
+    } else {
+        fp = fopen (PERSIST_FILE, "r");
+    }
 
+    if (fp != NULL) {
         while ((ch = fgetc (fp)) != EOF) {
 
             if (ch == '>') {
@@ -116,9 +122,15 @@ persist_data (state_t *state)
     breakpoint_t *curr_break;
     watchpoint_t *curr_watch;
 
-    fp = fopen (PERSIST_FILE, "w");
-    if (fp == NULL) {
-        pfeme ("Failed to open data persistence file\n");
+    // open file
+    if (state->data_path[0] != '\0') {
+        if ((fp = fopen (state->data_path, "w")) == NULL) {
+            pfeme ("Failed to open data persistence file \"%s\"\n", state->data_path);
+        }
+    } else {
+        if ((fp = fopen (PERSIST_FILE, "w")) == NULL) {
+            pfeme ("Failed to open data persistence file \"%s\"\n", PERSIST_FILE);
+        }
     }
 
     // watchpoints

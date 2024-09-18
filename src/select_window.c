@@ -2,11 +2,10 @@
 #include "select_window.h"
 #include "data.h"
 #include "display_lines.h"
-#include "get_popup_window_input/popup_watchpoints.h"
-#include "update_window_data/_update_window_data.h"
+#include "get_popup_window_input/watchpoints.h"
+#include "get_popup_window_input/breakpoints.h"
 #include "utilities.h"
 #include "plugins.h"
-#include "get_popup_window_input/popup_breakpoints.h"
 
 #define ESC        27
 #define BUFF_LEN  256

@@ -1,3 +1,10 @@
+
+// TODO: implement changes, scripts, documentation to allow termfu to be debugged by termfu
+// TODO: re-render layout on terminal screen size change
+// OPTIMIZE:  `make target`, `make server_` scripts result in slow debugging session
+// TODO: Figure out how to get the `-x .gdbtarget` flag to work for `make target` (scripts/gdb_target_server)
+    // Currently have to manually enter target "localhost:12347" when debugging
+
 #include <unistd.h>
 #include <signal.h>
 #include <ncurses.h>
@@ -59,6 +66,17 @@ main (int   argc,
 
 
 
+/*
+    Get CLI flag arguments
+    --------
+    -c   Configuration file path  (default: ./.termfu)
+        -->  state->config_path
+        -   default: CONFIG_FILE
+
+    -d   Data persistance path for watchpoints, breakpoints
+        -->  state->data_path
+        - default: PERSIST_FILE
+*/
 static void
 get_cli_arguments (int   argc,
                    char *argv[],
@@ -68,12 +86,16 @@ get_cli_arguments (int   argc,
     extern char *optarg;
 
     state->config_path[0] = '\0';
+    state->data_path[0] = '\0';
 
-    char *optstring = "f:";
+    char *optstring = "c:d:";
     while ((opt = getopt (argc, argv, optstring)) != -1) {
         switch (opt) {
-            case 'f':
+            case 'c':
                 strncpy (state->config_path, optarg, CONFIG_PATH_LEN - 1);
+                break;
+            case 'd':
+                strncpy (state->data_path, optarg, DATA_PATH_LEN - 1);
                 break;
         }
     }
@@ -126,8 +148,4 @@ set_signals (void)
 {
     signal (SIGINT, sigint_handler);    // Ctrl-C
 }
-
-
-// TODO: implement changes, scripts, documentation to allow termfu to be debugged by termfu
-// TODO: re-render layout on terminal screen size change
 

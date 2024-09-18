@@ -33,11 +33,16 @@ Copy `termfu` to the desired executable directory, e.g. `/usr/bin`.
 
 
 ## Usage
+
+- Without the `-f` flag, the program must be run in the same directory as a `.termfu` configuration file.
 ```
 termfu
 ```
-- The program must be run in the same directory as a `.termfu` configuration file.
-- Configure the debugger command and layout(s).
+- Otherwise, choose the desired configuration file path.
+```
+termfu -f config/.termfu_01
+```
+- Configure the debugger command and layout(s) inside the configuration file.
 - Breakpoints and watchpoints are persisted in `.termfu_data`. 
 - Select a window and scroll through the data using arrow or `hjkl` keys.
 - Switch layouts with `(l)ayouts`.
@@ -65,6 +70,7 @@ __Header Commands__
 | Qut     | Quit |
 | Run     | Run program (reload binary if needed) |
 | Stp     | Step |
+| Trg     | Target remote server (e.g. gdbserver) |
 | Unt     | Until |
 <br>
 
@@ -115,19 +121,9 @@ gdb --interpreter=mi misc/hello
 
 [ plugins ]
 
-# windows
-Asm : a : (a)ssembly
-Brk : e : br(e)akpoints
-Dbg : d : (d)ebug out
-LcV : v : local (v)ars
-Prg : p : (p)rogram out
-Reg : g : re(g)isters
-Src : o : s(o)urce file
-Stk : t : s(t)ack
-Wat : w : (w)atch
-
 # header commands
 Prm : m : pro(m)pt
+Trg : t : (t)arget
 Lay : l : (l)ayouts
 Qut : q : (q)uit
 Run : r : (r)un
@@ -138,27 +134,41 @@ Unt : u : (u)ntil
 Fin : f : (f)inish
 Kil : k : (k)ill
 
+# windows
+Asm : a : (a)ssembly
+Brk : e : br(e)akpoints
+Dbg : d : (d)ebug out
+LcV : v : local (v)ars
+Prg : p : (p)rogram out
+Reg : g : re(g)isters
+Src : o : s(o)urce file
+Stk : T : s(T)ack
+Wat : w : (w)atch
+
+
 [ layout : Main ]
 
-# header command layout
 >h
-mlq
+mtlq
 rnscufk
 
-# ASCII window layout
 >w
-eeoooaaa
-vvoooaaa
-ttoooaaa
-wwwpppdd
+eeeooooo
+wwwooooo
+vvvooooo
+TTpppddd
 
 [ layout : Assembly / Registers ]
+
 >h
-mlq
+mtlq
 rnscufk
+
 >w
 oag
-
+oag
+oag
+wpT
 ```
 <br>
 
@@ -182,37 +192,33 @@ oag
 - Blank space and comment PRs have a high probability of being closed.
 - Use existing code conventions.
 
-### Tool spotlight
-- Run `make todo` to view `TODO`, `FIX`, etc. tags in the source code.
-- The `logd()` function allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
-- The `make debug` script starts a `tmux`-based `GDB` debugging session. This is also a good way to explore the program. See the comments in `scripts/gdb_debug` for usage.
+### Developer notes
+- Run the `make configs` script to create all needed configuration files in `misc/` for running the included sample binaries or scripts (`make run_dev_gdb`, etc.) and for debugging. Feel free to edit the `scripts/create_configs` script to customize layouts, change the target binary, add plugins, etc. However, do __NOT__ include your customized script in a PR.
+- All watchpoints and breakpoints will be persisted in `_data` files alongside their relevant configuration files in `misc/`.
+- Run `make todo` to print all source file tags, such as `TODO`, `FIX`, etc.
+- The `make debug` script starts a `tmux`-based `GDB` TUI debugging session. See the comments in `scripts/gdb_debug_tui` for usage.
+- The `make server` and `make target` scripts allow `termfu` to debug itself. See the comments in `scripts/gdb_debug_server` for usage. __Note__: stepping through the program using these scripts is currently slow. There is an `OPTIMIZE` source tag for speeding this up.
+- The `logd()` function in `src/utilities.h` allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
+- It is recommended to create a shortcut for refreshing your terminal screen, as `ncurses` will make a mess of it when not shut down properly. For example, add `bind r respawn-pane -k` to `~/.tmux.conf` to refresh your `tmux` pane with `Ctrl+b` then `r`.
 
-### Run test files
-- `# Comment` out the undesired command in the provided `.termfu` configuration file.
-- You will need to `clear (a)ll` breakpoints and watchpoints when switching debuggers.
-
-__GDB__   
-```
-(cd misc && ./build_hello) && ./termfu
-```
-
-__PDB__
-```
-./termfu
-```
-<br>
 
 ### Scripts
 
 `./Makefile`
 <br>
-| Command        | Description |
-| --------       | -------     |
-| `make`         | Build production binary |
-| `make dev`	   | Build development binary|
-| `make devf`    | Build development binary, print formatted error messages |
-| `make todo`    | Print source code tags  (`TODO`, `FIXME`, etc.) |
-| `make debug`   | Start tmux GDB debugging session  (see `scripts/gdb_debug`) |
+| Command             | Description |
+| --------            | -------     |
+| `make`              | Build production binary |
+| `make dev`	        | Build development binary|
+| `make devf`         | Build development binary, print formatted error messages |
+| `make configs`      | Create all sample runs, debugging configuration files|
+| `make run_dev_gdb`  | Run development binary with sample gdb binary |
+| `make run_dev_pdb`  | Run development binary with sample pdb script |
+| `make todo`         | Print source code tags  (`TODO`, `FIXME`, etc.) |
+| `make tui_gdb`      | Start tmux GDB TUI debugging session  (see `scripts/gdb_debug`) |
+| `make tui_pdb`      | Start tmux GDB TUI debugging session  (see `scripts/pdb_debug`) |
+|	`make server`       | Start termfu_dev with gdbserver  (see `scripts/gdb_server`) |
+| `make target`       | Start termfu_dev and target the gdbserver started  by `make server` |
 <br>
 
 `./tests/Makefile`

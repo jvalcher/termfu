@@ -1,0 +1,23 @@
+#!/bin/sh
+
+#
+# Debug termfu_dev with termfu_dev
+# -------
+# Ncurses programs have a problem receiving user input when run in a different terminal via GDB's tty command.
+# This script solves that issue at the expense of having to quit and rerun it in order to restart the program.
+#
+# Usage:
+#
+#     1. Run `make server_<debugger>` in a separate terminal
+#     2. Run `make target` to target that server
+#     3. `(t)arget` the server  (localhost:12347)
+#     4. Set (b)reak then (c)ontinue
+#     5. (q)uit server, rerun server script
+#     6. Continue from step 3
+#
+
+CONFIG="misc/.termfu_target"
+DATA="${CONFIG}_data"
+
+./termfu_dev -c $CONFIG -d $DATA
+
