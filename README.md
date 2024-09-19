@@ -93,7 +93,7 @@ __Windows__
 Plugin codes are mapped to case-sensitive letter keys, which are used both as shortcuts and to create custom layouts.
 <br>
 
-- Add parentheses around the corresponding shortcut key in a `<(t)itle>` for easy reference. These characters will have a different color than the surrounding letters.
+- Add parentheses around a shortcut key in its `<(t)itle>` for easy reference. These characters will have a different color than the surrounding letters.
 - Only newline `# comments` are supported, not inline.
 
 ### Sections
