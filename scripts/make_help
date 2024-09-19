@@ -7,6 +7,9 @@ SC = BOLD_YELLOW
 R  = RESET
 
 make_commands = f'''
+                    -----------------------------
+  {BOLD_CYAN}Read the comments in the associated scripts for usage instructions.{R}
+                    -----------------------------
 
 {MC}make help          {R}- List make commands, description, associated scripts  {SC}(scripts/make_help)
 {MC}make               {R}- Build production binary
