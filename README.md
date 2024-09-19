@@ -96,8 +96,8 @@ Plugin codes are mapped to case-sensitive letter keys, which are used both as sh
 <br>
 
 - Add parentheses around a shortcut key in its `<(t)itle>` for easy reference. These characters will have a different color than the surrounding letters.
-- The command title order in the header are determined by the order of their respective key bindings.
-- Window size ratios and positions are determined via "key-binding ASCII art."
+- The order and line of command titles in the header are set by the order and line of the key bindings.
+- Window size ratios and position are set via "key-binding ASCII art."
 - Only newline `# comments` are supported, not inline.
 
 ### Sections
