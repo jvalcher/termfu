@@ -45,6 +45,7 @@ get_program_output_gdb (state_t *state)
             dest_buff->changed = true;
         }
     }
+    state->debugger->program_buffer [0] = '\0';
     dest_buff->new_data = false;
 }
 

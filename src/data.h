@@ -197,6 +197,7 @@ typedef struct {
 
 enum { DEBUGGER_GDB, DEBUGGER_PDB };
 enum { READER_RECEIVING, READER_DONE };
+enum { FORMAT_BUF, DATA_BUF, CLI_BUF, PROGRAM_BUF, ASYNC_BUF };
 
 typedef struct {
 
@@ -210,25 +211,26 @@ typedef struct {
     int     stdin_pipe;
     int     stdout_pipe;
 
+    int     reader_state;
+    char    reader_buffer  [READER_BUF_LEN];
+
     char    format_buffer  [FORMAT_BUF_LEN];
+    int     format_len;
+    int     format_pos;
     char    data_buffer    [DATA_BUF_LEN];
+    int     data_len;
+    int     data_pos;
     char    cli_buffer     [CLI_BUF_LEN];
+    int     cli_len;
+    int     cli_pos;
     char    program_buffer [PROGRAM_BUF_LEN];
+    int     program_len;
+    int     program_pos;
     char    async_buffer   [ASYNC_BUF_LEN];
+    int     async_len;
+    int     async_pos;
 
 } debugger_t;
-
-typedef struct {
-
-    int    state;
-    char   output_buffer [READER_BUF_LEN];
-    char  *cli_buffer_ptr;
-    char  *program_buffer_ptr;
-    char  *data_buffer_ptr;
-    char  *async_buffer_ptr;
-    int    plugin_index;
-
-} reader_t;
 
 
 

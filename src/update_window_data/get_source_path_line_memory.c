@@ -133,6 +133,8 @@ get_source_path_line_memory_gdb (state_t *state)
             win->file_data->line = 0;
         }
     }
+
+    state->debugger->data_buffer[0] = '\0';
 }
 
 
@@ -185,4 +187,6 @@ get_source_path_line_memory_pdb (state_t *state)
         win->file_data->line = atoi (state->debugger->format_buffer);
     }
 
+    state->debugger->cli_buffer[0] = '\0';
+    state->debugger->format_buffer[0] = '\0';
 }

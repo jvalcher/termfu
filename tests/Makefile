@@ -32,7 +32,7 @@ all: clean $(B_FILE)
 
 debug:
 	@echo ""
-	../scripts/gdb_debug_test
+	../scripts/debug_test
 	@echo ""
 
 

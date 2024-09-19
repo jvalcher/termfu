@@ -99,7 +99,9 @@ get_assembly_data_gdb (state_t *state)
                 cp_char (dest_buff, *src_ptr++);
             }
         }
-        
+        state->debugger->cli_buffer[0]  = '\0';
+        state->debugger->data_buffer[0] = '\0';
+
         dest_buff->changed = true;
     }
 

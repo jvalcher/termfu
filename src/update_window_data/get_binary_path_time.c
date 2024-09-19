@@ -56,6 +56,8 @@ get_binary_path_time_gdb (state_t *state)
             pfeme ("Unable to get status of file \"%s\"\n", state->debugger->prog_path);
         }
     }
+
+    state->debugger->cli_buffer[0]  = '\0';
 }
 
 

@@ -66,6 +66,8 @@ get_register_data_gdb (state_t *state)
 
         dest_buff->changed = true;
     }
+
+    state->debugger->cli_buffer[0] = '\0';
 }
 
 

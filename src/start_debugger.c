@@ -13,6 +13,7 @@
 #include "insert_output_marker.h"
 #include "update_window_data/get_binary_path_time.h"
 
+static void configure_debugger (debugger_t*);
 static void start_debugger_proc (state_t*);
 
 
@@ -20,6 +21,8 @@ static void start_debugger_proc (state_t*);
 void
 start_debugger (state_t *state)
 {
+    configure_debugger (state->debugger);
+
     start_debugger_proc (state);
 
     insert_output_end_marker (state);
@@ -27,6 +30,32 @@ start_debugger (state_t *state)
     parse_debugger_output (state);
 
     get_binary_path_time (state);
+}
+
+
+
+static void
+configure_debugger (debugger_t *debugger)
+{
+    debugger->format_buffer[0] = '\0';
+    debugger->format_len = FORMAT_BUF_LEN;
+    debugger->format_pos = 0;
+
+    debugger->data_buffer[0] = '\0';
+    debugger->data_len = DATA_BUF_LEN;
+    debugger->data_pos = 0;
+
+    debugger->cli_buffer[0] = '\0';
+    debugger->cli_len = CLI_BUF_LEN;
+    debugger->cli_pos = 0;
+
+    debugger->program_buffer[0] = '\0';
+    debugger->program_len = PROGRAM_BUF_LEN;
+    debugger->program_pos = 0;
+
+    debugger->async_buffer[0] = '\0';
+    debugger->async_len = ASYNC_BUF_LEN;
+    debugger->async_pos = 0;
 }
 
 

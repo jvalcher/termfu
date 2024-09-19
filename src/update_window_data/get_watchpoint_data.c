@@ -136,6 +136,8 @@ get_watchpoint_data_gdb (state_t *state)
             cp_char (dest_data, '\n');
         }
 
+        state->debugger->cli_buffer[0] = '\0';
+        state->debugger->data_buffer[0] = '\0';
         watch = watch->next;
     }
 }
@@ -203,6 +205,7 @@ get_watchpoint_data_pdb (state_t *state)
 
             cp_char (dest_data, '\n');
 
+            state->debugger->cli_buffer[0] = '\0';
             watch = watch->next;
         }
     }

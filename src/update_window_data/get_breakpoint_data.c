@@ -223,5 +223,6 @@ get_breakpoint_data_pdb (state_t *state)
         cp_char (dest_buff, '\0');
     }
 
+    state->debugger->cli_buffer[0]  = '\0';
     win->buff_data->changed = true;;
 }

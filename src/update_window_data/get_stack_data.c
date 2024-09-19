@@ -110,6 +110,8 @@ get_stack_data_gdb (state_t *state)
     else {
         cp_char (dest_buff, '\0');
     }
+
+    state->debugger->data_buffer[0] = '\0';
 }
 
 

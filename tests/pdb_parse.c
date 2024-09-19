@@ -10,19 +10,12 @@ main (void)
     state_t *state = (state_t*) malloc (sizeof (state_t));
     state->plugins = (plugin_t**) malloc (sizeof (plugin_t*));
     state->debugger = (debugger_t*) malloc (sizeof (debugger_t));
-    reader_t reader;
     FILE *fp;
     int ch, i;
 
-    state->debugger->cli_buffer[0] = '\0';
-    state->debugger->program_buffer[0] = '\0';
-    state->debugger->data_buffer[0] = '\0';
-    state->debugger->async_buffer[0] = '\0';
-
-    reader.cli_buffer_ptr = state->debugger->cli_buffer;
-    reader.program_buffer_ptr = state->debugger->program_buffer;
-    reader.data_buffer_ptr = state->debugger->data_buffer;
-    reader.async_buffer_ptr = state->debugger->async_buffer;
+    state->debugger->index = DEBUGGER_PDB;
+    state->debugger->cli_pos = 0;
+    state->debugger->cli_len = CLI_BUF_LEN;
 
     // open pdb.out
     if ((fp = fopen ("pdb.out", "r")) == NULL) {
@@ -33,12 +26,12 @@ main (void)
     // transfer to reader
     i = 0;
     while ((ch = fgetc (fp)) != EOF) {
-        reader.output_buffer [i++] = ch;
+        state->debugger->reader_buffer [i++] = ch;
     }
-    reader.output_buffer [i] = '\0';
+    state->debugger->reader_buffer [i] = '\0';
 
     // parse output
-    parse_debugger_output_pdb (&reader);
+    parse_debugger_output_pdb (state->debugger);
 
     printf ("\n\nCLI:\n\n'''\n%s\n'''\n\n", state->debugger->cli_buffer);
 

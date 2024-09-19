@@ -1,9 +1,7 @@
 #include "../src/data.h"
 #include "../src/plugins.h"
 #include "../src/start_debugger.h"
-#include "../src/insert_output_marker.h"
 #include "../src/utilities.h"
-#include "../src/parse_debugger_output.h"
 #include "../src/update_window_data/get_debugger_output.h"
 
 

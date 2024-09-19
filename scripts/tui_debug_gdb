@@ -29,5 +29,5 @@ fi
 
 tmux splitw -h -p 50 "gdbserver :12347 ./termfu_dev -c $CONFIG -d $DATA 0"
 tmux selectp -t 0
-gdb --tui --quiet -x misc/.gdb_tui_target
+gdb --tui --quiet -x scripts/.gdb_tui_target
 

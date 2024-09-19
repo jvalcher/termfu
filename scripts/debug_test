@@ -1,0 +1,5 @@
+#!/bin/sh
+
+
+gdb --quiet --tui a.out
+
