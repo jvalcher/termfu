@@ -1,0 +1,23 @@
+#!/usr/bin/python
+
+make_commands = '''
+
+make help          - List make commands
+make               - Build production binary
+make dev           - Build development binary
+make devf          - Build development binary, print formatted error messages
+make configs       - Create all testing, debugging configuration files
+make run_dev_gdb   - Run test gdb session
+make run_dev_pdb   - Run test pdb session
+                                                                                     
+make todo          - Print source code tags in source code (TODO, FIXME, etc.)
+make tui_gdb       - Run Tmux GDB TUI debugging session on GDB session
+make tui_pdb       - Run Tmux GDB TUI debugging session on PDB session
+make target        - Start termfu_dev and target one of the below running gdbservers
+make server_gdb    - Start termfu_dev gdbserver with gdb configuration
+make server_pdb    - Start termfu_dev gdbserver with pdb configuration
+
+'''
+
+print (make_commands)
+

@@ -235,8 +235,9 @@ vim.keymap.set('n', '<leader>b', create_break, {desc = 'Create debugger breakpoi
 <br>
 | Command             | Description |
 | --------            | -------     |
+| `make help`         | List make commands |
 | `make`              | Build production binary |
-| `make dev`	        | Build development binary|
+| `make dev`	        | Build development binary |
 | `make devf`         | Build development binary, print formatted error messages |
 | `make configs`      | Create all sample runs, debugging configuration files|
 | `make run_dev_gdb`  | Run development binary with sample gdb binary |
