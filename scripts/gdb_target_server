@@ -4,7 +4,7 @@
 # Debug termfu_dev with termfu_dev
 # -------
 # Ncurses programs have a problem receiving user input when run in a different terminal via GDB's tty command.
-# This script solves that issue at the expense of having to quit and rerun it in order to restart the program.
+# This script solves that issue at the expense of having to quit and rerun the server in order to restart the program.
 #
 # Usage:
 #
