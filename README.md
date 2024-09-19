@@ -242,10 +242,11 @@ vim.keymap.set('n', '<leader>b', create_break, {desc = 'Create debugger breakpoi
 | `make run_dev_gdb`  | Run development binary with sample gdb binary |
 | `make run_dev_pdb`  | Run development binary with sample pdb script |
 | `make todo`         | Print source code tags  (`TODO`, `FIXME`, etc.) |
-| `make tui_gdb`      | Start tmux GDB TUI debugging session  (see `scripts/gdb_debug`) |
-| `make tui_pdb`      | Start tmux GDB TUI debugging session  (see `scripts/pdb_debug`) |
-|	`make server`       | Start termfu_dev with gdbserver  (see `scripts/gdb_server`) |
-| `make target`       | Start termfu_dev and target the gdbserver started  by `make server` |
+| `make tui_gdb`      | Start tmux GDB TUI debugging session  (see `scripts/tui_debug_gdb`) |
+| `make tui_pdb`      | Start tmux GDB TUI debugging session  (see `scripts/tui_debug_pdb`) |
+| `make target`       | Start termfu_dev and target one of the below running servers  (see `scripts/gdb_target_server`)|
+|	`make server_gdb`   | Start termfu_dev gdbserver with gdb  (see `scripts/gdb_server_termfu_gdb`) |
+|	`make server_gdb`   | Start termfu_dev gdbserver with pdb  (see `scripts/pdb_server_termfu_pdb`) |
 <br>
 
 `./tests/Makefile`
