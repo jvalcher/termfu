@@ -34,24 +34,21 @@ Copy `termfu` to the desired executable directory, e.g. `/usr/bin`.
 
 ## Usage
 
-- Without the `-f` flag, the program must be run in the same directory as a `.termfu` configuration file.
+- The program can be run as follows in the same directory as a `.termfu` configuration file.
 ```
 termfu
 ```
-- Set the configuration file with `-f` and the data persistance file with `-d`.
+- Set the configuration file with `-c`. Breakpoints and watchpoints will be persisted in `.termfu_data` unless specified with the `-d` flag.
 ```
-termfu -f .termfu_01 -d .termfu_01_data
+termfu -c configs/.termfu_01 -d data/.termfu_01_data
 ```
-- Configure the debugger command and layout(s) inside the configuration file.
-- Breakpoints and watchpoints are persisted in `.termfu_data` unless set by the `-d` flag. 
-- Select a window and scroll through the data using arrow or `hjkl` keys.
-- Switch layouts with `(l)ayouts`.
-- Send custom debugger commands with `pro(m)pt`.
+- Configure the debugger command, key bindings, and layouts inside the configuration file  (see below).
+- Window data can be scrolled through using the arrow or `hjkl` keys.
 <br><br>
 
 
 ## Configuration
-Each three-character, case-sensitive plugin code corresponds to a specific action or window. These codes are mapped to keys, which are used as shortcuts and to create custom layouts. 
+Each three-character, case-sensitive plugin code corresponds to a specific header command or window. 
 <br>
 
 ### Plugins
@@ -91,19 +88,23 @@ __Windows__
 <br>
 
 
-### Configuration sections
+### Configuration setup
 
-- Adding parentheses around a character in a `<(t)itle>` changes the character's color.
+Plugin codes are mapped to case-sensitive letter keys, which are used both as shortcuts and to create custom layouts.
+<br>
+
+- Add parentheses around the corresponding shortcut key in a `<(t)itle>` for easy reference. These characters will have a different color than the surrounding letters.
 - Only newline `# comments` are supported, not inline.
+
+### Sections
 
 | Section   | Description |
 | :----:    |  :----: |
 | command | Debugger command |
 | plugins | \<plugin code\> : \<key binding\> : \<title\> |
-| layout  | \[ layout : <title> \] <br>`>h` : header commands,  `>w` : windows |
-<br>
+| layout  | \[ layout : \<label\> \] <br>`>h` : header commands,  `>w` : windows |
 
-### Commands
+### Supported commands
 
 | Debugger | Command |
 | :-----:  | ------  |
@@ -179,9 +180,35 @@ wpT
 <img src='./misc/layout2.png' height='400px'>
 <br>
 
-## Releases
+## Debugging tips
 
-- __v1.0__ - _09-17-2024_ - Initial release providing basic GDB, PDB functionality
+### Easy Vim, Neovim breakpoints
+
+Use these functions to create and copy a breakpoint string (`<file>:<line>`) from the current line to paste into `termfu`'s breakpoints window.
+
+__Vim__
+```vimscript
+  function! CreateBreakpoint()
+      let l:filename   = expand('%:t')
+      let l:linenumber = line('.')
+      let l:breakpoint = l:filename . ':' . l:linenumber
+      let @+           = l:breakpoint
+      echo l:breakpoint
+  endfunction
+  nnoremap <leader>b :call CreateBreakpoint()<CR>
+```
+
+__Neovim__
+```lua
+local function create_break ()
+    local filename = vim.fn.expand('%:t')
+    local linenumber = vim.fn.line('.')
+    local breakpoint = filename .. ':' .. linenumber
+    vim.fn.setreg('+', breakpoint)
+    print(breakpoint)
+end
+vim.keymap.set('n', '<leader>b', create_break, {desc = 'Create debugger breakpoint string'});
+```
 <br>
 
 ## Contributing
@@ -193,11 +220,11 @@ wpT
 - Use existing code conventions.
 
 ### Developer notes
-- Run the `make configs` script to create all needed configuration files in `misc/` for running the included sample binaries or scripts (`make run_dev_gdb`, etc.) and for debugging. Feel free to edit the `scripts/create_configs` script to customize layouts, change the target binary, add plugins, etc. However, do __NOT__ include your customized script in a PR.
-- All watchpoints and breakpoints will be persisted in `_data` files alongside their relevant configuration files in `misc/`.
+- Run the `make configs` script to create all needed configuration files in `scripts/` for running the included sample binaries or scripts (`make run_dev_gdb`, etc.) and for debugging. Feel free to edit the `scripts/create_configs` script to customize layouts, change the target binary, add plugins, etc. However, do __NOT__ include your customized script in a PR.
+- All watchpoints and breakpoints will be persisted in `_data` files alongside their relevant configuration files in `scripts/`.
 - Run `make todo` to print all source file tags, such as `TODO`, `FIX`, etc.
 - The `make debug` script starts a `tmux`-based `GDB` TUI debugging session.
-- The `make server` and `make target` scripts allow `termfu` to debug itself. __Note__: stepping through the program using these scripts is currently slow. There is an `OPTIMIZE` source tag for speeding this up.
+- The `make server` and `make target` scripts allow `termfu` to debug itself. __Note__: stepping through the program using these scripts is currently slow. There is an `OPTIMIZE` source tag to speed this up.
 - The `logd()` function in `src/utilities.h` allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
 - It is recommended to create a shortcut for refreshing your terminal screen, as `ncurses` will make a mess of it when not shut down properly. For example, add `bind r respawn-pane -k` to `~/.tmux.conf` to refresh your `tmux` pane with `Ctrl+b` then `r`.
 
