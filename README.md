@@ -44,6 +44,7 @@ termfu
 termfu -c configs/.termfu_01 -d data/.termfu_01_data
 ```
 - Configure the debugger command, key bindings, titles, and layouts inside the configuration file  _(see below)_.
+- Switch between layouts with your `(l)ayouts` shortcut.
 - Window data can be scrolled through using the arrow or `hjkl` keys.
 <br><br>
 
