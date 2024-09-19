@@ -38,7 +38,7 @@ C_UPDATE_FILES = $(wildcard ./src/update_window_data/*.c)
 C_POPUP_FILES  = $(wildcard ./src/get_popup_window_input/*.c)
 
 # configuration, data files  (see scripts/create_configs)
-CONFIG_BASE    = misc/.termfu
+CONFIG_BASE    = scripts/.termfu
 CONFIG_RUN_GDB = $(CONFIG_BASE)_run_gdb
 CONFIG_RUN_PDB = $(CONFIG_BASE)_run_pdb
 DATA_RUN_GDB   = $(CONFIG_RUN_GDB)_data

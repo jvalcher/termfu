@@ -7,7 +7,7 @@ Create configuration files
 dev - developer termfu session configuration
 dbg - termfu session being debugged configuration
 
-Directory: misc/...
+Directory: scripts/...
 
     File                 Script                 Type
     -------------------------------------------------
@@ -154,7 +154,7 @@ config_server_pdb = cmd_server_pdb + plugins + layout_server_pdb
 # File paths
 #
 
-base_path = 'misc/.termfu_'
+base_path = 'scripts/.termfu_'
 
 path_run_gdb    = base_path + 'run_gdb'
 path_run_pdb    = base_path + 'run_pdb'

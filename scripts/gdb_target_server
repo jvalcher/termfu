@@ -16,7 +16,7 @@
 #     6. Continue from step 3
 #
 
-CONFIG="misc/.termfu_target"
+CONFIG="scripts/.termfu_target"
 DATA="${CONFIG}_data"
 
 ./termfu_dev -c $CONFIG -d $DATA

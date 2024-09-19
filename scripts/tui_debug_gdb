@@ -20,7 +20,7 @@
 #   - In GDB, (q)uit
 #
 
-CONFIG="misc/.termfu_tui_gdb"
+CONFIG="scripts/.termfu_tui_gdb"
 DATA="${CONFIG}_data"
 
 if [ -z $TMUX ]; then
