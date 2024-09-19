@@ -20,7 +20,7 @@
 
 The Makefile uses `ncurses6`.
 ```
-sudo apt-get install libncurses-dev gdb pdb make
+sudo apt-get install libncurses-dev gdb pdb make gcc
 ```
 ### Build
 ```
