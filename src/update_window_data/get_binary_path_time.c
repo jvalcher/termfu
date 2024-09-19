@@ -33,7 +33,6 @@ get_binary_path_time_gdb (state_t *state)
 
     const char *path_str = "Symbols from \"";
 
-    i = 0;
     src_ptr  = state->debugger->cli_buffer;
     dest_ptr = state->debugger->prog_path;
 
@@ -42,6 +41,7 @@ get_binary_path_time_gdb (state_t *state)
     if ((src_ptr = strstr (src_ptr, path_str)) != NULL) {
 
         // path
+        i = 0;
         src_ptr += strlen (path_str);
         while (*src_ptr != '\"' && i < PROGRAM_PATH_LEN - 1) {
             *dest_ptr++ = *src_ptr++;

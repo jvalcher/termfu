@@ -56,9 +56,9 @@ parse_debugger_output (state_t *state)
 
 
 /*
-    Copy character into debugger buffer
+    Copy character into protected buffer
 */
-static void
+void
 cp_dchar (debugger_t *debugger, char ch, int buff_index)
 {
     char *buff;

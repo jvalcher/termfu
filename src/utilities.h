@@ -72,7 +72,9 @@ bool  find_window_string  (WINDOW *nc_window, char *string, int *y, int *x);
 
 
 /*
-    Copy single character to destination buff_data_t->buff (circular)
+    Copy single character to window buffer
+    -----------
+    state->plugins[x]->win->buff_data
 */
 void cp_char (buff_data_t *dest_buff_data, char ch);
 

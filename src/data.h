@@ -197,7 +197,6 @@ typedef struct {
 
 enum { DEBUGGER_GDB, DEBUGGER_PDB };
 enum { READER_RECEIVING, READER_DONE };
-enum { FORMAT_BUF, DATA_BUF, CLI_BUF, PROGRAM_BUF, ASYNC_BUF };
 
 typedef struct {
 

@@ -15,6 +15,8 @@ target_remote_server (state_t *state)
         case DEBUGGER_GDB:
             target_remote_server_gdb (state);
             break;
+        case DEBUGGER_PDB:
+            break;
     }
 }
 
