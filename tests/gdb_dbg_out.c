@@ -32,34 +32,22 @@ main (void)
     putchar ('\n');
 
     win->buff_data->new_data = true;
-    insert_output_start_marker (state);
-    send_command (state, "-break-insert main\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
+    send_command_mp (state, "-break-insert main\n");
     printf ("-break-insert CLI: \n\n%s\n\n", state->debugger->cli_buffer);
     get_debugger_output (state);
     
     win->buff_data->new_data = true;
-    insert_output_start_marker (state);
-    send_command (state, "-exec-run\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
+    send_command_mp (state, "-exec-run\n");
     printf ("-exec-run CLI: \n\n%s\n\n", state->debugger->cli_buffer);
     get_debugger_output (state);
     
     win->buff_data->new_data = true;
-    insert_output_start_marker (state);
-    send_command (state, "-exec-next\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
+    send_command_mp (state, "-exec-next\n");
     printf ("-exec-next CLI: \n\n%s\n\n", state->debugger->cli_buffer);
     get_debugger_output (state);
     
     win->buff_data->new_data = true;
-    insert_output_start_marker (state);
-    send_command (state, "-exec-continue\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
+    send_command_mp (state, "-exec-continue\n");
     printf ("-exec-continue CLI: \n\n%s\n\n", state->debugger->cli_buffer);
     get_debugger_output (state);
 

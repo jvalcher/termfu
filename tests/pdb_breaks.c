@@ -33,8 +33,6 @@ main (void)
     putchar ('\n');
     printf ("No breakpoints: \"%s\"\n\n", win->buff_data->buff);
 
-    // CURRENT: getting (null)
-
     // breakpoints
     insert_output_start_marker (state);
     send_command (state, "break 10\n");

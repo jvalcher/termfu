@@ -3,7 +3,7 @@
 #include "../src/data.h"
 #include "../src/plugins.h"
 #include "../src/start_debugger.h"
-#include "../src/update_window_data/get_binary_path.h"
+#include "../src/update_window_data/get_binary_path_time.h"
 
 
 int
@@ -19,7 +19,7 @@ main (void)
 
     start_debugger (state);
 
-    get_binary_path (state);
+    get_binary_path_time (state);
 
     printf ("\n%s\n", state->debugger->prog_path);
 

@@ -1,7 +1,7 @@
 
 #include "../src/data.h"
 #include "../src/plugins.h"
-#include "../src/get_popup_window_input/popup_watchpoints.h"
+#include "../src/get_popup_window_input/watchpoints.h"
 #include "../src/start_debugger.h"
 #include "../src/insert_output_marker.h"
 #include "../src/parse_debugger_output.h"

@@ -223,8 +223,8 @@ vim.keymap.set('n', '<leader>b', create_break, {desc = 'Create debugger breakpoi
 - Run the `make configs` script to create all needed configuration files in `scripts/` for running the included sample binaries or scripts (`make run_dev_gdb`, etc.) and for debugging. Feel free to edit the `scripts/create_configs` script to customize layouts, change the target binary, add plugins, etc. However, do __NOT__ include your customized script in a PR.
 - All watchpoints and breakpoints will be persisted in `_data` files alongside their relevant configuration files in `scripts/`.
 - Run `make todo` to print all source file tags, such as `TODO`, `FIX`, etc.
-- The `make debug` script starts a `tmux`-based `GDB` TUI debugging session.
-- The `make server` and `make target` scripts allow `termfu` to debug itself. __Note__: stepping through the program using these scripts is currently slow. There is an `OPTIMIZE` source tag to speed this up.
+- The `make tui_` scripts start a `tmux`-based `GDB` TUI debugging session.
+- The `make server` and `make target` scripts allow `termfu` to debug itself. __Note__: stepping through the program using these scripts is currently slow for some reason. There is an `OPTIMIZE` source tag to speed this up.
 - The `logd()` function in `src/utilities.h` allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
 - It is recommended to create a shortcut for refreshing your terminal screen, as `ncurses` will make a mess of it when not shut down properly. For example, add `bind r respawn-pane -k` to `~/.tmux.conf` to refresh your `tmux` pane with `Ctrl+b` then `r`.
 
