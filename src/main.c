@@ -1,8 +1,6 @@
 
 // TODO: re-render layout on terminal screen size change
 // FIX:  `make target`, `make server_` sessions step very slowly through program
-// TODO: Figure out how to get the `-x .gdbtarget` flag to work for `make target` (scripts/gdb_target_server)
-    // Currently have to manually enter target "localhost:12347" when debugging
 
 #include <unistd.h>
 #include <signal.h>
