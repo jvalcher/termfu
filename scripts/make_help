@@ -1,21 +1,27 @@
 #!/usr/bin/python
 
-make_commands = '''
+from colors import *
 
-make help          - List make commands
-make               - Build production binary
-make dev           - Build development binary
-make devf          - Build development binary, print formatted error messages
-make configs       - Create all testing, debugging configuration files
-make run_dev_gdb   - Run test gdb session
-make run_dev_pdb   - Run test pdb session
-                                                                                     
-make todo          - Print source code tags in source code (TODO, FIXME, etc.)
-make tui_gdb       - Run Tmux GDB TUI debugging session on GDB session
-make tui_pdb       - Run Tmux GDB TUI debugging session on PDB session
-make target        - Start termfu_dev and target one of the below running gdbservers
-make server_gdb    - Start termfu_dev gdbserver with gdb configuration
-make server_pdb    - Start termfu_dev gdbserver with pdb configuration
+MC = BOLD_GREEN
+SC = BOLD_YELLOW
+R  = RESET
+
+make_commands = f'''
+
+{MC}make help          {R}- List make commands, description, associated scripts  {SC}(scripts/make_help)
+{MC}make               {R}- Build production binary
+{MC}make dev           {R}- Build development binary
+{MC}make devf          {R}- Build development binary, print formatted error messages  {SC}(scripts/make_format_dev)
+{MC}make configs       {R}- Create all sample run and debugging configuration files  {SC}(scripts/create_configs)
+{MC}make run_dev_gdb   {R}- Run termfu_dev with sample GDB binary
+{MC}make run_dev_pdb   {R}- Run termfu_dev with sample PDB binary
+                       {R}                                                              
+{MC}make todo          {R}- Print source code tags, e.g. TODO, FIXME  {SC}(scripts/todo)
+{MC}make tui_gdb       {R}- Debug termfu_dev running GDB with GDB TUI inside tmux  {SC}(scripts/tui_debug_gdb)
+{MC}make tui_pdb       {R}- Debug termfu_dev running PDB with GDB TUI inside tmux  {SC}(scripts/tui_debug_pdb)
+{MC}make target        {R}- Start termfu_dev to target one of the below running servers  {SC}(scripts/gdb_target_server)
+{MC}make server_gdb    {R}- Start termfu_dev gdbserver running gdb  {SC}(scripts/gdbserver_termfu_gdb)
+{MC}make server_pdb    {R}- Start termfu_dev gdbserver running pdb  {SC}(scripts/gdbserver_termfu_pdb)
 
 '''
 

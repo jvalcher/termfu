@@ -6,7 +6,7 @@
 # Usage:
 #
 #   $ make server
-#   Run `make target` in a different terminal to target this server with termfu
+#   Run `make target` in a different terminal to target this server with termfu_dev
 #
 
 CONFIG="scripts/.termfu_server_gdb"

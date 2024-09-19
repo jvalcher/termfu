@@ -1,9 +1,6 @@
 
 #
-#   -------
-#   make t=test1.c - Build, run test1.c
-#   make debug     - Run debugger on current ./a.out
-#   -------
+# $ make help
 #
 
 
@@ -19,7 +16,10 @@ C_UPDATE_FILES = $(wildcard ../src/update_window_data/*.c)
 C_POPUP_FILES  = $(wildcard ../src/get_popup_window_input/*.c)
 
 
-.PHONY: all debug clean
+.PHONY: help all debug clean
+
+help:
+	@../scripts/make_help_tests
 
 
 all: C_FILES += $(t)

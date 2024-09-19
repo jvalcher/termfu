@@ -35,14 +35,15 @@ Copy `termfu` to the desired executable directory, e.g. `/usr/bin`.
 ## Usage
 
 - The program can be run as follows in the same directory as a `.termfu` configuration file.
-```
+```bash
 termfu
 ```
-- Set the configuration file with `-c`. Breakpoints and watchpoints will be persisted in `.termfu_data` unless specified with the `-d` flag.
-```
+- Set the configuration file path with `-c`.
+- Breakpoints and watchpoints will be persisted in `.termfu_data` unless specified with the `-d` flag.
+```bash
 termfu -c configs/.termfu_01 -d data/.termfu_01_data
 ```
-- Configure the debugger command, key bindings, titles, and layouts inside the configuration file  (see below).
+- Configure the debugger command, key bindings, titles, and layouts inside the configuration file  _(see below)_.
 - Window data can be scrolled through using the arrow or `hjkl` keys.
 <br><br>
 
@@ -56,19 +57,19 @@ Each three-character, case-sensitive plugin code corresponds to a specific heade
 __Header Commands__
 <br>
 
-| Code    | Description |
-| :-----: | ------ |
-| Con     | Continue |
-| Fin     | Finish |
-| Kil     | Kill |
-| Lay     | Choose layout |
-| Nxt     | Next |
-| Prm     | Debugger prompt |
-| Qut     | Quit |
-| Run     | Run program (reload binary if needed) |
-| Stp     | Step |
-| Trg     | Target remote server (e.g. gdbserver) |
-| Unt     | Until |
+| Code    | Description           | GDB                | PDB                |
+| :-----: | ------                | :----:             | :----:             |
+| Con     | Continue              | :heavy_check_mark: | :heavy_check_mark: |
+| Fin     | Finish                | :heavy_check_mark: | :heavy_check_mark: |
+| Kil     | Kill                  | :heavy_check_mark: | :heavy_check_mark: |
+| Lay     | Choose layout         | :heavy_check_mark: | :heavy_check_mark: |
+| Nxt     | Next                  | :heavy_check_mark: | :heavy_check_mark: |
+| Prm     | Debugger prompt       | :heavy_check_mark: | :heavy_check_mark: |
+| Qut     | Quit                  | :heavy_check_mark: | :heavy_check_mark: |
+| Run     | Run, reload program   | :heavy_check_mark: | :heavy_check_mark: |
+| Stp     | Step                  | :heavy_check_mark: | :heavy_check_mark: |
+| Trg     | Target remote server  | :heavy_check_mark: |                    |
+| Unt     | Until                 | :heavy_check_mark: | :heavy_check_mark: |
 <br>
 
 __Windows__
@@ -184,10 +185,10 @@ wpT
 
 ### Easy Vim, Neovim breakpoints
 
-Use these functions to create and copy a breakpoint string (`<file>:<line>`) from the current line to paste into `termfu`'s breakpoints window.
+Use these functions to create and copy a breakpoint string (`<file>:<line>`) from the current line to paste into `termfu`'s breakpoint window.
 
 __Vim__
-```vimscript
+```vim
   function! CreateBreakpoint()
       let l:filename   = expand('%:t')
       let l:linenumber = line('.')
@@ -220,42 +221,13 @@ vim.keymap.set('n', '<leader>b', create_break, {desc = 'Create debugger breakpoi
 - Use existing code conventions.
 
 ### Developer notes
-- Run the `make configs` script to create all needed configuration files in `scripts/` for running the included sample binaries or scripts (`make run_dev_gdb`, etc.) and for debugging. Feel free to edit the `scripts/create_configs` script to customize layouts, change the target binary, add plugins, etc. However, do __NOT__ include your customized script in a PR.
-- All watchpoints and breakpoints will be persisted in `_data` files alongside their relevant configuration files in `scripts/`.
+- Run `make help` to print all commands, descriptions, and associated scripts. Read the script comments for more information and usage.
+- Run `make configs` to create all needed configuration files in `scripts/` for running the included sample binaries or scripts with `make run_dev_` and debugging. Feel free to edit `scripts/create_configs` to customize layouts, change the target binary, and add plugins, but do _not_ include a customized script in a PR. All watchpoints and breakpoints will be persisted in `_data` files alongside their configuration files.
 - Run `make todo` to print all source file tags, such as `TODO`, `FIX`, etc.
 - The `make tui_` scripts start a `tmux`-based `GDB` TUI debugging session.
-- The `make server` and `make target` scripts allow `termfu` to debug itself. __Note__: stepping through the program using these scripts is currently slow for some reason. There is an `OPTIMIZE` source tag to speed this up.
+- The `make server` and `make target` scripts allow `termfu` to debug itself. __Note__: stepping through the program using these scripts is currently slow for some reason. There is a `FIX` tag regarding this.
 - The `logd()` function in `src/utilities.h` allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
 - It is recommended to create a shortcut for refreshing your terminal screen, as `ncurses` will make a mess of it when not shut down properly. For example, add `bind r respawn-pane -k` to `~/.tmux.conf` to refresh your `tmux` pane with `Ctrl+b` then `r`.
-
-
-### Scripts
-
-`./Makefile`
-<br>
-| Command             | Description |
-| --------            | -------     |
-| `make help`         | List make commands |
-| `make`              | Build production binary |
-| `make dev`	        | Build development binary |
-| `make devf`         | Build development binary, print formatted error messages |
-| `make configs`      | Create all sample runs, debugging configuration files|
-| `make run_dev_gdb`  | Run development binary with sample gdb binary |
-| `make run_dev_pdb`  | Run development binary with sample pdb script |
-| `make todo`         | Print source code tags  (`TODO`, `FIXME`, etc.) |
-| `make tui_gdb`      | Start tmux GDB TUI debugging session  (see `scripts/tui_debug_gdb`) |
-| `make tui_pdb`      | Start tmux GDB TUI debugging session  (see `scripts/tui_debug_pdb`) |
-| `make target`       | Start termfu_dev and target one of the below running servers  (see `scripts/gdb_target_server`)|
-|	`make server_gdb`   | Start termfu_dev gdbserver with gdb  (see `scripts/gdb_server_termfu_gdb`) |
-|	`make server_gdb`   | Start termfu_dev gdbserver with pdb  (see `scripts/pdb_server_termfu_pdb`) |
-<br>
-
-`./tests/Makefile`
-<br>
-| Command           | Description |
-| --------          | -------     |
-| `make t=test1.c`  | Build, run `test1.c` |
-| `make debug`      | Debug most recent build |
 
 <br><br>
 

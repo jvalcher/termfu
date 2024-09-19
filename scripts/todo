@@ -1,8 +1,12 @@
 #!/bin/sh
 
-# Output all source code tags recursively from CWD
+#
+# Output all source code tags recursively in CWD
+#
 
 CWD="src/"
+
+echo ""
 
 grep -rn \
 \
@@ -27,4 +31,6 @@ grep -rn \
     -e "s/BUG/\x1b[0;91m&\x1b[0m/g" | \
 \
     awk -F: '{ printf "%-45s %-s\n", $1 ":" $2 ":", substr($0, index($0, "//")) }'
+
+echo ""
 

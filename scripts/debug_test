@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# 
+# Start GDB TUI debug of latest test binary
+# ----------
+# Used by ../tests/Makefile `make debug`
+#
+
 
 gdb --quiet --tui a.out
 

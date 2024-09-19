@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# Run tmux GDB TUI debugging session
+# Run tmux GDB TUI debugging session on termfu_dev debugging with GDB
 # ---------
 # Ncurses programs have a problem receiving user input when run in a different terminal via GDB's tty command.
 # This script solves that issue at the expense of having to quit and rerun it in order to restart the program.
@@ -10,7 +10,7 @@
 #
 #   - Uses the `termfu_dev` build created by `make dev` or `make devf`
 #
-#   $ make debug
+#   $ make tui_gdb
 #
 #   - In GDB, set (b)reakpoint then (c)ontinue execution
 #
@@ -29,5 +29,5 @@ fi
 
 tmux splitw -h -p 50 "gdbserver :12347 ./termfu_dev -c $CONFIG -d $DATA 0"
 tmux selectp -t 0
-gdb --tui --quiet -x scripts/.gdb_tui_target
+gdb --tui --quiet -x scripts/.gdb_target
 

@@ -1,0 +1,18 @@
+#!/usr/bin/python
+
+from colors import *
+
+MC = BOLD_GREEN
+SC = BOLD_YELLOW
+R  = RESET
+
+make_commands = f'''
+
+{MC}make help       {R}- Print commands, descriptions, script files  {SC}(../scripts/make_help_tests)
+{MC}make t=test1.c  {R}- Build, run test1.c
+{MC}make debug      {R}- Run GDB TUI on current ./a.out binary  {SC}(../scripts/debug_test)
+
+'''
+
+print (make_commands)
+

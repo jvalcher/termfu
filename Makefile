@@ -1,21 +1,6 @@
 
 #
-#   -------
-#   make help          - List make commands
-#   make               - Build production binary
-#   make dev           - Build development binary
-#   make devf          - Build development binary, print formatted error messages
-#   make configs       - Create all testing, debugging configuration files
-#   make run_dev_gdb   - Run test gdb session
-#   make run_dev_pdb   - Run test pdb session
-#
-#   make todo          - Print source code tags in source code (TODO, FIXME, etc.)
-#   make tui_gdb       - Run Tmux GDB TUI debugging session on GDB session
-#   make tui_pdb       - Run Tmux GDB TUI debugging session on PDB session
-#   make target        - Start termfu_dev and target one of the below running gdbservers
-#	make server_gdb    - Start termfu_dev gdbserver with gdb configuration
-#	make server_pdb    - Start termfu_dev gdbserver with pdb configuration
-#   -------
+#  $ make help
 #
 
 
@@ -50,8 +35,7 @@ DATA_RUN_PDB   = $(CONFIG_RUN_PDB)_data
 
 
 help:
-	@echo ""
-	./scripts/make_help
+	@./scripts/make_help
 
 all: FLAGS   += $(PROD_FLAGS)
 all: C_FILES += $(C_UPDATE_FILES)
@@ -67,8 +51,7 @@ dev: clean_dev $(B_FILE_DEV)
 
 devf:
 	@echo ""
-	./scripts/make_format_dev
-	@echo ""
+	@./scripts/make_format_dev
 
 devformat: FLAGS   += $(FORMAT_FLAGS)
 devformat: C_FILES += $(C_UPDATE_FILES)
@@ -76,49 +59,31 @@ devformat: C_FILES += $(C_POPUP_FILES)
 devformat: clean_dev $(B_FILE_DEV)
 
 run_dev_gdb:
-	@echo ""
-	(cd misc && ./build_hello) && ./$(B_FILE_DEV) -c $(CONFIG_RUN_GDB) -d $(DATA_RUN_GDB)
-	@echo ""
+	@(cd misc && ./build_hello) && ./$(B_FILE_DEV) -c $(CONFIG_RUN_GDB) -d $(DATA_RUN_GDB)
 
 run_dev_pdb:
-	@echo ""
-	./$(B_FILE_DEV) -c $(CONFIG_RUN_PDB) -d $(DATA_RUN_PDB)
-	@echo ""
+	@./$(B_FILE_DEV) -c $(CONFIG_RUN_PDB) -d $(DATA_RUN_PDB)
 
 tui_gdb:
-	@echo ""
-	./scripts/tui_debug_gdb
-	@echo ""
+	@./scripts/tui_debug_gdb
 
 tui_pdb:
-	@echo ""
-	./scripts/tui_debug_pdb
-	@echo ""
+	@./scripts/tui_debug_pdb
 
 target:
-	@echo ""
-	./scripts/gdb_target_server
-	@echo ""
+	@./scripts/gdb_target_server
 
 server_gdb:
-	@echo ""
-	./scripts/gdbserver_termfu_gdb
-	@echo ""
+	@./scripts/gdbserver_termfu_gdb
 
 server_pdb:
-	@echo ""
-	./scripts/gdbserver_termfu_pdb
-	@echo ""
+	@./scripts/gdbserver_termfu_pdb
 
 configs:
-	@echo ""
-	./scripts/create_configs
-	@echo ""
+	@./scripts/create_configs
 
 todo:
-	@echo ""
-	./scripts/todo
-	@echo ""
+	@./scripts/todo
 
 clean_prod:
 	@echo ""
