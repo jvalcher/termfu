@@ -7,11 +7,9 @@
 #include "update_window_data/_update_window_data.h"
 #include "plugins.h"
 
-#define ESC  27
-
-
 static void close_popup_window_selection (void);
 
+#define ESC  27
 
 WINDOW *curr_screen_layout_sel,
        *parent_popup_win_sel,
