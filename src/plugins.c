@@ -103,12 +103,12 @@ int win_buff_len[] = {
     Wat_BUF_LEN
 };
 
-int win_input_plugins[] = {
+int win_topbar_plugins[] = {
     Brk,
     Src,
     Wat
 };
-char *win_input_titles[] = {
+char *win_topbar_titles[] = {
     "(c)reate  (d)elete  clear (a)ll",
     "",                                     // set dynamically
     "(c)reate  (d)elete  clear (a)ll"
@@ -121,7 +121,7 @@ allocate_plugin_windows (state_t *state)
 {
     int i, j,
         num_win_plugins       = sizeof (win_plugins) / sizeof (win_plugins[0]),
-        num_win_input_plugins = sizeof (win_input_plugins) / sizeof (win_input_plugins[0]),
+        num_win_topbar_plugins = sizeof (win_topbar_plugins) / sizeof (win_topbar_plugins[0]),
         num_win_file_plugins  = sizeof (win_file_plugins) / sizeof (win_file_plugins[0]),
         num_win_buff_plugins  = sizeof (win_buff_plugins) / sizeof (win_buff_plugins[0]);
 
@@ -145,17 +145,17 @@ allocate_plugin_windows (state_t *state)
     }
 
     // topbar subwindow data
-    for (i = 0; i < num_win_input_plugins; i++) {
-        j = win_input_plugins[i];
+    for (i = 0; i < num_win_topbar_plugins; i++) {
+        j = win_topbar_plugins[i];
         win = state->plugins[j]->win;
             //
         win->has_topbar = true;
 
-        win->topbar_title = (char*) malloc (strlen (win_input_titles[i]) + 1);
+        win->topbar_title = (char*) malloc (strlen (win_topbar_titles[i]) + 1);
         if (win->topbar_title == NULL) {
-            pfeme ("Unable to allocate window input title (\"%s\")\n", win_input_titles[i]);
+            pfeme ("Unable to allocate window input title (\"%s\")\n", win_topbar_titles[i]);
         }
-        strcpy (win->topbar_title, win_input_titles[i]);
+        strcpy (win->topbar_title, win_topbar_titles[i]);
     }
 
     // file_data_t
@@ -200,7 +200,7 @@ allocate_plugin_windows (state_t *state)
         win = state->plugins[j]->win;
         state->plugins[j]->win_type = BUFF_TYPE;
 
-        // set initial display position
+        // set display position
         switch (j) {
             case Asm:
                 state->plugins[j]->data_pos = ROW_DATA;
