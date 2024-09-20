@@ -34,9 +34,6 @@ DATA_RUN_PDB   = $(CONFIG_RUN_PDB)_data
 .PHONY: help all dev devf devformat congigs run_dev_gdb run_dev_pdb todo tui_gdb tui_pdb target server_gdb server_pdb clean_prod clean_dev
 
 
-help:
-	@./scripts/make_help
-
 all: FLAGS   += $(PROD_FLAGS)
 all: C_FILES += $(C_UPDATE_FILES)
 all: C_FILES += $(C_POPUP_FILES)
@@ -57,6 +54,9 @@ devformat: FLAGS   += $(FORMAT_FLAGS)
 devformat: C_FILES += $(C_UPDATE_FILES)
 devformat: C_FILES += $(C_POPUP_FILES)
 devformat: clean_dev $(B_FILE_DEV)
+
+help:
+	@./scripts/make_help
 
 run_dev_gdb:
 	@(cd misc && ./build_hello) && ./$(B_FILE_DEV) -c $(CONFIG_RUN_GDB) -d $(DATA_RUN_GDB)
