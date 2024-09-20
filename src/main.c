@@ -1,6 +1,8 @@
 
+//
 // TODO: re-render layout on terminal screen size change
-// FIX:  `make target`, `make server_` sessions step very slowly through program
+// FIX:  `make target`, `make server_` sessions step very slowly through gdbserver target program
+//
 
 #include <unistd.h>
 #include <signal.h>
@@ -30,10 +32,12 @@ main (int   argc,
     int        key;
     state_t    state;
     debugger_t debugger;
-
+        //
     state.debugger = &debugger;
 
     get_cli_arguments (argc, argv, &state);
+
+    set_signals ();
 
     initialize_ncurses ();
 
@@ -42,8 +46,6 @@ main (int   argc,
     start_debugger (&state); 
 
     render_layout (FIRST_LAYOUT, &state);
-
-    set_signals ();
 
     update_initial_window_data (&state);
 
@@ -58,7 +60,7 @@ main (int   argc,
 
     clean_up ();
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 
@@ -66,13 +68,15 @@ main (int   argc,
 /*
     Get CLI flag arguments
     --------
-    -c   Configuration file path  (default: ./.termfu)
-        -->  state->config_path
+    -h  Usage instructions
+
+    -c  Configuration file path
         -   default: CONFIG_FILE
+        -->  state->config_path
 
     -d   Data persistance path for watchpoints, breakpoints
-        -->  state->data_path
         - default: PERSIST_FILE
+        -->  state->data_path
 */
 static void
 get_cli_arguments (int   argc,
@@ -85,15 +89,47 @@ get_cli_arguments (int   argc,
     state->config_path[0] = '\0';
     state->data_path[0] = '\0';
 
-    char *optstring = "c:d:";
+    char *optstring = "c:d:h";
+
     while ((opt = getopt (argc, argv, optstring)) != -1) {
         switch (opt) {
+
             case 'c':
                 strncpy (state->config_path, optarg, CONFIG_PATH_LEN - 1);
                 break;
+
             case 'd':
                 strncpy (state->data_path, optarg, DATA_PATH_LEN - 1);
                 break;
+
+            case 'h':
+                printf (
+
+                "\n"
+                "Usage: \n"
+                "\n"
+                "   $ termfu\n"
+                "\n"
+                "       Run in same directory as a %s configuration file\n"
+                "       Data persisted to ./%s\n"
+                "\n"
+                "   $ termfu [OPTION...]\n"
+                "\n"
+                "       -c CONFIG_FILE    Use this configuration file\n"
+                "       -d PERSIST_FILE   Persist sessions with this file\n"
+                "\n",
+
+                CONFIG_FILE, PERSIST_FILE);
+
+                exit (EXIT_SUCCESS);
+
+            default:
+                fprintf (stderr,
+                        "\n"
+                        "Run with -h flag to see usage instructions.\n"
+                        "\n");
+
+                exit (EXIT_FAILURE);
         }
     }
 }

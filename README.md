@@ -35,14 +35,18 @@ Copy `termfu` to the desired executable directory, e.g. `/usr/bin`.
 ## Usage
 
 - The program can be run as follows in the same directory as a `.termfu` configuration file.
+- Breakpoint and watchpoint data is stored in `.termfu_data`.
 ```bash
 termfu
 ```
-- Set the configuration file path with `-c`.
-- Breakpoints and watchpoints will be persisted in `.termfu_data` unless specified with the `-d` flag.
+
+- `-h` prints usage instructions.
+- `-c` sets the configuration file path.
+- `-d` sets the data file path.
 ```bash
-termfu -c configs/.termfu_01 -d data/.termfu_01_data
+termfu -c .termfu_01 -d .termfu_01_data
 ```
+
 - Configure the debugger command, key bindings, titles, and layouts inside the configuration file  _(see below)_.
 - Switch between layouts with your `(l)ayouts` shortcut.
 - Window data can be scrolled through using the arrow or `hjkl` keys.
