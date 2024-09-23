@@ -159,6 +159,7 @@ get_breakpoint_data_pdb (state_t *state)
     const char  *at_str    = "at ",
                 *break_str = "breakpoint",
                 *hit_str   = "\tbreakpoint already hit",
+                *del_str   = "Deleted breakpoint",
                 *num_str   = "Num ";
 
     win       = state->plugins[Brk]->win;
@@ -169,6 +170,10 @@ get_breakpoint_data_pdb (state_t *state)
     dest_buff->changed = true;
 
     send_command_mp (state, "break\n");
+
+    if (strncmp (src_ptr, del_str, strlen (del_str)) == 0) {
+        goto skip_Brk_parse_pdb;
+    }
 
     if (strstr (src_ptr, break_str) != NULL) {
 
@@ -240,6 +245,7 @@ get_breakpoint_data_pdb (state_t *state)
     } 
 
     else {
+skip_Brk_parse_pdb:
         cp_char (dest_buff, '\0');
     }
 

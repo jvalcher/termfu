@@ -66,6 +66,7 @@ delete_breakpoint (state_t *state)
 
 
 
+// CURRENT: clear all breakpoints not clearing window
 void
 clear_all_breakpoints (state_t *state)
 {
