@@ -57,18 +57,18 @@ plugins = '''
 [ plugins ]
 
 # header commands
-Prm : m : pro(m)pt
 AtP : A : (A)ttach
-Trg : t : (t)arget
-Lay : l : (l)ayouts
-Qut : q : (q)uit
-Run : r : (r)un
-Nxt : n : (n)ext
-Stp : s : (s)tep
 Con : c : (c)ontinue
-Unt : u : (u)ntil
 Fin : f : (f)inish
 Kil : k : (k)ill
+Lay : l : (l)ayouts
+Nxt : n : (n)ext
+Prm : m : pro(m)pt
+Qut : q : (q)uit
+Run : r : (r)un
+Stp : s : (s)tep
+Trg : t : (t)arget
+Unt : u : (u)ntil
 
 # windows
 Asm : a : (a)ssembly
@@ -123,11 +123,10 @@ mlq
 rnscufk
 
 >w
-eo
-To
-wo
-vd
-pd
+eeoooo
+wwoooo
+vvoooo
+TTppdd
 
 '''
 
