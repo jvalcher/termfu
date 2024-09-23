@@ -3,6 +3,8 @@
 #  $ make help
 #
 
+# make
+MAKEFLAGS += --no-print-directory
 
 # binaries
 B_FILE_PROD    = termfu
@@ -31,7 +33,7 @@ DATA_RUN_GDB   = $(CONFIG_RUN_GDB)_data
 DATA_RUN_PDB   = $(CONFIG_RUN_PDB)_data
 
 
-.PHONY: help all dev devf devformat congigs run_dev_gdb run_dev_pdb todo tui_gdb tui_pdb target server_gdb server_pdb clean_prod clean_dev
+.PHONY: help all dev devf devformat congigs run_dev_gdb run_dev_pdb todo tui_gdb tui_pdb connect_proc server_gdb server_pdb clean_prod clean_dev
 
 
 all: FLAGS   += $(PROD_FLAGS)
@@ -48,42 +50,12 @@ dev: clean_dev $(B_FILE_DEV)
 
 devf:
 	@echo ""
-	@./scripts/make_format_dev
+	@./scripts/make_devf
 
 devformat: FLAGS   += $(FORMAT_FLAGS)
 devformat: C_FILES += $(C_UPDATE_FILES)
 devformat: C_FILES += $(C_POPUP_FILES)
 devformat: clean_dev $(B_FILE_DEV)
-
-help:
-	@./scripts/make_help
-
-run_dev_gdb:
-	@(cd misc && ./build_hello) && ./$(B_FILE_DEV) -c $(CONFIG_RUN_GDB) -d $(DATA_RUN_GDB)
-
-run_dev_pdb:
-	@./$(B_FILE_DEV) -c $(CONFIG_RUN_PDB) -d $(DATA_RUN_PDB)
-
-tui_gdb:
-	@./scripts/tui_debug_gdb
-
-tui_pdb:
-	@./scripts/tui_debug_pdb
-
-target:
-	@./scripts/gdb_target_server
-
-server_gdb:
-	@./scripts/gdbserver_termfu_gdb
-
-server_pdb:
-	@./scripts/gdbserver_termfu_pdb
-
-configs:
-	@./scripts/create_configs
-
-todo:
-	@./scripts/todo
 
 clean_prod:
 	@echo ""
@@ -95,7 +67,6 @@ clean_dev:
 	rm -f $(B_FILE_DEV)
 	@echo ""
 
-
 $(B_FILE_PROD):
 	$(CC) $(FLAGS) $(NCURSES_CFLAGS) $(C_FILES) -o $(B_FILE_PROD) $(NCURSES_LIBS)
 	@echo ""
@@ -103,4 +74,42 @@ $(B_FILE_PROD):
 $(B_FILE_DEV):
 	$(CC) $(FLAGS) $(NCURSES_CFLAGS) $(C_FILES) -o $(B_FILE_DEV) $(NCURSES_LIBS)
 	@echo ""
+
+
+
+help:
+	@./scripts/make_help
+
+configs:
+	@./scripts/make_configs
+
+build_gdb:
+	@(cd misc && ./build_hello)
+
+run_gdb:
+	@./$(B_FILE_DEV) -c $(CONFIG_RUN_GDB) -p $(DATA_RUN_GDB)
+
+run_pdb:
+	@./$(B_FILE_DEV) -c $(CONFIG_RUN_PDB) -p $(DATA_RUN_PDB)
+
+
+
+todo:
+	@./scripts/make_todo
+
+plugins:
+	@./scripts/make_plugins
+
+conn_proc_gdbtui:
+	@./scripts/make_conn_proc_gdbtui
+
+conn_proc_termfu:
+	@./scripts/make_conn_proc_termfu
+
+proc_gdb:
+	@./scripts/make_proc_gdb
+
+proc_pdb:
+	@./scripts/make_proc_pdb
+
 

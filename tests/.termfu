@@ -1,0 +1,56 @@
+
+[ command ]
+
+gdb --interpreter=mi a.out
+
+[ plugins ]
+
+# header commands
+Prm : m : pro(m)pt
+Trg : t : (t)arget
+Lay : l : (l)ayouts
+Qut : q : (q)uit
+Run : r : (r)un
+Nxt : n : (n)ext
+Stp : s : (s)tep
+Con : c : (c)ontinue
+Unt : u : (u)ntil
+Fin : f : (f)inish
+Kil : k : (k)ill
+
+# windows
+Asm : a : (a)ssembly
+Brk : e : br(e)akpoints
+Dbg : d : (d)ebug out
+LcV : v : local (v)ars
+Prg : p : (p)rogram out
+Reg : g : re(g)isters
+Src : o : s(o)urce file
+Stk : T : s(T)ack
+Wat : w : (w)atch
+
+
+[ layout : Main ]
+
+>h
+mtlq
+rnscufk
+
+>w
+eeeooooo
+wwwooooo
+vvvooooo
+TTpppddd
+
+[ layout : Assembly / Registers ]
+
+>h
+mtlq
+rnscufk
+
+>w
+oag
+oag
+oag
+wpT
+

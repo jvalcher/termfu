@@ -10,7 +10,9 @@
 #include "data.h"
 #include "parse_debugger_output.h"
 #include "utilities.h"
+#include "plugins.h"
 #include "insert_output_marker.h"
+#include "update_window_data/_update_window_data.h"
 #include "update_window_data/get_binary_path_time.h"
 
 static void configure_debugger (debugger_t*);
@@ -24,10 +26,11 @@ start_debugger (state_t *state)
     configure_debugger (state->debugger);
 
     start_debugger_proc (state);
-
     insert_output_end_marker (state);
-
     parse_debugger_output (state);
+
+    state->plugins[Dbg]->win->buff_data->new_data = true;
+    update_window (Dbg, state);
 
     get_binary_path_time (state);
 }

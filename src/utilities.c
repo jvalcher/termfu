@@ -330,3 +330,4 @@ file_was_updated (time_t file_mtime,
 
     return file_mtime < file_stat.st_mtim.tv_sec;
 }
+

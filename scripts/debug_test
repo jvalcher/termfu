@@ -7,5 +7,5 @@
 #
 
 
-gdb --quiet --tui a.out
+gdb --quiet --tui -x .gdbterm a.out
 

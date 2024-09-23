@@ -1,7 +1,3 @@
-#include <ctype.h>
-
-#include "get_register_data.h"
-#include "_no_buff_data.h"
 #include "../data.h"
 #include "../utilities.h"
 #include "../plugins.h"
@@ -119,8 +115,24 @@ get_stack_data_gdb (state_t *state)
 static void
 get_stack_data_pdb (state_t *state)
 {
-    no_buff_data (Stk, state); 
+    window_t *win;
+    char     *src_ptr;
+    buff_data_t *dest_buff;
 
-    state->plugins[Stk]->win->buff_data->changed = true;
+    win       = state->plugins[Stk]->win;
+    src_ptr   = state->debugger->cli_buffer;
+    dest_buff = win->buff_data;
+
+    send_command_mp (state, "where\n");
+
+    dest_buff->buff_pos = 0;
+
+    while (*src_ptr != '\0') {
+        cp_char (dest_buff, *src_ptr++);
+    }
+
+    dest_buff->changed = true;
+    state->debugger->cli_buffer[0] = '\0';
+    dest_buff->new_data = false;
 }
 

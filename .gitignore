@@ -10,6 +10,4 @@ scripts/.termfu_*
 venv
 __pycache__
 
-.gdbbreaks
 .gdb_history
-.gdbterm

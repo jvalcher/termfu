@@ -1,3 +1,5 @@
+#include <libgen.h>
+
 #include "get_breakpoint_data.h"
 #include "../data.h"
 #include "../utilities.h"
@@ -148,6 +150,8 @@ get_breakpoint_data_pdb (state_t *state)
     int          i;
     window_t    *win;
     char        *src_ptr,
+                 path_buff  [BREAK_LEN*2],
+                *basename_ptr,
                  break_buff [BREAK_LEN],
                  index_buff [INDEX_BUFF_LEN];
     buff_data_t *dest_buff;
@@ -158,7 +162,7 @@ get_breakpoint_data_pdb (state_t *state)
                 *num_str   = "Num ";
 
     win       = state->plugins[Brk]->win;
-    src_ptr   = state->debugger->cli_buffer;
+    src_ptr   = state->debugger->program_buffer;
     dest_buff = win->buff_data;
 
     dest_buff->buff_pos = 0;
@@ -193,10 +197,26 @@ get_breakpoint_data_pdb (state_t *state)
                 cp_char (dest_buff, ')');
                 cp_char (dest_buff, ' ');
 
-                // path:line
+                // path
                 i = 0;
                 src_ptr = strstr (src_ptr, at_str);
                 src_ptr += strlen (at_str);
+                while (*src_ptr != ':') {
+                    path_buff [i++] = *src_ptr++;
+                }
+                path_buff[i] = '\0';
+
+                // path -> basename
+                basename_ptr = basename (path_buff);
+
+                // filename
+                i = 0;
+                while (basename_ptr [i] != '\0') {
+                    break_buff [i] = basename_ptr [i];
+                    cp_char (dest_buff, break_buff [i++]);
+                }
+
+                // :line
                 while (*src_ptr != '\n') {
                     break_buff [i++] = *src_ptr;
                     cp_char (dest_buff, *src_ptr++);
@@ -223,6 +243,6 @@ get_breakpoint_data_pdb (state_t *state)
         cp_char (dest_buff, '\0');
     }
 
-    state->debugger->cli_buffer[0]  = '\0';
+    state->debugger->program_buffer[0]  = '\0';
     win->buff_data->changed = true;;
 }

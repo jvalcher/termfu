@@ -123,8 +123,6 @@ send_debugger_command (int      plugin_index,
         insert_output_end_marker (state);
         parse_debugger_output (state);
 
-        // update Dbg, Prg windows using last parse
-        // update Src next to provide data for remaining windows
         state->plugins[Dbg]->win->buff_data->new_data = true;
         state->plugins[Prg]->win->buff_data->new_data = true;
         update_windows (state, 9, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Stk, Wat);

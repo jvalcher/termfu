@@ -1,4 +1,3 @@
-
 #ifndef INSERT_OUTPUT_MARKER_H
 #define INSERT_OUTPUT_MARKER_H
 

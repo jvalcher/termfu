@@ -1,0 +1,43 @@
+#!/bin/sh
+
+#
+# Debug termfu_dev with GDB TUI
+# ---------
+# - Ncurses programs have a problem receiving user input when run in a different terminal via GDB's tty command.
+# - This script solves that issue at the expense of having to quit and restart sessions.
+# - `sudo` access is required to attach to the debugged process
+# - Tip -- create a terminal screen refresh shortcut for Ncurses errors.
+#
+# Usage: 
+#
+#   - Uses the `termfu_dev` build created by `make dev` or `make devf`
+#
+#   - Start termfu_dev process to be debugged in different terminal
+#       $ make proc_<debugger>
+#       - Creates PID_FILE on launch, pauses execution inside main() -> initial_configure()
+#
+#   - Connect to process with this script
+#       $ make conn_proc_gdbtui
+#       - Set (b)reakpoint after initial_configure() then (c)ontinue execution
+#
+#   - Resume debugged process by pressing any key
+#
+#   - Restart sessions
+#       - Quit debugged process from this script's session or quit debugged process directly
+#       - Rerun `make proc_<debugger>`
+#       - Quit, rerun `make conn_proc_gdbtui` to attach to new debugged process
+#
+
+PID_FILE="/tmp/termfu.pid"
+
+if [ -e $PID_FILE ]; then
+
+    TERMFU_PID=`cat ${PID_FILE}`
+
+    sudo gdb --quiet --tui -p $TERMFU_PID -x .gdbterm
+
+else
+    echo "PID file \"${PID_FILE}\" not found. Start debugged process first."
+fi
+
+

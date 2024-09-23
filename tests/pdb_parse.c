@@ -13,9 +13,10 @@ main (void)
     FILE *fp;
     int ch, i;
 
-    state->debugger->index = DEBUGGER_PDB;
     state->debugger->cli_pos = 0;
     state->debugger->cli_len = CLI_BUF_LEN;
+    state->debugger->program_pos = 0;
+    state->debugger->program_len = PROGRAM_BUF_LEN;
 
     // open pdb.out
     if ((fp = fopen ("pdb.out", "r")) == NULL) {
@@ -30,10 +31,12 @@ main (void)
     }
     state->debugger->reader_buffer [i] = '\0';
 
-    // parse output
+    //printf ("&&&%s&&&", state->debugger->reader_buffer);
+
     parse_debugger_output_pdb (state->debugger);
 
-    printf ("\n\nCLI:\n\n'''\n%s\n'''\n\n", state->debugger->cli_buffer);
+    printf ("\n\nCLI:\n\n&&&%s&&&\n\n", state->debugger->cli_buffer);
+    printf ("\n\nPROGR:\n\n&&&%s&&&\n\n", state->debugger->program_buffer);
 
 
     return 0;

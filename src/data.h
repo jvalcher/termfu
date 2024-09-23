@@ -13,7 +13,15 @@
 #define CONFIG_COMMAND_LABEL  "command"
 #define CONFIG_PLUGINS_LABEL  "plugins"
 #define CONFIG_LAYOUTS_LABEL  "layout"
-#define DEBUG_OUT_FILE        "debug.out"
+
+
+
+/*******
+  Debug
+ *******/
+
+#define DEBUG_OUT_FILE        "debug.out"           // logd()
+#define DEBUG_PID_FILE       "/tmp/termfu.pid"      // make process_
 
 
 
@@ -258,8 +266,9 @@ typedef struct {
  *******/
 
 #define CONFIG_PATH_LEN  128
+#define PID_LEN          8
 #define DATA_PATH_LEN    CONFIG_PATH_LEN
-#define BREAK_LEN        256
+#define BREAK_LEN        128
 #define WATCH_LEN        84
 #define INPUT_BUFF_LEN   4096
 
@@ -286,6 +295,7 @@ typedef struct {
     int           *plugin_key_index;
     char           config_path  [CONFIG_PATH_LEN];
     char           data_path    [DATA_PATH_LEN];
+    char           pid          [PID_LEN];
     char           input_buffer [INPUT_BUFF_LEN];
 
     layout_t      *layouts;

@@ -21,6 +21,7 @@ Plugins
 
     - Pop-up window selection
 
+        AtP     Attach to PID or file
         Lay     Layouts
         Prm     Execute custom debugger command
         Unt     Execute until
@@ -28,11 +29,11 @@ Plugins
     - Non-window
 
         EMP     empty index
-        Qut     Quit
         Con     Continue
         Fin     Finish
         Kil     Kill
         Nxt     Next
+        Qut     Quit
         Run     (Re)run program
         Stp     Step
         Trg     Target remote gdbserver
@@ -56,6 +57,7 @@ char *plugin_codes [] = {
     
     "EMP",
     "Asm",
+    "AtP",
     "Brk",
     "Con",
     "Dbg",
@@ -275,3 +277,25 @@ get_plugin_code_index (char    *code,
 
 
 
+void
+print_plugin_indexes_codes (void)
+{
+    int num_plugins = sizeof (plugin_codes) / sizeof (plugin_codes[0]),
+        spaces, n;
+
+    for (int i = 0; i < num_plugins; i++) {
+
+        n = i;
+        spaces = 4;
+        if (n == 0) {
+            --spaces;
+        } else {
+            while (n != 0) {
+                n /= 10;
+                --spaces;
+            }
+        }
+
+        printf ("\033[0;32m%d\033[0m%*c%s\n", i, spaces, ' ', plugin_codes[i]);
+    }
+}

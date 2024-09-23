@@ -152,11 +152,12 @@ get_watchpoint_data_pdb (state_t *state)
     char *cmd,
          *var_ptr,
          *cli_ptr,
+         *prog_ptr,
           index_buff [24];
     buff_data_t *dest_data;
 
     const char *name_err = "*** NameError",
-               *none     = "none";
+               *none_str = "none\n";
 
     win       = state->plugins[Wat]->win;
     dest_data = win->buff_data;
@@ -194,18 +195,16 @@ get_watchpoint_data_pdb (state_t *state)
             // value
             cli_ptr = state->debugger->cli_buffer;
             if (strstr (cli_ptr, name_err) != NULL) {
-                cli_ptr = (char*) none;
+                prog_ptr = (char*) none_str;
+            } else {
+                prog_ptr = state->debugger->program_buffer;
             }
-            while (*cli_ptr != '\0') {
-                if (*cli_ptr != '\n') {
-                    cp_char (dest_data, *cli_ptr);
-                }
-                ++cli_ptr;
+            while (*prog_ptr != '\0') {
+                cp_char (dest_data, *prog_ptr++);
             }
-
-            cp_char (dest_data, '\n');
 
             state->debugger->cli_buffer[0] = '\0';
+            state->debugger->program_buffer[0] = '\0';
             watch = watch->next;
         }
     }

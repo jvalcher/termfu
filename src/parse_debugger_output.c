@@ -1,3 +1,4 @@
+#include <string.h>
 #include <ctype.h>
 #include <unistd.h>
 
@@ -295,63 +296,164 @@ parse_debugger_output_gdb (debugger_t *debugger)
 
 
 
-// TODO: send pdb program output to state->debugger->program_buffer
-//  - Some debugger output has start markers (e.g. >, ->) but some does not
-//  - Must identify and filter all these individually
-
 /*
-    All pdb output goes into state->debugger->cli_buffer
+    Parse PDB output
+    -------
+
+    ->, >, ***,
+    debug strings  -> cli_buffer
+
+    Abc            -> program buffer
 */
 void
 parse_debugger_output_pdb (debugger_t *debugger)
 {
+    char *break_str    = "Breakpoint 1 at /",
+         *restart_str  = "Restarting /",
+         *return_str   = "--Return--",
+         *call_str     = "--Call--",
+         *where_s_str  = "  /",
+         *where_c_str  = "  <",
+         *finished_str = "The program finished and will be restarted";
+
     char *buff_ptr = debugger->reader_buffer;
 
     while (*buff_ptr != '\0') {
 
-        if (*buff_ptr == '>') {
+        // newline
+        if (*(buff_ptr - 1) == '\n' || buff_ptr == debugger->reader_buffer) {
 
-            //  beginning of command output marker
-            //
-            //      ">START\n"
-            //
-            if (*(buff_ptr + 1) == 'S' && 
-                *(buff_ptr + 2) == 'T' && 
-                *(buff_ptr + 3) == 'A' && 
-                *(buff_ptr + 4) == 'R' && 
-                *(buff_ptr + 5) == 'T') {
-
-                buff_ptr += 7;
-                debugger->reader_state = READER_RECEIVING;
+            // ->
+            if ( *buff_ptr      == '-' &&
+                *(buff_ptr + 1) == '>' &&
+                *(buff_ptr + 2) == ' ')
+            {
+                do {
+                    cp_dchar (debugger, *buff_ptr++, CLI_BUF);
+                } while (*(buff_ptr - 1) != '\n');
             }
 
-            //  end of command output marker
-            //
-            //     ">END\n"
-            //
-            else if (*(buff_ptr + 1) == 'E' && 
-                     *(buff_ptr + 2) == 'N' && 
-                     *(buff_ptr + 3) == 'D') {
+            // >
+            else if (*buff_ptr == '>') {
 
-                debugger->reader_state = READER_DONE;
-                break;
+                // > /path/...
+                if (*(buff_ptr + 1) == ' ' &&
+                    (*(buff_ptr + 2) == '/' || *(buff_ptr + 2) == '<'))
+                do {
+                    cp_dchar (debugger, *buff_ptr++, CLI_BUF);
+                } while (*(buff_ptr - 1) != '\n' && *buff_ptr != '\0');
+
+                // program output
+                else {
+                    do {
+                        cp_dchar (debugger, *buff_ptr++, PROGRAM_BUF);
+                    } while (*(buff_ptr - 1) != '\n' && *buff_ptr != '\0');
+                }
             }
-            
+
+            // *** msg
+            else if ( *buff_ptr      == '*' &&
+                     *(buff_ptr + 1) == '*' &&
+                     *(buff_ptr + 2) == '*')
+            {
+                do {
+                    cp_dchar (debugger, *buff_ptr++, CLI_BUF);
+                } while (*(buff_ptr - 1) != '\n' && *buff_ptr != '\0');
+            }
+
+            // skip prompt
+            else if ( *buff_ptr      == '('  &&
+                     *(buff_ptr + 1) == 'P'  &&
+                     *(buff_ptr + 2) == 'd'  &&
+                     *(buff_ptr + 3) == 'b'  &&
+                     *(buff_ptr + 4) == ')')
+                {
+
+                buff_ptr  += 6;
+
+                if (*buff_ptr == '\'') {
+
+                    // start output
+                    if (*(buff_ptr + 1) == '>' && 
+                        *(buff_ptr + 2) == 'S' && 
+                        *(buff_ptr + 3) == 'T' && 
+                        *(buff_ptr + 4) == 'A' && 
+                        *(buff_ptr + 5) == 'R' && 
+                        *(buff_ptr + 6) == 'T')
+                    {
+                        buff_ptr += 8;
+                        debugger->reader_state = READER_RECEIVING;
+                    }
+
+                    // end output
+                    else if (*(buff_ptr + 1) == '>' && 
+                             *(buff_ptr + 2) == 'E' && 
+                             *(buff_ptr + 3) == 'N' && 
+                             *(buff_ptr + 4) == 'D')
+                    {
+                        debugger->reader_state = READER_DONE;
+                        break;
+                    }
+                }
+            }
+
+            // read() sometimes puts this as first line instead of following (pdb) prompt (see above)
+            else if (*buff_ptr == '\'') {
+
+                // start output
+                if (*(buff_ptr + 1) == '>' && 
+                    *(buff_ptr + 2) == 'S' && 
+                    *(buff_ptr + 3) == 'T' && 
+                    *(buff_ptr + 4) == 'A' && 
+                    *(buff_ptr + 5) == 'R' && 
+                    *(buff_ptr + 6) == 'T')
+                {
+                    buff_ptr += 8;
+                    debugger->reader_state = READER_RECEIVING;
+                }
+
+                // end output
+                else if (*(buff_ptr + 1) == '>' && 
+                         *(buff_ptr + 2) == 'E' && 
+                         *(buff_ptr + 3) == 'N' && 
+                         *(buff_ptr + 4) == 'D')
+                {
+                    debugger->reader_state = READER_DONE;
+                    break;
+                }
+            }
+
+            // misc cli strings
+            else if (strncmp (buff_ptr, break_str, strlen (break_str)) == 0 || 
+                     strncmp (buff_ptr, return_str, strlen (return_str)) == 0 || 
+                     strncmp (buff_ptr, finished_str, strlen (finished_str)) == 0 || 
+                     strncmp (buff_ptr, where_s_str, strlen (where_s_str)) == 0 || 
+                     strncmp (buff_ptr, where_c_str, strlen (where_c_str)) == 0 || 
+                     strncmp (buff_ptr, call_str, strlen (call_str)) == 0 || 
+                     strncmp (buff_ptr, restart_str, strlen (restart_str)) == 0)
+            {
+                do {
+                    cp_dchar (debugger, *buff_ptr++, CLI_BUF);
+                } while (*(buff_ptr - 1) != '\n' && *buff_ptr != '\0');
+            }
+
+            // program output
             else {
-                cp_dchar (debugger, *buff_ptr++, CLI_BUF);
+                do {
+                    cp_dchar (debugger, *buff_ptr++, PROGRAM_BUF);
+                } while (*(buff_ptr - 1) != '\n' && *buff_ptr != '\0');
             }
         }
 
-        // skip prompt
-        else if ( *buff_ptr      == '\n' &&
-                 *(buff_ptr + 1) == '('  &&
-                 *(buff_ptr + 2) == 'P'  &&
-                 *(buff_ptr + 3) == 'd'  &&
-                 *(buff_ptr + 4) == 'b'  &&
-                 *(buff_ptr + 5) == ')')
+        // sometimes "(pdb)" inline
+        else if ( *buff_ptr      == '('  &&
+                 *(buff_ptr + 1) == 'P'  &&
+                 *(buff_ptr + 2) == 'd'  &&
+                 *(buff_ptr + 3) == 'b'  &&
+                 *(buff_ptr + 4) == ')')
         {
-            buff_ptr += 6;
-            *buff_ptr = '\n';
+            buff_ptr    += 6;
+            *buff_ptr++ = '\n';
         }
 
         else {

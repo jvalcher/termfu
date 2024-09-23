@@ -2,11 +2,8 @@
 
 #include "get_local_vars.h"
 #include "../data.h"
-#include "../insert_output_marker.h"
-#include "../parse_debugger_output.h"
 #include "../utilities.h"
 #include "../plugins.h"
-#include "_no_buff_data.h"
 
 
 static void get_local_vars_gdb (state_t *state);
@@ -45,9 +42,9 @@ get_local_vars_gdb (state_t *state)
 
     send_command_mp (state, "-stack-list-locals 1\n");
 
-    if (strstr (src_ptr, "error") == NULL) {
+    dest_buff->buff_pos = 0;
 
-        dest_buff->buff_pos = 0;
+    if (strstr (src_ptr, "error") == NULL) {
 
         // variable
         while ((src_ptr = strstr (src_ptr, key_name)) != NULL) {
@@ -106,10 +103,13 @@ get_local_vars_gdb (state_t *state)
 
             cp_char (dest_buff, '\n');
         }
+    } 
 
-        dest_buff->changed = true;
+    else {
+        cp_char (dest_buff, '\0');
     }
 
+    dest_buff->changed = true;
     state->debugger->data_buffer[0]  = '\0';
 }
 
@@ -118,8 +118,98 @@ get_local_vars_gdb (state_t *state)
 static void
 get_local_vars_pdb (state_t *state)
 {
-    no_buff_data (LcV, state); 
+    int          open_arrs;
+    window_t    *win;
+    char        *src_ptr;
+    buff_data_t *dest_data;
 
-    state->plugins[LcV]->win->buff_data->changed = true;
+    char *name_str = "{'__name__':";
+
+    win       = state->plugins[LcV]->win;
+    src_ptr   = state->debugger->program_buffer;
+    dest_data = win->buff_data;
+
+    send_command_mp (state, "locals()\n");
+
+    dest_data->buff_pos = 0;
+
+    // skip __name__ ... output
+    if (strncmp (src_ptr, name_str, strlen (name_str)) == 0) {
+        goto skip_LcV_parse;
+    }
+
+    // if local variables
+    if (*src_ptr == '{' && *(src_ptr + 1) != '}') {
+
+        // skip '{'
+        ++src_ptr;
+
+        while (*src_ptr != '\0') {
+
+            // locate ':'
+            if (*src_ptr == '\'' && *(src_ptr + 1) == ':') {
+
+                // variable
+                src_ptr -= 1;      // skip second ' in 'var'
+                while (*src_ptr != '\'') {
+                    --src_ptr;
+                }
+                ++src_ptr;      // skip first ' in 'var'
+                while (*src_ptr != '\'') {
+                    cp_char (dest_data, *src_ptr++);
+                }
+
+                cp_char (dest_data, ' ');
+                cp_char (dest_data, '=');
+                cp_char (dest_data, ' ');
+
+                // value
+                open_arrs = 0;
+                src_ptr += 3;  // skip ": "
+                while (*src_ptr != '\0') {
+
+                    if (*src_ptr == '[' || *src_ptr == '{') {
+                        ++open_arrs;
+                    }
+
+                    else if (*src_ptr == ']' || *src_ptr == '}') {
+                        --open_arrs;
+                    }
+
+                    else if ((*src_ptr      ==  ',' &&
+                             *(src_ptr + 1) ==  ' ' &&
+                             *(src_ptr + 2) == '\'')
+                             && 
+                             open_arrs == 0)
+                    {
+                        break;
+                    }
+
+                    cp_char (dest_data, *src_ptr++);
+                }
+
+                cp_char (dest_data, '\n');
+            }
+
+            else {
+                ++src_ptr;
+            }
+        }
+
+        while (dest_data->buff[dest_data->buff_pos] != '}') {
+            --dest_data->buff_pos;
+        }
+        cp_char (dest_data, '\0');
+    }
+
+    // no local variables
+    else {
+skip_LcV_parse:
+        cp_char (dest_data, '\0');
+    }
+
+    dest_data->changed = true;
+    state->debugger->program_buffer[0] = '\0';
+    dest_data->new_data = false;
 }
 

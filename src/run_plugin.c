@@ -4,7 +4,8 @@
 #include "send_debugger_command.h"
 #include "select_window.h"
 #include "choose_layout.h"
-#include "run_custom_command.h"
+#include "get_popup_window_input/attach_to_process.h"
+#include "get_popup_window_input/run_custom_command.h"
 #include "get_popup_window_input/target_remote_server.h"
 #include "get_popup_window_input/execute_until.h"
 
@@ -43,6 +44,9 @@ run_plugin (int      plugin_index,
             break;
 
         // popup window
+        case AtP:
+            attach_to_process (state);
+            break;
         case Lay: 
             choose_layout (state);
             break;

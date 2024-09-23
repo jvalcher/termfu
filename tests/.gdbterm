@@ -1,0 +1,29 @@
+source ./.gdbbreaks
+
+define sd
+    source ./.gdbdisplays
+end
+
+define q
+    save breakpoints ./.gdbbreaks
+    quit
+end
+
+define plist
+    set var $n = $arg0
+    while $n
+        print *($n)
+        set var $n = $n->next
+    end
+end
+
+define print_plugins
+    set $n = state->num_plugins
+    set $i = 0
+    while $n > 0
+        print *state->plugins[$i]
+        set $i = $i + 1
+        set $n = $n - 1
+    end
+end
+    

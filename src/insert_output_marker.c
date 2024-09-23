@@ -1,11 +1,10 @@
-
 #include "insert_output_marker.h"
 #include "data.h"
 #include "utilities.h"
 
 
 /*
-    ">START\n"
+    ">START"
 */
 void 
 insert_output_start_marker (state_t *state)
@@ -18,7 +17,7 @@ insert_output_start_marker (state_t *state)
 
 
 /*
-    ">END\n"
+    ">END"
 */
 void
 insert_output_end_marker (state_t *state)

@@ -1,0 +1,8 @@
+#!/bin/sh
+
+#
+# Print all plugins indexes and codes
+#
+
+( cd tests && make t=print_plugin_indexes.c)
+

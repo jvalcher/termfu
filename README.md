@@ -42,9 +42,9 @@ termfu
 
 - `-h` prints usage instructions.
 - `-c` sets the configuration file path.
-- `-d` sets the data file path.
+- `-p` sets the data persist file path.
 ```bash
-termfu -c .termfu_01 -d .termfu_01_data
+termfu -c .termfu_01 -p .termfu_01_data
 ```
 
 - Configure the debugger command, key bindings, titles, and layouts inside the configuration file  _(see below)_.
@@ -64,6 +64,7 @@ __Header Commands__
 
 | Code    | Description           | GDB                | PDB                |
 | :-----: | ------                | :----:             | :----:             |
+| AtP     | Attach to PID, file   | :heavy_check_mark: |                    |
 | Con     | Continue              | :heavy_check_mark: | :heavy_check_mark: |
 | Fin     | Finish                | :heavy_check_mark: | :heavy_check_mark: |
 | Kil     | Kill                  | :heavy_check_mark: | :heavy_check_mark: |
@@ -85,11 +86,11 @@ __Windows__
 | Asm     | Assembly code    | :heavy_check_mark: |                    |   
 | Brk     | Breakpoints      | :heavy_check_mark: | :heavy_check_mark: |
 | Dbg     | Debugger output  | :heavy_check_mark: | :heavy_check_mark: |
-| LcV     | Local variables  | :heavy_check_mark: |                    |
-| Prg     | Program output   | :heavy_check_mark: |                    |
+| LcV     | Local variables  | :heavy_check_mark: | :heavy_check_mark: |
+| Prg     | Program output   | :heavy_check_mark: | :heavy_check_mark: |
 | Reg     | Registers        | :heavy_check_mark: |                    |
 | Src     | Source file      | :heavy_check_mark: | :heavy_check_mark: |
-| Stk     | Stack            | :heavy_check_mark: |                    |
+| Stk     | Stack            | :heavy_check_mark: | :heavy_check_mark: |
 | Wat     | Watchpoints      | :heavy_check_mark: | :heavy_check_mark: |
 <br>
 
@@ -229,11 +230,11 @@ vim.keymap.set('n', '<leader>b', create_break, {desc = 'Create debugger breakpoi
 
 ### Developer notes
 - Run `make help` to print all commands, descriptions, and associated scripts. Read the script comments for more information and usage.
-- Run `make configs` to create all needed configuration files in `scripts/` for running the included sample binaries or scripts with `make run_dev_` and debugging. Feel free to edit `scripts/create_configs` to customize layouts, change the target binary, and add plugins, but be sure not to include your customized script in a PR. All watchpoints and breakpoints will be persisted in `_data` files alongside their configuration files.
+- Run `make configs` to create all needed configuration files in `scripts/` for running the included sample binaries or scripts with `make run_dev_` and debugging. Feel free to edit `scripts/make_configs` to customize layouts, change the target binary, and add plugins but please do not include your customized script in a PR. All watchpoints and breakpoints will be persisted in `_data` files alongside their configuration files.
 - Run `make todo` to print all source file tags, such as `TODO`, `FIX`, etc.
-- The `make tui_` scripts start a `tmux`-based `GDB` TUI debugging session.
-- The `make server` and `make target` scripts allow `termfu` to debug itself. __Note__: stepping through the program using these scripts is currently slow for some reason. There is a `FIX` tag regarding this.
+- You can debug `termfu` with the `GDB` TUI or with `termfu` itself. The `make proc_<debugger>` scripts start a termfu_dev process to be debugged by the `make conn_proc_<debugger>` scripts.
 - The `logd()` function in `src/utilities.h` allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
+- When adding new plugins or editing existing ones, be sure to check the functions with new or existing tests in `tests/`. Run `make help` in this directory to view available scripts.
 - It is recommended to create a shortcut for refreshing your terminal screen, as `ncurses` will make a mess of it when not shut down properly.
 
 <br><br>

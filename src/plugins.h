@@ -14,6 +14,7 @@
 enum {
     EMP,    
     Asm,
+    AtP,
     Brk,
     Con,
     Dbg,
@@ -59,6 +60,13 @@ int get_plugin_code_index (char*, state_t*);
     Allocate plugin window_t structs et al.
 */
 void allocate_plugin_windows (state_t*);
+
+
+
+/*
+    Print plugin indexes and codes (debugging)
+*/
+void print_plugin_indexes_codes (void);
 
 
 
