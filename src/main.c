@@ -1,7 +1,6 @@
 //
 // TODO: re-render layout on terminal screen size change
 // TODO: replace strcpy, strncpy functions with memcpy
-// TODO: finish adding any needed function return value error propagation
 //
 
 #include <unistd.h>
@@ -106,20 +105,20 @@ initial_configure (int   argc,
                    char *argv[],
                    state_t *state)
 {
-    //
-    // CLI arguments
-    //
     int opt;
     extern char *optarg;
     bool debugging_mode;
     FILE *fp;
 
+    //
+    // CLI arguments
+    //
     state->config_path[0] = '\0';
     state->data_path[0]   = '\0';
     state->pid[0]         = '\0';
     debugging_mode = false;
-    
     char *optstring = "hdc:p:";
+
     while ((opt = getopt (argc, argv, optstring)) != -1) {
         switch (opt) {
 
@@ -192,7 +191,7 @@ initial_configure (int   argc,
             "\n"
             "Connect to this process with debugger\n"
             "\n"
-            "    $ make connect_proc_<debugger>\n"
+            "    $ make conn_proc_<debugger>\n"
             "    - Set breakpoint\n"
             "    - Continue\n"
             "\n"
