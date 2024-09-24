@@ -28,7 +28,6 @@ Plugins
 
     - Non-window
 
-        EMP     empty index
         Con     Continue
         Fin     Finish
         Kil     Kill
@@ -40,6 +39,7 @@ Plugins
 */
 
 #include <string.h>
+#include <errno.h>
 #include <time.h>
 
 #include "plugins.h"
@@ -52,10 +52,11 @@ Plugins
 
 /*
     Plugin codes
+    -------
+    Must be in alphabetical order [A-Z,a-z]
 */
 char *plugin_codes [] = {
     
-    "EMP",
     "Asm",
     "AtP",
     "Brk",
@@ -118,7 +119,7 @@ char *win_topbar_titles[] = {
 
 
 
-void
+int
 allocate_plugin_windows (state_t *state)
 {
     int i, j,
@@ -135,15 +136,16 @@ allocate_plugin_windows (state_t *state)
 
         j = win_plugins[i];
         plugin = state->plugins[j];
-        plugin->win = (window_t*) malloc (sizeof (window_t));
-        win = plugin->win;
-        if (win == NULL) {
-            pfeme ("Window malloc failed for plugin %s (code: %s, index: %d)\n",
+        if ((plugin->win = (window_t*) malloc (sizeof (window_t))) == NULL) {
+            pfem ("malloc error: %s", strerror (errno));
+            pemr ("window_t allocation error (title: \"%s\", code: %s, index: %d)",
                     plugin->title, plugin->code, i);
         }
+        win = plugin->win;
         win->has_topbar = false;
         win->key = j;
-        strcpy (win->code, plugin_codes[j]);
+        strncpy (win->code, plugin_codes[j], CODE_LEN);
+        win->code [CODE_LEN] = '\0';
     }
 
     // topbar subwindow data
@@ -153,9 +155,10 @@ allocate_plugin_windows (state_t *state)
             //
         win->has_topbar = true;
 
-        win->topbar_title = (char*) malloc (strlen (win_topbar_titles[i]) + 1);
-        if (win->topbar_title == NULL) {
-            pfeme ("Unable to allocate window input title (\"%s\")\n", win_topbar_titles[i]);
+        if ((win->topbar_title = (char*) malloc (strlen (win_topbar_titles[i]) + 1)) == NULL) {
+            pfem ("malloc error: %s", strerror (errno));
+            pemr ("win->topbar_title allocation error (code: %s, title: %s)",
+                        win->code, win_topbar_titles[i]);
         }
         strcpy (win->topbar_title, win_topbar_titles[i]);
     }
@@ -177,9 +180,9 @@ allocate_plugin_windows (state_t *state)
         state->plugins[j]->win_type = FILE_TYPE;
         win->has_data_buff = false;
 
-        win->file_data = (file_data_t*) malloc (sizeof (file_data_t));
-        if (win->file_data == NULL) {
-            pfeme ("Unable to allocate file_data_t (%s)\n", win->code);
+        if ((win->file_data = (file_data_t*) malloc (sizeof (file_data_t))) == NULL) {
+            pfem ("malloc error: %s", strerror (errno));
+            pemr ("file_data_t allocation error (code: %s)", win->code);
         }
 
         win->file_data->path_changed = true;
@@ -220,13 +223,13 @@ allocate_plugin_windows (state_t *state)
                 break;
         }
 
-        win->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t));
-        if (win->buff_data == NULL) {
-            pfeme ("Unable to allocate buff_data_t (%s)\n", win->code);
+        if ((win->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t))) == NULL) {
+            pfem ("malloc error: %s", strerror (errno));
+            pemr ("buff_data_t allocation error (code: %s)", win->code);
         }
-        win->buff_data->buff = (char*) malloc (win_buff_len[i]);
-        if (win->buff_data == NULL) {
-            pfeme ("Unable to allocate buff_data_t->buff (%s)\n", win->code);
+        if ((win->buff_data->buff = (char*) malloc (win_buff_len[i])) == NULL ) {
+            pfem ("malloc error: %s", strerror (errno));
+            pemr ("buff_data_t->buff (code: %s) allocation error", win->code);
         }
 
         win->has_data_buff = true;
@@ -237,6 +240,8 @@ allocate_plugin_windows (state_t *state)
         win->buff_data->changed = true;
         win->file_data = NULL;
     }
+
+    return RET_OK;
 }
 
 
@@ -245,7 +250,6 @@ void
 set_num_plugins (state_t *state)
 {
     state->num_plugins = sizeof (plugin_codes) / sizeof (plugin_codes [0]);
-
 }
 
 
@@ -254,7 +258,7 @@ int
 get_plugin_code_index (char    *code,
                        state_t *state)
 {
-    int si = 1,
+    int si = 0,
         mi,
         ei = state->num_plugins - 1, 
         r;
@@ -272,7 +276,23 @@ get_plugin_code_index (char    *code,
             ei = mi - 1;
         }
     }
-    return -1;
+
+    pfemr ("Failed to find index for plugin code \"%s\"", code);
+}
+
+
+
+char*
+get_plugin_code (int plugin_index)
+{
+    int num_plugins = sizeof (plugin_codes) / sizeof (plugin_codes [0]);
+
+    if (plugin_index < num_plugins && plugin_index >= 0) {
+        return plugin_codes [plugin_index];
+    }
+
+    pfem ("Failed to get plugin code for index \"%d\"", plugin_index);
+    return NULL;
 }
 
 

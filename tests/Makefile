@@ -9,7 +9,7 @@ CC             = gcc
 FLAGS          = -g -Wall -Wextra
 
 NCURSES_CFLAGS = $(shell ncurses5-config --cflags)
-NCURSES_LIBS   = $(shell ncurses5-config --libs)
+NCURSES_LIBS   = $(shell ncurses5-config --libs) -lform
 
 C_FILES        = $(filter-out ../src/main.c, $(wildcard ../src/*.c))
 C_UPDATE_FILES = $(wildcard ../src/update_window_data/*.c)

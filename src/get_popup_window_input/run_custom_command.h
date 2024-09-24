@@ -9,7 +9,7 @@
 /*
    Run command in debugger prompt
 */
-void run_custom_command (state_t *state);
+int run_custom_command (state_t *state);
 
 
 

@@ -10,8 +10,8 @@
 #define ESC        27
 #define BUFF_LEN  256
 
-static void  select_window_color    (int plugin_index, state_t *state);
-static void  deselect_window_color  (void);
+static int  select_window_color    (int plugin_index, state_t *state);
+static int  deselect_window_color  (void);
 
 char     *curr_title = NULL;
 window_t *curr_win   = NULL;
@@ -19,7 +19,7 @@ WINDOW   *curr_WIN   = NULL;
 
 
 
-void
+int
 select_window (int      plugin_index,
                state_t *state)
 {
@@ -30,7 +30,10 @@ select_window (int      plugin_index,
 
     type = state->plugins[plugin_index]->win_type;
 
-    select_window_color (plugin_index, state);
+    if (select_window_color (plugin_index, state) == RET_FAIL) {
+        pfem ("Failed to select window color");
+        goto sel_win_err;
+    }
 
     keypad (stdscr, TRUE);
 
@@ -42,22 +45,34 @@ select_window (int      plugin_index,
         switch (key) {
             case 'k':
             case KEY_UP:
-                display_lines (type, KEY_UP, plugin_index, state);
+                if (display_lines (type, KEY_UP, plugin_index, state) == RET_FAIL) {
+                    pfem ("Failed to display lines (KEY_UP)");
+                    goto sel_win_err;
+                }
                 key_not_pressed = false;
                 break;
             case 'j':
             case KEY_DOWN:
-                display_lines (type, KEY_DOWN, plugin_index, state);
+                if (display_lines (type, KEY_DOWN, plugin_index, state) == RET_FAIL) {
+                    pfem ("Failed to display lines (KEY_DOWN)");
+                    goto sel_win_err;
+                }
                 key_not_pressed = false;
                 break;
             case 'l':
             case KEY_RIGHT:
-                display_lines (type, KEY_RIGHT, plugin_index, state);
+                if (display_lines (type, KEY_RIGHT, plugin_index, state) == RET_FAIL) {
+                    pfem ("Failed to display lines (KEY_RIGHT)");
+                    goto sel_win_err;
+                }
                 key_not_pressed = false;
                 break;
             case 'h':
             case KEY_LEFT:
-                display_lines (type, KEY_LEFT, plugin_index, state);
+                if (display_lines (type, KEY_LEFT, plugin_index, state) == RET_FAIL) {
+                    pfem ("Failed to display lines (KEY_LEFT)");
+                    goto sel_win_err;
+                }
                 key_not_pressed = false;
                 break;
             case 'q':
@@ -89,15 +104,24 @@ select_window (int      plugin_index,
                 case Brk:
                     switch (key) {
                         case 'd': 
-                            delete_breakpoint (state);
+                            if (delete_breakpoint (state) == RET_FAIL) {
+                                pfem ("Failed to delete breakpoint");
+                                goto sel_win_err;
+                            }
                             in_loop = false;
                             break;
                         case 'c':
-                            insert_breakpoint (state);
+                            if (insert_breakpoint (state) == RET_FAIL) {
+                                pfem ("Failed to insert breakpoint");
+                                goto sel_win_err;
+                            }
                             in_loop = false;
                             break;
                         case 'a':
-                            clear_all_breakpoints (state);
+                            if (clear_all_breakpoints (state) == RET_FAIL) {
+                                pfem ("Failed to clear all breakpoints");
+                                goto sel_win_err;
+                            }
                             in_loop = false;
                             break;
                     }
@@ -106,15 +130,24 @@ select_window (int      plugin_index,
                 case Wat:
                     switch (key) {
                         case 'd':
-                            delete_watchpoint (state);
+                            if (delete_watchpoint (state) == RET_FAIL) {
+                                pfem ("Failed to delete watchpoint");
+                                goto sel_win_err;
+                            }
                             in_loop = false;
                             break;
                         case 'c':
-                            insert_watchpoint (state);
+                            if (insert_watchpoint (state) == RET_FAIL) {
+                                pfem ("Failed to insert watchpoint");
+                                goto sel_win_err;
+                            }
                             in_loop = false;
                             break;
                         case 'a':
-                            clear_all_watchpoints (state);
+                            if (clear_all_watchpoints (state) == RET_FAIL) {
+                                pfem ("Failed to clear all watchpoints");
+                                goto sel_win_err;
+                            }
                             in_loop = false;
                             break;
                         }
@@ -124,9 +157,19 @@ select_window (int      plugin_index,
         key_not_pressed = true;
     }
 
-    deselect_window_color ();
+    if (deselect_window_color () == RET_FAIL) {
+        pfem ("Failed to deselect window color");
+        goto sel_win_err;
+    }
 
     keypad (stdscr, FALSE);
+
+    return RET_OK;
+
+sel_win_err:
+
+    pemr ("Select window error (index: %d, code: \"%s\")",
+            plugin_index, get_plugin_code (plugin_index));
 }
 
 
@@ -137,7 +180,7 @@ select_window (int      plugin_index,
 /*
     Change Ncurses window title color to indicate focus
 */
-static void
+static int
 select_window_color (int      plugin_index,
                      state_t *state)
 {
@@ -152,7 +195,10 @@ select_window_color (int      plugin_index,
     bool   key_color_toggle,
            string_exists;
 
-    string_exists = find_window_string (curr_win->WIN, curr_title, &y, &x);
+    if ((string_exists = find_window_string (curr_win->WIN, curr_title, &y, &x)) == false) {
+        pfemr ("Failed to find window title \"%s\"", curr_title);
+    }
+
 
     if (string_exists) {
 
@@ -176,11 +222,13 @@ select_window_color (int      plugin_index,
         wattrset (curr_win->WIN, A_NORMAL);
         wrefresh  (curr_win->WIN);
     }
+
+    return RET_OK;
 }
 
 
 
-static void
+static int
 deselect_window_color (void)
 {
 
@@ -189,7 +237,9 @@ deselect_window_color (void)
     bool key_color_toggle,
          string_exists;
 
-    string_exists = find_window_string (curr_win->WIN, curr_title, &y, &x);
+    if ((string_exists = find_window_string (curr_win->WIN, curr_title, &y, &x)) == false) {
+        pfemr ("Failed to find window title \"%s\"", curr_title);
+    }
 
     if (string_exists) {
 
@@ -216,5 +266,7 @@ deselect_window_color (void)
 
     curr_win = NULL;
     curr_title = NULL;
+
+    return RET_OK;
 }
 

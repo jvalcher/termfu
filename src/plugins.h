@@ -7,12 +7,11 @@
 
 
 /*
-   Plugin index identifiers
+   Plugin indexes
    --------
-   - In alphabetical order
+   - Order matches respective code strings in *plugin_codes[]  (i.e. alphabetical)
 */
 enum {
-    EMP,    
     Asm,
     AtP,
     Brk,
@@ -39,9 +38,7 @@ enum {
 
 
 /*
-    Calculate and set number of plugins
-    ---------
-    Used in parse_config_file()
+    Set number of plugins in state->num_plugins
 */
 void set_num_plugins  (state_t*);
 
@@ -50,21 +47,34 @@ void set_num_plugins  (state_t*);
 /*
     Return plugin code index matching its enum above
     ------
-    Used in parse_config_file()
+    Returns index or RET_FAIL
 */
-int get_plugin_code_index (char*, state_t*);
+int get_plugin_code_index (char *code, state_t *state);
+
+
+
+/*
+    Get plugin code from index
+    -------
+    Returns pointer to code or NULL
+*/
+char* get_plugin_code (int plugin_index);
 
 
 
 /*
     Allocate plugin window_t structs et al.
+    ----------
+    Returns RET_OK, RET_FAIL
 */
-void allocate_plugin_windows (state_t*);
+int allocate_plugin_windows (state_t*);
 
 
 
 /*
-    Print plugin indexes and codes (debugging)
+    Print plugin indexes and codes  (debugging)
+    ---------
+    Run with `make plugins`
 */
 void print_plugin_indexes_codes (void);
 

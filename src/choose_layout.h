@@ -8,7 +8,7 @@
 /*
     Choose different layout from CONFIG_FILE
 */
-void  choose_layout  (state_t *state);
+int choose_layout (state_t *state);
 
 
 

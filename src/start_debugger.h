@@ -9,7 +9,7 @@
 /*
     Configure, start debugger process
 */
-void start_debugger (state_t*);
+int start_debugger (state_t*);
 
 
 

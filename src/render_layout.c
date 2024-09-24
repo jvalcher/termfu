@@ -6,70 +6,93 @@
 #include <locale.h>
 #include <stdbool.h>
 #include <ncurses.h>
+#include <errno.h>
 
 #include "render_layout.h"
 #include "data.h"
+#include "plugins.h"
 #include "utilities.h"
 
-static void      free_nc_window_data   (state_t*);
+static int       free_nc_window_data   (state_t*);
 static layout_t *get_label_layout      (char*, layout_t*);
-static void      calculate_layout      (layout_t*, state_t*);
-static void      render_header         (layout_t*, state_t*);
-static void      render_windows        (state_t*);
-static void      render_header_titles  (layout_t*, state_t*);
-static void      render_window         (window_t*);
-static void      render_window_titles  (state_t*);
-static void      fix_corners           (state_t*);
-static int       fix_corner_char       (int, int);
+static int       calculate_layout      (layout_t*, state_t*);
+static int       render_header         (layout_t*, state_t*);
+static int       render_windows        (state_t*);
 
-bool  first_window_t_allocation = true;
 int   scr_rows;
 int   scr_cols;
 int   header_offset;
 
 
 
-void
+int
 render_layout (char     *label,
                state_t  *state)
 {
     if (state->curr_layout != NULL) {
-        free_nc_window_data (state);
+        if (free_nc_window_data (state) == RET_FAIL) {
+            pfemr ("Failed to free Ncurses window data for layout \"%s\"",
+                        state->curr_layout->label);
+        }
     }
 
-    state->curr_layout = get_label_layout (label, state->layouts);
+    if ((state->curr_layout = get_label_layout (label, state->layouts)) == NULL) {
+        pfemr ("Failed to find layout");
+    }
 
-    calculate_layout (state->curr_layout, state);
+    if (calculate_layout (state->curr_layout, state) == RET_FAIL) {
+        pfemr ("Failed to calculate layout \"%s\"", state->curr_layout->label);
+    }
 
-    render_header (state->curr_layout, state);
+    if (render_header (state->curr_layout, state) == RET_FAIL) {
+        pfemr ("Failed to render header for layout \"%s\"", state->curr_layout->label);
+    }
 
-    render_windows (state);
+    if (render_windows (state) == RET_FAIL) {
+        pfemr ("Failed to render windows for layout \"%s\"", state->curr_layout->label);
+    }
+
+    return RET_OK;
 }
 
 
 
-static void
+/*
+    Free ncurses WINDOWs in current layout from state->plugins[i]->win
+*/
+static int
 free_nc_window_data (state_t *state)
 {
     for (int i = 0; i < state->num_plugins; i++) {
 
         if (state->plugins[i]->has_window) {
 
-            // Ncurses WINDOWs
-            if (state->plugins[i]->win->IWIN) {
-                delwin (state->plugins[i]->win->IWIN);
+            if (state->plugins[i]->win->TWIN != NULL) {
+                if (delwin (state->plugins[i]->win->TWIN) == ERR) {
+                    pfemr ("Unable to delete TWIN (index: %d, code: %s)", 
+                                i, get_plugin_code (i));
+                }
             }
-            if (state->plugins[i]->win->DWIN) {
-                delwin (state->plugins[i]->win->DWIN);
-            }
-            if (state->plugins[i]->win->WIN) {
-                delwin (state->plugins[i]->win->WIN);
-            }
-            refresh ();
 
-            state->plugins[i]->has_window = false;
+            if (state->plugins[i]->win->DWIN != NULL) {
+                if (delwin (state->plugins[i]->win->DWIN) == ERR) {
+                    pfemr ("Unable to delete DWIN (index: %d, code: %s)", 
+                                i, get_plugin_code (i));
+                }
+            }
+
+            if (state->plugins[i]->win->WIN != NULL) {
+                if (delwin (state->plugins[i]->win->WIN) == ERR) {
+                    pfemr ("Unable to delete WIN (index: %d, code: %s)", 
+                                i, get_plugin_code (i));
+                }
+            }
+
+            refresh ();
         }
     }
+
+    return RET_OK;
 }
 
 
@@ -79,7 +102,7 @@ free_nc_window_data (state_t *state)
 */
 static layout_t*
 get_label_layout (char     *label,
-                   layout_t *layouts)
+                  layout_t *layouts)
 {
     do {
         if (strcmp (label, FIRST_LAYOUT)   == 0 || 
@@ -89,7 +112,8 @@ get_label_layout (char     *label,
         layouts = layouts->next;
     } while (layouts != NULL);
 
-    pfeme ("Layout \"%s\" not found\n", label);
+    pfem ("Layout \"%s\" not found\n", label);
+    return NULL;
 }
 
 
@@ -100,7 +124,7 @@ get_label_layout (char     *label,
     - Calculate position, dimensions in window_t
     - Allocate window_t structs if needed
 */
-static void
+static int
 calculate_layout (layout_t *layout,
                   state_t *state)
 {
@@ -117,19 +141,23 @@ calculate_layout (layout_t *layout,
                segm_row_rem,
                segm_col_rem,
                col_rem,
-               segm_rows        [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0},
-               segm_cols        [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0},
-               segm_ys          [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0},
-               segm_xs          [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0},
-               used_segm_matrix [MAX_ROW_SEGMENTS][MAX_COL_SEGMENTS] = {0},
+               segm_rows        [LAYOUT_ROW_SEGMENTS][LAYOUT_COL_SEGMENTS] = {0},
+               segm_cols        [LAYOUT_ROW_SEGMENTS][LAYOUT_COL_SEGMENTS] = {0},
+               segm_ys          [LAYOUT_ROW_SEGMENTS][LAYOUT_COL_SEGMENTS] = {0},
+               segm_xs          [LAYOUT_ROW_SEGMENTS][LAYOUT_COL_SEGMENTS] = {0},
+               used_segm_matrix [LAYOUT_ROW_SEGMENTS][LAYOUT_COL_SEGMENTS] = {0},
                plugin_index;
     char       key,
              **layout_matrix;
     window_t  *curr_window = NULL;
 
     // Calculate cols, rows in window area below header
-    scr_rows = getmaxy (stdscr);
-    scr_cols = getmaxx (stdscr);
+    if ((scr_rows = getmaxy (stdscr)) == ERR) {
+        pfemr ("Unable to get number of screen rows");
+    }
+    if ((scr_cols = getmaxx (stdscr)) == ERR) {
+        pfemr ("Unable to get number of screen columns");
+    }
     header_offset = layout->num_hdr_key_rows + 1;
     win_cols = scr_cols;
     win_rows = scr_rows - header_offset;
@@ -204,14 +232,14 @@ calculate_layout (layout_t *layout,
         }
     }
 
-    layout_matrix = (char**) layout->win_matrix;
-
-    // clear window statuses
+    // clear has_window statuses
     for (i = 0; i < state->num_plugins; i++) {
         if (state->plugins[i]->win != NULL) {
             state->plugins[i]->has_window = false;
         }
     }
+
+    layout_matrix = (char**) layout->win_matrix;
 
     // Set window_t structs data
     for (y = 0; y < row_ratio; y++) {
@@ -228,10 +256,10 @@ calculate_layout (layout_t *layout,
 
                 curr_window = state->plugins[plugin_index]->win;
                 if (curr_window == NULL) {
-                    pfeme ("No window allocated for plugin %s (code: %s, index: %d)\n",
+                    pfemr ("No window allocated for plugin \"%s\" (index: %d, code: %s)\n",
                             state->plugins[plugin_index]->title,
-                            state->plugins[plugin_index]->code,
-                            plugin_index);
+                            plugin_index,
+                            state->plugins[plugin_index]->code);
                 }
 
                 // Calculate rows, cols
@@ -293,68 +321,8 @@ calculate_layout (layout_t *layout,
             }
         }
     }
-}
 
-
-
-/*
-    Render header WINDOW
-    ---------
-
-        <program name> : <current layout>           <header titles>
-*/
-static void
-render_header (layout_t *layout, 
-               state_t *state)
-{
-    WINDOW *header;
-
-    state->header = newwin (header_offset, COLS, 0, 0);
-    if (state->header == NULL) {
-        pfeme ("Unable to create header window for layout \"%s\"\n", layout->label);
-    }
-    header = state->header;
-    int title_len  = strlen (PROGRAM_NAME);
-
-    // program name
-    wattron (header, COLOR_PAIR(MAIN_TITLE_COLOR) | A_BOLD);
-    mvwprintw (header, 1, 2, "%s", PROGRAM_NAME);
-    wattrset (header, A_NORMAL);
-
-    // colon
-    wattron (header, COLOR_PAIR(WHITE_BLACK));
-    mvwprintw (header, 1, title_len + 3, "%s", ":");
-
-    // current layout
-    wattron (header, COLOR_PAIR(LAYOUT_TITLE_COLOR));
-    mvwprintw (header, 1, title_len + 4, "%s", layout->label);
-    attrset (A_NORMAL);
-
-    refresh ();
-    wrefresh (header);
-
-    render_header_titles (layout, state);
-}
-
-
-
-/*
-    Render Ncurses WINDOWs
-*/
-static void 
-render_windows (state_t *state)
-{
-    int i;
-
-    for (i = 0; i < state->num_plugins; i++) {
-        if (state->plugins[i]->has_window) {
-            render_window (state->plugins[i]->win);
-        } 
-    }
-
-    fix_corners (state);
-
-    render_window_titles (state);
+    return RET_OK;
 }
 
 
@@ -364,11 +332,11 @@ render_windows (state_t *state)
     -------
     - Used by render_header()
 */
-static void
+static int
 render_header_titles (layout_t *layout,
                       state_t *state)
 {
-    int       row, key, 
+    int       row, ch, 
               header_title_indent,
               title_str_len,
               title_str_ch_left;
@@ -381,18 +349,21 @@ render_header_titles (layout_t *layout,
     header_title_indent = 0;
     title_str_len       = scr_cols - (strlen (PROGRAM_NAME) + 4);
     title_str_ch_left   = title_str_len;
-    titles_str          = (char*) malloc (sizeof (char) * title_str_len);
     header              = state->header;
 
-    memset (titles_str, '\0', title_str_len);
+    if ((titles_str = (char*) malloc (sizeof (char) * title_str_len)) == NULL) {
+        pfem ("malloc: %s", strerror (errno));
+        pemr ("Failed to allocate header title (len: %d)", title_str_len);
+    }
+
     titles_str [0]      = ' ';
 
     for (size_t j = 0; j < strlen (layout->hdr_key_str); j++) {
 
-        key = layout->hdr_key_str [j];
+        ch = layout->hdr_key_str [j];
         
         // render row of plugin titles
-        if (key == '\n') {
+        if (ch == '\n') {
 
             header_title_indent = scr_cols - strlen (titles_str) - 2;
 
@@ -422,12 +393,15 @@ render_header_titles (layout_t *layout,
 
 
         // append title to titles_str
-        curr_title         = state->plugins[state->plugin_key_index [key]]->title;
+        curr_title         = state->plugins[state->plugin_key_index [ch]]->title;
         title_str_ch_left -= strlen (curr_title) + 2;
-            //
+
         if (title_str_ch_left < 1) {
-            pfeme ("To many header titles in row %d\n", row + 1);
-        } else {
+            pfem ("To many header titles in row %d\n", row + 1);
+            pemr ("curr_title: %s", curr_title);
+        } 
+
+        else {
             strcat (titles_str, curr_title);
             strcat (titles_str, "  ");
         }
@@ -435,14 +409,64 @@ render_header_titles (layout_t *layout,
 
     wrefresh (header);
     free (titles_str);
+
+    return RET_OK;
+}
+
+
+
+/*
+    Render header WINDOW
+    ---------
+
+        <program name> : <current layout>           <header titles>
+*/
+static int
+render_header (layout_t *layout, 
+               state_t  *state)
+{
+    WINDOW *header;
+
+    if ((state->header = newwin (header_offset, COLS, 0, 0)) == NULL) {
+        pfemr ("Failed to create header window (header_offset: %d, COLS: %d)",
+                header_offset, COLS);
+    }
+    header = state->header;
+    int title_len  = strlen (PROGRAM_NAME);
+
+    // program name
+    wattron (header, COLOR_PAIR(MAIN_TITLE_COLOR) | A_BOLD);
+    mvwprintw (header, 1, 2, "%s", PROGRAM_NAME);
+    wattrset (header, A_NORMAL);
+
+    // colon
+    wattron (header, COLOR_PAIR(WHITE_BLACK));
+    mvwprintw (header, 1, title_len + 3, "%s", ":");
+
+    // current layout
+    wattron (header, COLOR_PAIR(LAYOUT_TITLE_COLOR));
+    mvwprintw (header, 1, title_len + 4, "%s", layout->label);
+    attrset (A_NORMAL);
+
+    refresh ();
+    wrefresh (header);
+
+    // header titles
+    if (render_header_titles (layout, state) == RET_FAIL) {
+        pfemr ("Failed to render header titles");
+    }
+
+    return RET_OK;
 }
 
 
 
 /*
     Create Ncurses window
+    -------
+    Used by render_windows()
 */
-static void
+static int
 render_window (window_t *win)
 {
     int left_spaces, right_spaces;
@@ -453,7 +477,7 @@ render_window (window_t *win)
                        win->y + header_offset, 
                        win->x);
     if (win == NULL) {
-        pfeme ("Unable to create window \"%s\" (rows: %d, cols: %d, y: %d, x: %d)\n",
+        pfemr ("Unable to create window \"%s\" (rows: %d, cols: %d, y: %d, x: %d)\n",
                     win->code, win->rows, win->cols, win->y, win->x);
     }
     wattron  (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
@@ -474,13 +498,13 @@ render_window (window_t *win)
         win->topbar_y = 1;
         win->topbar_x = 1;
 
-        win->IWIN = derwin (win->WIN,
+        win->TWIN = derwin (win->WIN,
                             win->topbar_rows,
                             win->topbar_cols,
                             win->topbar_y,
                             win->topbar_x);
-        if (win->IWIN == NULL) {
-            pfeme  ("Unable to create topbar subwindow for \"%s\" (rows: %d, cols: %d, y: %d, x: %d)\n",
+        if (win->TWIN == NULL) {
+            pfemr  ("Unable to create topbar subwindow for \"%s\" (rows: %d, cols: %d, y: %d, x: %d)\n",
                             win->code,
                             win->topbar_rows,
                             win->topbar_cols,
@@ -493,12 +517,12 @@ render_window (window_t *win)
         left_spaces = left_spaces > 0 ? left_spaces : 0;
         right_spaces = right_spaces > 0 ? left_spaces : 0;
 
-        wattron   (win->IWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
-        mvwprintw (win->IWIN, 0, 0, "%*c%.*s%*c", left_spaces, ' ',
+        wattron   (win->TWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
+        mvwprintw (win->TWIN, 0, 0, "%*c%.*s%*c", left_spaces, ' ',
                                                   win->topbar_cols, win->topbar_title,
                                                   right_spaces, ' ');
-        wattroff  (win->IWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
-        wrefresh  (win->IWIN);
+        wattroff  (win->TWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
+        wrefresh  (win->TWIN);
     }
 
     // data subwindow
@@ -513,7 +537,7 @@ render_window (window_t *win)
                         win->data_win_y,
                         win->data_win_x);
     if (win->DWIN == NULL) {
-        pfeme  ("Unable to create data subwindow for \"%s\" (rows: %d, cols: %d, y: %d, x: %d)\n",
+        pfemr  ("Unable to create data subwindow for \"%s\" (rows: %d, cols: %d, y: %d, x: %d)\n",
                         win->code,
                         win->data_win_rows,
                         win->data_win_cols,
@@ -522,69 +546,8 @@ render_window (window_t *win)
     }
 
     wrefresh (win->DWIN);
-}
 
-
-
-/*
-    Fix broken border corners caused by overlapping in calculate_layout()
-   
-          │       │
-         ─┐ -->  ─┤
-          │       │
-*/
-static void
-fix_corners (state_t *state)
-{
-    int       i, y, x,
-              rows, cols,
-              tl, tr, bl, br,
-              of = header_offset;
-    window_t  *win;
-
-    for (i = 0; i < state->num_plugins; i++) {
-
-        if (state->plugins[i]->has_window) {
-            win = state->plugins[i]->win;
-        } else {
-            continue;
-        }
-
-        y    = win->y;
-        x    = win->x;
-        rows = win->rows;
-        cols = win->cols;
-        tl   = 0;     // top left
-        tr   = 0;     // top right
-        bl   = 0;     // bottom left
-        br   = 0;     // bottom right
-
-        tl = fix_corner_char (y + of, x);
-        tr = fix_corner_char (y + of, x + (cols - 1));
-        bl = fix_corner_char (y + (rows - 1) + of, x);
-        br = fix_corner_char (y + (rows - 1) + of, x + (cols - 1));
-
-        // set corners
-        //
-        //      wborder (win, ls, rs, ts, bs, tl, tr, bl, br)
-        //
-        wattron  (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
-        wborder  (win->WIN, 0, 0, 0, 0, tl, tr, bl, br);
-        wattroff (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
-
-        refresh  ();
-        wrefresh (win->WIN);
-
-        // store corners
-        win->border [0] = 0;
-        win->border [1] = 0;
-        win->border [2] = 0;
-        win->border [3] = 0;
-        win->border [4] = tl;
-        win->border [5] = tr;
-        win->border [6] = bl;
-        win->border [7] = br;
-    }
+    return RET_OK;
 }
 
 
@@ -602,9 +565,10 @@ static int
 fix_corner_char (int y, 
                  int x)
 {
-    int i;
-    unsigned int uch;
-    int ch;
+    int ch,
+        borders [4] = {0},
+        horiz_line,
+        vert_line;
 
     // get border character
     //
@@ -615,21 +579,6 @@ fix_corner_char (int y,
     //
     ch = mvwinch (curscr, y, x) & A_CHARTEXT;
 
-    // if border character already corrected, return it as is
-    uch = 0;
-    int corrected_chars [] = {
-        ACS_LTEE,
-        ACS_RTEE,
-        ACS_BTEE,
-        ACS_TTEE,
-        ACS_PLUS
-    };
-    for (i = 0; i < 5; i++) {
-        if (uch == (corrected_chars [i] & A_CHARTEXT)) {
-            return corrected_chars [i];
-        }
-    }
-
     // check for surrounding border characters
     //
     //      t           │         borders[]
@@ -637,9 +586,8 @@ fix_corner_char (int y,
     //      b                      t, r, b, l   
     //                            {1, 0, 0, 1}
     //
-    int borders [4] = {0};
-    int horiz_line  = ACS_HLINE & A_CHARTEXT;
-    int vert_line   = ACS_VLINE & A_CHARTEXT;
+    horiz_line  = ACS_HLINE & A_CHARTEXT;
+    vert_line   = ACS_VLINE & A_CHARTEXT;
 
         // top
     if (y > header_offset) {
@@ -698,9 +646,76 @@ fix_corner_char (int y,
 
 
 /*
+    Fix broken border corners caused by overlapping in calculate_layout()
+   
+          │       │
+         ─┐ -->  ─┤
+          │       │
+*/
+static int
+fix_corners (state_t *state)
+{
+    int       i, y, x,
+              rows, cols,
+              tl, tr, bl, br,
+              of = header_offset;
+    window_t  *win;
+
+    for (i = 0; i < state->num_plugins; i++) {
+
+        if (state->plugins[i]->has_window) {
+            if ((win = state->plugins[i]->win) == NULL) {
+                pfemr ("Unable to fix corners for window \"%s\"", state->plugins[i]->code);
+            }
+        } else {
+            continue;
+        }
+
+        y    = win->y;
+        x    = win->x;
+        rows = win->rows;
+        cols = win->cols;
+        tl   = 0;     // top left
+        tr   = 0;     // top right
+        bl   = 0;     // bottom left
+        br   = 0;     // bottom right
+
+        tl = fix_corner_char (y + of, x);
+        tr = fix_corner_char (y + of, x + (cols - 1));
+        bl = fix_corner_char (y + (rows - 1) + of, x);
+        br = fix_corner_char (y + (rows - 1) + of, x + (cols - 1));
+
+        // set corners
+        //
+        //      wborder (win, ls, rs, ts, bs, tl, tr, bl, br)
+        //
+        wattron  (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
+        wborder  (win->WIN, 0, 0, 0, 0, tl, tr, bl, br);
+        wattroff (win->WIN, COLOR_PAIR(BORDER_COLOR) | A_BOLD);
+
+        refresh  ();
+        wrefresh (win->WIN);
+
+        // store corners
+        win->border [0] = 0;
+        win->border [1] = 0;
+        win->border [2] = 0;
+        win->border [3] = 0;
+        win->border [4] = tl;
+        win->border [5] = tr;
+        win->border [6] = bl;
+        win->border [7] = br;
+    }
+
+    return RET_OK;
+}
+
+
+
+/*
     Render window titles
 */
-static void 
+static int
 render_window_titles (state_t *state)
 {
     int       i,
@@ -714,11 +729,18 @@ render_window_titles (state_t *state)
 
         if (state->plugins[i]->has_window) {
             Win = state->plugins[i]->win->WIN;
+            if (Win == NULL) {
+                pfemr ("Window not allocated for \"%s\" (key: %c, code: %s)",
+                            state->plugins[i]->title,
+                            state->plugins[i]->key,
+                            state->plugins[i]->code);
+            }
         } else {
             continue;
         }
 
         title = state->plugins[i]->title;
+
         key_color_toggle = false;
 
             // calculate indent
@@ -748,5 +770,41 @@ render_window_titles (state_t *state)
         refresh();
         wrefresh(Win);
     }
+
+    return RET_OK;
 }
+
+
+
+/*
+    Render Ncurses WINDOWs
+*/
+static int
+render_windows (state_t *state)
+{
+    int i;
+
+    for (i = 0; i < state->num_plugins; i++) {
+        if (state->plugins[i]->has_window) {
+            if (render_window (state->plugins[i]->win) == RET_FAIL) {
+                pfemr ("Failed to render window \"%s\" (key: %c, code: %s)",
+                            state->plugins[i]->title,
+                            state->plugins[i]->key,
+                            state->plugins[i]->code);
+            }
+        } 
+    }
+
+    if (fix_corners (state) == RET_FAIL) {
+        pfemr ("Failed to fix window corners");
+    }
+
+    if (render_window_titles (state) == RET_FAIL) {
+        pfemr ("Failed to render window titles");
+    }
+
+    return RET_OK;
+}
+
+
 

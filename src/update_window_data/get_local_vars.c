@@ -6,27 +6,33 @@
 #include "../plugins.h"
 
 
-static void get_local_vars_gdb (state_t *state);
-static void get_local_vars_pdb (state_t *state);
+static int get_local_vars_gdb (state_t *state);
+static int get_local_vars_pdb (state_t *state);
 
 
 
-void
+int
 get_local_vars (state_t *state)
 {
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            get_local_vars_gdb (state);
+            if (get_local_vars_gdb (state) == RET_FAIL) {
+                pfemr ("Failed to get local variables (GDB)");
+            }
             break;
         case (DEBUGGER_PDB):
-            get_local_vars_pdb (state);
+            if (get_local_vars_pdb (state) == RET_FAIL) {
+                pfemr ("Failed to get local variables (PDB)");
+            }
             break;
     }
+
+    return RET_OK;
 }
 
 
 
-static void
+static int
 get_local_vars_gdb (state_t *state)
 {
     window_t *win;
@@ -40,7 +46,9 @@ get_local_vars_gdb (state_t *state)
     src_ptr   = state->debugger->data_buffer;
     dest_buff = win->buff_data;
 
-    send_command_mp (state, "-stack-list-locals 1\n");
+    if (send_command_mp (state, "-stack-list-locals 1\n") == RET_FAIL) {
+        pfemr ("Failed to send get local vars command (PDB)");
+    }
 
     dest_buff->buff_pos = 0;
 
@@ -111,11 +119,13 @@ get_local_vars_gdb (state_t *state)
 
     dest_buff->changed = true;
     state->debugger->data_buffer[0]  = '\0';
+
+    return RET_OK;
 }
 
 
 
-static void
+static int
 get_local_vars_pdb (state_t *state)
 {
     int          open_arrs;
@@ -129,7 +139,9 @@ get_local_vars_pdb (state_t *state)
     src_ptr   = state->debugger->program_buffer;
     dest_data = win->buff_data;
 
-    send_command_mp (state, "locals()\n");
+    if (send_command_mp (state, "locals()\n") == RET_FAIL) {
+        pfemr ("Failed to send get local vars command (PDB)");
+    }
 
     dest_data->buff_pos = 0;
 
@@ -211,5 +223,7 @@ skip_LcV_parse:
     dest_data->changed = true;
     state->debugger->program_buffer[0] = '\0';
     dest_data->new_data = false;
+
+    return RET_OK;
 }
 

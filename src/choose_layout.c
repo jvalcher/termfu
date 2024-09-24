@@ -6,8 +6,9 @@
 #include "render_layout.h"
 #include "update_window_data/_update_window_data.h"
 #include "plugins.h"
+#include "utilities.h"
 
-static void close_popup_window_selection (void);
+static int close_popup_window_selection (void);
 
 #define ESC  27
 
@@ -17,7 +18,7 @@ WINDOW *curr_screen_layout_sel,
 
 
 
-void
+int
 choose_layout (state_t *state)
 {
     int scr_rows, scr_cols,
@@ -139,32 +140,52 @@ choose_layout (state_t *state)
 
 choose_layout:
 
-    close_popup_window_selection ();
+    if (close_popup_window_selection () == RET_FAIL) {
+        pfemr ("Failed to close popup window for layout selection \"%s\"",
+                    curr_layout->label);
+    }
+
     keypad (stdscr, FALSE);
 
     if (new_layout) {
 
-        render_layout (curr_layout->label, state);
+        if (render_layout (curr_layout->label, state) == RET_FAIL) {
+            pfemr ("Failed to render layout");
+        }
 
         state->plugins[Src]->win->file_data->path_changed = true;
-        update_windows (state, 9, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Stk, Wat);
+        if (update_windows (state, 9, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Stk, Wat) == RET_FAIL) {
+            pfemr ("Failed to update windows");
+        }
     }
+
+    return RET_OK;
 }
 
 
 
-static void
+static int
 close_popup_window_selection (void)
 {
     touchwin (curr_screen_layout_sel);
-    wnoutrefresh (curr_screen_layout_sel);
+    if (wnoutrefresh (curr_screen_layout_sel) == ERR) {
+        pfemr ("wnoutrefresh failed");
+    }
     doupdate ();
     curs_set (0);
     noecho ();
 
-    delwin (curr_screen_layout_sel);
-    delwin (data_popup_win_sel);
-    delwin (parent_popup_win_sel);
+    if (delwin (curr_screen_layout_sel) == ERR) {
+        pfemr ("Failed to delete saved current screen");
+    }
+    if (delwin (data_popup_win_sel) == ERR) {
+        pfemr ("Failed to delete data popup window");
+    }
+    if (delwin (parent_popup_win_sel) == ERR) {
+        pfemr ("Failed to delete parent popup window");
+    }
+
+    return RET_OK;
 }
 
 

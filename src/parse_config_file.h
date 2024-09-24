@@ -13,7 +13,7 @@
     - Allocate layout_t linked list, calculate window ratios, ...
     - ...
 */
-void parse_config_file (state_t *state);
+int parse_config_file (state_t *state);
 
 
 

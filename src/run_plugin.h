@@ -9,7 +9,7 @@
 /*
     Run debugger command or enter window loop
 */
-void run_plugin (int plugin_index, state_t *state);
+int run_plugin (int plugin_index, state_t *state);
 
 
 

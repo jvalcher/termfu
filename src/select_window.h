@@ -9,7 +9,7 @@
 /*
     Enter window loop for scrolling through data, running commands
 */
-void select_window (int plugin_index, state_t *state);
+int select_window (int plugin_index, state_t *state);
 
 
 

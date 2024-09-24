@@ -5,7 +5,7 @@
 
 
 
-void get_assembly_data (state_t *state);
+int get_assembly_data (state_t *state);
 
 
 

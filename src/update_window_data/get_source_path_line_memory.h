@@ -10,7 +10,7 @@
     Current line number       --> state->plugins[Src]->win->file_data->line
     If path changed...        --> state->plugins[Src]->win->file_data->path_changed
 */
-void get_source_path_line_memory (state_t *state);
+int get_source_path_line_memory (state_t *state);
 
 
 

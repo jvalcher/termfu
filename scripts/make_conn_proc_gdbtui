@@ -10,7 +10,7 @@
 #
 # Usage: 
 #
-#   - Uses the `termfu_dev` build created by `make dev` or `make devf`
+#   - Debugs the `termfu_dev` build created by `make dev` or `make devf`
 #
 #   - Start termfu_dev process to be debugged in different terminal
 #       $ make proc_<debugger>

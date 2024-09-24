@@ -8,14 +8,14 @@
 /*
     Get watchpoints, breakpoints from PERSIST_FILE
 */
-void get_persisted_data (state_t *state);
+int get_persisted_data (state_t *state);
 
 
 
 /*
    Save current watchpoints, breakpoints to PERSIST_FILE
 */
-void persist_data (state_t *state);
+int persist_data (state_t *state);
 
 
 

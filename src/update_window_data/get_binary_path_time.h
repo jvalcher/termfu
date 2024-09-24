@@ -13,7 +13,7 @@
     state->debugger->prog_path
     state->debugger->prog_update_time
 */
-void get_binary_path_time (state_t *state);
+int get_binary_path_time (state_t *state);
 
 
 

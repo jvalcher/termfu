@@ -1,33 +1,38 @@
 #include <stdlib.h>
 
-#include "get_watchpoint_data.h"
 #include "../data.h"
 #include "../utilities.h"
 #include "../plugins.h"
 
-static void get_watchpoint_data_gdb (state_t *state);
-static void get_watchpoint_data_pdb (state_t *state);
+static int get_watchpoint_data_gdb (state_t *state);
+static int get_watchpoint_data_pdb (state_t *state);
 
 #define INDEX_BUF_LEN  8
 
 
 
-void
+int
 get_watchpoint_data (state_t *state)
 {
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            get_watchpoint_data_gdb (state);
+            if (get_watchpoint_data_gdb (state) == RET_FAIL) {
+                pfemr ("Failed to get watchpoint data (GDB)");
+            }
             break;
         case (DEBUGGER_PDB):
-            get_watchpoint_data_pdb (state);
+            if (get_watchpoint_data_pdb (state) == RET_FAIL) {
+                pfemr ("Failed to get watchpoint data (GDB)");
+            }
             break;
     }
+
+    return RET_OK;
 }
 
 
 
-static void
+static int
 get_watchpoint_data_gdb (state_t *state)
 {
     int i, last_char_offset;
@@ -54,7 +59,9 @@ get_watchpoint_data_gdb (state_t *state)
 
         // send watchpoint command
         cmd = concatenate_strings (3, "print ", watch->var, "\n");    
-        send_command_mp (state, cmd);
+        if (send_command_mp (state, cmd) == RET_FAIL) {
+            pfemr ("Failed to send watchpoint command (GDB)");
+        }
         free (cmd);
 
         src_ptr  = state->debugger->cli_buffer;
@@ -140,11 +147,13 @@ get_watchpoint_data_gdb (state_t *state)
         state->debugger->data_buffer[0] = '\0';
         watch = watch->next;
     }
+
+    return RET_OK;
 }
 
 
 
-static void
+static int
 get_watchpoint_data_pdb (state_t *state)
 {
     window_t *win;
@@ -170,7 +179,9 @@ get_watchpoint_data_pdb (state_t *state)
         while (watch != NULL) {
 
             cmd = concatenate_strings (3, "p ", watch->var, "\n");    
-            send_command_mp (state, cmd);
+            if (send_command_mp (state, cmd) == RET_FAIL) {
+                pfemr ("Failed to send watchpoint command (PDB)");
+            }
             free (cmd);
 
             // index
@@ -212,5 +223,7 @@ get_watchpoint_data_pdb (state_t *state)
     else {
         cp_char (dest_data, '\0');
     }
+
+    return RET_OK;
 }
 

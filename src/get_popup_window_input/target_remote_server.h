@@ -5,7 +5,7 @@
 
 
 
-void target_remote_server (state_t *state);
+int target_remote_server (state_t *state);
 
 
 

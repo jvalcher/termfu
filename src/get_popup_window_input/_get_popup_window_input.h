@@ -8,14 +8,14 @@
 /*
     Open popup window with <prompt> and save typed string into <buffer>
 */
-void  get_popup_window_input  (char *prompt, char *buffer);
+int  get_popup_window_input  (char *prompt, char *buffer);
 
 
 
 /*
     Close currently open popup window
 */
-void  close_popup_window  (void);
+int  close_popup_window  (void);
 
 
 

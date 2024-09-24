@@ -10,18 +10,19 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <ncurses.h>
+#include <errno.h>
 
 #include "parse_config_file.h"
 #include "data.h"
 #include "plugins.h"
 #include "utilities.h"
 
+static int         allocate_plugins       (state_t*);
 static FILE*       open_config_file       (state_t*);
-static void        get_category_and_label (FILE *file, char *category, char *label);
+static int         get_category_and_label (FILE *file, char *category, char *label);
 static char      **create_command         (FILE*, state_t*);
-static void        create_plugins         (FILE*, state_t*);
+static int         create_plugins         (FILE*, state_t*);
 static layout_t   *create_layout          (FILE*, char*);
-static void        allocate_plugins       (state_t*);
 
 extern char **plugin_codes;
 extern char **win_file_names;
@@ -31,33 +32,45 @@ char *debuggers[] = { "gdb", "pdb" };
 
 
 
-void
+int
 parse_config_file (state_t *state)
 {
     FILE     *fp;
-    int       num_keys;
+    int       key_arr_len;
     bool      is_first_layout = true;
     layout_t *prev_layout = NULL,
              *curr_layout = NULL,
              *head_layout = NULL;
     char      ch,
-              category [MAX_CONFIG_CATEG_LEN] = {'\0'},
-              label    [MAX_CONFIG_LABEL_LEN] = {'\0'};
+              category [LAYOUT_CATEG_LEN] = {'\0'},
+              label    [LAYOUT_LABEL_LEN] = {'\0'};
 
-    num_keys = (int)'z' + 1;
-    state->plugin_key_index = (int*) malloc (num_keys * sizeof (int));
+    // state->plugin_key_index
+    key_arr_len = (int)'z' + 1;
+    if ((state->plugin_key_index = (int*) malloc (key_arr_len * sizeof (int))) == NULL) {
+        pfem ("malloc error: %s", strerror (errno));
+        pemr ("Failed to allocate state->plugin_key_index\n");
+    }
 
+    // state->num_plugins
     set_num_plugins (state);
 
-    allocate_plugins (state);
+    // state->plugins
+    if (allocate_plugins (state) == RET_FAIL) {
+        pfemr ("Failed to allocate plugins\n");
+    }
 
-    allocate_plugin_windows (state);
+    // state->plugins[x]->win
+    if (allocate_plugin_windows (state) == RET_FAIL) {
+        pfemr ("Failed to allocate plugin windows\n");
+    }
 
-    fp = open_config_file (state);
+    if ((fp = open_config_file (state)) == NULL) {
+        pfemr ("Failed to open configuration file\n");
+    }
 
     // parse config file
     is_first_layout = true;
-        //
     while ((ch = fgetc (fp)) != EOF) {
 
         // newline comment
@@ -68,22 +81,32 @@ parse_config_file (state_t *state)
         }
 
         if (ch == '[') {
-            get_category_and_label (fp, category, label);
+            if (get_category_and_label (fp, category, label) == RET_FAIL) {
+                pfemr ("Failed to get category and label");
+            }
         }
 
         // create state->command
         if (strcmp (category, CONFIG_COMMAND_LABEL) == 0) {
-            state->command = create_command (fp, state);
+            if ((state->command = create_command (fp, state)) == NULL) {
+                pfemr ("Failed to create command");
+            }
         }
 
         // create state->plugins
         if (strcmp (category, CONFIG_PLUGINS_LABEL) == 0) {
-            create_plugins (fp, state);
+            if (create_plugins (fp, state) == RET_FAIL) {
+                pfemr ("Failed to create plugins");
+            }
         }
 
         // create linked list of state->layouts
         if (strcmp (category, CONFIG_LAYOUTS_LABEL) == 0) {
-            curr_layout = create_layout (fp, label);
+
+            if ((curr_layout = create_layout (fp, label)) == NULL) {
+                pfemr ("Failed to create layout \"%s\"", label);
+            }
+
             if (is_first_layout) {
                 head_layout = curr_layout;
                 is_first_layout = false;
@@ -91,6 +114,7 @@ parse_config_file (state_t *state)
                 prev_layout->next = curr_layout;
                 curr_layout->next = NULL;
             }
+
             prev_layout = curr_layout;
         }
 
@@ -102,25 +126,30 @@ parse_config_file (state_t *state)
 
     state->layouts = head_layout;
     state->curr_layout = NULL;
+
+    return RET_OK;
 }
 
 
 
-static void
+static int
 allocate_plugins (state_t *state)
 {
-    state->plugins = (plugin_t**) malloc (state->num_plugins * sizeof (plugin_t*));
-
-    if (state->plugins == NULL) {
-        pfeme ("plugin_t pointer array allocation failed\n");
+    // state->plugins
+    if ((state->plugins = (plugin_t**) malloc (state->num_plugins * sizeof (plugin_t*))) == NULL) {
+        pfem ("malloc error: %s", strerror (errno));
+        pemr ("Failed to allocate plugin array for %d plugins", state->num_plugins);
     }
 
+    // state->plugins[i]
     for (int i = 0; i < state->num_plugins; i++) {
-        state->plugins [i] = (plugin_t*) malloc (sizeof (plugin_t));
-        if (state->plugins [i] == NULL) {
-            pfeme ("plugin_t pointer allocation failed\n");
+        if ((state->plugins [i] = (plugin_t*) malloc (sizeof (plugin_t))) == NULL) {
+            pfem ("malloc error: %s", strerror (errno));
+            pemr ("plugin_t pointer allocation failed (index: %d, code: %s)", i, get_plugin_code (i));
         }
     }
+
+    return RET_OK;
 }
 
 
@@ -129,19 +158,17 @@ static FILE*
 open_config_file (state_t *state)
 {
     FILE *file = NULL;
-
     if (state->config_path[0] != '\0') {
         if ((file = fopen (state->config_path, "r")) == NULL) {
-            pfeme ("Unable to find config file \"./%s\"\n", state->config_path);
+            pfem ("fopen error: %s", strerror (errno));
+            pem ("fopen error for config file \"./%s\": %s", state->config_path, strerror (errno));
         }
-    } 
-
-    else {
+    } else {
         if ((file = fopen (CONFIG_FILE, "r")) == NULL) {
-            pfeme ("Unable to find config file \"./%s\"\n", CONFIG_FILE);
+            pfem ("fopen error: %s", strerror (errno));
+            pfem ("fopen error for config file \"./%s\": %s", CONFIG_FILE, strerror (errno));
         }
     } 
-
     return file;
 }
 
@@ -152,20 +179,27 @@ open_config_file (state_t *state)
     -------
         [ <categ> : <label> ]
 */
-static void
+static int
 get_category_and_label (FILE *file,
                         char *category,
                         char *label)
 {
-    int i,
-        ch = 0;
+    int  i,
+         ch = 0;
+    long start;
+
+    // save current file position
+    if ((start = ftell (file)) == -1) {
+        ;
+    }
 
     do {
         // category
         i = 0;
-        while (((ch = fgetc (file)) != ':'  &&
-                                 ch != ']') &&
-                                  i <  MAX_CONFIG_CATEG_LEN - 1) {
+        while ((ch = fgetc (file)) != ':'  &&
+                                ch != ']'  &&
+                                ch != '\n' &&
+                                 i <  LAYOUT_CATEG_LEN - 1) {
             if (ch != ' ')
                 category [i++] = ch;
         }
@@ -173,19 +207,31 @@ get_category_and_label (FILE *file,
 
         // if no label, break
         if (ch == ']') {
-            label = "\0";
+            label [0] = '\0';
             break;
+        }
+
+        // if newline reached, error
+        if (ch == '\n') {
+            pfem ("Newline character reached, formatting error");
+            pem  ("\"[");
+            while ((ch = fgetc (file)) != '\n') {
+                fputc (ch, stderr);
+            }
+            pemr ("\"");
         }
 
         // label
         i = 0;
         while ((ch = fgetc (file)) != ']' &&
-                    i < MAX_CONFIG_LABEL_LEN - 1) {
+                    i < LAYOUT_LABEL_LEN - 1) {
             label [i++] = ch;
         }
         label [i] = '\0';
 
     } while (ch != ']');
+
+    return RET_OK;
 }
 
 
@@ -223,7 +269,11 @@ create_command (FILE *fp,
     } while ((ch = fgetc (fp)) != '\n');
     ++n;    // execvp NULL
 
-    cmd_arr = (char**) malloc (n * sizeof (char*));
+    if ((cmd_arr = (char**) malloc (n * sizeof (char*))) == NULL) {
+        pfem ("malloc: %s\n", strerror (errno));
+        pem  ("Failed to allocate cmd_arr (n = %d): %s", n, strerror (errno));
+        return NULL;
+    }
 
     // create array
     fseek (fp, save_fp, SEEK_SET);
@@ -254,20 +304,29 @@ create_command (FILE *fp,
                     // set state->debugger->index and ->title
                     if (strcmp (debuggers [i], buff) == 0) {
                         state->debugger->index = i;
-                        strncpy (state->debugger->title, debuggers [i], DEBUG_TITLE_LEN - 1);
+                        memcpy (state->debugger->title, debuggers [i], DEBUG_TITLE_LEN - 1);
+                        state->debugger->title [DEBUG_TITLE_LEN - 1] = '\0';
                         debugger_supported = true;
                     }
                 }
             }
 
-            cmd_arr [n] = (char*) malloc (strlen (buff) + 1);
+            if ((cmd_arr [n] = (char*) malloc (strlen (buff) + 1)) == NULL) {
+                pfem ("malloc: %s", strerror (errno));
+                pem  ("Failed to allocate cmd_arr element \"%s\": %s", buff, strerror (errno));
+                return NULL;
+            }
             strcpy (cmd_arr [n++], buff); 
         }
     }
+
+    // debugger not supported
     if (debugger_supported == false) {
-        pfeme ("Debugger not supported\n");
+        pfem ("Debugger not supported -- See README.md for more information.\n\n");
+        return NULL;
     }
 
+    // execvp final command element
     cmd_arr [n] = NULL;
 
     return cmd_arr;
@@ -284,12 +343,13 @@ create_command (FILE *fp,
         Lay: l : (l)ayout
         Src: f : source (f)ile
 */
-static void create_plugins (FILE *file, state_t *state)
+static int
+create_plugins (FILE *file, state_t *state)
 {
     int       i, j,
               key,
               plugin_index;
-    char      title [MAX_TITLE_LEN],
+    char      title [LAYOUT_TITLE_LEN],
               code  [PLUGIN_CODE_LEN + 1];
     bool      title_started;
     plugin_t *curr_plugin = NULL;
@@ -311,15 +371,21 @@ static void create_plugins (FILE *file, state_t *state)
             }
             code [PLUGIN_CODE_LEN] = '\0';
 
-            if ((plugin_index = get_plugin_code_index (code, state)) == -1) {
-                pfeme ("Unable to find index for plugin code \"%s\"\n", code);
+            // get state->plugins [plugin_index]
+            if ((plugin_index = get_plugin_code_index (code, state)) == RET_FAIL) {
+                pfemr ("Failed to find plugin index");
             }
             curr_plugin = state->plugins [plugin_index];
-            strcpy (curr_plugin->code, code);
 
-            // key binding
+            // set plugin code
+            memcpy (curr_plugin->code, code, PLUGIN_CODE_LEN + 1);
+            curr_plugin->code [PLUGIN_CODE_LEN - 1] = '\0';
+
+            // set key binding
             ungetc (key, file);
-            while ((key = fgetc (file)) != ':') {;}
+            while ((key = fgetc (file)) != ':') {
+                ;
+            }
             while ((key = fgetc (file)) != ':') {
                 if (isalpha (key)) {
                     curr_plugin->key = key;
@@ -327,25 +393,35 @@ static void create_plugins (FILE *file, state_t *state)
             }
 
             // set state->plugin_key_index
+                // So that in main() loop:
+                // if key pressed == 'c'  -->  plugin_key_index [key] == plugin index bound to 'c'
             state->plugin_key_index [(int) curr_plugin->key] = plugin_index;
 
             // title
             i = 0;
             title_started = false;
-            while ((key = fgetc (file)) != '\n' && i < (MAX_CONFIG_LABEL_LEN - 1)) {
+            while ((key = fgetc (file)) != '\n' && i < (LAYOUT_LABEL_LEN - 1)) {
                 if (isalpha (key) || key == '(' || title_started) {
                     title[i++] = key;
                     title_started = true;
                 }
             }
             title[i] = '\0';
-            curr_plugin->title = (char*) malloc (strlen (title) + 1);
-            strncpy (curr_plugin->title, title, strlen(title) + 1);
+
+            // set curr_plugin->title
+            if ((curr_plugin->title = (char*) malloc (strlen (title) + 1)) == NULL) {
+                pfem ("malloc: %s", strerror (errno));
+                pemr ("Failed to allocate title \"%s\" for code %s, key %c",
+                            title, code, key);
+            }
+            strcpy (curr_plugin->title, title);
         }
     }
 
     // unget '[', EOF
     ungetc (key, file);
+
+    return RET_OK;
 }
 
 
@@ -357,23 +433,27 @@ static layout_t*
 create_layout (FILE* file,
                char *label)
 {
-    int ch, section_ch;
-    char *win_keys;
-    int num_chars = 0;
-    bool is_key = false;
-    char keys [MAX_KEY_STR_LEN] = {0};
-    int i = 0;
-    layout_t* layout = NULL;
+    int        ch,
+               section_ch,
+               num_chars,
+               i;
+    char       keys [LAYOUT_KEY_STR_LEN],
+              *win_keys,
+             **layout_matrix;
+    bool       is_key = false;
+    layout_t  *layout = NULL;
 
     // allocate layout
-    layout = (layout_t*) malloc (sizeof (layout_t));
-    if (layout == NULL) {
-        pfeme ("layout_t allocation failed for layout \"%s\"\n", label);
+    if ((layout = (layout_t*) malloc (sizeof (layout_t))) == NULL) {
+        pfem ("malloc error: %s", strerror (errno));
+        pem  ("layout_t allocation failed for layout \"%s\"\n", label);
+        return NULL;
     }
     layout->next = NULL;
 
     // add layout label
-    strncpy (layout->label, label, strlen (label));
+    memcpy (layout->label, label, LAYOUT_LABEL_LEN - 1);
+    layout->label [LAYOUT_LABEL_LEN - 1] = '\0';
 
     // parse
     while ((ch = fgetc(file)) != '[' && ch != EOF) {
@@ -409,7 +489,7 @@ create_layout (FILE* file,
                         ch != '[' && 
                         ch != '#' &&
                         ch != EOF &&
-                        num_chars <= MAX_KEY_STR_LEN) {
+                        num_chars <= LAYOUT_KEY_STR_LEN) {
 
                     // add key
                     if (isalpha(ch)) {
@@ -435,9 +515,11 @@ create_layout (FILE* file,
 
                 // add string to layout
                 if (section_ch == 'h') {
-                    strncpy ((char *)layout->hdr_key_str, keys, num_chars + 1);
+                    memcpy (layout->hdr_key_str, keys, LAYOUT_KEY_STR_LEN - 1);
+                    layout->hdr_key_str [LAYOUT_KEY_STR_LEN - 1] = '\0';
                 } else {
-                    strncpy ((char *)layout->win_key_str, keys, num_chars + 1);
+                    memcpy (layout->win_key_str, keys, LAYOUT_KEY_STR_LEN - 1);
+                    layout->win_key_str [LAYOUT_KEY_STR_LEN - 1] = '\0';
                     win_keys = layout->win_key_str;
                 }
 
@@ -489,6 +571,10 @@ create_layout (FILE* file,
     }
     layout->row_ratio = y_ratio;
     layout->col_ratio = x_ratio;
+    if (y_ratio == 0 || x_ratio == 0) {
+        pfem ("Ratio calculation error (y: %d, x: %d)", y_ratio, x_ratio);
+        return NULL;
+    }
 
 
     // allocate window matrix
@@ -497,16 +583,21 @@ create_layout (FILE* file,
     //      {s,s,w},
     //      {c,c,r}}
     //
-    char **layout_matrix = (char **) malloc (y_ratio * sizeof (char*));
-    for (i = 0; i < y_ratio; i++) {
-        layout_matrix [i] = (char *) malloc (x_ratio * sizeof (char));
+    if ((layout_matrix = (char**) malloc (y_ratio * sizeof (char*))) == NULL) {
+        pfem ("malloc error: %s", strerror (errno));
+        pem  ("Failed to allocate layout_matrix");
+        return NULL;
     }
-    if (layout_matrix == NULL) {
-        pfeme ("Unable to create layout_matrix for %s\n", 
-                    layout->label);
+    for (i = 0; i < y_ratio; i++) {
+        if ((layout_matrix [i] = (char*) malloc (x_ratio * sizeof (char))) == NULL) {
+            pfem ("malloc error: %s", strerror (errno));
+            pem ("Failed to allocate layout_matrix element (index: %d, code: %s)",
+                        i, get_plugin_code (i));
+            return NULL;
+        }
     }
 
-    // add keys to matrix
+    // add keys to layout_matrix
     int row = 0;
     int col = 0;
     for (size_t m = 0; m < strlen (win_keys); m++) {
@@ -519,7 +610,6 @@ create_layout (FILE* file,
             m   += 1;     // skip '\n'
         }
     }
-
     layout->win_matrix = layout_matrix;
 
     return layout;

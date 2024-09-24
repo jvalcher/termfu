@@ -1,31 +1,36 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "get_debugger_output.h"
 #include "../data.h"
 #include "../plugins.h"
 #include "../utilities.h"
 
-static void get_debugger_output_gdb (state_t *state);
-static void get_debugger_output_pdb (state_t *state);
+static int get_debugger_output_gdb (state_t *state);
+static int get_debugger_output_pdb (state_t *state);
 
 
 
-void
+int
 get_debugger_output (state_t *state)
 {
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            get_debugger_output_gdb (state);
+            if (get_debugger_output_gdb (state) == RET_FAIL) {
+                pfemr ("Failed to get debugger output (GDB)");
+            }
             break;
         case (DEBUGGER_PDB):
-            get_debugger_output_pdb (state);
+            if (get_debugger_output_pdb (state) == RET_FAIL) {
+                pfemr ("Failed to get debugger output (PDB)");
+            }
             break;
     }
+
+    return RET_OK;
 }
 
 
-static void
+static int
 get_debugger_output_gdb (state_t *state)
 {
     window_t *win;
@@ -57,11 +62,13 @@ get_debugger_output_gdb (state_t *state)
 
     state->debugger->cli_buffer[0] = '\0';
     dest_buff->new_data = false;
+
+    return RET_OK;
 }
 
 
 
-static void
+static int
 get_debugger_output_pdb (state_t *state)
 {
     window_t *win;
@@ -89,5 +96,7 @@ get_debugger_output_pdb (state_t *state)
 
     state->debugger->cli_buffer[0] = '\0';
     dest_buff->new_data = false;
+
+    return RET_OK;
 }
 

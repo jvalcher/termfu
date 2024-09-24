@@ -5,7 +5,7 @@
 
 
 
-void get_stack_data (state_t *state);
+int get_stack_data (state_t *state);
 
 
 

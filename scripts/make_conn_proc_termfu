@@ -10,7 +10,8 @@
 #
 # Usage: 
 #
-#   - Uses the `termfu_dev` build created by `make dev` or `make devf`
+#   - Debugs with the `./termfu` build created by `make`
+#   - Debugs the `termfu_dev` build created by `make dev` or `make devf`
 #
 #   - Start termfu_dev process to be debugged in different terminal
 #       $ make proc_<debugger>
@@ -52,7 +53,7 @@ if [ -e $PID_FILE ]; then
         # Add new PID
     sed -i "s|gdb --quiet --interpreter=mi|gdb --quiet --interpreter=mi -p $TERMFU_PID|" "$CONFIG"
 
-    sudo ./termfu_dev -c $CONFIG -p $DATA
+    sudo ./termfu -c $CONFIG -p $DATA
     
 else
     echo "PID file \"${PID_FILE}\" not found. Start debugged process first."

@@ -5,7 +5,7 @@
 
 
 
-void attach_to_process (state_t *state);
+int attach_to_process (state_t *state);
 
 
 

@@ -1,32 +1,37 @@
 #include <ctype.h>
 
-#include "get_register_data.h"
 #include "_no_buff_data.h"
 #include "../data.h"
 #include "../utilities.h"
 #include "../plugins.h"
 
 
-static void get_register_data_gdb (state_t *state);
-static void get_register_data_pdb (state_t *state);
+static int get_register_data_gdb (state_t *state);
+static int get_register_data_pdb (state_t *state);
 
 
 
-void
+int
 get_register_data (state_t *state)
 {
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            get_register_data_gdb (state);
+            if (get_register_data_gdb (state) == RET_FAIL) {
+                pfemr ("Failed to get register data (GDB)");
+            }
             break;
         case (DEBUGGER_PDB):
-            get_register_data_pdb (state);
+            if (get_register_data_pdb (state) == RET_FAIL) {
+                pfemr ("Failed to get register data (PDB)");
+            }
             break;
     }
+
+    return RET_OK;
 }
 
 
-static void
+static int
 get_register_data_gdb (state_t *state)
 {
     window_t *win;
@@ -37,7 +42,9 @@ get_register_data_gdb (state_t *state)
     src_ptr   = state->debugger->cli_buffer;
     dest_buff = win->buff_data;
 
-    send_command_mp (state, "info registers\n");
+    if (send_command_mp (state, "info registers\n") == RET_FAIL) {
+        pfemr ("Failed to send register data command (GDB)");
+    }
 
     if (strstr (src_ptr, "error") == NULL) {
 
@@ -68,15 +75,19 @@ get_register_data_gdb (state_t *state)
     }
 
     state->debugger->cli_buffer[0] = '\0';
+
+    return RET_OK;
 }
 
 
 
-static void
+static int
 get_register_data_pdb (state_t *state)
 {
     no_buff_data (Reg, state); 
 
     state->plugins[Reg]->win->buff_data->changed = true;
+
+    return RET_OK;
 }
 

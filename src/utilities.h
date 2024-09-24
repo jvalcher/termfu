@@ -39,14 +39,14 @@ char  *concatenate_strings  (int num_strings, ...);
 /*
     Send debugger command string
 */
-void  send_command  (state_t *state, char *command_string);
+int send_command (state_t *state, char *command_string);
 
 
 
 /*
     Send debugger command string with start, end markers and parse output
 */
-void send_command_mp (state_t *state, char *command);
+int send_command_mp (state_t *state, char *command);
 
 
 
@@ -56,8 +56,8 @@ void send_command_mp (state_t *state, char *command);
     - Must normally set, unset attributes with wattron/off using constant or macro
     - This function allows you to use integer variables (predefined in functions)
 */
-void  set_nc_attribute    (WINDOW *nc_window, int attribute_value);
-void  unset_nc_attribute  (WINDOW *nc_window, int);
+int  set_nc_attribute    (WINDOW *nc_window, int attribute_value);
+int  unset_nc_attribute  (WINDOW *nc_window, int);
 
 
 
@@ -96,47 +96,69 @@ void cp_fchar (file_data_t *dest_file_data, char ch, int type);
     -------
     - Returns true if updated, false otherwise
 */
-bool file_was_updated (time_t file_mtime, char *file_path);
+bool file_was_updated (time_t prev_file_mtime, char *file_path);
 
 
 
 
-/****************
+/*
   Formatted error messages
- ****************
-  Single message, exit:
+  ----------
+  - Runs clean_up() first
+
+    Single message, return RET_FAIL
   
-      pfeme ("Unknown character \"%c\" \n", ch);
+        pfemr ("Unknown character \"%c\"\n", ch);
+    
+        ERROR: src_file.c : func() : 10
+               Unknown character "c"
+
+    Or single message, exit program
+
+        pfeme ("Unknown character \"%c\"\n", ch);
   
-      ERROR: src_file.c : func() : 10
-             Unknown character "c"
+    Or just single message
+
+        pfem ("Unknown character \"%c\"\n", ch);
   
-  Multiple messages, exit;
+    Multiple messages, return RET_FAIL
   
-      pfem ("Unknown character \"%c\" \n", ch);
-      pem  ("Check README.md for more details"); 
-      peme ("Exiting...");
+        pfem ("Unknown character \"%c\"\n", ch);
+        pem  ("Check README.md for more details\n"); 
+        pemr ("Returning EXIT_FAILURE...\n");
+    
+        ERROR: src_file.c : func() : 10
+               Unknown character "c"
+               Check README.md for more details
+               Returning EXIT_FAILURE...
+
+    Or final message then exit program
+
+        peme ("Exiting...\n");
   
-      ERROR: src_file.c : func() : 10
-             Unknown character "c"
-             Check README.md for more details
-             Exiting...
 */
 
 // Print formatted error message
 #define pfem(...) do { \
-    clean_up(); \
+    clean_up();\
 \
-    fprintf (stderr, "\
+    fprintf (stderr, "\n\n\
 \033[1;31m%s\033[1;0m \
 \033[1;32m%s\033[1;0m() : \
 \033[1;36m%s\033[1;0m : \
-\033[1;33m%d\033[1;0m\n       ", \
-    "ERROR:", __func__, __FILE__, __LINE__); \
+\033[1;33m%d\033[1;0m\n\
+       ", \
+    "ERROR:", __func__, __FILE__, __LINE__);\
 \
-    fprintf (stderr, __VA_ARGS__); \
+    fprintf (stderr, __VA_ARGS__);\
+    fprintf (stderr, "\n"); \
 } while (0)
 
+// Print formatted error message, return
+#define pfemr(...) ({ \
+    pfem(__VA_ARGS__);\
+    return RET_FAIL;\
+})
 
 // Print formatted error message, exit
 #define pfeme(...) do { \
@@ -144,18 +166,23 @@ bool file_was_updated (time_t file_mtime, char *file_path);
     exit (EXIT_FAILURE); \
 } while (0)
 
-
 // Print error message
 #define pem(...) do { \
     fprintf (stderr, "       "); \
     fprintf (stderr, __VA_ARGS__); \
+    fprintf (stderr, "\n"); \
 } while (0)
 
+// Print error message, return
+#define pemr(...) ({\
+    pem(__VA_ARGS__);\
+    return RET_FAIL;\
+})
 
 // Print error message, exit
 #define peme(...) do { \
-    pem(__VA_ARGS__); \
-    exit (EXIT_FAILURE); \
+    pem(__VA_ARGS__);\
+    exit (EXIT_FAILURE);\
 } while (0)
 
 

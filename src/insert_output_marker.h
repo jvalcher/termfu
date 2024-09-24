@@ -10,8 +10,8 @@
    Ensures all debugger output is read when multiple read()s required
    in parse_debugger_output()
 */
-void  insert_output_start_marker (state_t* state);
-void  insert_output_end_marker   (state_t* state);
+int insert_output_start_marker (state_t* state);
+int insert_output_end_marker   (state_t* state);
 
 
 

@@ -4,33 +4,37 @@
 #include "get_assembly_data.h"
 #include "_no_buff_data.h"
 #include "../data.h"
-#include "../insert_output_marker.h"
-#include "../parse_debugger_output.h"
 #include "../utilities.h"
 #include "../plugins.h"
 
 #define OFFSET_COLS 4
 
-static void get_assembly_data_gdb (state_t *state);
-static void get_assembly_data_pdb (state_t *state);
+static int get_assembly_data_gdb (state_t *state);
+static int get_assembly_data_pdb (state_t *state);
 
 
 
-void
+int
 get_assembly_data (state_t *state)
 {
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            get_assembly_data_gdb (state);
+            if (get_assembly_data_gdb (state) == RET_FAIL) {
+                pfemr ("Failed to get assembly data (GDB)");
+            }
             break;
         case (DEBUGGER_PDB):
-            get_assembly_data_pdb (state);
+            if (get_assembly_data_pdb (state) == RET_FAIL) {
+                pfemr ("Failed to get assembly data (PDB)");
+            }
             break;
     }
+
+    return RET_OK;
 }
 
 
-static void
+static int
 get_assembly_data_gdb (state_t *state)
 {
     window_t *win;
@@ -52,7 +56,10 @@ get_assembly_data_gdb (state_t *state)
     // send debugger command
     func = (src_data->func[0] == '\0') ? main : src_data->func;
     cmd = concatenate_strings (3, "disassemble ", func, " \n");
-    send_command_mp (state, cmd);
+    if (send_command_mp (state, cmd) == RET_FAIL) {
+        pfem ("Failed to send assembly command to GDB debugger");
+        pemr ("Command: \"%s\"", cmd);
+    }
     free (cmd);
 
     if (strstr (data_ptr, "error") == NULL) {
@@ -105,7 +112,7 @@ get_assembly_data_gdb (state_t *state)
         dest_buff->changed = true;
     }
 
-    // set current line ('=>')
+    // set scroll row on '=>'
     dest_ptr = win->buff_data->buff;
     win->buff_data->scroll_row = 1;
     while (*dest_ptr != '\0') {
@@ -118,15 +125,19 @@ get_assembly_data_gdb (state_t *state)
         }
         ++dest_ptr;
     }
+
+    return RET_OK;
 }
 
 
 
-static void
+static int
 get_assembly_data_pdb (state_t *state)
 {
     no_buff_data (Asm, state); 
 
     state->plugins[Asm]->win->buff_data->changed = true;
+
+    return RET_OK;
 }
 

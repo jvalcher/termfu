@@ -12,7 +12,7 @@
    - Calculates and renders Ncurses header and windows (no data)
      based on configuration file settings set in parse_config_file()
 */
-void render_layout (char *layout_title, state_t *state);
+int render_layout (char *layout_title, state_t *state);
 
 
 

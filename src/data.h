@@ -20,8 +20,10 @@
   Debug
  *******/
 
-#define DEBUG_OUT_FILE        "debug.out"           // logd()
-#define DEBUG_PID_FILE       "/tmp/termfu.pid"      // make process_
+#define RET_OK           1
+#define RET_FAIL        -1
+#define DEBUG_OUT_FILE  "debug.out"           // logd()
+#define DEBUG_PID_FILE  "/tmp/termfu.pid"     // make process_
 
 
 
@@ -62,25 +64,28 @@
 #define FOCUS_WINDOW_TITLE_KEY_COLOR    BLUE_BLACK
 #define WINDOW_INPUT_TITLE_COLOR        WHITE_BLUE
 
+// form
+#define FORM_BACKGROUND                 WHITE_BLUE
+
 
 
 /*********
   Layouts
  *********/
 
-#define FIRST_LAYOUT            "FiRsT_lAyOuT"
-#define MAX_CONFIG_CATEG_LEN    128
-#define MAX_CONFIG_LABEL_LEN    128
-#define MAX_KEY_STR_LEN         256
-#define MAX_TITLE_LEN           48
-#define MAX_ROW_SEGMENTS        24      // per layout
-#define MAX_COL_SEGMENTS        24
+#define FIRST_LAYOUT         "FiRsT_lAyOuT"
+#define LAYOUT_CATEG_LEN     128
+#define LAYOUT_LABEL_LEN     128
+#define LAYOUT_KEY_STR_LEN   256
+#define LAYOUT_TITLE_LEN     48
+#define LAYOUT_ROW_SEGMENTS  24      // per layout
+#define LAYOUT_COL_SEGMENTS  24
 
 typedef struct layout {
 
-    char            label [MAX_CONFIG_LABEL_LEN];
-    char            hdr_key_str [MAX_KEY_STR_LEN];
-    char            win_key_str [MAX_KEY_STR_LEN];
+    char            label       [LAYOUT_LABEL_LEN];
+    char            hdr_key_str [LAYOUT_KEY_STR_LEN];
+    char            win_key_str [LAYOUT_KEY_STR_LEN];
     int             num_hdr_key_rows;
     char          **win_matrix;
     int             row_ratio;
@@ -95,6 +100,7 @@ typedef struct layout {
   Ncurses window data
  *********/
 
+#define CODE_LEN       3
 #define NO_DATA_MSG    "Not supported by "
 #define FILE_PATH_LEN  256
 #define ADDRESS_LEN    48
@@ -151,11 +157,11 @@ typedef struct {
 typedef struct {
 
     WINDOW       *WIN;
-    WINDOW       *IWIN;
+    WINDOW       *TWIN;
     WINDOW       *DWIN;
 
     int           key;
-    char          code[4];
+    char          code[CODE_LEN + 1];
     bool          has_topbar;
     bool          has_data_buff;     // as opposed to file
 

@@ -15,7 +15,7 @@
     key:   key pressed (e.g. KEY_UP, KEY_LEFT, ...) in window loop
 */
 
-void  display_lines (int type, int key, int plugin_index, state_t *state);
+int  display_lines (int type, int key, int plugin_index, state_t *state);
 
 
 
@@ -29,7 +29,7 @@ void  set_buff_rows_cols (window_t *win);
 /*
     Get number of file rows, max columns, et al. in new window data file
 */
-void  set_file_rows_cols (window_t *win);
+int  set_file_rows_cols (window_t *win);
 
 
 

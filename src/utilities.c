@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <stdarg.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 #include "utilities.h"
 #include "data.h"
@@ -18,9 +19,9 @@ void
 logd (const char *formatted_string, ...)
 {
     if (debug_out_ptr == NULL) {
-        debug_out_ptr = fopen (DEBUG_OUT_FILE, "w");
-        if (debug_out_ptr == NULL) {
-            pfeme ("Unable to open debug output file\n");
+        if ((debug_out_ptr = fopen (DEBUG_OUT_FILE, "w")) == NULL) {
+            pfem ("fopen error: %s", strerror (errno));
+            peme ("Failed to open debug out file \"%s\"", DEBUG_OUT_FILE);
         }
     }
 
@@ -63,11 +64,11 @@ concatenate_strings (int num_strs, ...)
     va_end (strs);
 
     // allocate
-    str = (char*) malloc (strlen (buffer) + 1);
-    if (str == NULL) {
-        fprintf (stderr, "String malloc failed");
-        exit (EXIT_FAILURE);
+    if ((str = (char*) malloc (strlen (buffer) + 1)) == NULL) {
+        pfem ("malloc error: %s", strerror (errno));
+        peme ("Failed to concatenate strings \"%s\"", buffer);
     }
+
     strcpy (str, buffer);
 
     return str;
@@ -75,32 +76,39 @@ concatenate_strings (int num_strs, ...)
 
 
 
-void
+int
 send_command (state_t *state,
-              char *command)
+              char    *command)
 {
-    size_t bytes = write (state->debugger->stdin_pipe, command, strlen (command));
-    if (bytes == 0) {
-        pfeme ("No bytes written to debugger process");
+    if (write (state->debugger->stdin_pipe, command, strlen (command)) == -1) {
+        pfem ("write error: %s", strerror (errno));
+        pemr ("Command: \"%s\"", command);
     }
+    return RET_OK;
 }
 
 
 
-void
+int
 send_command_mp (state_t *state,
                  char *command)
 {
-    insert_output_start_marker (state);
-
-    size_t bytes = write (state->debugger->stdin_pipe, command, strlen (command));
-    if (bytes == 0) {
-        pfeme ("No bytes written to debugger process");
+    if (insert_output_start_marker (state) == RET_FAIL) {
+        pfemr ("Failed to send command start marker");
     }
 
-    insert_output_end_marker (state);
+    if (write (state->debugger->stdin_pipe, command, strlen (command)) == -1) {
+        pfem ("write error: %s", strerror (errno));
+        pemr ("Command: \"%s\"", command);
+    }
+
+    if (insert_output_end_marker (state) == RET_FAIL) {
+        pfemr ("Failed to send command end marker");
+    }
 
     parse_debugger_output (state);
+
+    return RET_OK;
 }
 
 
@@ -108,7 +116,7 @@ send_command_mp (state_t *state,
 /*
     Set Ncurses attribute with variable instead of constant
 */
-void
+int
 set_nc_attribute (WINDOW* win,
                   int attr)
 {
@@ -144,7 +152,12 @@ set_nc_attribute (WINDOW* win,
         case A_UNDERLINE:
             wattron (win, A_UNDERLINE);
             break;
+
+        default:
+            pfemr ("Unsupported attribute \"%d\"", attr);
     }
+
+    return RET_OK;
 }
 
 
@@ -152,7 +165,7 @@ set_nc_attribute (WINDOW* win,
 /*
     Unset Ncurses attribute with variable instead of constant
 */
-void
+int
 unset_nc_attribute (WINDOW* win,
                     int attr)
 {
@@ -191,7 +204,12 @@ unset_nc_attribute (WINDOW* win,
         case A_UNDERLINE:
             wattroff (win, A_UNDERLINE);
             break;
+
+        default:
+            pfemr ("Unsupported attribute \"%d\"", attr);
     }
+
+    return RET_OK;
 }
 
 

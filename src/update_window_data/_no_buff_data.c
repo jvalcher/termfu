@@ -4,7 +4,7 @@
 
 
 void
-no_buff_data (int plugin_index,
+no_buff_data (int      plugin_index,
               state_t *state)
 {
     buff_data_t *data = state->plugins[plugin_index]->win->buff_data;

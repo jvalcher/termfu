@@ -5,7 +5,7 @@
 
 
 
-void  get_debugger_output  (state_t *state);
+int get_debugger_output (state_t *state);
 
 
 

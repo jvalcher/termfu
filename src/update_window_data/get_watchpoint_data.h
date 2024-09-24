@@ -5,7 +5,7 @@
 
 
 
-void  get_watchpoint_data  (state_t *state);
+int get_watchpoint_data (state_t *state);
 
 
 

@@ -1,31 +1,36 @@
 #include <string.h>
 
-#include "get_program_output.h"
 #include "../data.h"
 #include "../plugins.h"
 #include "../utilities.h"
 
-static void get_program_output_gdb (state_t *state);
-static void get_program_output_pdb (state_t *state);
+static int get_program_output_gdb (state_t *state);
+static int get_program_output_pdb (state_t *state);
 
 
 
-void
+int
 get_program_output (state_t *state)
 {
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            get_program_output_gdb (state);
+            if (get_program_output_gdb (state) == RET_FAIL) {
+                pfemr ("Failed to get program output (GDB)");
+            }
             break;
         case (DEBUGGER_PDB):
-            get_program_output_pdb (state);
+            if (get_program_output_pdb (state) == RET_FAIL) {
+                pfemr ("Failed to get program output (PDB)");
+            }
             break;
     }
+
+    return RET_OK;
 }
 
 
 
-static void
+static int
 get_program_output_gdb (state_t *state)
 {
     window_t *win;
@@ -46,11 +51,13 @@ get_program_output_gdb (state_t *state)
     }
     state->debugger->program_buffer [0] = '\0';
     dest_buff->new_data = false;
+
+    return RET_OK;
 }
 
 
 
-static void
+static int
 get_program_output_pdb (state_t *state)
 {
     window_t *win;
@@ -71,5 +78,7 @@ get_program_output_pdb (state_t *state)
     }
     state->debugger->program_buffer [0] = '\0';
     dest_buff->new_data = false;
+
+    return RET_OK;
 }
 

@@ -3,6 +3,7 @@
 #include <ncurses.h>
 #include <stdlib.h>
 #include <libgen.h>
+#include <errno.h>
 
 #include "display_lines.h"
 #include "data.h"
@@ -26,7 +27,7 @@ static void  format_win_data     (int, state_t*);
 
 
 
-void
+int
 display_lines (int       type,
                int       key,
                int       plugin_index,
@@ -66,9 +67,14 @@ display_lines (int       type,
                 }
 
                 // open new file
-                win->file_data->ptr = fopen (win->file_data->path, "r");
+                if ((win->file_data->ptr = fopen (win->file_data->path, "r")) == NULL) {
+                    pfem ("fopen error: %s", strerror (errno));
+                    pemr ("Failed to open file \"%s\"", win->file_data->path);
+                }
                 if (win->file_data->ptr != NULL) {
-                    set_file_rows_cols (win);
+                    if (set_file_rows_cols (win) == RET_FAIL) {
+                        pfemr ("Failed to set file rows, cols");
+                    }
                     win->file_data->path_changed = false;
                 }
             }
@@ -82,6 +88,8 @@ display_lines (int       type,
 
         format_win_data (plugin_index, state);
     }
+
+    return RET_OK;
 }
 
 
@@ -202,7 +210,7 @@ display_lines_buff (int      key,
     }
 
     // print buffer lines
-    while ((newline_ptr = strchr(buff_ptr, '\n')) != NULL && wy < win->data_win_rows) {
+    while ((newline_ptr = strchr (buff_ptr, '\n')) != NULL && wy < win->data_win_rows) {
 
         len = newline_ptr - buff_ptr;
 
@@ -253,7 +261,7 @@ display_lines_buff (int      key,
 /*
     Calculate file rows, columns, etc.
 */
-void
+int
 set_file_rows_cols (window_t *win)
 {
     char  line [512];
@@ -284,9 +292,9 @@ set_file_rows_cols (window_t *win)
     }
 
     // calculate newline offsets
-    win->file_data->offsets = (long*) malloc (win->file_data->rows * sizeof(long));
-    if (win->file_data->offsets == NULL) {
-        pfeme ("Failed to allocate offsets array for \"%s\" (%s)\n", win->file_data->path, win->code);
+    if ((win->file_data->offsets = (long*) malloc (win->file_data->rows * sizeof(long))) == NULL) {
+        pfem ("malloc error: %s", strerror (errno));
+        pemr ("Failed to allocate offsets array for \"%s\" (%s)\n", win->file_data->path, win->code);
     }
     win->file_data->offsets [0] = 0;
     for (int i = 1; i < win->file_data->rows; i++) {
@@ -300,6 +308,8 @@ set_file_rows_cols (window_t *win)
     max_mid = win->file_data->rows - ((win->data_win_rows - 1) / 2);
     win->file_data->max_mid = (win->file_data->rows > win->data_win_rows) ? max_mid : win->file_data->min_mid;
     win->data_win_mid_line = win->file_data->min_mid;
+
+    return RET_OK;
 }
 
 
@@ -494,12 +504,12 @@ format_win_data (int plugin_index,
         left_spaces = left_spaces > 0 ? left_spaces : 0;
         right_spaces = right_spaces > 0 ? left_spaces : 0;
 
-        wattron   (win->IWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
-        mvwprintw (win->IWIN, 0, 0, "%*c%.*s%*c", left_spaces, ' ',
+        wattron   (win->TWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
+        mvwprintw (win->TWIN, 0, 0, "%*c%.*s%*c", left_spaces, ' ',
                                                   win->topbar_cols, basefile,
                                                   right_spaces, ' ');
-        wattroff  (win->IWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
-        wrefresh  (win->IWIN);
+        wattroff  (win->TWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
+        wrefresh  (win->TWIN);
     }
 }
 

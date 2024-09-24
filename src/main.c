@@ -1,10 +1,13 @@
 //
 // TODO: re-render layout on terminal screen size change
+// TODO: replace strcpy, strncpy functions with memcpy
+// TODO: finish adding any needed function return value error propagation
 //
 
 #include <unistd.h>
 #include <signal.h>
 #include <ncurses.h>
+#include <errno.h>
 
 #include "data.h"
 #include "utilities.h"
@@ -16,7 +19,7 @@
 #include "update_window_data/_update_window_data.h"
 #include "plugins.h"
 
-static void initial_configure   (int, char*[], state_t*);
+static int  initial_configure   (int, char*[], state_t*);
 static void exit_signal_handler (int sig_num);
 
 
@@ -30,24 +33,40 @@ main (int   argc,
     debugger_t debugger;
     state.debugger = &debugger;
 
-    initial_configure (argc, argv, &state);
+    if (initial_configure (argc, argv, &state) == RET_FAIL) {
+        pfeme ("Initial configuration failed\n\n");
+    }
 
-    parse_config_file (&state);
+    if (parse_config_file (&state) == RET_FAIL) {
+        pfeme ("Failed to parse configuration file\n\n");
+    }
 
-    render_layout (FIRST_LAYOUT, &state);
+    if (render_layout (FIRST_LAYOUT, &state) == RET_FAIL) {
+        pfeme ("Failed to render \"%s\" layout\n\n", FIRST_LAYOUT);
+    }
 
-    start_debugger (&state); 
+    if (start_debugger (&state) == RET_FAIL) {
+        pfeme ("Failed to start debugger");
+    }
 
-    update_windows (&state, 2, Src, Asm);
+    if (update_windows (&state, 2, Src, Asm) == RET_FAIL) {
+        pfeme ("Failed to update windows");
+    }
 
-    get_persisted_data (&state);
+    if (get_persisted_data (&state) == RET_FAIL) {
+        pfeme ("Failed to get persisted data");
+    }
 
     while (debugger.running) {
         key = getch ();
-        run_plugin (state.plugin_key_index[key], &state);
+        if (run_plugin (state.plugin_key_index[key], &state) == RET_FAIL) {
+            pfeme ("Failed to run plugin");
+        }
     }
 
-    persist_data (&state);
+    if (persist_data (&state) == RET_FAIL) {
+        pfeme ("Failed to persist data");
+    }
 
     clean_up ();
 
@@ -82,7 +101,7 @@ main (int   argc,
 
     - Initialize Ncurses
 */
-static void
+static int
 initial_configure (int   argc,
                    char *argv[],
                    state_t *state)
@@ -98,10 +117,9 @@ initial_configure (int   argc,
     state->config_path[0] = '\0';
     state->data_path[0]   = '\0';
     state->pid[0]         = '\0';
-
-    char *optstring = "hdc:p:";
     debugging_mode = false;
-
+    
+    char *optstring = "hdc:p:";
     while ((opt = getopt (argc, argv, optstring)) != -1) {
         switch (opt) {
 
@@ -120,7 +138,9 @@ initial_configure (int   argc,
                 "   $ termfu [OPTION...]\n"
                 "\n"
                 "       -c CONFIG_FILE    Use this configuration file\n"
-                "       -d PERSIST_FILE   Persist sessions with this file\n"
+                "       -p PERSIST_FILE   Persist sessions with this file\n"
+                "\n"
+                "       -d                Start in debug mode\n"
                 "\n",
 
                 CONFIG_FILE, PERSIST_FILE);
@@ -159,7 +179,8 @@ initial_configure (int   argc,
 
         // write debugged termfu PID to DEBUG_PID_FILE
         if ((fp = fopen (DEBUG_PID_FILE, "w")) == NULL) {
-            fprintf (stderr, "Unable to open debug PID file \"%s\"\n", DEBUG_PID_FILE);
+            pfem ("fopen error: %s", strerror (errno));
+            pemr ("Unable to open debug PID file \"%s\"\n", DEBUG_PID_FILE);
         }
         fprintf (fp, "%ld", (long) getpid());
         fclose (fp);
@@ -167,12 +188,13 @@ initial_configure (int   argc,
         // print message
         printf (
             "\n"
+            "Process ID:    \033[0;36m%ld\033[0m (%s)\n"
+            "\n"
             "Connect to this process with debugger\n"
             "\n"
-            "$ make connect_proc_<debugger>\n"
-            "\n"
-            "Process ID:    \033[0;36m%ld\033[0m (%s)\n"
-            "Next function: \033[0;33mparse_config_file\033[0m\n"
+            "    $ make connect_proc_<debugger>\n"
+            "    - Set breakpoint\n"
+            "    - Continue\n"
             "\n"
             "Press any key to continue...\n"
             "\n",
@@ -204,12 +226,16 @@ initial_configure (int   argc,
         init_pair(CYAN_BLACK, COLOR_CYAN, COLOR_BLACK);         // CYAN_BLACK
         init_pair(WHITE_BLACK, COLOR_WHITE, COLOR_BLACK);       // WHITE_BLACK
         init_pair(WHITE_BLUE, COLOR_WHITE, COLOR_BLUE);         // WHITE_BLUE
+    } else {
+        pfemr ("Terminal doesn't support colors\n");
     }
 
     cbreak();
     noecho();
     curs_set (0);
     set_escdelay (0);
+
+    return RET_OK;
 }
 
 

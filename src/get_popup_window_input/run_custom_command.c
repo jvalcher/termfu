@@ -7,20 +7,28 @@
 
 // TODO: save commands, up/down key access
 
-void
+int
 run_custom_command (state_t *state)
 {
     char *cmd;
 
-    get_popup_window_input  (">> ", state->input_buffer);
+    if (get_popup_window_input  (">> ", state->input_buffer) == RET_FAIL) {
+        pfemr ("Failed to get custom command input");
+    }
 
     cmd = concatenate_strings (2, state->input_buffer, "\n");    
-    send_command_mp (state, cmd);
+    if (send_command_mp (state, cmd) == RET_FAIL) {
+        pfemr ("Failed to send custom command");
+    }
     free (cmd);
     
     state->plugins[Dbg]->win->buff_data->new_data = true;
     state->plugins[Prg]->win->buff_data->new_data = true;
-    update_windows (state, 8, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Wat);
+    if (update_windows (state, 8, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Wat) == RET_FAIL) {
+        pfemr ("Failed to update windows");
+    }
+
+    return RET_OK;
 }
 
 

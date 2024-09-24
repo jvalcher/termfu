@@ -5,10 +5,9 @@
 
 
 
-void get_register_data (state_t *state);
+int get_register_data (state_t *state);
 
 
 
 #endif
-
 

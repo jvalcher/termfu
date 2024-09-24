@@ -5,7 +5,7 @@
 
 
 
-void  get_program_output  (state_t *state);
+int get_program_output (state_t *state);
 
 
 

@@ -3,26 +3,32 @@
 #include "../plugins.h"
 
 
-static void get_stack_data_gdb (state_t *state);
-static void get_stack_data_pdb (state_t *state);
+static int get_stack_data_gdb (state_t *state);
+static int get_stack_data_pdb (state_t *state);
 
 
 
-void
+int
 get_stack_data (state_t *state)
 {
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            get_stack_data_gdb (state);
+            if (get_stack_data_gdb (state) == RET_FAIL) {
+                pfemr ("Failed to get stack data (GDB)");
+            }
             break;
         case (DEBUGGER_PDB):
-            get_stack_data_pdb (state);
+            if (get_stack_data_pdb (state) == RET_FAIL) {
+                pfemr ("Failed to get stack data (PDB)");
+            }
             break;
     }
+
+    return RET_OK;
 }
 
 
-static void
+static int
 get_stack_data_gdb (state_t *state)
 {
     window_t *win;
@@ -40,7 +46,9 @@ get_stack_data_gdb (state_t *state)
                 *file_key  = "file=\"",
                 *line_key  = "line=\"";
 
-    send_command_mp (state, "-stack-list-frames\n");
+    if (send_command_mp (state, "-stack-list-frames\n") == RET_FAIL) {
+        pfemr ("Failed to send stack data command (GDB)");
+    }
 
     dest_buff->buff_pos = 0;
     dest_buff->changed = true;
@@ -108,11 +116,13 @@ get_stack_data_gdb (state_t *state)
     }
 
     state->debugger->data_buffer[0] = '\0';
+
+    return RET_OK;
 }
 
 
 
-static void
+static int
 get_stack_data_pdb (state_t *state)
 {
     window_t *win;
@@ -123,7 +133,9 @@ get_stack_data_pdb (state_t *state)
     src_ptr   = state->debugger->cli_buffer;
     dest_buff = win->buff_data;
 
-    send_command_mp (state, "where\n");
+    if (send_command_mp (state, "where\n") == RET_FAIL) {
+        pfemr ("Failed to send stack data command (PDB)");
+    }
 
     dest_buff->buff_pos = 0;
 
@@ -134,5 +146,7 @@ get_stack_data_pdb (state_t *state)
     dest_buff->changed = true;
     state->debugger->cli_buffer[0] = '\0';
     dest_buff->new_data = false;
+
+    return RET_OK;
 }
 

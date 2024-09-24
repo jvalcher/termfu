@@ -9,7 +9,7 @@
 /*
     Send non-window debugger command
 */
-void send_debugger_command (int plugin_index, state_t *state);
+int send_debugger_command (int plugin_index, state_t *state);
 
 
 

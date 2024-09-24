@@ -1,31 +1,39 @@
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "watchpoints.h"
 #include "_get_popup_window_input.h"
 #include "../data.h"
 #include "../update_window_data/_update_window_data.h"
 #include "../plugins.h"
+#include "../utilities.h"
 
 
 
-void
+int
 insert_watchpoint (state_t *state)
 {
     int index;
     watchpoint_t *watch = NULL;
 
-    get_popup_window_input  ("Create watchpoint (variable): ", state->input_buffer);
+    if (get_popup_window_input  ("Create watchpoint (variable): ", state->input_buffer) == RET_FAIL) {
+        pfemr ("Failed to get watchpoint input");
+    }
 
     if (strlen (state->input_buffer) > 0) {
 
         // first watchpoint
         if (state->watchpoints == NULL) {
-            state->watchpoints = (watchpoint_t*) malloc (sizeof (watchpoint_t));
+            if ((state->watchpoints = (watchpoint_t*) malloc (sizeof (watchpoint_t))) == NULL) {
+                pfem ("malloc error: %s", strerror (errno));
+                pemr ("Failed to allocate watchpoint_t (var: \"%s\")", state->input_buffer);
+            }
             watch = state->watchpoints;
             watch->index = 1;
             watch->var[0] = '\0';
-            strncpy (watch->var, state->input_buffer, WATCH_LEN - 1);
+            memcpy (watch->var, state->input_buffer, WATCH_LEN - 1);
+            watch->var [WATCH_LEN - 1] = '\0';
             watch->next = NULL;
         } 
 
@@ -37,21 +45,29 @@ insert_watchpoint (state_t *state)
                 watch = watch->next; 
                 index = watch->index;
             }
-            watch->next = (watchpoint_t*) malloc (sizeof (watchpoint_t));
+            if ((watch->next = (watchpoint_t*) malloc (sizeof (watchpoint_t))) == NULL) {
+                pfem ("malloc error: %s", strerror (errno));
+                pemr ("Failed to allocate watchpoint_t (var: \"%s\")", state->input_buffer);
+            }
             watch = watch->next;
             watch->index = index + 1;
             watch->value[0] = '\0';
-            strncpy (watch->var, state->input_buffer, WATCH_LEN - 1);
+            memcpy (watch->var, state->input_buffer, WATCH_LEN - 1);
+            watch->var [WATCH_LEN - 1] = '\0';
             watch->next = NULL;
         }
     }
 
-    update_window (Wat, state);
+    if (update_window (Wat, state) == RET_FAIL) {
+        pfemr ("Failed to update watchpoint window");
+    }
+
+    return RET_OK;
 }
 
 
 
-void
+int
 delete_watchpoint (state_t *state)
 {
     watchpoint_t *prev_watch,
@@ -60,7 +76,9 @@ delete_watchpoint (state_t *state)
     watch = state->watchpoints;
     prev_watch = watch;
 
-    get_popup_window_input  ("Delete watchpoint (index): ", state->input_buffer);
+    if (get_popup_window_input  ("Delete watchpoint (index): ", state->input_buffer) == RET_FAIL) {
+        pfemr ("Failed to get delete watchpoint input");
+    }
 
     while (watch != NULL) {
 
@@ -78,12 +96,16 @@ delete_watchpoint (state_t *state)
         watch = watch->next; 
     }
 
-    update_window (Wat, state);
+    if (update_window (Wat, state) == RET_FAIL) {
+        pfemr ("Failed to update window");
+    }
+
+    return RET_OK;
 }
 
 
 
-void
+int
 clear_all_watchpoints (state_t *state)
 {
     watchpoint_t *tmp_watch,
@@ -97,6 +119,10 @@ clear_all_watchpoints (state_t *state)
     }
     state->watchpoints = NULL;
 
-    update_window (Wat, state);
+    if (update_window (Wat, state) == RET_FAIL) {
+        pfemr ("Failed to update watchpoint window");
+    }
+
+    return RET_OK;
 }
 

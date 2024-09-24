@@ -25,7 +25,6 @@ parse_debugger_output (state_t *state)
 
     while (running) 
     {
-
         // read debugger stdout
         state->debugger->reader_buffer[0] = '\0';
         bytes_read = read (state->debugger->stdout_pipe, 

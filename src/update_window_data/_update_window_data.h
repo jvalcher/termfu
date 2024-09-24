@@ -14,7 +14,7 @@
 /*
     Update single window's data
 */
-void  update_window (int plugin_index, state_t *state);
+int  update_window (int plugin_index, state_t *state);
 
 
 
@@ -23,7 +23,7 @@ void  update_window (int plugin_index, state_t *state);
     ------
     num_windows == number of plugin index arguments
 */
-void  update_windows (state_t *state, int num_windows, ...);
+int  update_windows (state_t *state, int num_windows, ...);
 
 
 

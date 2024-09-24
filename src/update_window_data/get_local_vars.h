@@ -5,7 +5,7 @@
 
 
 
-void get_local_vars (state_t *state);
+int get_local_vars (state_t *state);
 
 
 
