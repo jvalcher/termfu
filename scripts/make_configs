@@ -41,10 +41,10 @@ cmd_label = '''
 [ command ]
 
 '''
-cmd_run_gdb          = cmd_label + 'gdb --quiet --interpreter=mi misc/hello\n'
+cmd_run_gdb          = cmd_label + 'gdb --interpreter=mi misc/hello\n'
 cmd_run_pdb          = cmd_label + 'python -m pdb misc/gcd.py\n'
-cmd_conn_proc_termfu = cmd_label + 'gdb --quiet --interpreter=mi\n'
-cmd_proc_gdb         = cmd_label + 'gdb --quiet --interpreter=mi misc/hello\n'
+cmd_conn_proc_termfu = cmd_label + 'gdb --interpreter=mi\n'
+cmd_proc_gdb         = cmd_label + 'gdb --interpreter=mi misc/hello\n'
 cmd_proc_pdb         = cmd_label + 'python -m pdb misc/gcd.py\n'
 
 

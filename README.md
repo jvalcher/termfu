@@ -132,17 +132,18 @@ gdb --interpreter=mi misc/hello
 [ plugins ]
 
 # header commands
-Prm : m : pro(m)pt
-Trg : t : (t)arget
-Lay : l : (l)ayouts
-Qut : q : (q)uit
-Run : r : (r)un
-Nxt : n : (n)ext
-Stp : s : (s)tep
+AtP : A : (A)ttach
 Con : c : (c)ontinue
-Unt : u : (u)ntil
 Fin : f : (f)inish
 Kil : k : (k)ill
+Lay : l : (l)ayouts
+Nxt : n : (n)ext
+Prm : m : pro(m)pt
+Qut : q : (q)uit
+Run : r : (r)un
+Stp : s : (s)tep
+Trg : t : (t)arget
+Unt : u : (u)ntil
 
 # windows
 Asm : a : (a)ssembly
@@ -159,7 +160,7 @@ Wat : w : (w)atch
 [ layout : Main ]
 
 >h
-mtlq
+mAtlq
 rnscufk
 
 >w
@@ -171,7 +172,7 @@ TTpppddd
 [ layout : Assembly / Registers ]
 
 >h
-mtlq
+mAtlq
 rnscufk
 
 >w
