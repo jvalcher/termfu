@@ -28,43 +28,53 @@ int
 main (int   argc,
       char *argv[]) 
 {
-    int        key;
+    int        key, ret;
     state_t    state;
     debugger_t debugger;
     state.debugger = &debugger;
 
-    if (initial_configure (argc, argv, &state) == RET_FAIL) {
+    ret = initial_configure (argc, argv, &state);
+    if (ret == FAIL) {
         pfeme ("Initial configuration failed\n\n");
     }
 
-    if (parse_config_file (&state) == RET_FAIL) {
+    ret = parse_config_file (&state);
+    if (ret== FAIL) {
         pfeme ("Failed to parse configuration file\n\n");
     }
 
-    if (render_layout (FIRST_LAYOUT, &state) == RET_FAIL) {
+    ret = render_layout (FIRST_LAYOUT, &state);
+    if (ret == FAIL) {
         pfeme ("Failed to render \"%s\" layout\n\n", FIRST_LAYOUT);
     }
 
-    if (start_debugger (&state) == RET_FAIL) {
+    ret = start_debugger (&state);
+    if (ret == FAIL) {
         pfeme ("Failed to start debugger");
     }
 
-    if (update_windows (&state, 2, Src, Asm) == RET_FAIL) {
+    ret = update_windows (&state, 2, Src, Asm);
+    if (ret == FAIL) {
         pfeme ("Failed to update windows");
     }
 
-    if (get_persisted_data (&state) == RET_FAIL) {
+    ret = get_persisted_data (&state);
+    if (ret == FAIL) {
         pfeme ("Failed to get persisted data");
     }
 
     while (debugger.running) {
+
         key = getch ();
-        if (run_plugin (state.plugin_key_index[key], &state) == RET_FAIL) {
+
+        ret = run_plugin (state.plugin_key_index[key], &state);
+        if (ret == FAIL) {
             pfeme ("Failed to run plugin");
         }
     }
 
-    if (persist_data (&state) == RET_FAIL) {
+    ret = persist_data (&state);
+    if (ret == FAIL) {
         pfeme ("Failed to persist data");
     }
 
@@ -177,7 +187,8 @@ initial_configure (int   argc,
     if (debugging_mode) {
 
         // write debugged termfu PID to DEBUG_PID_FILE
-        if ((fp = fopen (DEBUG_PID_FILE, "w")) == NULL) {
+        fp = fopen (DEBUG_PID_FILE, "w");
+        if (fp == NULL) {
             pfem ("fopen error: %s", strerror (errno));
             pemr ("Unable to open debug PID file \"%s\"\n", DEBUG_PID_FILE);
         }
@@ -233,7 +244,7 @@ initial_configure (int   argc,
     curs_set (0);
     set_escdelay (0);
 
-    return RET_OK;
+    return A_OK;
 }
 
 

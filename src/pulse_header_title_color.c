@@ -10,7 +10,6 @@
 
 #define MIN_PULSE_LEN  .06
 
-
 struct timeval start, end;
 
 
@@ -23,7 +22,8 @@ pulse_header_title_color (int plugin_index,
     size_t  i;
     int     x, y,
             title_color,
-            keych_color;
+            keych_color,
+            ret;
     double  diff;
     bool    key_color_toggle,
             string_exists;
@@ -33,14 +33,16 @@ pulse_header_title_color (int plugin_index,
     // set colors, handle pulse length
     switch (pulse_state) {
         case ON:
-            if (gettimeofday (&start, NULL) == -1) {
+            ret = gettimeofday (&start, NULL);
+            if (ret == -1) {
                 pfemr ("Failed to get start time of day (ON): %s", strerror (errno));
             }
             title_color = FOCUS_HEADER_TITLE_COLOR;
             keych_color = FOCUS_TITLE_KEY_COLOR;
             break;
         case OFF:
-            if (gettimeofday(&end, NULL) == -1) {
+            ret = gettimeofday(&end, NULL);
+            if (ret == -1) {
                 pfemr ("Failed to get end time of day (OFF): %s", strerror (errno));
             }
             diff = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
@@ -63,20 +65,23 @@ pulse_header_title_color (int plugin_index,
     if (string_exists) {
 
         key_color_toggle = false;
-        if (set_nc_attribute (header, title_color) == RET_FAIL) {
-            pfemr ("Failed to set ncurses attribute");
+        ret = set_nc_attribute (header, title_color);
+        if (ret == FAIL) {
+            pfemr (ERR_NC_ATTR);
         }
         for (i = 0; i < strlen (title) + 1; i++) {
             mvwprintw (header, y, x + i, "%c", title [i]);
             if (key_color_toggle) {
-                if (set_nc_attribute (header, title_color) == RET_FAIL) {
-                    pfemr ("Failed to set ncurses attribute");
+                ret = set_nc_attribute (header, title_color);
+                if (ret == FAIL) {
+                    pfemr (ERR_NC_ATTR);
                 }
                 key_color_toggle = false;
             }
             if (title [i] == '(') {
-                if (set_nc_attribute (header, keych_color) == RET_FAIL) {
-                    pfemr ("Failed to set ncurses attribute");
+                ret = set_nc_attribute (header, keych_color);
+                if (ret == FAIL) {
+                    pfemr (ERR_NC_ATTR);
                 }
                 key_color_toggle = true;
             }
@@ -84,5 +89,5 @@ pulse_header_title_color (int plugin_index,
         wrefresh (header);
     }
 
-    return RET_OK;
+    return A_OK;
 }

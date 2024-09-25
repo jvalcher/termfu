@@ -17,26 +17,31 @@ static int get_assembly_data_pdb (state_t *state);
 int
 get_assembly_data (state_t *state)
 {
+    int ret;
+
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            if (get_assembly_data_gdb (state) == RET_FAIL) {
+            ret = get_assembly_data_gdb (state);
+            if (ret == FAIL) {
                 pfemr ("Failed to get assembly data (GDB)");
             }
             break;
         case (DEBUGGER_PDB):
-            if (get_assembly_data_pdb (state) == RET_FAIL) {
+            ret = get_assembly_data_pdb (state);
+            if (ret == FAIL) {
                 pfemr ("Failed to get assembly data (PDB)");
             }
             break;
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
 static int
 get_assembly_data_gdb (state_t *state)
 {
+    int       ret;
     window_t *win;
     char     *src_ptr,
              *dest_ptr,
@@ -53,13 +58,14 @@ get_assembly_data_gdb (state_t *state)
     dest_buff = win->buff_data;
     src_data  = state->plugins[Src]->win->src_file_data;
 
-    // send debugger command
     func = (src_data->func[0] == '\0') ? main : src_data->func;
     cmd = concatenate_strings (3, "disassemble ", func, " \n");
-    if (send_command_mp (state, cmd) == RET_FAIL) {
-        pfem ("Failed to send assembly command to GDB debugger");
-        pemr ("Command: \"%s\"", cmd);
+
+    ret = send_command_mp (state, cmd);
+    if (ret == FAIL) {
+        pfemr (ERR_DBG_CMD);
     }
+
     free (cmd);
 
     if (strstr (data_ptr, "error") == NULL) {
@@ -126,7 +132,7 @@ get_assembly_data_gdb (state_t *state)
         ++dest_ptr;
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -138,6 +144,6 @@ get_assembly_data_pdb (state_t *state)
 
     state->plugins[Asm]->win->buff_data->changed = true;
 
-    return RET_OK;
+    return A_OK;
 }
 

@@ -8,12 +8,16 @@
 static int get_binary_path_time_gdb (state_t *state);
 
 
+
 int
 get_binary_path_time (state_t *state)
 {
+    int ret;
+
     switch (state->debugger->index) {
         case DEBUGGER_GDB:
-            if (get_binary_path_time_gdb (state) == RET_FAIL) {
+            ret = get_binary_path_time_gdb (state);
+            if (ret == FAIL) {
                 pfemr ("Failed to get binary path and update time (GDB)");
             }
             break;
@@ -21,7 +25,7 @@ get_binary_path_time (state_t *state)
             break;
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -29,7 +33,7 @@ get_binary_path_time (state_t *state)
 static int
 get_binary_path_time_gdb (state_t *state)
 {
-    int i;
+    int i, ret;
     char *src_ptr,
         *dest_ptr;
     struct stat file_stat;
@@ -39,8 +43,9 @@ get_binary_path_time_gdb (state_t *state)
     src_ptr  = state->debugger->cli_buffer;
     dest_ptr = state->debugger->prog_path;
 
-    if (send_command_mp (state, "info file\n") == RET_FAIL) {
-        pfemr ("Failed to send debugger command");
+    ret = send_command_mp (state, "info file\n");
+    if (ret == FAIL) {
+        pfemr (ERR_DBG_CMD);
     }
 
     if ((src_ptr = strstr (src_ptr, path_str)) != NULL) {
@@ -64,7 +69,7 @@ get_binary_path_time_gdb (state_t *state)
 
     state->debugger->cli_buffer[0]  = '\0';
 
-    return RET_OK;
+    return A_OK;
 }
 
 

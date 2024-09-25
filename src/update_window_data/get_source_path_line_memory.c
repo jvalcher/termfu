@@ -13,20 +13,24 @@ static int get_source_path_line_memory_pdb (state_t *state);
 int
 get_source_path_line_memory (state_t *state)
 {
+    int ret;
+
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            if (get_source_path_line_memory_gdb (state) == RET_FAIL) {
+            ret = get_source_path_line_memory_gdb (state);
+            if (ret == FAIL) {
                 pfemr ("Failed to get source, line, memory (GDB)");
             }
             break;
         case (DEBUGGER_PDB):
-            if (get_source_path_line_memory_pdb (state) == RET_FAIL) {
+            ret = get_source_path_line_memory_pdb (state);
+            if (ret == FAIL) {
                 pfemr ("Failed to get source, line, memory (PDB)");
             }
             break;
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -34,6 +38,7 @@ get_source_path_line_memory (state_t *state)
 static int
 get_source_path_line_memory_gdb (state_t *state)
 {
+    int   ret;
     char *src_ptr,
          *dest_ptr,
          *prev_ptr;
@@ -57,8 +62,9 @@ get_source_path_line_memory_gdb (state_t *state)
 
     // check if program running
     src_ptr = state->debugger->data_buffer;
-    if (send_command_mp (state, "-thread-info\n") == RET_FAIL) {
-        pfemr ("Failed to send source, line, memory (program running check) command (GDB)");
+    ret = send_command_mp (state, "-thread-info\n");
+    if (ret == FAIL) {
+        pfemr (ERR_DBG_CMD);
     }
 
         // get number of threads
@@ -75,8 +81,9 @@ get_source_path_line_memory_gdb (state_t *state)
     // if no threads or program not running
     if (*src_ptr == ']') {
 
-        if (send_command_mp (state, "-file-list-exec-source-files\n") == RET_FAIL) {
-            pfemr ("Failed to send source, line, memory (no threads) command (GDB)");
+        ret = send_command_mp (state, "-file-list-exec-source-files\n");
+        if (ret == FAIL) {
+            pfemr (ERR_DBG_CMD);
         }
 
         src_ptr = state->debugger->data_buffer;
@@ -145,7 +152,7 @@ get_source_path_line_memory_gdb (state_t *state)
 
     state->debugger->data_buffer[0] = '\0';
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -153,6 +160,7 @@ get_source_path_line_memory_gdb (state_t *state)
 static int
 get_source_path_line_memory_pdb (state_t *state)
 {
+    int   ret;
     char *src_ptr;
     window_t *win;
     src_file_data_t *file_data;
@@ -167,8 +175,9 @@ get_source_path_line_memory_pdb (state_t *state)
     file_data->path_pos = 0;
     file_data->func_pos = 0;
 
-    if (send_command_mp (state, "where\n") == RET_FAIL) {
-        pfemr ("Failed to send source path, line, memory command (PDB)");
+    ret = send_command_mp (state, "where\n");
+    if (ret == FAIL) {
+        pfemr (ERR_DBG_CMD);
     }
 
     src_ptr = strstr (src_ptr, curr_path_symbol);
@@ -201,5 +210,5 @@ get_source_path_line_memory_pdb (state_t *state)
     state->debugger->cli_buffer[0] = '\0';
     state->debugger->format_buffer[0] = '\0';
 
-    return RET_OK;
+    return A_OK;
 }

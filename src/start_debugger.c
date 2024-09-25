@@ -24,30 +24,37 @@ static int start_debugger_proc (state_t*);
 int
 start_debugger (state_t *state)
 {
-    if (configure_debugger (state->debugger) == RET_FAIL) {
+    int ret;
+
+    ret = configure_debugger (state->debugger);
+    if (ret == FAIL) {
         pfemr ("Failed to configure debugger");
     }
 
-    if (start_debugger_proc (state) == RET_FAIL) {
+    ret = start_debugger_proc (state);
+    if (ret == FAIL) {
         pfemr ("Failed to start debugger process");
     }
 
-    if (insert_output_end_marker (state) == RET_FAIL) {
-        pfemr ("Failed to send end marker for debugger start");
+    ret = insert_output_end_marker (state);
+    if (ret == FAIL) {
+        pfemr (ERR_OUT_MARK);
     }
 
     parse_debugger_output (state);
 
     state->plugins[Dbg]->win->buff_data->new_data = true;
-    if (update_window (Dbg, state) == RET_FAIL) {
-        pfemr ("Failed to update debugger window");
+    ret = update_window (Dbg, state);
+    if (ret == FAIL) {
+        pfemr (ERR_UPDATE_WIN);
     }
 
-    if (get_binary_path_time (state) == RET_FAIL) {
-        pfemr ("Failed to get binary_path_time");
+    ret = get_binary_path_time (state);
+    if (ret == FAIL) {
+        pfemr ("Failed to get binary path, time");
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -100,7 +107,7 @@ configure_debugger (debugger_t *debugger)
     debugger->async_pos = 0;
     debugger->async_times_doubled = 0;
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -147,8 +154,9 @@ start_debugger_proc (state_t *state)
         i = 0;
         do {
             strcat (state->debugger->format_buffer, state->command[i++]);
+            strcat (state->debugger->format_buffer, " ");
         } while (state->command [i] != NULL);
-        pfemr ("execvp error: \"%s\"", state->debugger->format_buffer);
+        pfemr ("execvp error with command: \"%s\"", state->debugger->format_buffer);
     }
 
     if (debugger_pid > 0) {
@@ -159,6 +167,6 @@ start_debugger_proc (state_t *state)
         close (debug_out_pipe  [PIPE_WRITE]);
     }
 
-    return RET_OK;
+    return A_OK;
 }
 

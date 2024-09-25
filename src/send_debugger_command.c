@@ -20,16 +20,19 @@ send_debugger_command (int      plugin_index,
                        state_t *state)
 {
     bool exiting = false;
-    int debugger_index = state->debugger->index;
+    int ret,
+        debugger_index = state->debugger->index;
 
     // OPTIMIZE: make this a separate thread so that termfu can continue
-    if (pulse_header_title_color (plugin_index, state, ON) == RET_FAIL) {
-        pfem ("Failed to pulse header title color on");
+    ret = pulse_header_title_color (plugin_index, state, ON);
+    if (ret == FAIL) {
+        pfem (ERR_PULSE_CMD);
         goto dbg_cmd_err_misc;
     }
 
-    if (insert_output_start_marker (state) == RET_FAIL) {
-        pfem ("Failed to insert output start marker");
+    ret = insert_output_start_marker (state);
+    if (ret == FAIL) {
+        pfem (ERR_OUT_MARK);
         goto dbg_cmd_err_misc;
     }
 
@@ -38,10 +41,10 @@ send_debugger_command (int      plugin_index,
         case Con:
             switch (debugger_index) {
                 case (DEBUGGER_GDB):
-                    if (send_command (state, "-exec-continue\n") == RET_FAIL) goto dbg_cmd_err;
+                    if (send_command (state, "-exec-continue\n") == FAIL) goto dbg_cmd_err;
                     break;
                 case (DEBUGGER_PDB):
-                    if (send_command (state, "continue\n") == RET_FAIL) goto dbg_cmd_err;
+                    if (send_command (state, "continue\n") == FAIL) goto dbg_cmd_err;
                     break;
             }
             break;
@@ -49,10 +52,10 @@ send_debugger_command (int      plugin_index,
         case Fin:
             switch (debugger_index) {
                 case (DEBUGGER_GDB):
-                    if (send_command (state, "-exec-finish\n") == RET_FAIL) goto dbg_cmd_err;
+                    if (send_command (state, "-exec-finish\n") == FAIL) goto dbg_cmd_err;
                     break;
                 case (DEBUGGER_PDB):
-                    if (send_command (state, "return\n") == RET_FAIL) goto dbg_cmd_err;
+                    if (send_command (state, "return\n") == FAIL) goto dbg_cmd_err;
                     break;
             }
             break;
@@ -60,10 +63,10 @@ send_debugger_command (int      plugin_index,
         case Kil:
             switch (debugger_index) {
                 case (DEBUGGER_GDB):
-                    if (send_command (state, "kill\n") == RET_FAIL) goto dbg_cmd_err;
+                    if (send_command (state, "kill\n") == FAIL) goto dbg_cmd_err;
                     break;
                 case (DEBUGGER_PDB):
-                    if (send_command (state, "restart\n") == RET_FAIL) goto dbg_cmd_err;
+                    if (send_command (state, "restart\n") == FAIL) goto dbg_cmd_err;
                     break;
             }
             break;
@@ -71,10 +74,10 @@ send_debugger_command (int      plugin_index,
         case Nxt:
             switch (debugger_index) {
                 case (DEBUGGER_GDB):
-                    if (send_command (state, "-exec-next\n") == RET_FAIL) goto dbg_cmd_err;
+                    if (send_command (state, "-exec-next\n") == FAIL) goto dbg_cmd_err;
                     break;
                 case (DEBUGGER_PDB):
-                    if (send_command (state, "next\n") == RET_FAIL) goto dbg_cmd_err;
+                    if (send_command (state, "next\n") == FAIL) goto dbg_cmd_err;
                     break;
             }
             break;
@@ -82,13 +85,13 @@ send_debugger_command (int      plugin_index,
         case Run:
             switch (debugger_index) {
                 case (DEBUGGER_GDB):
-                    if (send_command (state, "-exec-run\n") == RET_FAIL) goto dbg_cmd_err;
+                    if (send_command (state, "-exec-run\n") == FAIL) goto dbg_cmd_err;
                     if (file_was_updated (state->debugger->prog_update_time, state->debugger->prog_path)) {
                         state->plugins[Src]->win->src_file_data->path_changed = true;
                     }
                     break;
                 case (DEBUGGER_PDB):
-                    if (send_command (state, "restart\n") == RET_FAIL) goto dbg_cmd_err;
+                    if (send_command (state, "restart\n") == FAIL) goto dbg_cmd_err;
                     state->plugins[Src]->win->src_file_data->path_changed = true;
                     break;
             }
@@ -97,10 +100,10 @@ send_debugger_command (int      plugin_index,
         case Stp:
             switch (debugger_index) {
                 case (DEBUGGER_GDB):
-                    if (send_command (state, "step\n") == RET_FAIL) goto dbg_cmd_err;
+                    if (send_command (state, "step\n") == FAIL) goto dbg_cmd_err;
                     break;
                 case (DEBUGGER_PDB):
-                    if (send_command (state, "step\n") == RET_FAIL) goto dbg_cmd_err;
+                    if (send_command (state, "step\n") == FAIL) goto dbg_cmd_err;
                     break;
             }
             break;
@@ -108,10 +111,10 @@ send_debugger_command (int      plugin_index,
         case Qut:
             switch (debugger_index) {
                 case (DEBUGGER_GDB):
-                    if (send_command (state, "-gdb-exit\n") == RET_FAIL) goto dbg_cmd_err;
+                    if (send_command (state, "-gdb-exit\n") == FAIL) goto dbg_cmd_err;
                     break;
                 case (DEBUGGER_PDB):
-                    if (send_command (state, "quit\n") == RET_FAIL) goto dbg_cmd_err;
+                    if (send_command (state, "quit\n") == FAIL) goto dbg_cmd_err;
                     break;
             }
             state->debugger->running = false;
@@ -123,33 +126,37 @@ send_debugger_command (int      plugin_index,
         // flush program stdout
         switch (debugger_index) {
             case DEBUGGER_GDB:
-                if (send_command (state, "call ((void(*)(int))fflush)(0)\n") == RET_FAIL) {
-                    pfem ("Failed to send flush command");
+                ret = send_command (state, "call ((void(*)(int))fflush)(0)\n");
+                if (ret == FAIL) {
+                    pfem (ERR_DBG_CMD);
                     goto dbg_cmd_err_misc;
                 }
                 break;
         }
 
-        if (insert_output_end_marker (state) == RET_FAIL) {
-            pfem ("Failed to insert output start marker");
+        ret = insert_output_end_marker (state);
+        if (ret == FAIL) {
+            pfem (ERR_OUT_MARK);
             goto dbg_cmd_err_misc;
         }
         parse_debugger_output (state);
 
         state->plugins[Dbg]->win->buff_data->new_data = true;
         state->plugins[Prg]->win->buff_data->new_data = true;
-        if (update_windows (state, 9, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Stk, Wat) == RET_FAIL) {
-            pfem ("Failed to update windows");
+        ret = update_windows (state, 9, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Stk, Wat);
+        if (ret == FAIL) {
+            pfem (ERR_UPDATE_WINS);
             goto dbg_cmd_err_misc;
         }
     }
 
-    if (pulse_header_title_color (plugin_index, state, OFF) == RET_FAIL) {
-        pfem ("Failed to pulse header title color off");
+    ret = pulse_header_title_color (plugin_index, state, OFF);
+    if (ret == FAIL) {
+        pfem (ERR_PULSE_CMD);
         goto dbg_cmd_err_misc;
     }
 
-    return RET_OK;
+    return A_OK;
 
 dbg_cmd_err:
 

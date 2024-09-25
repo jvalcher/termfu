@@ -8,12 +8,16 @@
 static int target_remote_server_gdb (state_t *state);
 
 
+
 int
 target_remote_server (state_t *state)
 {
+    int ret;
+
     switch (state->debugger->index) {
         case DEBUGGER_GDB:
-            if (target_remote_server_gdb (state) == RET_FAIL) {
+            ret = target_remote_server_gdb (state);
+            if (ret == FAIL) {
                 pfemr ("Failed to target remote server (GDB)");
             }
             break;
@@ -21,7 +25,7 @@ target_remote_server (state_t *state)
             break;
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -29,27 +33,31 @@ target_remote_server (state_t *state)
 static int
 target_remote_server_gdb (state_t *state)
 {
+    int   ret;
     char *cmd,
          *cmd_base = "target remote ";
 
-    if (get_popup_window_input  ("Target remote server: ", state->input_buffer) == RET_FAIL) {
-        pfemr ("Failed to get target remote input");
+    ret = get_popup_window_input  ("Target remote server: ", state->input_buffer);
+    if (ret == FAIL) {
+        pfemr (ERR_POPUP_IN);
     }
 
     if (strlen (state->input_buffer) > 0) {
 
         cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");
-        if (send_command_mp (state, cmd) == RET_FAIL) {
-            pfemr ("Failed to send target remote command");
+        ret = send_command_mp (state, cmd);
+        if (ret == FAIL) {
+            pfemr (ERR_DBG_CMD);
         }
         free (cmd);
 
         state->plugins[Dbg]->win->buff_data->new_data = true;
         state->plugins[Prg]->win->buff_data->new_data = true;
-        if (update_windows (state, 9, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Stk, Wat) == RET_FAIL) {
-            pfemr ("Failed to update windows");
+        ret = update_windows (state, 9, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Stk, Wat);
+        if (ret == FAIL) {
+            pfemr (ERR_UPDATE_WINS);
         }
     }
 
-    return RET_OK;
+    return A_OK;
 }

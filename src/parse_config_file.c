@@ -36,7 +36,8 @@ int
 parse_config_file (state_t *state)
 {
     FILE     *fp;
-    int       key_arr_len;
+    int       key_arr_len,
+              ret;
     bool      is_first_layout = true;
     layout_t *prev_layout = NULL,
              *curr_layout = NULL,
@@ -56,12 +57,14 @@ parse_config_file (state_t *state)
     set_num_plugins (state);
 
     // state->plugins
-    if (allocate_plugins (state) == RET_FAIL) {
+    ret = allocate_plugins (state);
+    if (ret == FAIL) {
         pfemr ("Failed to allocate plugins\n");
     }
 
     // state->plugins[x]->win
-    if (allocate_plugin_windows (state) == RET_FAIL) {
+    ret = allocate_plugin_windows (state);
+    if (ret == FAIL) {
         pfemr ("Failed to allocate plugin windows\n");
     }
 
@@ -81,7 +84,8 @@ parse_config_file (state_t *state)
         }
 
         if (ch == '[') {
-            if (get_category_and_label (fp, category, label) == RET_FAIL) {
+            ret = get_category_and_label (fp, category, label);
+            if (ret == FAIL) {
                 pfemr ("Failed to get category and label");
             }
         }
@@ -95,7 +99,8 @@ parse_config_file (state_t *state)
 
         // create state->plugins
         if (strcmp (category, CONFIG_PLUGINS_LABEL) == 0) {
-            if (create_plugins (fp, state) == RET_FAIL) {
+            ret = create_plugins (fp, state);
+            if (ret == FAIL) {
                 pfemr ("Failed to create plugins");
             }
         }
@@ -127,7 +132,7 @@ parse_config_file (state_t *state)
     state->layouts = head_layout;
     state->curr_layout = NULL;
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -149,7 +154,7 @@ allocate_plugins (state_t *state)
         }
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -231,7 +236,7 @@ get_category_and_label (FILE *file,
 
     } while (ch != ']');
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -372,7 +377,7 @@ create_plugins (FILE *file, state_t *state)
             code [PLUGIN_CODE_LEN] = '\0';
 
             // get state->plugins [plugin_index]
-            if ((plugin_index = get_plugin_code_index (code, state)) == RET_FAIL) {
+            if ((plugin_index = get_plugin_code_index (code, state)) == FAIL) {
                 pfemr ("Failed to find plugin index");
             }
             curr_plugin = state->plugins [plugin_index];
@@ -421,7 +426,7 @@ create_plugins (FILE *file, state_t *state)
     // unget '[', EOF
     ungetc (key, file);
 
-    return RET_OK;
+    return A_OK;
 }
 
 

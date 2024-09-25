@@ -38,11 +38,14 @@ logd (const char *formatted_string, ...)
 void
 clean_up (void)
 {
+    int ret;
+
     curs_set (1);
     endwin ();
 
-    if (persist_data (state_ptr) == RET_FAIL) {
-        pfem ("Failed to persist data");
+    ret = persist_data (state_ptr);
+    if (ret == FAIL) {
+        fprintf (stderr, "\nFailed to persist data during cleanup\n\n");
     }
 
     if (debug_out_ptr != NULL) {
@@ -85,11 +88,15 @@ int
 send_command (state_t *state,
               char    *command)
 {
-    if (write (state->debugger->stdin_pipe, command, strlen (command)) == -1) {
+    int ret;
+
+    ret = write (state->debugger->stdin_pipe, command, strlen (command));
+    if (ret == -1) {
         pfem ("write error: %s", strerror (errno));
         pemr ("Command: \"%s\"", command);
     }
-    return RET_OK;
+
+    return A_OK;
 }
 
 
@@ -98,8 +105,11 @@ int
 send_command_mp (state_t *state,
                  char *command)
 {
-    if (insert_output_start_marker (state) == RET_FAIL) {
-        pfemr ("Failed to send command start marker");
+    int ret;
+
+    ret = insert_output_start_marker (state);
+    if (ret == FAIL) {
+        pfemr (ERR_OUT_MARK);
     }
 
     if (write (state->debugger->stdin_pipe, command, strlen (command)) == -1) {
@@ -107,13 +117,14 @@ send_command_mp (state_t *state,
         pemr ("Command: \"%s\"", command);
     }
 
-    if (insert_output_end_marker (state) == RET_FAIL) {
-        pfemr ("Failed to send command end marker");
+    ret = insert_output_end_marker (state);
+    if (ret == FAIL) {
+        pfemr (ERR_OUT_MARK);
     }
 
     parse_debugger_output (state);
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -162,7 +173,7 @@ set_nc_attribute (WINDOW* win,
             pfemr ("Unsupported attribute \"%d\"", attr);
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -214,7 +225,7 @@ unset_nc_attribute (WINDOW* win,
             pfemr ("Unsupported attribute \"%d\"", attr);
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -275,9 +286,11 @@ bool
 file_was_updated (time_t file_mtime,
                   char *file_path)
 {
+    int ret;
     struct stat file_stat;
 
-    if (stat (file_path, &file_stat) != 0) {
+    ret = stat (file_path, &file_stat);
+    if (ret == -1) {
         return false;
     }
 

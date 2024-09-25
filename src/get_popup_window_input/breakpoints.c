@@ -11,13 +11,15 @@
 int
 insert_breakpoint (state_t *state)
 {
+    int   ret;
     char *cmd_base_gdb = "-break-insert ",
          *cmd_base_pdb = "break ",
          *cmd_base,
          *cmd;
 
-    if (get_popup_window_input  ("Insert breakpoint: ", state->input_buffer) == RET_FAIL) {
-        pfemr ("Failed to get popup window input");
+    ret = get_popup_window_input  ("Insert breakpoint: ", state->input_buffer);
+    if (ret == FAIL) {
+        pfemr (ERR_POPUP_IN);
     }
 
     switch (state->debugger->index) {
@@ -30,16 +32,18 @@ insert_breakpoint (state_t *state)
     }
 
     cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
-    if (send_command_mp (state, cmd) == RET_FAIL) {
-        pfemr ("Failed to send insert breakpoint command");
+    ret = send_command_mp (state, cmd);
+    if (ret == FAIL) {
+        pfemr (ERR_DBG_CMD);
     }
     free (cmd);
 
-    if (update_window (Brk, state) == RET_FAIL) {
-        pfemr ("Failed to update breakpoint window");
+    ret = update_window (Brk, state);
+    if (ret == FAIL) {
+        pfemr (ERR_UPDATE_WIN);
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -47,13 +51,15 @@ insert_breakpoint (state_t *state)
 int
 delete_breakpoint (state_t *state)
 {
+    int   ret;
     char *cmd_base_gdb = "-break-delete ",
          *cmd_base_pdb = "clear ",
          *cmd_base,
          *cmd;
 
-    if (get_popup_window_input  ("Delete breakpoint: ", state->input_buffer) == RET_FAIL) {
-        pfemr ("Failed to get delete breakpoint input");
+    ret = get_popup_window_input  ("Delete breakpoint: ", state->input_buffer);
+    if (ret == FAIL) {
+        pfemr (ERR_POPUP_IN);
     }
 
     switch (state->debugger->index) {
@@ -66,14 +72,18 @@ delete_breakpoint (state_t *state)
     }
 
     cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
-    if (send_command_mp (state, cmd) == RET_FAIL) {
-        pfemr ("Failed to send delete breakpoint command");
+    ret = send_command_mp (state, cmd);
+    if (ret == FAIL) {
+        pfemr (ERR_DBG_CMD);
     }
     free (cmd);
 
-    update_window (Brk, state);
+    ret = update_window (Brk, state);
+    if (ret == FAIL) {
+        pfemr (ERR_UPDATE_WIN);
+    }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -82,6 +92,7 @@ int
 clear_all_breakpoints (state_t *state)
 {
     breakpoint_t *curr_break;
+    int   ret;
     char *cmd_base_gdb = "-break-delete ",
          *cmd_base_pdb = "clear ",
          *cmd_base,
@@ -101,8 +112,9 @@ clear_all_breakpoints (state_t *state)
         do {
             
             cmd = concatenate_strings (3, cmd_base, curr_break->index, "\n");    
-            if (send_command_mp (state, cmd) == RET_FAIL) {
-                pfemr ("Failed to send delete breakpoint command");
+            ret = send_command_mp (state, cmd);
+            if (ret == FAIL) {
+                pfemr (ERR_DBG_CMD);
             }
             free (cmd);
 
@@ -111,10 +123,11 @@ clear_all_breakpoints (state_t *state)
     }
     state->breakpoints = NULL;
 
-    if (update_window (Brk, state) == RET_FAIL) {
-        pfemr ("Failed to update breakpoint window");
+    ret = update_window (Brk, state);
+    if (ret == FAIL) {
+        pfemr (ERR_UPDATE_WIN);
     }
 
-    return RET_OK;
+    return A_OK;
 }
 

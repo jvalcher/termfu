@@ -15,6 +15,7 @@ static int get_breakpoint_data_pdb (state_t *state);
 int
 get_breakpoint_data (state_t *state)
 {
+    int ret;
     breakpoint_t *tmp_break,
                  *curr_break;
 
@@ -31,18 +32,20 @@ get_breakpoint_data (state_t *state)
 
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            if (get_breakpoint_data_gdb (state) == RET_FAIL) {
+            ret = get_breakpoint_data_gdb (state);
+            if (ret == FAIL) {
                 pfemr ("Failed to get breakpoint data (GDB)");
             }
             break;
         case (DEBUGGER_PDB):
-            if (get_breakpoint_data_pdb (state) == RET_FAIL) {
+            ret = get_breakpoint_data_pdb (state);
+            if (ret == FAIL) {
                 pfemr ("Failed to get breakpoint data (PDB)");
             }
             break;
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -59,8 +62,8 @@ allocate_breakpoint (state_t *state,
 
     if (state->breakpoints == NULL) {
         if ((curr_break = (breakpoint_t*) malloc (sizeof (breakpoint_t))) == NULL) {
-            pfem ("breakpoint_t malloc error (first)");
-            pemr ("index: \"%s\"; breakpoint: \"%s\"", index_buff, break_buff);
+            pfem ("malloc error (first): %s", strerror (errno));
+            goto alloc_break_err;
         }
         state->breakpoints = curr_break;
     } else {
@@ -68,8 +71,8 @@ allocate_breakpoint (state_t *state,
             curr_break = curr_break->next;
         }
         if ((curr_break->next = (breakpoint_t*) malloc (sizeof (breakpoint_t))) == NULL) {
-            pfem ("breakpoint_t malloc error");
-            pemr ("index: \"%s\"; breakpoint: \"%s\"", index_buff, break_buff);
+            pfem ("malloc error: %s", strerror (errno));
+            goto alloc_break_err;
         }
         curr_break = curr_break->next;
     }
@@ -82,7 +85,10 @@ allocate_breakpoint (state_t *state,
 
     curr_break->next = NULL;
 
-    return RET_OK;
+    return A_OK;
+
+alloc_break_err:
+    pemr ("index: \"%s\"; breakpoint: \"%s\"", index_buff, break_buff);
 }
 
 
@@ -90,7 +96,7 @@ allocate_breakpoint (state_t *state,
 static int
 get_breakpoint_data_gdb (state_t *state)
 {
-    int          i;
+    int          i, ret;
     char        *src_ptr,
                  break_buff [BREAK_LEN],
                  index_buff [INDEX_BUFF_LEN];
@@ -103,8 +109,9 @@ get_breakpoint_data_gdb (state_t *state)
     src_ptr   = state->debugger->data_buffer;
     dest_buff = state->plugins[Brk]->win->buff_data;
 
-    if (send_command_mp (state, "-break-info\n") == RET_FAIL) {
-        pfemr ("Failed to send breakpoint command (GDB)");
+    ret = send_command_mp (state, "-break-info\n");
+    if (ret == FAIL) {
+        pfemr (ERR_DBG_CMD);
     }
 
     if (strstr (src_ptr, "error") == NULL) {
@@ -148,7 +155,8 @@ get_breakpoint_data_gdb (state_t *state)
                 }
                 break_buff [i] = '\0';
 
-                if (allocate_breakpoint (state, break_buff, index_buff) == RET_FAIL) {
+                ret = allocate_breakpoint (state, break_buff, index_buff);
+                if (ret == FAIL) {
                     pfemr ("Failed to allocate breakpoint");
                 }
 
@@ -163,7 +171,7 @@ get_breakpoint_data_gdb (state_t *state)
         dest_buff->changed = true;
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -171,7 +179,7 @@ get_breakpoint_data_gdb (state_t *state)
 static int
 get_breakpoint_data_pdb (state_t *state)
 {
-    int          i;
+    int          i, ret;
     window_t    *win;
     char        *src_ptr,
                  path_buff  [BREAK_LEN*2],
@@ -193,8 +201,9 @@ get_breakpoint_data_pdb (state_t *state)
     dest_buff->buff_pos = 0;
     dest_buff->changed = true;
 
-    if (send_command_mp (state, "break\n") == RET_FAIL) {
-        pfemr ("Failed to send breakpoint command (PDB)");
+    ret = send_command_mp (state, "break\n");
+    if (ret == FAIL) {
+        pfemr (ERR_DBG_CMD);
     }
 
     if (strncmp (src_ptr, del_str, strlen (del_str)) == 0) {
@@ -254,7 +263,8 @@ get_breakpoint_data_pdb (state_t *state)
                 }
                 break_buff [i] = '\0';
 
-                if (allocate_breakpoint (state, break_buff, index_buff) == RET_FAIL) {
+                ret = allocate_breakpoint (state, break_buff, index_buff);
+                if (ret == FAIL) {
                     pfemr ("Failed to allocate breakpoint");
                 }
 
@@ -280,5 +290,5 @@ skip_Brk_parse_pdb:
     state->debugger->program_buffer[0]  = '\0';
     win->buff_data->changed = true;;
 
-    return RET_OK;
+    return A_OK;
 }

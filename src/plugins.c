@@ -9,9 +9,6 @@
 #include "plugins.h"
 #include "data.h"
 #include "utilities.h"
-#include "display_lines.h"
-#include "update_window_data/_update_window_data.h"
-
 
 
 /*
@@ -194,7 +191,7 @@ allocate_plugin_windows (state_t *state)
         win->src_file_data = NULL;
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 

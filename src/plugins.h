@@ -47,7 +47,7 @@ void set_num_plugins  (state_t*);
 /*
     Return plugin code index matching its enum above
     ------
-    Returns index or RET_FAIL
+    Returns index or FAIL
 */
 int get_plugin_code_index (char *code, state_t *state);
 
@@ -65,7 +65,7 @@ char* get_plugin_code (int plugin_index);
 /*
     Allocate plugin window_t structs et al.
     ----------
-    Returns RET_OK, RET_FAIL
+    Returns A_OK, FAIL
 */
 int allocate_plugin_windows (state_t*);
 

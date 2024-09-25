@@ -7,10 +7,6 @@
 int
 main (void)
 {
-    typedef struct{
-        int n;
-    } num_t;
-
 
 
     return 0;

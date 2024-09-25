@@ -14,20 +14,24 @@ static int get_watchpoint_data_pdb (state_t *state);
 int
 get_watchpoint_data (state_t *state)
 {
+    int ret;
+
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            if (get_watchpoint_data_gdb (state) == RET_FAIL) {
+            ret = get_watchpoint_data_gdb (state);
+            if (ret == FAIL) {
                 pfemr ("Failed to get watchpoint data (GDB)");
             }
             break;
         case (DEBUGGER_PDB):
-            if (get_watchpoint_data_pdb (state) == RET_FAIL) {
+            ret = get_watchpoint_data_pdb (state);
+            if (ret == FAIL) {
                 pfemr ("Failed to get watchpoint data (GDB)");
             }
             break;
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -35,17 +39,20 @@ get_watchpoint_data (state_t *state)
 static int
 get_watchpoint_data_gdb (state_t *state)
 {
-    int i, last_char_offset;
-    window_t *win;
+    int           i,
+                  last_char_offset,
+                  ret;
+    char         *cmd, *ptr,
+                 *src_ptr,
+                 *data_ptr,
+                 *watch_val,
+                 *dest_ptr,
+                  index_buff [INDEX_BUF_LEN];
+    buff_data_t  *dest_data;
+    window_t     *win;
     watchpoint_t *watch;
-    const char *hex = "0x";
-    char *cmd, *ptr,
-         *src_ptr,
-         *data_ptr,
-         *watch_val,
-         *dest_ptr,
-          index_buff [INDEX_BUF_LEN];
-    buff_data_t *dest_data;
+
+    char *hex = "0x";
 
     win       = state->plugins[Wat]->win;
     dest_data = win->buff_data;
@@ -59,8 +66,9 @@ get_watchpoint_data_gdb (state_t *state)
 
         // send watchpoint command
         cmd = concatenate_strings (3, "print ", watch->var, "\n");    
-        if (send_command_mp (state, cmd) == RET_FAIL) {
-            pfemr ("Failed to send watchpoint command (GDB)");
+        ret = send_command_mp (state, cmd);
+        if (ret == FAIL) {
+            pfemr (ERR_DBG_CMD);
         }
         free (cmd);
 
@@ -72,7 +80,10 @@ get_watchpoint_data_gdb (state_t *state)
 
         // index
         i = 0;
-        snprintf (index_buff, INDEX_BUF_LEN - 1, "%d", watch->index);
+        ret = snprintf (index_buff, INDEX_BUF_LEN - 1, "%d", watch->index);
+        if (ret < 0) {
+            pfemr ("Failed to convert index int to string");
+        }
         while (index_buff [i] != '\0') {
             cp_char (dest_data, index_buff [i++]);
         }
@@ -148,7 +159,7 @@ get_watchpoint_data_gdb (state_t *state)
         watch = watch->next;
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -156,17 +167,18 @@ get_watchpoint_data_gdb (state_t *state)
 static int
 get_watchpoint_data_pdb (state_t *state)
 {
-    window_t *win;
+    int           ret;
+    char         *cmd,
+                 *var_ptr,
+                 *cli_ptr,
+                 *prog_ptr,
+                  index_buff [24];
+    window_t     *win;
     watchpoint_t *watch;
-    char *cmd,
-         *var_ptr,
-         *cli_ptr,
-         *prog_ptr,
-          index_buff [24];
-    buff_data_t *dest_data;
+    buff_data_t  *dest_data;
 
-    const char *name_err = "*** NameError",
-               *none_str = "none\n";
+    char *name_err = "*** NameError",
+         *none_str = "none\n";
 
     win       = state->plugins[Wat]->win;
     dest_data = win->buff_data;
@@ -179,8 +191,9 @@ get_watchpoint_data_pdb (state_t *state)
         while (watch != NULL) {
 
             cmd = concatenate_strings (3, "p ", watch->var, "\n");    
-            if (send_command_mp (state, cmd) == RET_FAIL) {
-                pfemr ("Failed to send watchpoint command (PDB)");
+            ret = send_command_mp (state, cmd);
+            if (ret == FAIL) {
+                pfemr (ERR_DBG_CMD);
             }
             free (cmd);
 
@@ -224,6 +237,6 @@ get_watchpoint_data_pdb (state_t *state)
         cp_char (dest_data, '\0');
     }
 
-    return RET_OK;
+    return A_OK;
 }
 

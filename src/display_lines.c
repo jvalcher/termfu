@@ -9,7 +9,6 @@
 #include "data.h"
 #include "utilities.h"
 #include "plugins.h"
-#include "update_window_data/_update_window_data.h"
 
 #define LINE_NUM_TEXT_SPACES  2
 
@@ -33,6 +32,7 @@ display_lines (int       type,
                int       plugin_index,
                state_t  *state)
 {
+    int ret;
     window_t *win = state->plugins[plugin_index]->win;
 
     if (state->plugins[plugin_index]->has_window) {
@@ -71,16 +71,18 @@ display_lines (int       type,
                     pfem ("fopen error: %s", strerror (errno));
                     pemr ("Failed to open file \"%s\"", win->src_file_data->path);
                 }
-                if (win->src_file_data->ptr != NULL) {
-                    if (set_file_rows_cols (win) == RET_FAIL) {
-                        pfemr ("Failed to set file rows, cols");
-                    }
-                    win->src_file_data->path_changed = false;
+
+                ret = set_file_rows_cols (win);
+                if (ret == FAIL) {
+                    pfemr ("Failed to set file rows, cols");
                 }
+                win->src_file_data->path_changed = false;
             }
 
             if (win->src_file_data->ptr != NULL) {
                 display_lines_file (key, win);
+            } else {
+                pfemr ("NULL file pointer");
             }
 
             break;
@@ -89,7 +91,7 @@ display_lines (int       type,
         format_win_data (plugin_index, state);
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -309,7 +311,7 @@ set_file_rows_cols (window_t *win)
     win->src_file_data->max_mid = (win->src_file_data->rows > win->data_win_rows) ? max_mid : win->src_file_data->min_mid;
     win->data_win_mid_line = win->src_file_data->min_mid;
 
-    return RET_OK;
+    return A_OK;
 }
 
 

@@ -16,6 +16,8 @@ int
 run_plugin (int      plugin_index,
             state_t *state)
 {
+    int ret;
+
     switch (plugin_index) {
 
         // commands
@@ -26,8 +28,9 @@ run_plugin (int      plugin_index,
         case Run:
         case Stp:
         case Qut:
-            if (send_debugger_command (plugin_index, state) == RET_FAIL) {
-                pfem ("Failed to send debugger command");
+            ret = send_debugger_command (plugin_index, state);
+            if (ret == FAIL) {
+                pfem ("FAIL: send_debugger_command (plugin_index, state)");
                 goto run_plugin_err;
             }
             break;
@@ -43,8 +46,9 @@ run_plugin (int      plugin_index,
         case Stk:
         case Wat: 
             if (state->plugins[plugin_index]->has_window) {
-                if (select_window (plugin_index, state) == RET_FAIL) {
-                    pfem ("Failed to select window");
+                ret = select_window (plugin_index, state);
+                if (ret == FAIL) {
+                    pfem ("FAIL: select_window (plugin_index, state)");
                     goto run_plugin_err;
                 }
             }
@@ -52,43 +56,47 @@ run_plugin (int      plugin_index,
 
         // popup window
         case AtP:
-            if (attach_to_process (state) == RET_FAIL) {
-                pfem ("Failed to attach to process");
+            ret = attach_to_process (state);
+            if (ret == FAIL) {
+                pfem ("FAIL: attach_to_process(state)");
                 goto run_plugin_err;
             }
             break;
         case Lay: 
-            if (choose_layout (state) == RET_FAIL) {
-                pfem ("Failed to choose layout");
+            ret = choose_layout (state);
+            if (ret == FAIL) {
+                pfem ("FAIL: choose_layout (state)");
                 goto run_plugin_err;
             }
             break;
         case Prm: 
-            if (run_custom_command (state) == RET_FAIL) {
-                pfem ("Failed to run custom command");
+            ret = run_custom_command (state);
+            if (ret == FAIL) {
+                pfem ("FAIL: run_custom_command (state)");
                 goto run_plugin_err;
             }
             break;
         case Trg: 
-            if (target_remote_server (state) == RET_FAIL) {
-                pfem ("Failed to target remote server");
+            ret = target_remote_server (state);
+            if (ret == FAIL) {
+                pfem ("FAIL: target_retmote_server (state)");
                 goto run_plugin_err;
             }
             break;
         case Unt: 
-            if (execute_until (state) == RET_FAIL) {
-                pfem ("Failed to execute until");
+            ret = execute_until (state);
+            if (ret == FAIL) {
+                pfem ("FAIL: execute_until (state)");
                 goto run_plugin_err;
             }
             break;
     }
 
-    return RET_OK;
+    return A_OK;
 
 run_plugin_err:
 
-    pemr ("run_plugin error (index: %d, code: %s)",
-                plugin_index, get_plugin_code (plugin_index));
+    pemr ("plugin index: %d, code: \"%s\"", plugin_index, get_plugin_code (plugin_index));
 }
 
 

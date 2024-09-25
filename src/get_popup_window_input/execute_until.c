@@ -12,13 +12,15 @@
 int
 execute_until (state_t *state)
 {
+    int ret;
     char *cmd_base_gdb = "-exec-until ",
          *cmd_base_pdb = "until ",
          *cmd_base,
          *cmd;
 
-    if (get_popup_window_input  ("Execute until (line, filename:line): ", state->input_buffer) == RET_FAIL) {
-        pfemr ("Failed to get execute until data");
+    ret = get_popup_window_input  ("Execute until (line, filename:line): ", state->input_buffer);
+    if (ret == FAIL) {
+        pfemr (ERR_POPUP_IN);
     }
 
     if (strlen (state->input_buffer) > 0) {
@@ -32,18 +34,20 @@ execute_until (state_t *state)
                 break;
         }
         cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
-        if (send_command_mp (state, cmd) == RET_FAIL) {
-            pfemr ("Failed to send execute until command");
+        ret = send_command_mp (state, cmd);
+        if (ret == FAIL) {
+            pfemr (ERR_DBG_CMD);
         }
         free (cmd);
 
         state->plugins[Dbg]->win->buff_data->new_data = true;
         state->plugins[Prg]->win->buff_data->new_data = true;
-        if (update_windows (state, 8, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Wat) == RET_FAIL) {
-            pfemr ("Failed to update windows");
+        ret = update_windows (state, 8, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Wat);
+        if (ret == FAIL) {
+            pfemr (ERR_UPDATE_WINS);
         }
     }
 
-    return RET_OK;
+    return A_OK;
 }
 

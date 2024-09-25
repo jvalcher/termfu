@@ -8,7 +8,6 @@ int close_popup_window (void);
 
 #define POPUP_ROWS  6
 
-
 WINDOW *curr_screen_layout,
        *parent_popup_win,
        *data_popup_win;
@@ -21,15 +20,17 @@ get_popup_window_input (char *prompt,
 {
     int scr_rows, scr_cols,
         rows, cols,
-        y, x;
+        y, x,
+        ret;
 
     curs_set (1);
     echo ();
 
     // save current layout
     doupdate ();
-    if ((curr_screen_layout = dupwin (curscr)) == NULL) {
-        pfem ("Failed to duplicate screen");
+    curr_screen_layout = dupwin (curscr);
+    if (curr_screen_layout == NULL) {
+        pfem ("Failed to duplicate current screen");
         goto get_pop_in_err;
     }
 
@@ -41,16 +42,18 @@ get_popup_window_input (char *prompt,
     x = (scr_cols > cols) ? ((scr_cols - cols) / 2) : 1;
 
         // parent
-    if ((parent_popup_win = newwin (rows, cols, y, x)) == NULL) {
-        pfem ("Failed to create parent input popup window");
+    parent_popup_win = newwin (rows, cols, y, x);
+    if (parent_popup_win == NULL) {
+        pfem ("Failed to create parent window (%d, %d, %d, %d)", rows, cols, y, x);
         goto get_pop_in_err;
     }
     box (parent_popup_win, 0, 0);
     wrefresh (parent_popup_win);
 
         // data
-    if ((data_popup_win = derwin (parent_popup_win, rows - 2, cols - 2, 1, 1)) == NULL) {
-        pfem ("Failed to create data input popup window");
+    data_popup_win = derwin (parent_popup_win, rows - 2, cols - 2, 1, 1);
+    if (data_popup_win == NULL) {
+        pfem ("Failed to create data subwindow (%d, %d, %d, %d)", rows-2, cols-2, 1, 1);
         goto get_pop_in_err;
     }
     mvwprintw (data_popup_win, 0, 0, "%s", prompt);
@@ -61,12 +64,13 @@ get_popup_window_input (char *prompt,
 
     wgetnstr (data_popup_win, buffer, INPUT_BUFF_LEN - 1);
 
-    if (close_popup_window () == RET_FAIL) {
-        pfem ("Failed to close input popup window");
+    ret = close_popup_window ();
+    if (ret == FAIL) {
+        pfem ("Failed to close popup window");
         goto get_pop_in_err;
     }
 
-    return RET_OK;
+    return A_OK;
 
 get_pop_in_err:
 
@@ -79,25 +83,28 @@ get_pop_in_err:
 int
 close_popup_window (void)
 {
+    int ret;
+
     touchwin (curr_screen_layout);
-    if (wnoutrefresh (curr_screen_layout) == ERR) {
-        pfemr ("wnoutrefresh failed");
-    }
+    wnoutrefresh (curr_screen_layout);
     doupdate ();
     curs_set (0);
     noecho ();
 
-    if (delwin (curr_screen_layout) == ERR) {
-        pfemr ("Failed to delete saved current screen");
+    ret = delwin (curr_screen_layout);
+    if (ret == ERR) {
+        pfemr ("(ERR)  delwin (curr_screen_layout)");
     }
-    if (delwin (data_popup_win) == ERR) {
-        pfemr ("Failed to delete data popup window");
+    ret = delwin (data_popup_win);
+    if (ret == ERR) {
+        pfemr ("(ERR)  delwin (data_popup_win)");
     }
-    if (delwin (parent_popup_win) == ERR) {
-        pfemr ("Failed to delete parent popup window");
+    ret = delwin (parent_popup_win);
+    if (ret == ERR) {
+        pfemr ("(ERR)  delwin (parent_popup_win)");
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "parse_config_file.h"
 #include "render_layout.h"
@@ -92,9 +93,14 @@ void set_state_ptr (state_t *state);
 
 
 /*
-    Copy single character to window buffer
+    Copy single character to plugin window buffer
     -----------
     state->plugins[x]->win->buff_data
+
+    Uses: 
+        ->buff_pos
+        ->buff_len
+        ->times_doubled
 */
 void cp_char (buff_data_t *dest_buff_data, char ch);
 
@@ -103,7 +109,12 @@ void cp_char (buff_data_t *dest_buff_data, char ch);
 /*
     Copy character into src_file_data_t buffer
     --------
-    state->plugins[Src]->win->src_file_data_t->path, ->addr, ->func
+    state->plugins[Src]->win->src_file_data  (->path, ->addr, ->func)
+
+    Uses:
+        ->path_pos
+        ->path_len
+        ->addr_ ...
 */
 enum { PATH, ADDR, FUNC };      // type
 
@@ -114,7 +125,13 @@ void cp_fchar (src_file_data_t *dest_file_data, char ch, int type);
 /*
     Copy character into debugger buffer
     ---------
-    state->debugger-><buffer>
+    state->debugger
+
+    Uses:
+        ->format_pos
+        ->format_len
+        ->format_times_doubled
+        ->data_ ...
 */
 enum { FORMAT_BUF, DATA_BUF, CLI_BUF, PROGRAM_BUF, ASYNC_BUF };     // buff_index
 
@@ -127,7 +144,7 @@ void cp_dchar (debugger_t *debugger, char ch, int buff_index);
   ----------
   - Runs clean_up() first
 
-    Print formatted message, return RET_FAIL
+    Print formatted message, return FAIL
   
         pfemr ("Unknown character \"%c\"", ch);
     
@@ -143,25 +160,25 @@ void cp_dchar (debugger_t *debugger, char ch, int buff_index);
         pfem ("Failed to allocate buffer");
         return NULL;
   
-    Multiple messages, return RET_FAIL
+    Multiple messages, return FAIL
   
         pfem ("Unknown character \"%c\"", ch);
         pem  ("Check README.md for more details");
         pem  ("Check the website for video demos");
-        pemr ("Returning RET_FAIL...");
+        pemr ("Returning FAIL...");
     
         ERROR: src_file.c : func() : 10
                Unknown character "c"
                Check README.md for more details
                Check the website for video demos
-               Returning RET_FAIL...
+               Returning FAIL...
 
     Or final message then exit program
         
         ...
         peme ("Exiting...");
 
-    Print errno message, return RET_FAIL
+    Print errno message, return FAIL
 
         pfemr ("malloc error: %s", strerror (errno));
   
@@ -171,7 +188,7 @@ void cp_dchar (debugger_t *debugger, char ch, int buff_index);
 #define pfem(...) do { \
     clean_up();\
 \
-    fprintf (stderr, "\n\n\
+    fprintf (stderr, "\n\
 \033[1;31m%s\033[1;0m \
 \033[1;32m%s\033[1;0m() : \
 \033[1;36m%s\033[1;0m : \
@@ -186,12 +203,13 @@ void cp_dchar (debugger_t *debugger, char ch, int buff_index);
 // Print formatted error message, return
 #define pfemr(...) ({ \
     pfem(__VA_ARGS__);\
-    return RET_FAIL;\
+    return FAIL;\
 })
 
 // Print formatted error message, exit
 #define pfeme(...) do { \
     pfem(__VA_ARGS__); \
+    fprintf (stderr, "\n");\
     exit (EXIT_FAILURE); \
 } while (0)
 
@@ -205,15 +223,17 @@ void cp_dchar (debugger_t *debugger, char ch, int buff_index);
 // Print error message, return
 #define pemr(...) ({\
     pem(__VA_ARGS__);\
-    return RET_FAIL;\
+    return FAIL;\
 })
 
 // Print error message, exit
 #define peme(...) do { \
     pem(__VA_ARGS__);\
+    fprintf (stderr, "\n");\
     exit (EXIT_FAILURE);\
 } while (0)
 
 
 
 #endif
+

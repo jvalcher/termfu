@@ -14,20 +14,24 @@ static int get_local_vars_pdb (state_t *state);
 int
 get_local_vars (state_t *state)
 {
+    int ret;
+
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            if (get_local_vars_gdb (state) == RET_FAIL) {
+            ret = get_local_vars_gdb (state);
+            if (ret == FAIL) {
                 pfemr ("Failed to get local variables (GDB)");
             }
             break;
         case (DEBUGGER_PDB):
-            if (get_local_vars_pdb (state) == RET_FAIL) {
+            ret = get_local_vars_pdb (state);
+            if (ret == FAIL) {
                 pfemr ("Failed to get local variables (PDB)");
             }
             break;
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -35,6 +39,7 @@ get_local_vars (state_t *state)
 static int
 get_local_vars_gdb (state_t *state)
 {
+    int ret;
     window_t *win;
     const
     char *key_name  = "name=\"",
@@ -46,8 +51,9 @@ get_local_vars_gdb (state_t *state)
     src_ptr   = state->debugger->data_buffer;
     dest_buff = win->buff_data;
 
-    if (send_command_mp (state, "-stack-list-locals 1\n") == RET_FAIL) {
-        pfemr ("Failed to send get local vars command (PDB)");
+    ret = send_command_mp (state, "-stack-list-locals 1\n");
+    if (ret == FAIL) {
+        pfemr (ERR_DBG_CMD);
     }
 
     dest_buff->buff_pos = 0;
@@ -120,7 +126,7 @@ get_local_vars_gdb (state_t *state)
     dest_buff->changed = true;
     state->debugger->data_buffer[0]  = '\0';
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -128,7 +134,8 @@ get_local_vars_gdb (state_t *state)
 static int
 get_local_vars_pdb (state_t *state)
 {
-    int          open_arrs;
+    int          open_arrs,
+                 ret;
     window_t    *win;
     char        *src_ptr;
     buff_data_t *dest_data;
@@ -139,8 +146,9 @@ get_local_vars_pdb (state_t *state)
     src_ptr   = state->debugger->program_buffer;
     dest_data = win->buff_data;
 
-    if (send_command_mp (state, "locals()\n") == RET_FAIL) {
-        pfemr ("Failed to send get local vars command (PDB)");
+    ret = send_command_mp (state, "locals()\n");
+    if (ret == FAIL) {
+        pfemr (ERR_DBG_CMD);
     }
 
     dest_data->buff_pos = 0;
@@ -224,6 +232,6 @@ skip_LcV_parse:
     state->debugger->program_buffer[0] = '\0';
     dest_data->new_data = false;
 
-    return RET_OK;
+    return A_OK;
 }
 

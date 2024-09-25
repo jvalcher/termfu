@@ -13,20 +13,24 @@ static int get_debugger_output_pdb (state_t *state);
 int
 get_debugger_output (state_t *state)
 {
+    int ret;
+
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            if (get_debugger_output_gdb (state) == RET_FAIL) {
+            ret = get_debugger_output_gdb (state);
+            if (ret == FAIL) {
                 pfemr ("Failed to get debugger output (GDB)");
             }
             break;
         case (DEBUGGER_PDB):
-            if (get_debugger_output_pdb (state) == RET_FAIL) {
+            ret = get_debugger_output_pdb (state);
+            if (ret == FAIL) {
                 pfemr ("Failed to get debugger output (PDB)");
             }
             break;
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -63,7 +67,7 @@ get_debugger_output_gdb (state_t *state)
     state->debugger->cli_buffer[0] = '\0';
     dest_buff->new_data = false;
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -97,6 +101,6 @@ get_debugger_output_pdb (state_t *state)
     state->debugger->cli_buffer[0] = '\0';
     dest_buff->new_data = false;
 
-    return RET_OK;
+    return A_OK;
 }
 

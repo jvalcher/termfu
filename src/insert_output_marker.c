@@ -3,26 +3,31 @@
 #include "utilities.h"
 
 
+
 /*
     ">START"
 */
 int
 insert_output_start_marker (state_t *state)
 {
+    int ret;
+
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            if (send_command (state, "echo >START\n") == RET_FAIL) {
-                pfemr ("Failed to send GDB start marker");
+            ret = send_command (state, "echo >START\n");
+            if (ret == FAIL) {
+                pfemr (ERR_DBG_CMD);
             }
             break;
         case (DEBUGGER_PDB):
-            if (send_command (state, "p \">START\"\n") == RET_FAIL) {
-                pfemr ("Failed to send PDB start marker");
+            ret = send_command (state, "p \">START\"\n");
+            if (ret == FAIL) {
+                pfemr (ERR_DBG_CMD);
             }
             break;
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -32,20 +37,24 @@ insert_output_start_marker (state_t *state)
 int
 insert_output_end_marker (state_t *state)
 {
+    int ret;
+
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            if (send_command (state,"echo >END\n") == RET_FAIL) {
-                pfemr ("Failed to send GDB end marker");
+            ret = send_command (state,"echo >END\n");
+            if (ret == FAIL) {
+                pfemr (ERR_DBG_CMD);
             }
             break;
         case (DEBUGGER_PDB):
-            if (send_command (state, "p \">END\"\n") == RET_FAIL) {
-                pfemr ("Failed to send PDB end marker");
+            ret = send_command (state, "p \">END\"\n");
+            if (ret == FAIL) {
+                pfemr (ERR_DBG_CMD);
             }
             break;
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 

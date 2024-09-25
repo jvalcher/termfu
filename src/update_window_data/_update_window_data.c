@@ -25,21 +25,25 @@ update_windows (state_t *state,
                 int num_updates,
                 ...)
 {
-    int plugin;
+    int plugin,
+        ret;
     va_list  plugins;
 
     va_start (plugins, num_updates);
 
     for (int i = 0; i < num_updates; i++) {
+
         plugin = va_arg (plugins, int);
-        if (update_window (plugin, state) == RET_FAIL) {
+
+        ret = update_window (plugin, state);
+        if (ret == FAIL) {
             pfemr ("Update window loop failed");
         }
     }
 
     va_end (plugins);
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -48,57 +52,68 @@ int
 update_window (int      plugin_index,
                state_t *state)
 {
+    int ret;
+
     switch (plugin_index) {
         case Asm:
-            if (get_assembly_data (state) == RET_FAIL) {
+            ret = get_assembly_data (state);
+            if (ret == FAIL) {
                 pfem ("Failed to get assembly data");
                 goto upd_win_err;
             }
             break;
         case Brk: 
-            if (get_breakpoint_data (state) == RET_FAIL) {
+            ret = get_breakpoint_data (state);
+            if (ret == FAIL) {
                 pfem ("Failed to get breakpoint data");
                 goto upd_win_err;
             }
             break;
         case Dbg:
-            if (get_debugger_output (state) == RET_FAIL) {
+            ret = get_debugger_output (state);
+            if (ret == FAIL) {
                 pfem ("Failed to get debugger output");
                 goto upd_win_err;
             }
             break;
         case LcV:
-            if (get_local_vars (state) == RET_FAIL) {
+            ret = get_local_vars (state);
+            if (ret == FAIL) {
                 pfem ("Failed to get local variables");
                 goto upd_win_err;
             }
             break;
         case Prg:
-            if (get_program_output (state) == RET_FAIL) {
+            ret = get_program_output (state);
+            if (ret == FAIL) {
                 pfem ("Failed to get program output");
                 goto upd_win_err;
             }
             break;
         case Reg:
-            if (get_register_data (state) == RET_FAIL) {
+            ret = get_register_data (state);
+            if (ret == FAIL) {
                 pfem ("Failed to get register data");
                 goto upd_win_err;
             }
             break;
         case Src:
-            if (get_source_path_line_memory (state) == RET_FAIL) {
+            ret = get_source_path_line_memory (state);
+            if (ret == FAIL) {
                 pfem ("Failed to get source, line, memory data");
                 goto upd_win_err;
             }
             break;
         case Stk:
-            if (get_stack_data (state) == RET_FAIL) {
+            ret = get_stack_data (state);
+            if (ret == FAIL) {
                 pfem ("Failed to get stack data");
                 goto upd_win_err;
             }
             break;
         case Wat:
-            if (get_watchpoint_data (state) == RET_FAIL) {
+            ret = get_watchpoint_data (state);
+            if (ret == FAIL) {
                 pfem ("Failed to get watchpoint data");
                 goto upd_win_err;
             }
@@ -108,21 +123,20 @@ update_window (int      plugin_index,
             goto upd_win_err;
     }
 
-    if (display_lines (state->plugins[plugin_index]->win_type,
+    ret = display_lines (state->plugins[plugin_index]->win_type,
                        state->plugins[plugin_index]->data_pos,
                        plugin_index,
-                       state) == RET_FAIL)
-    {
-        pfem ("Failed to display lines (type: %d, pos: %d)",
-                state->plugins[plugin_index]->win_type,
-                state->plugins[plugin_index]->data_pos);
+                       state);
+    if (ret == FAIL) {
+        pfem (ERR_DISP_LINES);
+        goto upd_win_err;
     }
 
-    return RET_OK;
+    return A_OK;
 
 upd_win_err:
 
-    pemr ("Failed to update window (index: %d, code: %s, debugger: %s)",
+    pemr ("Failed to update window (index: %d, code: \"%s\", debugger: \"%s\")",
             plugin_index, get_plugin_code (plugin_index), state->debugger->title);
 }
 

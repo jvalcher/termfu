@@ -26,8 +26,9 @@ static watchpoint_t *create_watchpoint (state_t *state);
 int
 get_persisted_data (state_t *state)
 {
-    FILE *fp;
-    int ch, i;
+    FILE         *fp;
+    int           ch, i,
+                  ret;
     watchpoint_t *watch;
     char  break_buff [BREAK_LEN],
          *cmd_base_gdb = "-break-insert ",
@@ -98,8 +99,9 @@ get_persisted_data (state_t *state)
                             // insert breakpoint
                             cmd = concatenate_strings (3, cmd_base, break_buff, "\n");    
 
-                            if (send_command_mp (state, cmd) == RET_FAIL) {
-                                pfemr ("Failed to send insert breakpoint command");
+                            ret = send_command_mp (state, cmd);
+                            if (ret == FAIL) {
+                                pfemr (ERR_DBG_CMD);
                             }
 
                             free (cmd);
@@ -113,11 +115,12 @@ get_persisted_data (state_t *state)
         fclose (fp);
     }
 
-    if (update_windows (state, 2, Wat, Brk) == RET_FAIL) {
-        pfemr ("Failed to update windows");
+    ret = update_windows (state, 2, Wat, Brk);
+    if (ret == FAIL) {
+        pfemr (ERR_UPDATE_WINS);
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -168,7 +171,7 @@ persist_data (state_t *state)
 
     fclose (fp);
 
-    return RET_OK;
+    return A_OK;
 }
 
 

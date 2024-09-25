@@ -20,8 +20,19 @@
   Debug
  *******/
 
-#define RET_OK           1                    // function return value
-#define RET_FAIL        -1                    //   "
+#define A_OK   0
+#define FAIL  -1
+
+#define ERR_DBG_CMD     "Failed to send debugger command"
+#define ERR_DISP_LINES  "Failed to display lines"
+#define ERR_NC_ATTR     "Failed to set ncurses attribute"
+#define ERR_OUT_MARK    "Failed to insert output marker"
+#define ERR_POPUP_IN    "Failed to get popup window input"
+#define ERR_PULSE_CMD   "Failed to pulse header title color"
+#define ERR_REND_LAYOUT "Failed to render layout"
+#define ERR_UPDATE_WIN  "Failed to update window"
+#define ERR_UPDATE_WINS "Failed to update windows"
+
 #define DEBUG_OUT_FILE  "debug.out"           // logd() output file
 #define DEBUG_PID_FILE  "/tmp/termfu.pid"     // used by `make proc_<debugger>`
 

@@ -19,9 +19,9 @@ static int       calculate_layout      (layout_t*, state_t*);
 static int       render_header         (layout_t*, state_t*);
 static int       render_windows        (state_t*);
 
-int   scr_rows;
-int   scr_cols;
-int   header_offset;
+int scr_rows,
+    scr_cols,
+    header_offset;
 
 
 
@@ -29,30 +29,45 @@ int
 render_layout (char     *label,
                state_t  *state)
 {
+    int ret;
+
     if (state->curr_layout != NULL) {
-        if (free_nc_window_data (state) == RET_FAIL) {
-            pfemr ("Failed to free Ncurses window data for layout \"%s\"",
+        ret = free_nc_window_data (state);
+        if (ret == FAIL) {
+            pfem ("Failed to free Ncurses window data for layout \"%s\"",
                         state->curr_layout->label);
+            goto render_layout_err;
         }
     }
 
     if ((state->curr_layout = get_label_layout (label, state->layouts)) == NULL) {
-        pfemr ("Failed to find layout");
+        pfem ("Failed to find layout");
+        goto render_layout_err;
     }
 
-    if (calculate_layout (state->curr_layout, state) == RET_FAIL) {
-        pfemr ("Failed to calculate layout \"%s\"", state->curr_layout->label);
+    ret = calculate_layout (state->curr_layout, state);
+    if (ret == FAIL) {
+        pfem ("Failed to calculate layout \"%s\"", state->curr_layout->label);
+        goto render_layout_err;
     }
 
-    if (render_header (state->curr_layout, state) == RET_FAIL) {
-        pfemr ("Failed to render header for layout \"%s\"", state->curr_layout->label);
+    ret = render_header (state->curr_layout, state);
+    if (ret == FAIL) {
+        pfem ("Failed to render header for layout \"%s\"", state->curr_layout->label);
+        goto render_layout_err;
     }
 
-    if (render_windows (state) == RET_FAIL) {
-        pfemr ("Failed to render windows for layout \"%s\"", state->curr_layout->label);
+    ret = render_windows (state);
+    if (ret == FAIL) {
+        pfem ("Failed to render windows for layout \"%s\"", state->curr_layout->label);
+        goto render_layout_err;
     }
 
-    return RET_OK;
+    return A_OK;
+
+render_layout_err:
+    pemr ("Current layout: \"%s\", number of plugins: %d",
+                state->curr_layout->label, state->num_plugins);
 }
 
 
@@ -63,26 +78,31 @@ render_layout (char     *label,
 static int
 free_nc_window_data (state_t *state)
 {
+    int ret;
+
     for (int i = 0; i < state->num_plugins; i++) {
 
         if (state->plugins[i]->has_window) {
 
             if (state->plugins[i]->win->TWIN != NULL) {
-                if (delwin (state->plugins[i]->win->TWIN) == ERR) {
+                ret = delwin (state->plugins[i]->win->TWIN);
+                if (ret == ERR) {
                     pfemr ("Unable to delete TWIN (index: %d, code: %s)", 
                                 i, get_plugin_code (i));
                 }
             }
 
             if (state->plugins[i]->win->DWIN != NULL) {
-                if (delwin (state->plugins[i]->win->DWIN) == ERR) {
+                ret = delwin (state->plugins[i]->win->DWIN);
+                if (ret == ERR) {
                     pfemr ("Unable to delete DWIN (index: %d, code: %s)", 
                                 i, get_plugin_code (i));
                 }
             }
 
             if (state->plugins[i]->win->WIN != NULL) {
-                if (delwin (state->plugins[i]->win->WIN) == ERR) {
+                ret = delwin (state->plugins[i]->win->WIN);
+                if (ret == ERR) {
                     pfemr ("Unable to delete WIN (index: %d, code: %s)", 
                                 i, get_plugin_code (i));
                 }
@@ -92,7 +112,7 @@ free_nc_window_data (state_t *state)
         }
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -152,12 +172,8 @@ calculate_layout (layout_t *layout,
     window_t  *curr_window = NULL;
 
     // Calculate cols, rows in window area below header
-    if ((scr_rows = getmaxy (stdscr)) == ERR) {
-        pfemr ("Unable to get number of screen rows");
-    }
-    if ((scr_cols = getmaxx (stdscr)) == ERR) {
-        pfemr ("Unable to get number of screen columns");
-    }
+    scr_rows = getmaxy (stdscr);
+    scr_cols = getmaxx (stdscr);
     header_offset = layout->num_hdr_key_rows + 1;
     win_cols = scr_cols;
     win_rows = scr_rows - header_offset;
@@ -254,8 +270,7 @@ calculate_layout (layout_t *layout,
 
                 state->plugins[plugin_index]->has_window = true;
 
-                curr_window = state->plugins[plugin_index]->win;
-                if (curr_window == NULL) {
+                if ((curr_window = state->plugins[plugin_index]->win) == NULL) {
                     pfemr ("No window allocated for plugin \"%s\" (index: %d, code: %s)\n",
                             state->plugins[plugin_index]->title,
                             plugin_index,
@@ -322,7 +337,7 @@ calculate_layout (layout_t *layout,
         }
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -411,7 +426,7 @@ render_header_titles (layout_t *layout,
     wrefresh (header);
     free (titles_str);
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -426,6 +441,7 @@ static int
 render_header (layout_t *layout, 
                state_t  *state)
 {
+    int ret;
     WINDOW *header;
 
     if ((state->header = newwin (header_offset, COLS, 0, 0)) == NULL) {
@@ -453,11 +469,12 @@ render_header (layout_t *layout,
     wrefresh (header);
 
     // header titles
-    if (render_header_titles (layout, state) == RET_FAIL) {
+    ret = render_header_titles (layout, state);
+    if (ret == FAIL) {
         pfemr ("Failed to render header titles");
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -473,11 +490,11 @@ render_window (window_t *win)
     int left_spaces, right_spaces;
 
     // parent window
-    win->WIN = newwin (win->rows, 
+    if ((win->WIN = newwin (win->rows, 
                        win->cols, 
                        win->y + header_offset, 
-                       win->x);
-    if (win == NULL) {
+                       win->x)) == NULL)
+    {
         pfemr ("Unable to create window \"%s\" (rows: %d, cols: %d, y: %d, x: %d)\n",
                     win->code, win->rows, win->cols, win->y, win->x);
     }
@@ -499,12 +516,12 @@ render_window (window_t *win)
         win->topbar_y = 1;
         win->topbar_x = 1;
 
-        win->TWIN = derwin (win->WIN,
+        if ((win->TWIN = derwin (win->WIN,
                             win->topbar_rows,
                             win->topbar_cols,
                             win->topbar_y,
-                            win->topbar_x);
-        if (win->TWIN == NULL) {
+                            win->topbar_x)) == NULL)
+        {
             pfemr  ("Unable to create topbar subwindow for \"%s\" (rows: %d, cols: %d, y: %d, x: %d)\n",
                             win->code,
                             win->topbar_rows,
@@ -532,12 +549,12 @@ render_window (window_t *win)
     win->data_win_y = win->topbar_y + 1;
     win->data_win_x = 1;
 
-    win->DWIN = derwin (win->WIN,
+    if ((win->DWIN = derwin (win->WIN,
                         win->data_win_rows,
                         win->data_win_cols,
                         win->data_win_y,
-                        win->data_win_x);
-    if (win->DWIN == NULL) {
+                        win->data_win_x)) == NULL)
+    {
         pfemr  ("Unable to create data subwindow for \"%s\" (rows: %d, cols: %d, y: %d, x: %d)\n",
                         win->code,
                         win->data_win_rows,
@@ -548,7 +565,7 @@ render_window (window_t *win)
 
     wrefresh (win->DWIN);
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -708,7 +725,7 @@ fix_corners (state_t *state)
         win->border [7] = br;
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -729,8 +746,7 @@ render_window_titles (state_t *state)
     for (i = 0; i < state->num_plugins; i++) {
 
         if (state->plugins[i]->has_window) {
-            Win = state->plugins[i]->win->WIN;
-            if (Win == NULL) {
+            if ((Win = state->plugins[i]->win->WIN) == NULL) {
                 pfemr ("Window not allocated for \"%s\" (key: %c, code: %s)",
                             state->plugins[i]->title,
                             state->plugins[i]->key,
@@ -772,7 +788,7 @@ render_window_titles (state_t *state)
         wrefresh(Win);
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -783,11 +799,12 @@ render_window_titles (state_t *state)
 static int
 render_windows (state_t *state)
 {
-    int i;
+    int i, ret;
 
     for (i = 0; i < state->num_plugins; i++) {
         if (state->plugins[i]->has_window) {
-            if (render_window (state->plugins[i]->win) == RET_FAIL) {
+            ret = render_window (state->plugins[i]->win);
+            if (ret == FAIL) {
                 pfemr ("Failed to render window \"%s\" (key: %c, code: %s)",
                             state->plugins[i]->title,
                             state->plugins[i]->key,
@@ -796,15 +813,17 @@ render_windows (state_t *state)
         } 
     }
 
-    if (fix_corners (state) == RET_FAIL) {
+    ret = fix_corners (state);
+    if (ret == FAIL) {
         pfemr ("Failed to fix window corners");
     }
 
-    if (render_window_titles (state) == RET_FAIL) {
+    ret = render_window_titles (state);
+    if (ret == FAIL) {
         pfemr ("Failed to render window titles");
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 

@@ -33,7 +33,7 @@ DATA_RUN_GDB   = $(CONFIG_RUN_GDB)_data
 DATA_RUN_PDB   = $(CONFIG_RUN_PDB)_data
 
 
-.PHONY: help all dev devf devformat congigs run_dev_gdb run_dev_pdb todo tui_gdb tui_pdb connect_proc server_gdb server_pdb clean_prod clean_dev
+.PHONY: help all dev devf devformat congigs build_gdb run_gdb run_pdb plugins conn_proc_gdbtui conn_proc_termfu proc_gdb proc_pdb clean_prod clean_dev
 
 
 all: FLAGS   += $(PROD_FLAGS)

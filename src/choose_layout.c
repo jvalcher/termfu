@@ -27,7 +27,8 @@ choose_layout (state_t *state)
         ch,
         num_options,
         curr_option,
-        print_option;
+        print_option,
+        ret;
     layout_t *curr_layout;
     bool new_layout;
 
@@ -140,7 +141,8 @@ choose_layout (state_t *state)
 
 choose_layout:
 
-    if (close_popup_window_selection () == RET_FAIL) {
+    ret = close_popup_window_selection ();
+    if (ret == FAIL) {
         pfemr ("Failed to close popup window for layout selection \"%s\"",
                     curr_layout->label);
     }
@@ -149,17 +151,19 @@ choose_layout:
 
     if (new_layout) {
 
-        if (render_layout (curr_layout->label, state) == RET_FAIL) {
-            pfemr ("Failed to render layout");
+        ret = render_layout (curr_layout->label, state);
+        if (ret == FAIL) {
+            pfemr (ERR_REND_LAYOUT);
         }
 
         state->plugins[Src]->win->src_file_data->path_changed = true;
-        if (update_windows (state, 9, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Stk, Wat) == RET_FAIL) {
-            pfemr ("Failed to update windows");
+        ret = update_windows (state, 9, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Stk, Wat);
+        if (ret == FAIL) {
+            pfemr (ERR_UPDATE_WINS);
         }
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -167,25 +171,31 @@ choose_layout:
 static int
 close_popup_window_selection (void)
 {
+    int ret;
+
     touchwin (curr_screen_layout_sel);
-    if (wnoutrefresh (curr_screen_layout_sel) == ERR) {
+    ret = wnoutrefresh (curr_screen_layout_sel);
+    if (ret == ERR) {
         pfemr ("wnoutrefresh failed");
     }
     doupdate ();
     curs_set (0);
     noecho ();
 
-    if (delwin (curr_screen_layout_sel) == ERR) {
+    ret = delwin (curr_screen_layout_sel);
+    if (ret == ERR) {
         pfemr ("Failed to delete saved current screen");
     }
-    if (delwin (data_popup_win_sel) == ERR) {
+    ret = delwin (data_popup_win_sel);
+    if (ret == ERR) {
         pfemr ("Failed to delete data popup window");
     }
-    if (delwin (parent_popup_win_sel) == ERR) {
+    ret = delwin (parent_popup_win_sel);
+    if (ret == ERR) {
         pfemr ("Failed to delete parent popup window");
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 

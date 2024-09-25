@@ -14,11 +14,13 @@
 int
 insert_watchpoint (state_t *state)
 {
-    int index;
+    int index,
+        ret;
     watchpoint_t *watch = NULL;
 
-    if (get_popup_window_input  ("Create watchpoint (variable): ", state->input_buffer) == RET_FAIL) {
-        pfemr ("Failed to get watchpoint input");
+    ret = get_popup_window_input  ("Create watchpoint (variable): ", state->input_buffer);
+    if (ret == FAIL) {
+        pfemr (ERR_POPUP_IN);
     }
 
     if (strlen (state->input_buffer) > 0) {
@@ -58,11 +60,12 @@ insert_watchpoint (state_t *state)
         }
     }
 
-    if (update_window (Wat, state) == RET_FAIL) {
+    ret = update_window (Wat, state);
+    if (ret == FAIL) {
         pfemr ("Failed to update watchpoint window");
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -70,14 +73,16 @@ insert_watchpoint (state_t *state)
 int
 delete_watchpoint (state_t *state)
 {
+    int ret;
     watchpoint_t *prev_watch,
                  *watch;
 
     watch = state->watchpoints;
     prev_watch = watch;
 
-    if (get_popup_window_input  ("Delete watchpoint (index): ", state->input_buffer) == RET_FAIL) {
-        pfemr ("Failed to get delete watchpoint input");
+    ret = get_popup_window_input  ("Delete watchpoint (index): ", state->input_buffer);
+    if (ret == FAIL) {
+        pfemr (ERR_POPUP_IN);
     }
 
     while (watch != NULL) {
@@ -96,11 +101,12 @@ delete_watchpoint (state_t *state)
         watch = watch->next; 
     }
 
-    if (update_window (Wat, state) == RET_FAIL) {
-        pfemr ("Failed to update window");
+    ret = update_window (Wat, state);
+    if (ret == FAIL) {
+        pfemr (ERR_UPDATE_WIN);
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
 
@@ -108,6 +114,7 @@ delete_watchpoint (state_t *state)
 int
 clear_all_watchpoints (state_t *state)
 {
+    int ret;
     watchpoint_t *tmp_watch,
                  *watch;
 
@@ -119,10 +126,11 @@ clear_all_watchpoints (state_t *state)
     }
     state->watchpoints = NULL;
 
-    if (update_window (Wat, state) == RET_FAIL) {
-        pfemr ("Failed to update watchpoint window");
+    ret = update_window (Wat, state);
+    if (ret == FAIL) {
+        pfemr (ERR_UPDATE_WIN);
     }
 
-    return RET_OK;
+    return A_OK;
 }
 
