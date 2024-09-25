@@ -1,7 +1,8 @@
+#include <string.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 #include "get_binary_path_time.h"
-#include "../data.h"
 #include "../utilities.h"
 
 static int get_binary_path_time_gdb (state_t *state);
@@ -54,11 +55,11 @@ get_binary_path_time_gdb (state_t *state)
         *dest_ptr = '\0';
 
         // last updated time
-        if (stat (state->debugger->prog_path, &file_stat) == 0) {
-            state->debugger->prog_update_time = file_stat.st_mtim.tv_sec;
-        } else {
-            pfemr ("Unable to get status of file \"%s\"\n", state->debugger->prog_path);
+        if (stat (state->debugger->prog_path, &file_stat) == -1) {
+            pfem ("stat error: %s", strerror (errno));
+            pemr ("Failed to get status of file \"%s\"\n", state->debugger->prog_path);
         }
+        state->debugger->prog_update_time = file_stat.st_mtim.tv_sec;
     }
 
     state->debugger->cli_buffer[0]  = '\0';

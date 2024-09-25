@@ -114,20 +114,14 @@ typedef struct layout {
   Ncurses window data
  *********/
 
-#define CODE_LEN       3
-#define NO_DATA_MSG    "Not supported by "
-#define FILE_PATH_LEN  256
-#define ADDRESS_LEN    48
-#define FUNC_LEN       48
-#define Asm_BUF_LEN    131072
-#define Brk_BUF_LEN    4096
-#define Dbg_BUF_LEN    32768
-#define LcV_BUF_LEN    16384
-#define Prg_BUF_LEN    32768
-#define Reg_BUF_LEN    16384
-#define Stk_BUF_LEN    16384
-#define Wat_BUF_LEN    4096
-
+#define CODE_LEN          3
+#define NO_DATA_MSG       "Not supported by "
+#define FILE_PATH_LEN     256
+#define ADDRESS_LEN       48
+#define FUNC_LEN          128
+#define ORIG_BUF_LEN      16384     // Double buffer size 3x to 32768 -> 65536 -> 131072
+#define MAX_DOUBLE_TIMES  3         // before it loops back around                            
+                                        
 /*
     buff_data_t
     --------
@@ -146,9 +140,11 @@ typedef struct layout {
 */
 typedef struct {
 
+    char   code [CODE_LEN+1];
     char  *buff;  
     int    buff_len;
     int    buff_pos;
+    int    times_doubled;
     bool   changed;
     int    rows;
     int    max_cols;
@@ -292,11 +288,6 @@ typedef struct {
 #define DEBUG_TITLE_LEN  8
 #define PROGRAM_PATH_LEN 256
 #define READER_BUF_LEN   8192
-#define FORMAT_BUF_LEN   65536
-#define DATA_BUF_LEN     65536
-#define CLI_BUF_LEN      65536
-#define PROGRAM_BUF_LEN  65536
-#define ASYNC_BUF_LEN    65536 
 
 enum { DEBUGGER_GDB, DEBUGGER_PDB };
 enum { READER_RECEIVING, READER_DONE };
@@ -306,33 +297,38 @@ enum { READER_RECEIVING, READER_DONE };
     -------
     state->debugger
 
-    index               - DEBUGGER_GDB, DEBUGGER_PDB, ...
-    title               - "gdb", "pdb", ...
-    running             - controls main() loop state
-    prog_path           - binary, main script path buffer
-    prog_update_time    - file's last update time (st_mtim.tv_sec), used to signal reload
-                                    
-    stdin_pipe;         - debugger process input pipe
-    stdout_pipe;        - debugger process output pipe
-                                    
-    reader_state        - READER_RECEIVING, RECEIVER_DONE
-    reader_buffer       - debugger process initial output buffer
-                                    
-    format_buffer       - misc buffer for formatting output
-    format_len          - buffer size
-    format_pos          - null terminator index
-    data_buffer         - data stream buffer
-    data_len            - buffer size
-    data_pos            - null terminator index
-    cli_buffer          - cli stream buffer
-    cli_len             - buffer size
-    cli_pos             - null terminator index
-    program_buffer      - program output buffer
-    program_len         - buffer size
-    program_pos         - null terminator index
-    async_buffer        - async (status) buffer
-    async_len           - buffer size
-    async_pos           - null terminator index
+    index                   - DEBUGGER_GDB, DEBUGGER_PDB, ...
+    title                   - "gdb", "pdb", ...
+    running                 - controls main() loop state
+    prog_path               - binary, main script path buffer
+    prog_update_time        - file's last update time (st_mtim.tv_sec), used to signal reload
+                                        
+    stdin_pipe;             - debugger process input pipe
+    stdout_pipe;            - debugger process output pipe
+                                        
+    reader_state            - READER_RECEIVING, RECEIVER_DONE
+    reader_buffer           - debugger process initial output buffer
+                                        
+    format_buffer           - misc buffer for formatting output
+    format_len              - buffer size
+    format_pos              - null terminator index
+    format_times_doubled    - times buffer size doubled
+    data_buffer             - data stream buffer
+    data_len                - buffer size
+    data_pos                - null terminator index
+    data_times_doubled      - times buffer size doubled
+    cli_buffer              - cli stream buffer
+    cli_len                 - buffer size
+    cli_pos                 - null terminator index
+    cli_times_doubled       - times buffer size doubled
+    program_buffer          - program output buffer
+    program_len             - buffer size
+    program_pos             - null terminator index
+    program_times_doubled   - times buffer size doubled
+    async_buffer            - async (status) buffer
+    async_len               - buffer size
+    async_pos               - null terminator index
+    async_times_doubled     - times buffer size doubled
 */
 typedef struct {
 
@@ -348,21 +344,26 @@ typedef struct {
     int     reader_state;
     char    reader_buffer  [READER_BUF_LEN];
 
-    char    format_buffer  [FORMAT_BUF_LEN];
+    char   *format_buffer;
     int     format_len;
     int     format_pos;
-    char    data_buffer    [DATA_BUF_LEN];
+    int     format_times_doubled;
+    char   *data_buffer;
     int     data_len;
     int     data_pos;
-    char    cli_buffer     [CLI_BUF_LEN];
+    int     data_times_doubled;
+    char   *cli_buffer;
     int     cli_len;
     int     cli_pos;
-    char    program_buffer [PROGRAM_BUF_LEN];
+    int     cli_times_doubled;
+    char   *program_buffer;
     int     program_len;
     int     program_pos;
-    char    async_buffer   [ASYNC_BUF_LEN];
+    int     program_times_doubled;
+    char   *async_buffer;
     int     async_len;
     int     async_pos;
+    int     async_times_doubled;
 
 } debugger_t;
 

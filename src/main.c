@@ -80,17 +80,17 @@ main (int   argc,
     Initial configuration
     ---------
 
-    - CLI flag arguments
+    - CLI flags
 
         -h
             - Prints usage instructions
 
-        -c  Configuration file path
+        -c  <Configuration file path>
             - See README.md for more information
             - default: CONFIG_FILE
             - Outputs to state->config_path
 
-        -p  Data persistence file path
+        -p  <Data persistence file path>
             - Persists watchpoints, breakpoints
             - default: PERSIST_FILE
             - Outputs to state->data_path
@@ -98,8 +98,8 @@ main (int   argc,
         -d
             - Wait for debugger to attach
 
+    - Set state pointer
     - Set signals
-
     - Initialize Ncurses
 */
 static int
@@ -203,6 +203,12 @@ initial_configure (int   argc,
         // wait...
         getchar ();
     }
+
+    
+    //
+    // set state pointer in utilities.c for persisting data on clean_up()
+    //
+    set_state_ptr (state);
 
 
     //

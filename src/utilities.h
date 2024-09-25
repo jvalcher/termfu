@@ -11,7 +11,7 @@
 
 
 /*
-    Log formatted string to DEBUG_OUT_FILE for debugging inside Ncurses
+    Log formatted string to DEBUG_OUT_FILE for debugging inside ncurses
     --------
     - Same usage as printf()
 */
@@ -37,14 +37,18 @@ char  *concatenate_strings  (int num_strings, ...);
 
 
 /*
-    Send debugger command string
+    Send debugger command only
+    -------
+    - Must end with '\n'
 */
-int send_command (state_t *state, char *command_string);
+int send_command (state_t *state, char *command);
 
 
 
 /*
-    Send debugger command string with start, end markers and parse output
+    Send debugger command string with start, end markers; parse output
+    -------
+    - Must end with '\n'
 */
 int send_command_mp (state_t *state, char *command);
 
@@ -56,8 +60,8 @@ int send_command_mp (state_t *state, char *command);
     - Must normally set, unset attributes with wattron/off using constant or macro
     - This function allows you to use integer variables (predefined in functions)
 */
-int  set_nc_attribute    (WINDOW *nc_window, int attribute_value);
-int  unset_nc_attribute  (WINDOW *nc_window, int);
+int set_nc_attribute   (WINDOW *nc_window, int attribute_value);
+int unset_nc_attribute (WINDOW *nc_window, int);
 
 
 
@@ -67,27 +71,7 @@ int  unset_nc_attribute  (WINDOW *nc_window, int);
     - Sets y,x variables to first character's coordinates
     - returns true if string found, false otherwise
 */
-bool  find_window_string  (WINDOW *nc_window, char *string, int *y, int *x);
-
-
-
-/*
-    Copy single character to window buffer
-    -----------
-    state->plugins[x]->win->buff_data
-*/
-void cp_char (buff_data_t *dest_buff_data, char ch);
-
-
-
-/*
-    Copy single char to  state->plugins[Src]->win->src_file_data_t->path, ->addr, ->func  buffers
-    --------
-    type: PATH, ADDR, FUNC
-*/
-enum { PATH, ADDR, FUNC };
-    //
-void cp_fchar (src_file_data_t *dest_file_data, char ch, int type);
+bool find_window_string (WINDOW *nc_window, char *string, int *y, int *x);
 
 
 
@@ -101,12 +85,38 @@ bool file_was_updated (time_t prev_file_mtime, char *file_path);
 
 
 /*
+    Set pointer to state in utilities.c for persisting data on clean_up()
+*/
+void set_state_ptr (state_t *state);
+
+
+
+/*
+    Copy single character to window buffer
+    -----------
+    state->plugins[x]->win->buff_data
+*/
+void cp_char (buff_data_t *dest_buff_data, char ch);
+
+
+
+/*
+    Copy character into src_file_data_t buffer
+    --------
+    state->plugins[Src]->win->src_file_data_t->path, ->addr, ->func
+*/
+enum { PATH, ADDR, FUNC };      // type
+
+void cp_fchar (src_file_data_t *dest_file_data, char ch, int type);
+
+
+
+/*
     Copy character into debugger buffer
     ---------
     state->debugger-><buffer>
-    buff_index:  one of the below enum indexes
 */
-enum { FORMAT_BUF, DATA_BUF, CLI_BUF, PROGRAM_BUF, ASYNC_BUF };
+enum { FORMAT_BUF, DATA_BUF, CLI_BUF, PROGRAM_BUF, ASYNC_BUF };     // buff_index
 
 void cp_dchar (debugger_t *debugger, char ch, int buff_index);
 

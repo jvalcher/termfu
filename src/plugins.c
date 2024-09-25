@@ -59,16 +59,6 @@ int win_buff_plugins[] = {
     Stk,
     Wat
 };
-int win_buff_len[] = {
-    Asm_BUF_LEN,
-    Brk_BUF_LEN,
-    Dbg_BUF_LEN,
-    LcV_BUF_LEN,
-    Prg_BUF_LEN,
-    Reg_BUF_LEN,
-    Stk_BUF_LEN,
-    Wat_BUF_LEN
-};
 
 int win_topbar_plugins[] = {
     Brk,
@@ -189,13 +179,15 @@ allocate_plugin_windows (state_t *state)
             pfem ("malloc error: %s", strerror (errno));
             pemr ("buff_data_t allocation error (code: %s)", win->code);
         }
-        if ((win->buff_data->buff = (char*) malloc (win_buff_len[i])) == NULL ) {
+        if ((win->buff_data->buff = (char*) malloc (sizeof(char) * ORIG_BUF_LEN)) == NULL ) {
             pfem ("malloc error: %s", strerror (errno));
             pemr ("buff_data_t->buff (code: %s) allocation error", win->code);
         }
 
+        memcpy (win->buff_data->code, plugin_codes[j], CODE_LEN + 1);
         win->buff_data->buff_pos = 0;
-        win->buff_data->buff_len = win_buff_len[i];
+        win->buff_data->buff_len = ORIG_BUF_LEN;
+        win->buff_data->times_doubled = 0;
         win->buff_data->scroll_col = 1;
         win->buff_data->scroll_row = 1;
         win->buff_data->changed = true;

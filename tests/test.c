@@ -7,9 +7,11 @@
 int
 main (void)
 {
-    int ch = getchar();
+    typedef struct{
+        int n;
+    } num_t;
 
-    printf ("%d", ch);
+
 
     return 0;
 }

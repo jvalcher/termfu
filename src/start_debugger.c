@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 #include "start_debugger.h"
 #include "data.h"
@@ -15,15 +16,17 @@
 #include "update_window_data/_update_window_data.h"
 #include "update_window_data/get_binary_path_time.h"
 
-static void configure_debugger (debugger_t*);
-static int  start_debugger_proc (state_t*);
+static int configure_debugger (debugger_t*);
+static int start_debugger_proc (state_t*);
 
 
 
 int
 start_debugger (state_t *state)
 {
-    configure_debugger (state->debugger);
+    if (configure_debugger (state->debugger) == RET_FAIL) {
+        pfemr ("Failed to configure debugger");
+    }
 
     if (start_debugger_proc (state) == RET_FAIL) {
         pfemr ("Failed to start debugger process");
@@ -36,37 +39,68 @@ start_debugger (state_t *state)
     parse_debugger_output (state);
 
     state->plugins[Dbg]->win->buff_data->new_data = true;
-    update_window (Dbg, state);
+    if (update_window (Dbg, state) == RET_FAIL) {
+        pfemr ("Failed to update debugger window");
+    }
 
-    get_binary_path_time (state);
+    if (get_binary_path_time (state) == RET_FAIL) {
+        pfemr ("Failed to get binary_path_time");
+    }
 
     return RET_OK;
 }
 
 
 
-static void
+static int
 configure_debugger (debugger_t *debugger)
 {
+    if ((debugger->format_buffer = (char*) malloc (sizeof (char) * ORIG_BUF_LEN)) == NULL) {
+        pfem ("malloc error: %s", strerror (errno));
+        pemr ("Format buffer allocation failed");
+    }
     debugger->format_buffer[0] = '\0';
-    debugger->format_len = FORMAT_BUF_LEN;
+    debugger->format_len = ORIG_BUF_LEN;
     debugger->format_pos = 0;
+    debugger->format_times_doubled = 0;
 
+    if ((debugger->data_buffer = (char*) malloc (sizeof (char) * ORIG_BUF_LEN)) == NULL) {
+        pfem ("malloc error: %s", strerror (errno));
+        pemr ("Data buffer allocation failed");
+    }
     debugger->data_buffer[0] = '\0';
-    debugger->data_len = DATA_BUF_LEN;
+    debugger->data_len = ORIG_BUF_LEN;
     debugger->data_pos = 0;
+    debugger->data_times_doubled = 0;
 
+    if ((debugger->cli_buffer = (char*) malloc (sizeof (char) * ORIG_BUF_LEN)) == NULL) {
+        pfem ("malloc error: %s", strerror (errno));
+        pemr ("CLI buffer allocation failed");
+    }
     debugger->cli_buffer[0] = '\0';
-    debugger->cli_len = CLI_BUF_LEN;
+    debugger->cli_len = ORIG_BUF_LEN;;
     debugger->cli_pos = 0;
+    debugger->cli_times_doubled = 0;
 
+    if ((debugger->program_buffer = (char*) malloc (sizeof (char) * ORIG_BUF_LEN)) == NULL) {
+        pfem ("malloc error: %s", strerror (errno));
+        pemr ("Program out buffer allocation failed");
+    }
     debugger->program_buffer[0] = '\0';
-    debugger->program_len = PROGRAM_BUF_LEN;
+    debugger->program_len = ORIG_BUF_LEN;;
     debugger->program_pos = 0;
+    debugger->program_times_doubled = 0;
 
+    if ((debugger->async_buffer = (char*) malloc (sizeof (char) * ORIG_BUF_LEN)) == NULL) {
+        pfem ("malloc error: %s", strerror (errno));
+        pemr ("Async buffer allocation failed");
+    }
     debugger->async_buffer[0] = '\0';
-    debugger->async_len = ASYNC_BUF_LEN;
+    debugger->async_len = ORIG_BUF_LEN;
     debugger->async_pos = 0;
+    debugger->async_times_doubled = 0;
+
+    return RET_OK;
 }
 
 

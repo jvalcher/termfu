@@ -10,8 +10,10 @@
 #include "data.h"
 #include "insert_output_marker.h"
 #include "parse_debugger_output.h"
+#include "persist_data.h"
 
 FILE *debug_out_ptr = NULL;
+state_t *state_ptr = NULL;
 
 
 
@@ -33,13 +35,16 @@ logd (const char *formatted_string, ...)
 
 
 
-void clean_up (void)
+void
+clean_up (void)
 {
-    // exit Ncurses
     curs_set (1);
     endwin ();
 
-    // close DEBUG_OUT_FILE
+    if (persist_data (state_ptr) == RET_FAIL) {
+        pfem ("Failed to persist data");
+    }
+
     if (debug_out_ptr != NULL) {
         fclose (debug_out_ptr);
     }
@@ -266,17 +271,64 @@ find_window_string (WINDOW *window,
 
 
 
+bool
+file_was_updated (time_t file_mtime,
+                  char *file_path)
+{
+    struct stat file_stat;
+
+    if (stat (file_path, &file_stat) != 0) {
+        return false;
+    }
+
+    return file_mtime < file_stat.st_mtim.tv_sec;
+}
+
+
+
+void
+set_state_ptr (state_t *state)
+{
+    state_ptr = state;
+}
+
+
+
 void
 cp_char (buff_data_t *dest_buff_data,
          char ch)
 {
+    char *tmp;
+
     dest_buff_data->buff[dest_buff_data->buff_pos] = ch;
     dest_buff_data->buff[dest_buff_data->buff_pos + 1] = '\0';
 
-    if (dest_buff_data->buff_pos < dest_buff_data->buff_len - 2) {
+    if (dest_buff_data->buff_pos < dest_buff_data->buff_len - 1) {
         ++dest_buff_data->buff_pos;
-    } else {
-        dest_buff_data->buff_pos = 0;
+    } 
+
+    else {
+
+        // double buffer size
+        if (dest_buff_data->times_doubled < MAX_DOUBLE_TIMES) {
+
+            dest_buff_data->buff_len *= 2;
+            ++dest_buff_data->times_doubled;
+
+            tmp = (char*) realloc (dest_buff_data->buff, sizeof (char) * dest_buff_data->buff_len);
+            if (tmp == NULL) {
+                pfem ("realloc error: %s", strerror (errno));
+                peme ("Failed to reallocate window buffer (code: %s, times doubled: %d, buff size: %d)",
+                            dest_buff_data->code, dest_buff_data->times_doubled, dest_buff_data->buff_len);
+            }
+
+            dest_buff_data->buff = tmp;
+        }
+
+        // or loop back to buffer start
+        else {
+            dest_buff_data->buff_pos = 0;
+        }
     }
 }
 
@@ -307,28 +359,30 @@ cp_fchar (src_file_data_t *dest_file_data,
             len = &dest_file_data->func_len;
             pos = &dest_file_data->func_pos;
             break;
+        default:
+            pfeme ("Unrecognized buffer type \"%d\"", type);
     }
 
     buff[*pos] = ch;
     buff[*pos + 1] = '\0';
 
-    if (*pos < *len - 2) {
+    if (*pos < *len - 1) {
         *pos += 1;
     } 
 
     else {
 
-        pfem ("Character copy buffer overflow");
+        pfem ("Buffer overflow");
 
         switch (type) {
             case PATH:
-                peme ("win->src_file_data->path : %s", buff);
+                peme ("win->src_file_data->path : \"%s...\"", buff);
                 break;
             case ADDR:
-                peme ("win->src_file_data->addr : %s", buff);
+                peme ("win->src_file_data->addr : \"%s...\"", buff);
                 break;
             case FUNC:
-                peme ("win->src_file_data->func : %s", buff);
+                peme ("win->src_file_data->func : \"%s...\"", buff);
                 break;
         }
     }
@@ -336,68 +390,109 @@ cp_fchar (src_file_data_t *dest_file_data,
 
 
 
-bool
-file_was_updated (time_t file_mtime,
-                  char *file_path)
-{
-    struct stat file_stat;
-
-    if (stat (file_path, &file_stat) != 0) {
-        return false;
-    }
-
-    return file_mtime < file_stat.st_mtim.tv_sec;
-}
-
-
-
-/*
-    Copy character into debugger buffer
-*/
 void
-cp_dchar (debugger_t *debugger, char ch, int buff_index)
+cp_dchar (debugger_t *debugger,
+          char ch,
+          int buff_index)
 {
-    char *buff;
     int  *len,
-         *pos;
+         *pos,
+         *doubled;
+    char *buff,
+         *tmp,
+         *title,
+         *form_title  = "format",
+         *data_title  = "data",
+         *cli_title   = "cli",
+         *prog_title  = "program",
+         *async_title = "async";
+
 
     switch (buff_index) {
         case FORMAT_BUF:
-            buff =  debugger->format_buffer;
-            len  = &debugger->format_len;
-            pos  = &debugger->format_pos;
+            title   =  form_title;
+            buff    =  debugger->format_buffer;
+            len     = &debugger->format_len;
+            pos     = &debugger->format_pos;
+            doubled = &debugger->format_times_doubled;
             break;
         case DATA_BUF:
-            buff =  debugger->data_buffer;
-            len  = &debugger->data_len;
-            pos  = &debugger->data_pos;
+            title   =  data_title;
+            buff    =  debugger->data_buffer;
+            len     = &debugger->data_len;
+            pos     = &debugger->data_pos;
+            doubled = &debugger->data_times_doubled;
             break;
         case CLI_BUF:
-            buff =  debugger->cli_buffer;
-            len  = &debugger->cli_len;
-            pos  = &debugger->cli_pos;
+            title   =  cli_title;
+            buff    =  debugger->cli_buffer;
+            len     = &debugger->cli_len;
+            pos     = &debugger->cli_pos;
+            doubled = &debugger->cli_times_doubled;
             break;
         case PROGRAM_BUF:
-            buff =  debugger->program_buffer;
-            len  = &debugger->program_len;
-            pos  = &debugger->program_pos;
+            title   =  prog_title;
+            buff    =  debugger->program_buffer;
+            len     = &debugger->program_len;
+            pos     = &debugger->program_pos;
+            doubled = &debugger->program_times_doubled;
             break;
         case ASYNC_BUF:
-            buff =  debugger->async_buffer;
-            len  = &debugger->async_len;
-            pos  = &debugger->async_pos;
+            title   =  async_title;
+            buff    =  debugger->async_buffer;
+            len     = &debugger->async_len;
+            pos     = &debugger->async_pos;
+            doubled = &debugger->async_times_doubled;
             break;
+        default:
+            pfeme ("Unrecognized debugger buffer index \"%d\"", buff_index);
     }
 
     buff [*pos] = ch;
     buff [*pos + 1] = '\0';
 
-    if (*pos < *len - 2) {
+    if (*pos < *len - 1) {
         *pos += 1;
-    } else {
-        *pos = 0;
+    } 
+
+    else {
+
+        // double buffer size
+        if (*doubled < MAX_DOUBLE_TIMES) {
+
+            *len     *= 2;
+            *doubled += 1;
+
+            tmp = (char*) realloc (buff, sizeof (char) * *len);
+            if (tmp == NULL) {
+                pfem ("realloc error: %s", strerror (errno));
+                pem  ("Failed to reallocate \"%s\" buffer", title);
+                peme ("Buffer size: %d, position: %d, Times doubled: %d)", *len, *pos, *doubled);
+            }
+
+            switch (buff_index) {
+                case FORMAT_BUF:
+                    debugger->format_buffer = tmp;
+                    break;
+                case DATA_BUF:
+                    debugger->data_buffer = tmp;
+                    break;
+                case CLI_BUF:
+                    debugger->cli_buffer = tmp;
+                    break;
+                case PROGRAM_BUF:
+                    debugger->program_buffer = tmp;
+                    break;
+                case ASYNC_BUF:
+                    debugger->async_buffer = tmp;
+                    break;
+            }
+        }
+
+        // or loop back to buffer start
+        else {
+            *pos = 0;
+        }
     }
 }
-
-
 
