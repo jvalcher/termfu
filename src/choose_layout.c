@@ -153,7 +153,7 @@ choose_layout:
             pfemr ("Failed to render layout");
         }
 
-        state->plugins[Src]->win->file_data->path_changed = true;
+        state->plugins[Src]->win->src_file_data->path_changed = true;
         if (update_windows (state, 9, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Stk, Wat) == RET_FAIL) {
             pfemr ("Failed to update windows");
         }

@@ -81,13 +81,13 @@ void cp_char (buff_data_t *dest_buff_data, char ch);
 
 
 /*
-    Copy single char to  state->plugins[Src]->win->file_data_t->path, ->addr, ->func  buffers
+    Copy single char to  state->plugins[Src]->win->src_file_data_t->path, ->addr, ->func  buffers
     --------
     type: PATH, ADDR, FUNC
 */
 enum { PATH, ADDR, FUNC };
     //
-void cp_fchar (file_data_t *dest_file_data, char ch, int type);
+void cp_fchar (src_file_data_t *dest_file_data, char ch, int type);
 
 
 
@@ -98,6 +98,17 @@ void cp_fchar (file_data_t *dest_file_data, char ch, int type);
 */
 bool file_was_updated (time_t prev_file_mtime, char *file_path);
 
+
+
+/*
+    Copy character into debugger buffer
+    ---------
+    state->debugger-><buffer>
+    buff_index:  one of the below enum indexes
+*/
+enum { FORMAT_BUF, DATA_BUF, CLI_BUF, PROGRAM_BUF, ASYNC_BUF };
+
+void cp_dchar (debugger_t *debugger, char ch, int buff_index);
 
 
 

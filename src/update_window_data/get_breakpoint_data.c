@@ -74,8 +74,12 @@ allocate_breakpoint (state_t *state,
         curr_break = curr_break->next;
     }
 
-    strncpy (curr_break->index, index_buff, INDEX_BUFF_LEN - 1);
-    strncpy (curr_break->path_line, break_buff, BREAK_LEN - 1);
+    memcpy (curr_break->index, index_buff, INDEX_BUFF_LEN - 1);
+    curr_break->index[INDEX_BUFF_LEN-1] = '\0';
+
+    memcpy (curr_break->path_line, break_buff, BREAK_LEN - 1);
+    curr_break->path_line[BREAK_LEN-1] = '\0';
+
     curr_break->next = NULL;
 
     return RET_OK;

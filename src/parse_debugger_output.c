@@ -4,6 +4,7 @@
 
 #include "parse_debugger_output.h"
 #include "data.h"
+#include "utilities.h"
 
 void parse_debugger_output_gdb (debugger_t*);
 void parse_debugger_output_pdb (debugger_t*);
@@ -50,56 +51,6 @@ parse_debugger_output (state_t *state)
                 running = false;
                 break;
         }
-    }
-}
-
-
-
-/*
-    Copy character into protected buffer
-*/
-void
-cp_dchar (debugger_t *debugger, char ch, int buff_index)
-{
-    char *buff;
-    int  *len,
-         *pos;
-
-    switch (buff_index) {
-        case FORMAT_BUF:
-            buff =  debugger->format_buffer;
-            len  = &debugger->format_len;
-            pos  = &debugger->format_pos;
-            break;
-        case DATA_BUF:
-            buff =  debugger->data_buffer;
-            len  = &debugger->data_len;
-            pos  = &debugger->data_pos;
-            break;
-        case CLI_BUF:
-            buff =  debugger->cli_buffer;
-            len  = &debugger->cli_len;
-            pos  = &debugger->cli_pos;
-            break;
-        case PROGRAM_BUF:
-            buff =  debugger->program_buffer;
-            len  = &debugger->program_len;
-            pos  = &debugger->program_pos;
-            break;
-        case ASYNC_BUF:
-            buff =  debugger->async_buffer;
-            len  = &debugger->async_len;
-            pos  = &debugger->async_pos;
-            break;
-    }
-
-    buff [*pos] = ch;
-    buff [*pos + 1] = '\0';
-
-    if (*pos < *len - 2) {
-        *pos += 1;
-    } else {
-        *pos = 0;
     }
 }
 

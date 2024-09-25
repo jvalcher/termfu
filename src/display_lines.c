@@ -56,30 +56,30 @@ display_lines (int       type,
 
         case FILE_TYPE:
 
-            if (win->file_data->path_changed) {
+            if (win->src_file_data->path_changed) {
 
                 // free file pointer, offsets
-                if (win->file_data->ptr != NULL) {
-                    fclose (win->file_data->ptr);
+                if (win->src_file_data->ptr != NULL) {
+                    fclose (win->src_file_data->ptr);
                 }
-                if (win->file_data->offsets != NULL) {
-                    free (win->file_data->offsets);
+                if (win->src_file_data->offsets != NULL) {
+                    free (win->src_file_data->offsets);
                 }
 
                 // open new file
-                if ((win->file_data->ptr = fopen (win->file_data->path, "r")) == NULL) {
+                if ((win->src_file_data->ptr = fopen (win->src_file_data->path, "r")) == NULL) {
                     pfem ("fopen error: %s", strerror (errno));
-                    pemr ("Failed to open file \"%s\"", win->file_data->path);
+                    pemr ("Failed to open file \"%s\"", win->src_file_data->path);
                 }
-                if (win->file_data->ptr != NULL) {
+                if (win->src_file_data->ptr != NULL) {
                     if (set_file_rows_cols (win) == RET_FAIL) {
                         pfemr ("Failed to set file rows, cols");
                     }
-                    win->file_data->path_changed = false;
+                    win->src_file_data->path_changed = false;
                 }
             }
 
-            if (win->file_data->ptr != NULL) {
+            if (win->src_file_data->ptr != NULL) {
                 display_lines_file (key, win);
             }
 
@@ -269,45 +269,45 @@ set_file_rows_cols (window_t *win)
           max_mid,
           ch, n;
 
-    win->file_data->first_char = 0;
-    win->file_data->rows = 0;
-    win->file_data->max_cols = 0;
+    win->src_file_data->first_char = 0;
+    win->src_file_data->rows = 0;
+    win->src_file_data->max_cols = 0;
 
     // calculate rows, max columns
-    while (fgets(line, sizeof(line), win->file_data->ptr) != NULL) {
+    while (fgets(line, sizeof(line), win->src_file_data->ptr) != NULL) {
         line_len = strlen(line);
-        if (win->file_data->max_cols < line_len) {
-            win->file_data->max_cols = line_len + 1;
+        if (win->src_file_data->max_cols < line_len) {
+            win->src_file_data->max_cols = line_len + 1;
         }
-        win->file_data->rows += 1;
+        win->src_file_data->rows += 1;
     }
-    rewind (win->file_data->ptr);
+    rewind (win->src_file_data->ptr);
 
     // calculate max line number digits
-    n = win->file_data->rows;
-    win->file_data->line_num_digits = 0;
+    n = win->src_file_data->rows;
+    win->src_file_data->line_num_digits = 0;
     while (n != 0) {
-        ++win->file_data->line_num_digits;
+        ++win->src_file_data->line_num_digits;
         n /= 10;
     }
 
     // calculate newline offsets
-    if ((win->file_data->offsets = (long*) malloc (win->file_data->rows * sizeof(long))) == NULL) {
+    if ((win->src_file_data->offsets = (long*) malloc (win->src_file_data->rows * sizeof(long))) == NULL) {
         pfem ("malloc error: %s", strerror (errno));
-        pemr ("Failed to allocate offsets array for \"%s\" (%s)\n", win->file_data->path, win->code);
+        pemr ("Failed to allocate offsets array for \"%s\" (%s)\n", win->src_file_data->path, win->code);
     }
-    win->file_data->offsets [0] = 0;
-    for (int i = 1; i < win->file_data->rows; i++) {
-        while ((ch = fgetc (win->file_data->ptr)) != '\n' && ch != EOF) {}
+    win->src_file_data->offsets [0] = 0;
+    for (int i = 1; i < win->src_file_data->rows; i++) {
+        while ((ch = fgetc (win->src_file_data->ptr)) != '\n' && ch != EOF) {}
         if (ch == '\n')
-            win->file_data->offsets[i] = ftell (win->file_data->ptr);
+            win->src_file_data->offsets[i] = ftell (win->src_file_data->ptr);
     }
-    rewind (win->file_data->ptr);
+    rewind (win->src_file_data->ptr);
 
-    win->file_data->min_mid = (win->data_win_rows / 2) + 1;
-    max_mid = win->file_data->rows - ((win->data_win_rows - 1) / 2);
-    win->file_data->max_mid = (win->file_data->rows > win->data_win_rows) ? max_mid : win->file_data->min_mid;
-    win->data_win_mid_line = win->file_data->min_mid;
+    win->src_file_data->min_mid = (win->data_win_rows / 2) + 1;
+    max_mid = win->src_file_data->rows - ((win->data_win_rows - 1) / 2);
+    win->src_file_data->max_mid = (win->src_file_data->rows > win->data_win_rows) ? max_mid : win->src_file_data->min_mid;
+    win->data_win_mid_line = win->src_file_data->min_mid;
 
     return RET_OK;
 }
@@ -337,42 +337,42 @@ display_lines_file (int key,
             break;
 
         case LINE_DATA:
-            if (win->file_data->line < win->file_data->min_mid) {
-                win->data_win_mid_line = win->file_data->min_mid;
-            } else if (win->file_data->line > win->file_data->max_mid) {
-                win->data_win_mid_line = win->file_data->max_mid;
+            if (win->src_file_data->line < win->src_file_data->min_mid) {
+                win->data_win_mid_line = win->src_file_data->min_mid;
+            } else if (win->src_file_data->line > win->src_file_data->max_mid) {
+                win->data_win_mid_line = win->src_file_data->max_mid;
             } else {
-                win->data_win_mid_line = win->file_data->line;
+                win->data_win_mid_line = win->src_file_data->line;
             }
             break;
 
         case KEY_UP:
             win->data_win_mid_line =
-                (win->data_win_mid_line <= win->file_data->min_mid)
-                ? win->file_data->min_mid
+                (win->data_win_mid_line <= win->src_file_data->min_mid)
+                ? win->src_file_data->min_mid
                 : win->data_win_mid_line - 1;
             break;
 
         case KEY_DOWN:
             win->data_win_mid_line =
-                (win->data_win_mid_line >= win->file_data->max_mid)
-                ? win->file_data->max_mid
+                (win->data_win_mid_line >= win->src_file_data->max_mid)
+                ? win->src_file_data->max_mid
                 : win->data_win_mid_line + 1;
             break;
 
         case KEY_RIGHT:
-            win->file_data->first_char =
-                ((win->file_data->max_cols - win->file_data->first_char) >
-                    (win->data_win_cols - win->file_data->line_num_digits - LINE_NUM_TEXT_SPACES))
-                ? win->file_data->first_char + 1
-                : win->file_data->max_cols - win->data_win_cols + win->file_data->line_num_digits + LINE_NUM_TEXT_SPACES;
+            win->src_file_data->first_char =
+                ((win->src_file_data->max_cols - win->src_file_data->first_char) >
+                    (win->data_win_cols - win->src_file_data->line_num_digits - LINE_NUM_TEXT_SPACES))
+                ? win->src_file_data->first_char + 1
+                : win->src_file_data->max_cols - win->data_win_cols + win->src_file_data->line_num_digits + LINE_NUM_TEXT_SPACES;
             break;
 
         case KEY_LEFT:
-            win->file_data->first_char =
-                (win->file_data->first_char == 0)
+            win->src_file_data->first_char =
+                (win->src_file_data->first_char == 0)
                 ? 0
-                : win->file_data->first_char - 1;
+                : win->src_file_data->first_char - 1;
             break;
     }
 
@@ -381,20 +381,20 @@ display_lines_file (int key,
     print_line = (print_line >= 1) ? print_line : 1;
 
     // calculate text length minus line number, spaces
-    win_text_len = win->data_win_cols - win->file_data->line_num_digits - LINE_NUM_TEXT_SPACES;
+    win_text_len = win->data_win_cols - win->src_file_data->line_num_digits - LINE_NUM_TEXT_SPACES;
 
     // print lines
     for (i = 0; i < win->data_win_rows; i++) {
 
         // seek to beginning of line
-        fseek (win->file_data->ptr, win->file_data->offsets[print_line++ - 1], SEEK_SET);
+        fseek (win->src_file_data->ptr, win->src_file_data->offsets[print_line++ - 1], SEEK_SET);
 
         // get line
-        fgets (line, sizeof (line), win->file_data->ptr);
+        fgets (line, sizeof (line), win->src_file_data->ptr);
         line_len = strlen (line);
 
         // if line characters visible
-        if (win->file_data->first_char <= line_len) {
+        if (win->src_file_data->first_char <= line_len) {
 
             // remove newline
             if (line [line_len - 1] == '\n') {
@@ -403,12 +403,12 @@ display_lines_file (int key,
 
             // calculate line length
             else {
-                line_len = ((line_len - win->file_data->first_char) <= win->data_win_cols) 
-                            ? line_len - win->file_data->first_char
+                line_len = ((line_len - win->src_file_data->first_char) <= win->data_win_cols) 
+                            ? line_len - win->src_file_data->first_char
                             : win->data_win_cols;
             }
 
-            line_index = win->file_data->first_char;
+            line_index = win->src_file_data->first_char;
 
         } else {
 
@@ -418,10 +418,10 @@ display_lines_file (int key,
             line_index = 0;
         }
 
-        spaces = win->file_data->line_num_digits - sprintf (buff, "%d", print_line - 1) + LINE_NUM_TEXT_SPACES;
+        spaces = win->src_file_data->line_num_digits - sprintf (buff, "%d", print_line - 1) + LINE_NUM_TEXT_SPACES;
 
         // highlight current line
-        if ((print_line - 1) == win->file_data->line) {
+        if ((print_line - 1) == win->src_file_data->line) {
             wattron (win->DWIN, A_REVERSE);
         }
 
@@ -429,12 +429,12 @@ display_lines_file (int key,
         mvwprintw (win->DWIN, row++, col, "%d%*c%.*s",
                 print_line - 1, spaces, ' ', win_text_len, (const char*)(line + line_index));
 
-        if ((print_line - 1) == win->file_data->line) {
+        if ((print_line - 1) == win->src_file_data->line) {
             wattroff (win->DWIN, A_REVERSE);
         }
 
         // break if end of file
-        if (print_line > win->file_data->rows) {
+        if (print_line > win->src_file_data->rows) {
             break;
         }
     }
@@ -466,7 +466,7 @@ format_win_data (int plugin_index,
         // highlight current hex address (wherever it occurs)
         si = 0;
         getmaxyx (win->DWIN, rows, cols);
-        needle = state->plugins[Src]->win->file_data->addr;
+        needle = state->plugins[Src]->win->src_file_data->addr;
 
         for (i = 0; i < rows; i++) {
             for (j = 0; j < cols; j++) {
@@ -498,7 +498,7 @@ format_win_data (int plugin_index,
         // TODO: Replace source file line number with colored "b2" breakpoint index number
 
         // print current source code file in top bar
-        basefile = basename (win->file_data->path);
+        basefile = basename (win->src_file_data->path);
         left_spaces = (win->topbar_cols - strlen (basefile)) / 2;
         right_spaces = win->topbar_cols - strlen (basefile) - left_spaces;
         left_spaces = left_spaces > 0 ? left_spaces : 0;

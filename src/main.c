@@ -1,6 +1,8 @@
 //
 // TODO: re-render layout on terminal screen size change
-// TODO: replace strcpy, strncpy functions with memcpy
+// TODO: replace strncpy with memcpy
+// TODO: put parse_configuration_file() through its paces; add more error handling
+// TODO: add user error messages to pfem... functions; dev flag for current message formatting
 //
 
 #include <unistd.h>
@@ -115,7 +117,6 @@ initial_configure (int   argc,
     //
     state->config_path[0] = '\0';
     state->data_path[0]   = '\0';
-    state->pid[0]         = '\0';
     debugging_mode = false;
     char *optstring = "hdc:p:";
 

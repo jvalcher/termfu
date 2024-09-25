@@ -9,7 +9,7 @@
 /*
    Plugin indexes
    --------
-   - Order matches respective code strings in *plugin_codes[]  (i.e. alphabetical)
+   - Order matches respective code strings in *plugin_codes[] in plugins.c  (i.e. alphabetical)
 */
 enum {
     Asm,

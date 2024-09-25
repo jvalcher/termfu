@@ -104,7 +104,7 @@ update_window (int      plugin_index,
             }
             break;
         default:
-            pfemr ("Unrecognized plugin index");
+            pfem ("Unrecognized plugin index");
             goto upd_win_err;
     }
 
@@ -122,7 +122,7 @@ update_window (int      plugin_index,
 
 upd_win_err:
 
-    pemr ("Failed to update window (index: %d, code: %s)",
-            plugin_index, get_plugin_code (plugin_index));
+    pemr ("Failed to update window (index: %d, code: %s, debugger: %s)",
+            plugin_index, get_plugin_code (plugin_index), state->debugger->title);
 }
 

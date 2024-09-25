@@ -4,8 +4,6 @@
 
 #include "data.h"
 
-#define BUFF_TYPE  0
-#define FILE_TYPE  1
 
 
 /*

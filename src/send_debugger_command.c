@@ -22,6 +22,7 @@ send_debugger_command (int      plugin_index,
     bool exiting = false;
     int debugger_index = state->debugger->index;
 
+    // OPTIMIZE: make this a separate thread so that termfu can continue
     if (pulse_header_title_color (plugin_index, state, ON) == RET_FAIL) {
         pfem ("Failed to pulse header title color on");
         goto dbg_cmd_err_misc;
@@ -83,12 +84,12 @@ send_debugger_command (int      plugin_index,
                 case (DEBUGGER_GDB):
                     if (send_command (state, "-exec-run\n") == RET_FAIL) goto dbg_cmd_err;
                     if (file_was_updated (state->debugger->prog_update_time, state->debugger->prog_path)) {
-                        state->plugins[Src]->win->file_data->path_changed = true;
+                        state->plugins[Src]->win->src_file_data->path_changed = true;
                     }
                     break;
                 case (DEBUGGER_PDB):
                     if (send_command (state, "restart\n") == RET_FAIL) goto dbg_cmd_err;
-                    state->plugins[Src]->win->file_data->path_changed = true;
+                    state->plugins[Src]->win->src_file_data->path_changed = true;
                     break;
             }
             break;

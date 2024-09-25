@@ -4,7 +4,6 @@
 #include "../data.h"
 #include "../plugins.h"
 #include "../utilities.h"
-#include "../parse_debugger_output.h"
 
 static int get_source_path_line_memory_gdb (state_t *state);
 static int get_source_path_line_memory_pdb (state_t *state);
@@ -40,7 +39,7 @@ get_source_path_line_memory_gdb (state_t *state)
          *prev_ptr;
     window_t *win;
     bool is_running;
-    file_data_t *file_data;
+    src_file_data_t *file_data;
 
     const char *key_threads  = "threads=[",
                *key_addr     = "addr=\"",
@@ -49,7 +48,7 @@ get_source_path_line_memory_gdb (state_t *state)
                *key_line     = "line=\"";
 
     win = state->plugins[Src]->win;
-    file_data = win->file_data;
+    file_data = win->src_file_data;
     is_running = true;
 
     file_data->path_pos = 0;
@@ -123,9 +122,10 @@ get_source_path_line_memory_gdb (state_t *state)
         *dest_ptr = '\0';
 
         // path changed
-        if (strcmp (state->debugger->format_buffer, win->file_data->path) != 0) {
-            strncpy (win->file_data->path, state->debugger->format_buffer, FILE_PATH_LEN - 1);
-            win->file_data->path_changed = true;
+        if (strcmp (state->debugger->format_buffer, win->src_file_data->path) != 0) {
+            memcpy (win->src_file_data->path, state->debugger->format_buffer, FILE_PATH_LEN - 1);
+            win->src_file_data->path [FILE_PATH_LEN-1] = '\0';
+            win->src_file_data->path_changed = true;
         } 
 
         // line number
@@ -136,10 +136,10 @@ get_source_path_line_memory_gdb (state_t *state)
             while (*src_ptr != '\"') {
                 cp_dchar (state->debugger, *src_ptr++, FORMAT_BUF);
             }
-            win->file_data->line = atoi (state->debugger->format_buffer);
+            win->src_file_data->line = atoi (state->debugger->format_buffer);
             state->debugger->format_buffer[0] = '\0';
         } else {
-            win->file_data->line = 0;
+            win->src_file_data->line = 0;
         }
     }
 
@@ -155,13 +155,13 @@ get_source_path_line_memory_pdb (state_t *state)
 {
     char *src_ptr;
     window_t *win;
-    file_data_t *file_data;
+    src_file_data_t *file_data;
 
     const char *curr_path_symbol = "\n> ",
                *caret_str        = "<string>";
 
     win = state->plugins[Src]->win;
-    file_data = win->file_data;
+    file_data = win->src_file_data;
     src_ptr   = state->debugger->cli_buffer;
 
     file_data->path_pos = 0;
@@ -184,9 +184,10 @@ get_source_path_line_memory_pdb (state_t *state)
 
     if (strcmp (state->debugger->format_buffer, caret_str) != 0) {
 
-        if (strcmp (state->debugger->format_buffer, win->file_data->path) != 0) {
-            strncpy (win->file_data->path, state->debugger->format_buffer, FILE_PATH_LEN - 1);
-            win->file_data->path_changed = true;
+        if (strcmp (state->debugger->format_buffer, win->src_file_data->path) != 0) {
+            memcpy (win->src_file_data->path, state->debugger->format_buffer, FILE_PATH_LEN - 1);
+            win->src_file_data->path[FILE_PATH_LEN-1] = '\0';
+            win->src_file_data->path_changed = true;
         }
 
         // line number
@@ -194,7 +195,7 @@ get_source_path_line_memory_pdb (state_t *state)
         do {
             cp_dchar (state->debugger, *src_ptr++, FORMAT_BUF);
         } while (*src_ptr != ')');
-        win->file_data->line = atoi (state->debugger->format_buffer);
+        win->src_file_data->line = atoi (state->debugger->format_buffer);
     }
 
     state->debugger->cli_buffer[0] = '\0';

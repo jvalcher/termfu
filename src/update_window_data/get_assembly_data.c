@@ -45,13 +45,13 @@ get_assembly_data_gdb (state_t *state)
              *func,
              *main = "main";
     buff_data_t *dest_buff;
-    file_data_t *src_data;
+    src_file_data_t *src_data;
 
     win       = state->plugins[Asm]->win;
     src_ptr   = state->debugger->cli_buffer;
     data_ptr  = state->debugger->data_buffer;
     dest_buff = win->buff_data;
-    src_data  = state->plugins[Src]->win->file_data;
+    src_data  = state->plugins[Src]->win->src_file_data;
 
     // send debugger command
     func = (src_data->func[0] == '\0') ? main : src_data->func;

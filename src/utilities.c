@@ -283,7 +283,7 @@ cp_char (buff_data_t *dest_buff_data,
 
 
 void
-cp_fchar (file_data_t *dest_file_data,
+cp_fchar (src_file_data_t *dest_file_data,
           char ch,
           int type)
 {
@@ -322,13 +322,13 @@ cp_fchar (file_data_t *dest_file_data,
 
         switch (type) {
             case PATH:
-                peme ("win->file_data->path : %s", buff);
+                peme ("win->src_file_data->path : %s", buff);
                 break;
             case ADDR:
-                peme ("win->file_data->addr : %s", buff);
+                peme ("win->src_file_data->addr : %s", buff);
                 break;
             case FUNC:
-                peme ("win->file_data->func : %s", buff);
+                peme ("win->src_file_data->func : %s", buff);
                 break;
         }
     }
@@ -348,4 +348,56 @@ file_was_updated (time_t file_mtime,
 
     return file_mtime < file_stat.st_mtim.tv_sec;
 }
+
+
+
+/*
+    Copy character into debugger buffer
+*/
+void
+cp_dchar (debugger_t *debugger, char ch, int buff_index)
+{
+    char *buff;
+    int  *len,
+         *pos;
+
+    switch (buff_index) {
+        case FORMAT_BUF:
+            buff =  debugger->format_buffer;
+            len  = &debugger->format_len;
+            pos  = &debugger->format_pos;
+            break;
+        case DATA_BUF:
+            buff =  debugger->data_buffer;
+            len  = &debugger->data_len;
+            pos  = &debugger->data_pos;
+            break;
+        case CLI_BUF:
+            buff =  debugger->cli_buffer;
+            len  = &debugger->cli_len;
+            pos  = &debugger->cli_pos;
+            break;
+        case PROGRAM_BUF:
+            buff =  debugger->program_buffer;
+            len  = &debugger->program_len;
+            pos  = &debugger->program_pos;
+            break;
+        case ASYNC_BUF:
+            buff =  debugger->async_buffer;
+            len  = &debugger->async_len;
+            pos  = &debugger->async_pos;
+            break;
+    }
+
+    buff [*pos] = ch;
+    buff [*pos + 1] = '\0';
+
+    if (*pos < *len - 2) {
+        *pos += 1;
+    } else {
+        *pos = 0;
+    }
+}
+
+
 

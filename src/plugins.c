@@ -1,41 +1,5 @@
 /*
-
-Plugins
-------
-- Each case-sensitive, three-letter code is associated with a plugin
-- Each plugin is assigned a key shortcut [A-Z,a-z] in the configuration file
-
-- Codes:
-
-    - Window
-
-        Asm     Assembly code
-        Brk     Breakpoints
-        Dbg     Debugger output
-        LcV     Local variables
-        Prg     Program output
-        Reg     Registers
-        Src     Source file
-        Stk     Stack frames
-        Wat     Watchpoints
-
-    - Pop-up window selection
-
-        AtP     Attach to PID or file
-        Lay     Layouts
-        Prm     Execute custom debugger command
-        Unt     Execute until
-
-    - Non-window
-
-        Con     Continue
-        Fin     Finish
-        Kil     Kill
-        Nxt     Next
-        Qut     Quit
-        Run     (Re)run program
-        Stp     Step
-        Trg     Target remote gdbserver
+    See README.md for more information
 */
 
 #include <string.h>
@@ -144,8 +108,7 @@ allocate_plugin_windows (state_t *state)
         win = plugin->win;
         win->has_topbar = false;
         win->key = j;
-        strncpy (win->code, plugin_codes[j], CODE_LEN);
-        win->code [CODE_LEN] = '\0';
+        memcpy (win->code, plugin_codes[j], CODE_LEN + 1);
     }
 
     // topbar subwindow data
@@ -163,7 +126,7 @@ allocate_plugin_windows (state_t *state)
         strcpy (win->topbar_title, win_topbar_titles[i]);
     }
 
-    // file_data_t
+    // src_file_data_t
     for (i = 0; i < num_win_file_plugins; i++) {
         j = win_file_plugins[i];
 
@@ -178,23 +141,22 @@ allocate_plugin_windows (state_t *state)
         win = state->plugins[j]->win;
 
         state->plugins[j]->win_type = FILE_TYPE;
-        win->has_data_buff = false;
 
-        if ((win->file_data = (file_data_t*) malloc (sizeof (file_data_t))) == NULL) {
+        if ((win->src_file_data = (src_file_data_t*) malloc (sizeof (src_file_data_t))) == NULL) {
             pfem ("malloc error: %s", strerror (errno));
             pemr ("file_data_t allocation error (code: %s)", win->code);
         }
 
-        win->file_data->path_changed = true;
-        win->file_data->path[0]  = '\0';
-        win->file_data->path_len = FILE_PATH_LEN;
-        win->file_data->path_pos = 0;
-        win->file_data->func[0]  = '\0';
-        win->file_data->func_len = FUNC_LEN;
-        win->file_data->func_pos = 0;
-        win->file_data->addr[0]  = '\0';
-        win->file_data->addr_len = ADDRESS_LEN;
-        win->file_data->addr_pos = 0;
+        win->src_file_data->path_changed = true;
+        win->src_file_data->path[0]  = '\0';
+        win->src_file_data->path_len = FILE_PATH_LEN;
+        win->src_file_data->path_pos = 0;
+        win->src_file_data->func[0]  = '\0';
+        win->src_file_data->func_len = FUNC_LEN;
+        win->src_file_data->func_pos = 0;
+        win->src_file_data->addr[0]  = '\0';
+        win->src_file_data->addr_len = ADDRESS_LEN;
+        win->src_file_data->addr_pos = 0;
         win->buff_data = NULL;
     }
 
@@ -232,13 +194,12 @@ allocate_plugin_windows (state_t *state)
             pemr ("buff_data_t->buff (code: %s) allocation error", win->code);
         }
 
-        win->has_data_buff = true;
         win->buff_data->buff_pos = 0;
         win->buff_data->buff_len = win_buff_len[i];
         win->buff_data->scroll_col = 1;
         win->buff_data->scroll_row = 1;
         win->buff_data->changed = true;
-        win->file_data = NULL;
+        win->src_file_data = NULL;
     }
 
     return RET_OK;
