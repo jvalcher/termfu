@@ -123,39 +123,47 @@ void cp_dchar (debugger_t *debugger, char ch, int buff_index);
 
 
 /*
-  Formatted error messages
+  Print formatted error messages
   ----------
   - Runs clean_up() first
 
-    Single message, return RET_FAIL
+    Print formatted message, return RET_FAIL
   
-        pfemr ("Unknown character \"%c\"\n", ch);
+        pfemr ("Unknown character \"%c\"", ch);
     
         ERROR: src_file.c : func() : 10
                Unknown character "c"
 
-    Or single message, exit program
+    Or message, exit program
 
-        pfeme ("Unknown character \"%c\"\n", ch);
+        pfeme ("Unknown character \"%c\"", ch);
   
-    Or just single message
+    Or just message
 
-        pfem ("Unknown character \"%c\"\n", ch);
+        pfem ("Failed to allocate buffer");
+        return NULL;
   
     Multiple messages, return RET_FAIL
   
-        pfem ("Unknown character \"%c\"\n", ch);
-        pem  ("Check README.md for more details\n"); 
-        pemr ("Returning EXIT_FAILURE...\n");
+        pfem ("Unknown character \"%c\"", ch);
+        pem  ("Check README.md for more details");
+        pem  ("Check the website for video demos");
+        pemr ("Returning RET_FAIL...");
     
         ERROR: src_file.c : func() : 10
                Unknown character "c"
                Check README.md for more details
-               Returning EXIT_FAILURE...
+               Check the website for video demos
+               Returning RET_FAIL...
 
     Or final message then exit program
+        
+        ...
+        peme ("Exiting...");
 
-        peme ("Exiting...\n");
+    Print errno message, return RET_FAIL
+
+        pfemr ("malloc error: %s", strerror (errno));
   
 */
 
