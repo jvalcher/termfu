@@ -356,7 +356,8 @@ render_header_titles (layout_t *layout,
         pemr ("Failed to allocate header title (len: %d)", title_str_len);
     }
 
-    titles_str [0]      = ' ';
+    memset (titles_str, '\0', title_str_len);
+    titles_str [0] = ' ';
 
     for (size_t j = 0; j < strlen (layout->hdr_key_str); j++) {
 

@@ -1,8 +1,7 @@
+
 //
 // TODO: re-render layout on terminal screen size change
-// TODO: replace strncpy with memcpy
 // TODO: put parse_configuration_file() through its paces; add more error handling
-// TODO: add user error messages to pfem... functions; dev flag for current message formatting
 //
 
 #include <unistd.h>
@@ -205,21 +204,15 @@ initial_configure (int   argc,
     }
 
     
-    //
-    // set state pointer in utilities.c for persisting data on clean_up()
-    //
+    // Set state pointer in utilities.c for persisting data on clean_up()
     set_state_ptr (state);
 
 
-    //
     // Signals
-    //
     signal (SIGINT, exit_signal_handler);    // Ctrl-C
 
 
-    //
-    // Ncurses
-    //
+    // ncurses
     initscr();
 
     if (has_colors()) {
@@ -235,7 +228,6 @@ initial_configure (int   argc,
     } else {
         pfemr ("Terminal doesn't support colors\n");
     }
-
     cbreak();
     noecho();
     curs_set (0);
@@ -249,7 +241,6 @@ initial_configure (int   argc,
 static void
 exit_signal_handler (int sig_num)
 {
-    // TODO: persist data on SIGINT
     (void) sig_num;
     clean_up ();
     fprintf (stderr, "termfu exited (SIGINT)\n");
