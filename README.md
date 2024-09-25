@@ -229,7 +229,7 @@ vim.keymap.set('n', '<leader>b', create_break, {desc = 'Create debugger breakpoi
 - Use existing code conventions.
 
 ### Developer notes
-- Run `make help` to print all commands, descriptions, and associated scripts. Read the script comments for more information and usage.
+- Run `make help` to print all commands, descriptions, and associated scripts. Read the script comments for more information and usage instructions.
 - Run `make configs` to create all needed configuration files in `scripts/` for running the included sample binaries or scripts with `make run_dev_` and debugging. Feel free to edit `scripts/make_configs` to customize layouts, change the target binary, and add plugins but please do not include your customized script in a PR. All watchpoints and breakpoints will be persisted in `_data` files alongside their configuration files.
 - Run `make todo` to print all source file tags, such as `TODO`, `FIX`, etc.
 - You can debug `termfu` with the `GDB` TUI or with `termfu` itself. The `make proc_<debugger>` scripts start a termfu_dev process to be debugged by the `make conn_proc_<debugger>` scripts.
