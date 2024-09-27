@@ -48,7 +48,7 @@ get_program_output_gdb (state_t *state)
     if (dest_buff->new_data) {
         if (strstr (src_ptr, "error") == NULL) {
             while (*src_ptr != '\0') {
-                cp_char (dest_buff, *src_ptr++);
+                cp_wchar (dest_buff, *src_ptr++);
             }
             dest_buff->changed = true;
         }
@@ -75,7 +75,7 @@ get_program_output_pdb (state_t *state)
     if (dest_buff->new_data) {
         if (strstr (src_ptr, "error") == NULL) {
             while (*src_ptr != '\0') {
-                cp_char (dest_buff, *src_ptr++);
+                cp_wchar (dest_buff, *src_ptr++);
             }
             dest_buff->changed = true;
         }

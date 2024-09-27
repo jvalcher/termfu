@@ -13,7 +13,7 @@ no_buff_data (int      plugin_index,
 
     data->buff_pos = 0;
     while (*ptr != '\0') {
-        cp_char (data, *ptr++);
+        cp_wchar (data, *ptr++);
     }
 
     free (msg);

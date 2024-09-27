@@ -64,32 +64,32 @@ get_stack_data_gdb (state_t *state)
         while ((src_ptr = strstr (src_ptr, level_key)) != NULL) {
             src_ptr += strlen (level_key);
             while (*src_ptr != '\"') {
-                cp_char (dest_buff, *src_ptr++);
+                cp_wchar (dest_buff, *src_ptr++);
             }
 
-            cp_char (dest_buff, ':');
+            cp_wchar (dest_buff, ':');
 
             // addr
             src_ptr  = strstr (src_ptr, addr_key);
             src_ptr += strlen (level_key);
             while (*src_ptr != '\"') {
-                cp_char (dest_buff, *src_ptr++);
+                cp_wchar (dest_buff, *src_ptr++);
             }
 
-            cp_char (dest_buff, ' ');
-            cp_char (dest_buff, ' ');
+            cp_wchar (dest_buff, ' ');
+            cp_wchar (dest_buff, ' ');
 
             // func
             src_ptr  = strstr (src_ptr, func_key);
             src_ptr += strlen (func_key);
             while (*src_ptr != '\"') {
-                cp_char (dest_buff, *src_ptr++);
+                cp_wchar (dest_buff, *src_ptr++);
             }
 
-            cp_char (dest_buff, ' ');
-            cp_char (dest_buff, '-');
-            cp_char (dest_buff, '-');
-            cp_char (dest_buff, ' ');
+            cp_wchar (dest_buff, ' ');
+            cp_wchar (dest_buff, '-');
+            cp_wchar (dest_buff, '-');
+            cp_wchar (dest_buff, ' ');
 
             // file
             tmp_ptr = src_ptr;
@@ -97,27 +97,27 @@ get_stack_data_gdb (state_t *state)
             if (src_ptr != NULL) {
                 src_ptr += strlen (file_key);
                 while (*src_ptr != '\"') {
-                    cp_char (dest_buff, *src_ptr++);
+                    cp_wchar (dest_buff, *src_ptr++);
                 }
 
-                cp_char (dest_buff, ':');
+                cp_wchar (dest_buff, ':');
 
                 // line
                 src_ptr  = strstr (src_ptr, line_key);
                 src_ptr += strlen (line_key);
                 while (*src_ptr != '\"') {
-                    cp_char (dest_buff, *src_ptr++);
+                    cp_wchar (dest_buff, *src_ptr++);
                 }
             } else {
                 src_ptr = tmp_ptr;
             }
 
-            cp_char (dest_buff, '\n');
+            cp_wchar (dest_buff, '\n');
         }
     }
 
     else {
-        cp_char (dest_buff, '\0');
+        cp_wchar (dest_buff, '\0');
     }
 
     state->debugger->data_buffer[0] = '\0';
@@ -147,7 +147,7 @@ get_stack_data_pdb (state_t *state)
     dest_buff->buff_pos = 0;
 
     while (*src_ptr != '\0') {
-        cp_char (dest_buff, *src_ptr++);
+        cp_wchar (dest_buff, *src_ptr++);
     }
 
     dest_buff->changed = true;

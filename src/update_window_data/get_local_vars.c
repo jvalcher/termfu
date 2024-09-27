@@ -64,12 +64,12 @@ get_local_vars_gdb (state_t *state)
         while ((src_ptr = strstr (src_ptr, key_name)) != NULL) {
             src_ptr += strlen (key_name);
             while (*src_ptr != '\"') {
-                cp_char (dest_buff, *src_ptr++);
+                cp_wchar (dest_buff, *src_ptr++);
             }
 
-            cp_char (dest_buff, ' ');
-            cp_char (dest_buff, '=');
-            cp_char (dest_buff, ' ');
+            cp_wchar (dest_buff, ' ');
+            cp_wchar (dest_buff, '=');
+            cp_wchar (dest_buff, ' ');
 
             // value
             src_ptr = strstr (src_ptr, key_value);
@@ -79,12 +79,12 @@ get_local_vars_gdb (state_t *state)
                 //  \\\t, \\\n  ->  \t, \n
                 if (*src_ptr == '\\' && isalpha(*(src_ptr + 1))) {
                     if (*(src_ptr + 1) == 'n') {
-                        cp_char (dest_buff, '\\');
-                        cp_char (dest_buff, 'n');
+                        cp_wchar (dest_buff, '\\');
+                        cp_wchar (dest_buff, 'n');
                         src_ptr += 2;
                     } else if (*(src_ptr + 1) == 't') {
-                        cp_char (dest_buff, '\\');
-                        cp_char (dest_buff, 't');
+                        cp_wchar (dest_buff, '\\');
+                        cp_wchar (dest_buff, 't');
                         src_ptr += 2;
                     } 
                 }
@@ -92,7 +92,7 @@ get_local_vars_gdb (state_t *state)
                 //  \\\"  ->  \"
                 else if (*src_ptr == '\\' && *(src_ptr + 1) == '\"' ) {
                     src_ptr += 1;
-                    cp_char (dest_buff, *src_ptr++);
+                    cp_wchar (dest_buff, *src_ptr++);
                 }
 
                 //  \\\\  ->  '\\'
@@ -106,21 +106,21 @@ get_local_vars_gdb (state_t *state)
                 }
 
                 else {
-                    cp_char (dest_buff, *src_ptr++);
+                    cp_wchar (dest_buff, *src_ptr++);
                 }
             }
 
             // ..., 4, 5 '}'
             if (*(src_ptr + 1) == '\"') {
-                cp_char (dest_buff, '}');
+                cp_wchar (dest_buff, '}');
             }
 
-            cp_char (dest_buff, '\n');
+            cp_wchar (dest_buff, '\n');
         }
     } 
 
     else {
-        cp_char (dest_buff, '\0');
+        cp_wchar (dest_buff, '\0');
     }
 
     dest_buff->changed = true;
@@ -176,12 +176,12 @@ get_local_vars_pdb (state_t *state)
                 }
                 ++src_ptr;      // skip first ' in 'var'
                 while (*src_ptr != '\'') {
-                    cp_char (dest_data, *src_ptr++);
+                    cp_wchar (dest_data, *src_ptr++);
                 }
 
-                cp_char (dest_data, ' ');
-                cp_char (dest_data, '=');
-                cp_char (dest_data, ' ');
+                cp_wchar (dest_data, ' ');
+                cp_wchar (dest_data, '=');
+                cp_wchar (dest_data, ' ');
 
                 // value
                 open_arrs = 0;
@@ -205,10 +205,10 @@ get_local_vars_pdb (state_t *state)
                         break;
                     }
 
-                    cp_char (dest_data, *src_ptr++);
+                    cp_wchar (dest_data, *src_ptr++);
                 }
 
-                cp_char (dest_data, '\n');
+                cp_wchar (dest_data, '\n');
             }
 
             else {
@@ -219,13 +219,13 @@ get_local_vars_pdb (state_t *state)
         while (dest_data->buff[dest_data->buff_pos] != '}') {
             --dest_data->buff_pos;
         }
-        cp_char (dest_data, '\0');
+        cp_wchar (dest_data, '\0');
     }
 
     // no local variables
     else {
 skip_LcV_parse:
-        cp_char (dest_data, '\0');
+        cp_wchar (dest_data, '\0');
     }
 
     dest_data->changed = true;

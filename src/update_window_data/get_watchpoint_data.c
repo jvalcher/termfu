@@ -76,7 +76,7 @@ get_watchpoint_data_gdb (state_t *state)
         data_ptr = state->debugger->data_buffer;
         watch_val = watch->value;
 
-        cp_char (dest_data, '(');
+        cp_wchar (dest_data, '(');
 
         // index
         i = 0;
@@ -85,21 +85,21 @@ get_watchpoint_data_gdb (state_t *state)
             pfemr ("Failed to convert index int to string");
         }
         while (index_buff [i] != '\0') {
-            cp_char (dest_data, index_buff [i++]);
+            cp_wchar (dest_data, index_buff [i++]);
         }
 
-        cp_char (dest_data, ')');
-        cp_char (dest_data, ' ');
+        cp_wchar (dest_data, ')');
+        cp_wchar (dest_data, ' ');
 
         // variable
         i = 0;
         while (watch->var[i] != '\0') {
-            cp_char (dest_data, watch->var[i++]);
+            cp_wchar (dest_data, watch->var[i++]);
         }
 
-        cp_char (dest_data, ' ');
-        cp_char (dest_data, '=');
-        cp_char (dest_data, ' ');
+        cp_wchar (dest_data, ' ');
+        cp_wchar (dest_data, '=');
+        cp_wchar (dest_data, ' ');
 
         if (strstr (data_ptr, "error") == NULL) {
 
@@ -109,7 +109,7 @@ get_watchpoint_data_gdb (state_t *state)
             if (src_ptr != NULL) {
                 i = 0;
                 while (*src_ptr != ' ') {
-                    cp_char (dest_data, *src_ptr);
+                    cp_wchar (dest_data, *src_ptr);
                     if (i < WATCH_LEN) {
                         watch_val [i++] = *src_ptr;
                     }
@@ -127,7 +127,7 @@ get_watchpoint_data_gdb (state_t *state)
             // copy value
             i = 0;
             while (*src_ptr != '\n') {
-                cp_char (dest_data, *src_ptr);
+                cp_wchar (dest_data, *src_ptr);
                 if (i < WATCH_LEN) {
                     watch_val [i++] = *src_ptr;
                 } 
@@ -142,16 +142,16 @@ get_watchpoint_data_gdb (state_t *state)
                 win->buff_data->buff_pos -= 2;
             }
 
-            cp_char (dest_data, '\n');
+            cp_wchar (dest_data, '\n');
         }
 
         else {
             strcpy (watch->value, "none");
             i = 0;
             while (watch->value [i] != '\0') {
-                cp_char (dest_data, watch->value [i++]);
+                cp_wchar (dest_data, watch->value [i++]);
             }
-            cp_char (dest_data, '\n');
+            cp_wchar (dest_data, '\n');
         }
 
         state->debugger->cli_buffer[0] = '\0';
@@ -198,23 +198,23 @@ get_watchpoint_data_pdb (state_t *state)
             free (cmd);
 
             // index
-            cp_char (dest_data, '(');
+            cp_wchar (dest_data, '(');
             sprintf (index_buff, "%d", watch->index);
             for (size_t i = 0; i < strlen (index_buff); i++) {
-                cp_char (dest_data, index_buff [i]);
+                cp_wchar (dest_data, index_buff [i]);
             }
-            cp_char (dest_data, ')');
-            cp_char (dest_data, ' ');
+            cp_wchar (dest_data, ')');
+            cp_wchar (dest_data, ' ');
 
             // variable
             var_ptr = watch->var;
             while (*var_ptr != '\0') {
-                cp_char (dest_data, *var_ptr++);
+                cp_wchar (dest_data, *var_ptr++);
             }
 
-            cp_char (dest_data, ' ');
-            cp_char (dest_data, '=');
-            cp_char (dest_data, ' ');
+            cp_wchar (dest_data, ' ');
+            cp_wchar (dest_data, '=');
+            cp_wchar (dest_data, ' ');
 
             // value
             cli_ptr = state->debugger->cli_buffer;
@@ -224,7 +224,7 @@ get_watchpoint_data_pdb (state_t *state)
                 prog_ptr = state->debugger->program_buffer;
             }
             while (*prog_ptr != '\0') {
-                cp_char (dest_data, *prog_ptr++);
+                cp_wchar (dest_data, *prog_ptr++);
             }
 
             state->debugger->cli_buffer[0] = '\0';
@@ -234,7 +234,7 @@ get_watchpoint_data_pdb (state_t *state)
     }
 
     else {
-        cp_char (dest_data, '\0');
+        cp_wchar (dest_data, '\0');
     }
 
     return A_OK;

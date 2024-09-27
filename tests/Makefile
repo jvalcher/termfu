@@ -13,14 +13,14 @@ NCURSES_LIBS   = $(shell ncurses5-config --libs) -lform
 
 C_FILES        = $(filter-out ../src/main.c, $(wildcard ../src/*.c))
 C_UPDATE_FILES = $(wildcard ../src/update_window_data/*.c)
-C_POPUP_FILES  = $(wildcard ../src/get_popup_window_input/*.c)
+C_FORM_IN_FILES  = $(wildcard ../src/get_form_input/*.c)
 
 
 .PHONY: all help debug clean
 
 all: C_FILES += $(t)
 all: C_FILES += $(C_UPDATE_FILES)
-all: C_FILES += $(C_POPUP_FILES)
+all: C_FILES += $(C_FORM_IN_FILES)
 all: clean $(B_FILE)
 	@./$(B_FILE)
 	@echo ""
@@ -39,6 +39,6 @@ clean:
 	@echo ""
 
 $(B_FILE):
-	@$(CC) $(FLAGS) $(NCURSES_CFLAGS) $(C_FILES) -o $(B_FILE) $(NCURSES_LIBS)
+	@$(CC) $(FLAGS) $(NCURSES_CFLAGS) $(C_FILES) test_utilities.c -o $(B_FILE) $(NCURSES_LIBS)
 	@echo ""
 

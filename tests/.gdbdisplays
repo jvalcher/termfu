@@ -1,3 +1,8 @@
-disp src_ptr
-disp dest_data->buff
-disp dest_data->buff_pos
+disp rows
+disp cols
+disp y
+disp x
+disp c
+disp *buff_ptr
+disp buffer
+disp buff_ptr

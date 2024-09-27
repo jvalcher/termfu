@@ -132,18 +132,18 @@ get_breakpoint_data_gdb (state_t *state)
             // get breakpoint number
             while ((src_ptr = strstr (src_ptr, key_number)) != NULL) {
 
-                cp_char (dest_buff, '(');
+                cp_wchar (dest_buff, '(');
 
                 i = 0;
                 src_ptr += strlen (key_number);
                 while (*src_ptr != '\"') {
                     index_buff [i++] = *src_ptr;
-                    cp_char (dest_buff, *src_ptr++);
+                    cp_wchar (dest_buff, *src_ptr++);
                 }
                 index_buff [i] = '\0';
 
-                cp_char (dest_buff, ')');
-                cp_char (dest_buff, ' ');
+                cp_wchar (dest_buff, ')');
+                cp_wchar (dest_buff, ' ');
 
                 // get file:line
                 i = 0;
@@ -151,7 +151,7 @@ get_breakpoint_data_gdb (state_t *state)
                 src_ptr += strlen (key_orig_loc);
                 while (*src_ptr != '\"') {
                     break_buff [i++] = *src_ptr;
-                    cp_char (dest_buff, *src_ptr++);
+                    cp_wchar (dest_buff, *src_ptr++);
                 }
                 break_buff [i] = '\0';
 
@@ -160,12 +160,12 @@ get_breakpoint_data_gdb (state_t *state)
                     pfemr ("Failed to allocate breakpoint");
                 }
 
-                cp_char (dest_buff, '\n');
+                cp_wchar (dest_buff, '\n');
             }
         }
 
         else {
-            cp_char (dest_buff, '\0');
+            cp_wchar (dest_buff, '\0');
         }
 
         dest_buff->changed = true;
@@ -224,18 +224,18 @@ get_breakpoint_data_pdb (state_t *state)
 
             else if (*src_ptr != '\n' && *src_ptr != '\'') {
 
-                cp_char (dest_buff, '(');
+                cp_wchar (dest_buff, '(');
 
                 // index
                 i = 0;
                 do {
                     index_buff [i++] = *src_ptr;
-                    cp_char (dest_buff, *src_ptr++);
+                    cp_wchar (dest_buff, *src_ptr++);
                 } while (*src_ptr != ' ');
                 index_buff [i] = '\0';
 
-                cp_char (dest_buff, ')');
-                cp_char (dest_buff, ' ');
+                cp_wchar (dest_buff, ')');
+                cp_wchar (dest_buff, ' ');
 
                 // path
                 i = 0;
@@ -253,13 +253,13 @@ get_breakpoint_data_pdb (state_t *state)
                 i = 0;
                 while (basename_ptr [i] != '\0') {
                     break_buff [i] = basename_ptr [i];
-                    cp_char (dest_buff, break_buff [i++]);
+                    cp_wchar (dest_buff, break_buff [i++]);
                 }
 
                 // :line
                 while (*src_ptr != '\n') {
                     break_buff [i++] = *src_ptr;
-                    cp_char (dest_buff, *src_ptr++);
+                    cp_wchar (dest_buff, *src_ptr++);
                 }
                 break_buff [i] = '\0';
 
@@ -268,7 +268,7 @@ get_breakpoint_data_pdb (state_t *state)
                     pfemr ("Failed to allocate breakpoint");
                 }
 
-                cp_char (dest_buff, '\n');
+                cp_wchar (dest_buff, '\n');
             }
 
             else {
@@ -284,7 +284,7 @@ get_breakpoint_data_pdb (state_t *state)
 
     else {
 skip_Brk_parse_pdb:
-        cp_char (dest_buff, '\0');
+        cp_wchar (dest_buff, '\0');
     }
 
     state->debugger->program_buffer[0]  = '\0';

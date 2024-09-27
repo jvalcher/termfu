@@ -2,8 +2,8 @@
 #include "select_window.h"
 #include "data.h"
 #include "display_lines.h"
-#include "get_popup_window_input/watchpoints.h"
-#include "get_popup_window_input/breakpoints.h"
+#include "get_form_input/watchpoints.h"
+#include "get_form_input/breakpoints.h"
 #include "utilities.h"
 #include "plugins.h"
 
@@ -104,7 +104,9 @@ select_window (int      plugin_index,
                 continue;
             }
 
-            // window commands
+            // TODO: global window commands driver; wrap text toggle
+
+            // specific window commands
             switch (plugin_index) {
 
                 case Brk:

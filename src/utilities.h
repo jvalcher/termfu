@@ -102,12 +102,12 @@ void set_state_ptr (state_t *state);
         ->buff_len
         ->times_doubled
 */
-void cp_char (buff_data_t *dest_buff_data, char ch);
+void cp_wchar (buff_data_t *dest_buff_data, char ch);
 
 
 
 /*
-    Copy character into src_file_data_t buffer
+    Copy character into src_file_data_t buffers
     --------
     state->plugins[Src]->win->src_file_data  (->path, ->addr, ->func)
 
@@ -131,7 +131,8 @@ void cp_fchar (src_file_data_t *dest_file_data, char ch, int type);
         ->format_pos
         ->format_len
         ->format_times_doubled
-        ->data_ ...
+        ->data_pos
+        ->data_ ..l
 */
 enum { FORMAT_BUF, DATA_BUF, CLI_BUF, PROGRAM_BUF, ASYNC_BUF };     // buff_index
 
@@ -142,20 +143,21 @@ void cp_dchar (debugger_t *debugger, char ch, int buff_index);
 /*
   Print formatted error messages
   ----------
-  - Runs clean_up() first
+  - For error propagation that will ultimately exit the program
+    - Runs clean_up()
 
-    Print formatted message, return FAIL
+    Message, return FAIL
   
         pfemr ("Unknown character \"%c\"", ch);
     
         ERROR: src_file.c : func() : 10
                Unknown character "c"
 
-    Or message, exit program
+    Message, exit program
 
         pfeme ("Unknown character \"%c\"", ch);
   
-    Or just message
+    Message
 
         pfem ("Failed to allocate buffer");
         return NULL;
@@ -170,18 +172,19 @@ void cp_dchar (debugger_t *debugger, char ch, int buff_index);
         ERROR: src_file.c : func() : 10
                Unknown character "c"
                Check README.md for more details
-               Check the website for video demos
+               See a physician if your symptoms persist
                Returning FAIL...
 
-    Or final message then exit program
+    Multiple messages then exit program
         
         ...
         peme ("Exiting...");
 
-    Print errno message, return FAIL
+    errno message, return FAIL
 
-        pfemr ("malloc error: %s", strerror (errno));
-  
+        if ((buff = malloc (4096)) == NULL) {
+            pfemr ("malloc error: %s", strerror (errno));
+        }
 */
 
 // Print formatted error message

@@ -1,7 +1,7 @@
 
 #include "execute_until.h"
+#include "_get_form_input.h"
 #include "../update_window_data/_update_window_data.h"
-#include "_get_popup_window_input.h"
 #include "../data.h"
 #include "../utilities.h"
 #include "../update_window_data/_update_window_data.h"
@@ -18,7 +18,7 @@ execute_until (state_t *state)
          *cmd_base,
          *cmd;
 
-    ret = get_popup_window_input  ("Execute until (line, filename:line): ", state->input_buffer);
+    ret = get_form_input ("Execute until (line, filename:line): ", state->input_buffer);
     if (ret == FAIL) {
         pfemr (ERR_POPUP_IN);
     }

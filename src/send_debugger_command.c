@@ -108,6 +108,7 @@ send_debugger_command (int      plugin_index,
             }
             break;
 
+        case 27:
         case Qut:
             switch (debugger_index) {
                 case (DEBUGGER_GDB):

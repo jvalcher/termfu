@@ -67,6 +67,10 @@ main (int   argc,
 
         key = getch ();
 
+        if (key == ESC) {
+            break;
+        }
+
         ret = run_plugin (state.plugin_key_index[key], &state);
         if (ret == FAIL) {
             pfeme ("Failed to run plugin");

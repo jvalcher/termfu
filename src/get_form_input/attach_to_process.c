@@ -1,24 +1,24 @@
-#include "target_remote_server.h"
-#include "_get_popup_window_input.h"
+#include "attach_to_process.h"
+#include "_get_form_input.h"
 #include "../data.h"
 #include "../utilities.h"
-#include "../update_window_data/_update_window_data.h"
 #include "../plugins.h"
+#include "../update_window_data/_update_window_data.h"
 
-static int target_remote_server_gdb (state_t *state);
+static int attach_to_process_gdb (state_t *state);
 
 
 
 int
-target_remote_server (state_t *state)
+attach_to_process (state_t *state)
 {
     int ret;
 
     switch (state->debugger->index) {
         case DEBUGGER_GDB:
-            ret = target_remote_server_gdb (state);
+            ret = attach_to_process_gdb (state);
             if (ret == FAIL) {
-                pfemr ("Failed to target remote server (GDB)");
+                pfemr ("Failed to attach to process");
             }
             break;
         case DEBUGGER_PDB:
@@ -31,13 +31,13 @@ target_remote_server (state_t *state)
 
 
 static int
-target_remote_server_gdb (state_t *state)
+attach_to_process_gdb (state_t *state)
 {
     int   ret;
     char *cmd,
-         *cmd_base = "target remote ";
+         *cmd_base = "-target-attach ";
 
-    ret = get_popup_window_input  ("Target remote server: ", state->input_buffer);
+    ret = get_form_input  ("Attach to process ID or file: ", state->input_buffer);
     if (ret == FAIL) {
         pfemr (ERR_POPUP_IN);
     }

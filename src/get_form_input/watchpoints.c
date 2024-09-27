@@ -3,7 +3,7 @@
 #include <errno.h>
 
 #include "watchpoints.h"
-#include "_get_popup_window_input.h"
+#include "_get_form_input.h"
 #include "../data.h"
 #include "../update_window_data/_update_window_data.h"
 #include "../plugins.h"
@@ -18,7 +18,7 @@ insert_watchpoint (state_t *state)
         ret;
     watchpoint_t *watch = NULL;
 
-    ret = get_popup_window_input  ("Create watchpoint (variable): ", state->input_buffer);
+    ret = get_form_input ("Create watchpoint (variable): ", state->input_buffer);
     if (ret == FAIL) {
         pfemr (ERR_POPUP_IN);
     }
@@ -80,7 +80,7 @@ delete_watchpoint (state_t *state)
     watch = state->watchpoints;
     prev_watch = watch;
 
-    ret = get_popup_window_input  ("Delete watchpoint (index): ", state->input_buffer);
+    ret = get_form_input ("Delete watchpoint (index): ", state->input_buffer);
     if (ret == FAIL) {
         pfemr (ERR_POPUP_IN);
     }

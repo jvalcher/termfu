@@ -1,6 +1,6 @@
 
 #include "breakpoints.h"
-#include "_get_popup_window_input.h"
+#include "_get_form_input.h"
 #include "../data.h"
 #include "../utilities.h"
 #include "../update_window_data/_update_window_data.h"
@@ -17,7 +17,7 @@ insert_breakpoint (state_t *state)
          *cmd_base,
          *cmd;
 
-    ret = get_popup_window_input  ("Insert breakpoint: ", state->input_buffer);
+    ret = get_form_input ("Insert breakpoint: ", state->input_buffer);
     if (ret == FAIL) {
         pfemr (ERR_POPUP_IN);
     }
@@ -57,7 +57,7 @@ delete_breakpoint (state_t *state)
          *cmd_base,
          *cmd;
 
-    ret = get_popup_window_input  ("Delete breakpoint: ", state->input_buffer);
+    ret = get_form_input ("Delete breakpoint: ", state->input_buffer);
     if (ret == FAIL) {
         pfemr (ERR_POPUP_IN);
     }

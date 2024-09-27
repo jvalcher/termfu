@@ -42,6 +42,8 @@
   Ncurses
  *********/
 
+#define ESC  27
+
 /*
    Color pair identifiers
 
@@ -76,7 +78,8 @@
 #define WINDOW_INPUT_TITLE_COLOR        WHITE_BLUE
 
 // form
-#define FORM_BACKGROUND                 WHITE_BLUE
+#define FORM_INPUT_FIELD                WHITE_BLUE
+#define FORM_BUTTON                     WHITE_BLUE
 
 
 

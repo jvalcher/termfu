@@ -16,14 +16,6 @@ static void  display_lines_buff  (int, int, state_t*);
 static void  display_lines_file  (int, window_t*);
 static void  format_win_data     (int, state_t*);
 
-// TODO: Enable/disable line wrapping
-  // One option is with a header command popup window that toggled it globally
-    // Adding a topbar wrap toggle command to every window would be excessive
-  // Another preferred option would be to have a command listed in the header that only works when a window is selected
-    // Error popup when used while not in a window that explains its use
-    // window_t bool `is_wrapped` to indicate state
-    // Window wrap states persisted in _data file (>r)
-
 
 
 int

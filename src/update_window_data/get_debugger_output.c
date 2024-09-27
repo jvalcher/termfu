@@ -58,7 +58,7 @@ get_debugger_output_gdb (state_t *state)
                     } 
                 }
 
-                cp_char (dest_buff, *src_ptr++);
+                cp_wchar (dest_buff, *src_ptr++);
             }
             dest_buff->changed = true;
         }
@@ -92,7 +92,7 @@ get_debugger_output_pdb (state_t *state)
             } 
 
             else {
-                cp_char (dest_buff, *src_ptr++);
+                cp_wchar (dest_buff, *src_ptr++);
             }
         }
         dest_buff->changed = true;

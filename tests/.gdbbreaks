@@ -1,2 +1,1 @@
-break cp_chr.c:33
-  condition $bpnum i+1==32768
+break ncurses_win_scroll.c:73

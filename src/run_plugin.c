@@ -5,10 +5,10 @@
 #include "select_window.h"
 #include "choose_layout.h"
 #include "utilities.h"
-#include "get_popup_window_input/attach_to_process.h"
-#include "get_popup_window_input/run_custom_command.h"
-#include "get_popup_window_input/target_remote_server.h"
-#include "get_popup_window_input/execute_until.h"
+#include "get_form_input/attach_to_process.h"
+#include "get_form_input/run_custom_command.h"
+#include "get_form_input/target_remote_server.h"
+#include "get_form_input/execute_until.h"
 
 
 

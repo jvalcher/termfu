@@ -308,7 +308,7 @@ set_state_ptr (state_t *state)
 
 
 void
-cp_char (buff_data_t *dest_buff_data,
+cp_wchar (buff_data_t *dest_buff_data,
          char ch)
 {
     char *tmp;
