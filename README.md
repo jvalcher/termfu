@@ -127,7 +127,7 @@ Plugin codes are mapped to case-sensitive letter keys, which are used both as sh
 ```
 [ command ]
 
-gdb --interpreter=mi misc/hello
+gdb --interpreter=mi --quiet misc/hello
 
 [ plugins ]
 
