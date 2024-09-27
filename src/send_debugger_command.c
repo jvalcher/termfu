@@ -27,13 +27,13 @@ send_debugger_command (int      plugin_index,
     ret = pulse_header_title_color (plugin_index, state, ON);
     if (ret == FAIL) {
         pfem (ERR_PULSE_CMD);
-        goto dbg_cmd_err_misc;
+        goto dbg_cmd_err_end;
     }
 
     ret = insert_output_start_marker (state);
     if (ret == FAIL) {
         pfem (ERR_OUT_MARK);
-        goto dbg_cmd_err_misc;
+        goto dbg_cmd_err_end;
     }
 
     switch (plugin_index) {
@@ -130,7 +130,7 @@ send_debugger_command (int      plugin_index,
                 ret = send_command (state, "call ((void(*)(int))fflush)(0)\n");
                 if (ret == FAIL) {
                     pfem (ERR_DBG_CMD);
-                    goto dbg_cmd_err_misc;
+                    goto dbg_cmd_err_end;
                 }
                 break;
         }
@@ -138,23 +138,28 @@ send_debugger_command (int      plugin_index,
         ret = insert_output_end_marker (state);
         if (ret == FAIL) {
             pfem (ERR_OUT_MARK);
-            goto dbg_cmd_err_misc;
+            goto dbg_cmd_err_end;
         }
-        parse_debugger_output (state);
+
+        ret = parse_debugger_output (state);
+        if (ret == FAIL) {
+            pfem (ERR_DBG_PARSE);
+            goto dbg_cmd_err_end;
+        }
 
         state->plugins[Dbg]->win->buff_data->new_data = true;
         state->plugins[Prg]->win->buff_data->new_data = true;
         ret = update_windows (state, 9, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Stk, Wat);
         if (ret == FAIL) {
             pfem (ERR_UPDATE_WINS);
-            goto dbg_cmd_err_misc;
+            goto dbg_cmd_err_end;
         }
     }
 
     ret = pulse_header_title_color (plugin_index, state, OFF);
     if (ret == FAIL) {
         pfem (ERR_PULSE_CMD);
-        goto dbg_cmd_err_misc;
+        goto dbg_cmd_err_end;
     }
 
     return A_OK;
@@ -185,7 +190,7 @@ dbg_cmd_err:
             break;
     }
 
-dbg_cmd_err_misc:
+dbg_cmd_err_end:
 
     pemr ("Send debugger (%s) command error (index: %d, code: %s)",
             state->debugger->title, plugin_index, get_plugin_code (plugin_index));

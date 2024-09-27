@@ -1,6 +1,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "parse_debugger_output.h"
 #include "data.h"
@@ -11,11 +12,11 @@ void parse_debugger_output_pdb (debugger_t*);
 
 
 
-void 
+int
 parse_debugger_output (state_t *state)
 {
-    bool running = true;
-    int bytes_read = 0;
+    bool running;
+    ssize_t bytes_read = 0;
 
     state->debugger->cli_pos = 0;
     state->debugger->program_pos = 0;
@@ -23,6 +24,7 @@ parse_debugger_output (state_t *state)
     state->debugger->async_pos = 0;
 
     state->debugger->reader_state = READER_RECEIVING;
+    running = true;
 
     while (running) 
     {
@@ -31,6 +33,10 @@ parse_debugger_output (state_t *state)
         bytes_read = read (state->debugger->stdout_pipe, 
                            state->debugger->reader_buffer,
                            READER_BUF_LEN - 1);
+        if (bytes_read == -1) {
+            pfem ("read error: %s", strerror (errno));
+            pemr ("Failed to read debugger stdout");
+        }
         state->debugger->reader_buffer [bytes_read] = '\0';
 
         // parse output
@@ -52,6 +58,8 @@ parse_debugger_output (state_t *state)
                 break;
         }
     }
+
+    return A_OK;
 }
 
 

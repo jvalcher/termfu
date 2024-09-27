@@ -122,7 +122,10 @@ send_command_mp (state_t *state,
         pfemr (ERR_OUT_MARK);
     }
 
-    parse_debugger_output (state);
+    ret = parse_debugger_output (state);
+    if (ret == FAIL) {
+        pfemr (ERR_DBG_PARSE);
+    }
 
     return A_OK;
 }

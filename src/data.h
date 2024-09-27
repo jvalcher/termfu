@@ -24,6 +24,7 @@
 #define FAIL  -1
 
 #define ERR_DBG_CMD     "Failed to send debugger command"
+#define ERR_DBG_PARSE   "Failed to parse debugger output"
 #define ERR_DISP_LINES  "Failed to display lines"
 #define ERR_NC_ATTR     "Failed to set ncurses attribute"
 #define ERR_OUT_MARK    "Failed to insert output marker"

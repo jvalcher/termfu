@@ -9,7 +9,7 @@
 /*
     Run initial parse of debugger command output
 */
-void parse_debugger_output (state_t *state);
+int parse_debugger_output (state_t *state);
 
 
 
