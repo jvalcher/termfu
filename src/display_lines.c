@@ -61,12 +61,14 @@ display_lines (int       type,
                 // open new file
                 if ((win->src_file_data->ptr = fopen (win->src_file_data->path, "r")) == NULL) {
                     pfem ("fopen error: %s", strerror (errno));
-                    pemr ("Failed to open file \"%s\"", win->src_file_data->path);
+                    pem ("Failed to open file \"%s\"", win->src_file_data->path);
+                    goto disp_lines_err;
                 }
 
                 ret = set_file_rows_cols (win);
                 if (ret == FAIL) {
-                    pfemr ("Failed to set file rows, cols");
+                    pfem ("Failed to set file rows, cols");
+                    goto disp_lines_err;
                 }
                 win->src_file_data->path_changed = false;
             }
@@ -74,7 +76,8 @@ display_lines (int       type,
             if (win->src_file_data->ptr != NULL) {
                 display_lines_file (key, win);
             } else {
-                pfemr ("NULL file pointer");
+                pfem ("NULL file pointer");
+                goto disp_lines_err;
             }
 
             break;
@@ -84,6 +87,10 @@ display_lines (int       type,
     }
 
     return A_OK;
+
+disp_lines_err:
+    pemr ("Key: \"%d\", plugin index: \"%d\", plugin code: \"%s\"",
+                key, plugin_index, get_plugin_code (plugin_index));
 }
 
 
