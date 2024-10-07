@@ -10,10 +10,8 @@
 
 #include "render_layout.h"
 #include "data.h"
-#include "plugins.h"
 #include "utilities.h"
 
-static int       free_nc_window_data   (state_t*);
 static layout_t *get_label_layout      (char*, layout_t*);
 static int       calculate_layout      (layout_t*, state_t*);
 static int       render_header         (layout_t*, state_t*);
@@ -68,51 +66,6 @@ render_layout (char     *label,
 render_layout_err:
     pemr ("Current layout: \"%s\", number of plugins: %d",
                 state->curr_layout->label, state->num_plugins);
-}
-
-
-
-/*
-    Free ncurses WINDOWs in current layout from state->plugins[i]->win
-*/
-static int
-free_nc_window_data (state_t *state)
-{
-    int ret;
-
-    for (int i = 0; i < state->num_plugins; i++) {
-
-        if (state->plugins[i]->has_window) {
-
-            if (state->plugins[i]->win->TWIN != NULL) {
-                ret = delwin (state->plugins[i]->win->TWIN);
-                if (ret == ERR) {
-                    pfemr ("Unable to delete TWIN (index: %d, code: %s)", 
-                                i, get_plugin_code (i));
-                }
-            }
-
-            if (state->plugins[i]->win->DWIN != NULL) {
-                ret = delwin (state->plugins[i]->win->DWIN);
-                if (ret == ERR) {
-                    pfemr ("Unable to delete DWIN (index: %d, code: %s)", 
-                                i, get_plugin_code (i));
-                }
-            }
-
-            if (state->plugins[i]->win->WIN != NULL) {
-                ret = delwin (state->plugins[i]->win->WIN);
-                if (ret == ERR) {
-                    pfemr ("Unable to delete WIN (index: %d, code: %s)", 
-                                i, get_plugin_code (i));
-                }
-            }
-
-            refresh ();
-        }
-    }
-
-    return A_OK;
 }
 
 
@@ -413,7 +366,7 @@ render_header_titles (layout_t *layout,
         title_str_ch_left -= strlen (curr_title) + 2;
 
         if (title_str_ch_left < 1) {
-            pfem ("To many header titles in row %d\n", row + 1);
+            pfem ("To many header titles in row %d", row + 1);
             pemr ("curr_title: %s", curr_title);
         } 
 

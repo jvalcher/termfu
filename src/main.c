@@ -207,7 +207,9 @@ initial_configure (int   argc,
             "Connect to this process with debugger\n"
             "\n"
             "    $ make conn_proc_<debugger>\n"
-            "    - Set breakpoint\n"
+            "    - Set breakpoint, next functions:\n"
+            "      - \033[0;32mset_state_ptr\033[0m()  (immediate)\n"
+            "      - \033[0;32mparse_config_file\033[0m()  (upon finish)\n"
             "    - Continue\n"
             "\n"
             "Press any key to continue...\n"
@@ -218,13 +220,16 @@ initial_configure (int   argc,
         getchar ();
     }
 
+
+    state->new_run = true;
     
-    // Set state pointer in utilities.c for persisting data on clean_up()
+
+    // Set state pointer in utilities.c for exiting ncurses, persisting data with clean_up()
     set_state_ptr (state);
 
 
-    // Signals
-    signal (SIGINT, exit_signal_handler);    // Ctrl-C
+    // signal handlers
+    signal (SIGINT, exit_signal_handler);     // Ctrl-C;  (gdb) signal 2
 
 
     // ncurses

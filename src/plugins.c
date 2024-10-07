@@ -170,6 +170,8 @@ allocate_plugin_windows (state_t *state)
             case Prg:
                 state->plugins[j]->data_pos = END_DATA;
                 break;
+            default:
+                state->plugins[j]->data_pos = BEG_DATA;
         }
 
         if ((win->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t))) == NULL) {
@@ -185,9 +187,11 @@ allocate_plugin_windows (state_t *state)
         win->buff_data->buff_pos = 0;
         win->buff_data->buff_len = ORIG_BUF_LEN;
         win->buff_data->times_doubled = 0;
+        win->buff_data->buff_ptr = NULL;
         win->buff_data->scroll_col = 1;
         win->buff_data->scroll_row = 1;
         win->buff_data->changed = true;
+        win->buff_data->text_wrapped = true;
         win->src_file_data = NULL;
     }
 

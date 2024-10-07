@@ -55,7 +55,7 @@ main (void)
 
     // buff_data_t buffer
     for (i = 0; i < max_size; i++) {
-        cp_char (win->buff_data, 'a');
+        cp_wchar (win->buff_data, 'a');
         printf ("pos: %d,  len: %d,  doubled: %d,  strlen: %ld\n",
                     win->buff_data->buff_pos,
                     win->buff_data->buff_len,

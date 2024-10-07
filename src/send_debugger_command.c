@@ -89,6 +89,7 @@ send_debugger_command (int      plugin_index,
                     if (file_was_updated (state->debugger->prog_update_time, state->debugger->prog_path)) {
                         state->plugins[Src]->win->src_file_data->path_changed = true;
                     }
+                    state->new_run = true;
                     break;
                 case (DEBUGGER_PDB):
                     if (send_command (state, "restart\n") == FAIL) goto dbg_cmd_err;

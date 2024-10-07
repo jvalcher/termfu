@@ -5,6 +5,7 @@ tags
 debug.out
 progr.out
 misc/hello
+misc/vars
 scripts/.termfu_*
 
 venv

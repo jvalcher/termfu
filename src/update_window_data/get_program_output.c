@@ -37,9 +37,12 @@ get_program_output (state_t *state)
 static int
 get_program_output_gdb (state_t *state)
 {
-    window_t *win;
-    char     *src_ptr;
+    size_t       i;
+    window_t    *win;
+    char        *src_ptr;
     buff_data_t *dest_buff;
+
+    char *new_run_str = "<New run>\n";
 
     win       = state->plugins[Prg]->win;
     src_ptr   = state->debugger->program_buffer;
@@ -47,12 +50,22 @@ get_program_output_gdb (state_t *state)
 
     if (dest_buff->new_data) {
         if (strstr (src_ptr, "error") == NULL) {
+
+            // new run marker
+            if (state->new_run) {
+                for (i = 0; i < strlen (new_run_str); i++) {
+                    cp_wchar (dest_buff, new_run_str [i]);
+                }
+                state->new_run = false;
+            }
+
             while (*src_ptr != '\0') {
                 cp_wchar (dest_buff, *src_ptr++);
             }
             dest_buff->changed = true;
         }
     }
+
     state->debugger->program_buffer [0] = '\0';
     dest_buff->new_data = false;
 

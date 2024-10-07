@@ -2,19 +2,19 @@
 #include <string.h>
 #include <ncurses.h>
 #include <stdlib.h>
-#include <libgen.h>
 #include <errno.h>
 
 #include "display_lines.h"
 #include "data.h"
 #include "utilities.h"
 #include "plugins.h"
+#include "format_window_data.h"
 
 #define LINE_NUM_TEXT_SPACES  2
 
-static void  display_lines_buff  (int, int, state_t*);
-static void  display_lines_file  (int, window_t*);
-static void  format_win_data     (int, state_t*);
+static void display_lines_buff_no_wrap  (int, int, state_t*);
+static void display_lines_buff_wrap     (int, int, state_t*);
+static void display_lines_file          (int, window_t*);
 
 
 
@@ -35,15 +35,26 @@ display_lines (int       type,
 
             if (win->buff_data->changed) {
 
-                set_buff_rows_cols (win);
-                if (plugin_index != Asm) {
-                    win->buff_data->scroll_row = 1;
+                // text not wrapped
+                if (win->buff_data->text_wrapped == false) {
+
+                    // configure buffer data
+                    set_buff_rows_cols (win);
+                    if (plugin_index != Asm) {
+                        win->buff_data->scroll_row = 1;
+                    }
+                    win->buff_data->scroll_col = 1;
+                    win->buff_data->changed = false;
+
+                    display_lines_buff_no_wrap (key, plugin_index, state);
                 }
-                win->buff_data->scroll_col = 1;
-                win->buff_data->changed = false;
+
+                // text wrapped
+                else {
+                    display_lines_buff_wrap (key, plugin_index, state);
+                }
             }
 
-            display_lines_buff (key, plugin_index, state);
             break;
 
         case FILE_TYPE:
@@ -65,6 +76,7 @@ display_lines (int       type,
                     goto disp_lines_err;
                 }
 
+                // configure file data
                 ret = set_file_rows_cols (win);
                 if (ret == FAIL) {
                     pfem ("Failed to set file rows, cols");
@@ -73,6 +85,7 @@ display_lines (int       type,
                 win->src_file_data->path_changed = false;
             }
 
+            // display lines
             if (win->src_file_data->ptr != NULL) {
                 display_lines_file (key, win);
             } else {
@@ -83,12 +96,14 @@ display_lines (int       type,
             break;
         }
 
-        format_win_data (plugin_index, state);
+        format_window_data (plugin_index, state);
+
     }
 
     return A_OK;
 
 disp_lines_err:
+
     pemr ("Key: \"%d\", plugin index: \"%d\", plugin code: \"%s\"",
                 key, plugin_index, get_plugin_code (plugin_index));
 }
@@ -121,20 +136,20 @@ set_buff_rows_cols (window_t *win)
 
 
 static void
-display_lines_buff (int      key,
-                    int      plugin_index,
-                    state_t *state)
+display_lines_buff_no_wrap (int      key,
+                            int      plugin_index,
+                            state_t *state)
 {
-    char   *buff_ptr,
-           *newline_ptr;
-    int     wy,
-            wx,
-            data_row,
-            win_rows,
-            win_mid_row,
-            scroll_row,
-            buff_rows,
-            len;
+    char     *buff_ptr,
+             *newline_ptr;
+    int       wy,
+              wx,
+              data_row,
+              win_rows,
+              win_mid_row,
+              scroll_row,
+              buff_rows,
+              len;
     window_t *win;
 
     win = state->plugins[plugin_index]->win;
@@ -256,6 +271,97 @@ display_lines_buff (int      key,
 
     wrefresh (win->DWIN);
 }
+
+
+
+// CURRENT: scroll not working
+
+static void
+display_lines_buff_wrap (int      key,
+                         int      plugin_index,
+                         state_t *state)
+{
+    int       y, x, c,
+              rows, cols,
+              offset;
+    char     *buff_ptr;
+    window_t *win;
+
+    win = state->plugins[plugin_index]->win;
+    getyx (win->DWIN, y, x);
+    (void) x;
+    rows = win->rows;
+    cols = win->cols;
+
+    switch (key) {
+
+        case END_DATA:
+        case ROW_DATA:
+        case BEG_DATA:
+        case KEY_HOME:
+            win->buff_data->buff_ptr = win->buff_data->buff;
+            break;
+
+        case KEY_DOWN:
+            c = 0;
+            buff_ptr = win->buff_data->buff_ptr;
+            if (y >= (rows - 1)) {
+                while (*(buff_ptr + c) != '\n') {
+                    ++c;
+                }
+                if (c <= cols) {
+                    buff_ptr += (c + 1);
+                } else {
+                    buff_ptr += cols;
+                }
+            }
+            break;
+
+        case KEY_UP:
+            c = 0;
+            buff_ptr = win->buff_data->buff_ptr;
+            if (buff_ptr != win->buff_data->buff) {
+                if (*(buff_ptr - 1) == '\n') {
+                    if ((buff_ptr - 1) != win->buff_data->buff) {
+                        ++c;
+                        --buff_ptr;
+                        offset = 2;
+                    }
+                }
+                else {
+                    offset = 1;
+                }
+                while (*(buff_ptr - c) != '\n' &&
+                        (buff_ptr - c) != win->buff_data->buff) {
+                    ++c;
+                }
+                        
+                if ((buff_ptr - 1) == win->buff_data->buff) {
+                    buff_ptr = win->buff_data->buff;
+                }
+                else {
+                    if ((c - offset) <= cols) {
+                        buff_ptr -= (c - 1);
+                    } else {
+                        if (((c - offset) % cols) != 0) {
+                            buff_ptr -= ((c - offset) % cols) + 1;
+                        } else {
+                            buff_ptr -= (cols + 1);
+                        }
+                    }
+                }
+            }
+            break;
+
+        default:
+            win->buff_data->buff_ptr = win->buff_data->buff;
+    }
+
+    wmove     (win->DWIN, 0, 0); 
+    waddstr   (win->DWIN, win->buff_data->buff_ptr);
+    wclrtoeol (win->DWIN);
+    wrefresh  (win->DWIN);
+}
                 
 
 
@@ -330,7 +436,6 @@ display_lines_file (int key,
 
     wclear (win->DWIN);
 
-    // shift mid_line, first_char
     // TODO: page up/down, home, end
     switch (key) {
 
@@ -421,18 +526,9 @@ display_lines_file (int key,
 
         spaces = win->src_file_data->line_num_digits - sprintf (buff, "%d", print_line - 1) + LINE_NUM_TEXT_SPACES;
 
-        // highlight current line
-        if ((print_line - 1) == win->src_file_data->line) {
-            wattron (win->DWIN, A_REVERSE);
-        }
-
         // print line
         mvwprintw (win->DWIN, row++, col, "%d%*c%.*s",
                 print_line - 1, spaces, ' ', win_text_len, (const char*)(line + line_index));
-
-        if ((print_line - 1) == win->src_file_data->line) {
-            wattroff (win->DWIN, A_REVERSE);
-        }
 
         // break if end of file
         if (print_line > win->src_file_data->rows) {
@@ -441,76 +537,5 @@ display_lines_file (int key,
     }
 
     wrefresh(win->DWIN);
-}
-
-
-
-static void
-format_win_data (int plugin_index,
-                 state_t *state)
-{
-    int       i, j, 
-              m, n,
-              ch,
-              rows, cols,
-              left_spaces,
-              right_spaces;
-    size_t    k, si;
-    window_t *win;
-    char     *needle,
-             *basefile;
-
-    win = state->plugins[plugin_index]->win;
-
-    if (plugin_index == Asm) {
-
-        // highlight current hex address (wherever it occurs)
-        si = 0;
-        getmaxyx (win->DWIN, rows, cols);
-        needle = state->plugins[Src]->win->src_file_data->addr;
-
-        for (i = 0; i < rows; i++) {
-            for (j = 0; j < cols; j++) {
-                ch = mvwinch (win->DWIN, i, j);
-                if ((char) ch == needle [si]) {
-                    if (si == 0) {
-                        m = i;
-                        n = j;
-                    }
-                    si += 1;
-                    if (si == strlen (needle)) {
-                        wattron (win->DWIN, A_REVERSE);
-                        for (k = 0; k < strlen (needle); k++) {
-                            mvwprintw (win->DWIN, m, n + k, "%c", needle[k]);
-                        }
-                        wattroff (win->DWIN, A_REVERSE);
-                        wrefresh (win->DWIN);
-                    }
-                } 
-                else {
-                    si = 0;
-                }
-            }
-        }
-    }
-
-    else if (plugin_index == Src) {
-            
-        // TODO: Replace source file line number with colored "b2" breakpoint index number
-
-        // print current source code file in top bar
-        basefile = basename (win->src_file_data->path);
-        left_spaces = (win->topbar_cols - strlen (basefile)) / 2;
-        right_spaces = win->topbar_cols - strlen (basefile) - left_spaces;
-        left_spaces = left_spaces > 0 ? left_spaces : 0;
-        right_spaces = right_spaces > 0 ? left_spaces : 0;
-
-        wattron   (win->TWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
-        mvwprintw (win->TWIN, 0, 0, "%*c%.*s%*c", left_spaces, ' ',
-                                                  win->topbar_cols, basefile,
-                                                  right_spaces, ' ');
-        wattroff  (win->TWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
-        wrefresh  (win->TWIN);
-    }
 }
 

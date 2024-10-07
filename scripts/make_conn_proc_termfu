@@ -27,10 +27,14 @@
 #     If the command is yellow, that usually means that it is waiting for command input
 #     from the debugged process.
 #
-#   - Restart sessions
-#       - Quit debugged process from this script's session or quit debugged process directly
+#   - Restart session
+#       - Quit debugged termfu process:
+#           - From inside the debugged process:  (q)uit
+#           - From the debugger:  (gdb) signal 2
 #       - Rerun `make proc_<debugger>`
-#       - Quit, rerun `make conn_proc_termfu` to attach to new PID
+#       - Reconnect debugger:
+#           - Quit, rerun `make conn_proc_termfu` (gets PID automatically from file)
+#           - Manually input new PID in termfu prompt (see process message):  (gdb) attach <pid>
 #
 
 PID_FILE="/tmp/termfu.pid"
@@ -45,13 +49,10 @@ if [ -e $PID_FILE ]; then
     #
     # Add PID to gdb command
     #
-    # In order to persist breakpoints with termfu_dev the process must be attached to 
-    # first with the initial GDB command inside the CONFIG file.
+    # In order to load the debugged process' persisted breakpoints it must be attached to immediately
+    # via the -p flag in the initial GDB command inside the termfu configuration file. 
     #
-        # Remove previous PID
-    make configs    
-        # Add new PID
-    sed -i "s|gdb --quiet --interpreter=mi|gdb --quiet --interpreter=mi -p $TERMFU_PID|" "$CONFIG"
+    sed -i "s|gdb --quiet --interpreter=mi|gdb --interpreter=mi -p $TERMFU_PID|" "$CONFIG"
 
     sudo ./termfu -c $CONFIG -p $DATA
     

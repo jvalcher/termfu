@@ -3,6 +3,8 @@
 #include "../src/data.h"
 #include "../src/parse_debugger_output.h"
 
+#define MOCK_PDB_OUT  "mock.pdb_out"
+
 
 int
 main (void)
@@ -14,12 +16,12 @@ main (void)
     int ch, i;
 
     state->debugger->cli_pos = 0;
-    state->debugger->cli_len = CLI_BUF_LEN;
+    state->debugger->cli_len = ORIG_BUF_LEN;
     state->debugger->program_pos = 0;
-    state->debugger->program_len = PROGRAM_BUF_LEN;
+    state->debugger->program_len = ORIG_BUF_LEN;
 
     // open pdb.out
-    if ((fp = fopen ("pdb.out", "r")) == NULL) {
+    if ((fp = fopen (MOCK_PDB_OUT, "r")) == NULL) {
         perror ("Debugger output file");
         exit (1);
     }

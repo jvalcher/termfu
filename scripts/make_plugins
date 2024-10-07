@@ -4,5 +4,5 @@
 # Print all plugins indexes and codes
 #
 
-( cd tests && make t=print_plugin_indexes.c)
+(cd tests && make t=util_plugin_indexes.c)
 

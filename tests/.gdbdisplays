@@ -1,8 +1,4 @@
-disp rows
-disp cols
-disp y
-disp x
-disp c
-disp *buff_ptr
-disp buffer
-disp buff_ptr
+disp src_ptr
+disp break_path_buff
+disp index_buff
+disp dest_buff->buff

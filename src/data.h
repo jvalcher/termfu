@@ -24,10 +24,13 @@
 #define FAIL  -1
 
 #define ERR_DBG_CMD     "Failed to send debugger command"
+#define ERR_DBG_FCLOSE  "Failed to close DEBUG_OUT_FILE"
 #define ERR_DBG_PARSE   "Failed to parse debugger output"
 #define ERR_DISP_LINES  "Failed to display lines"
 #define ERR_NC_ATTR     "Failed to set ncurses attribute"
+#define ERR_NC_FREE     "Failed to free ncurses layout windows"
 #define ERR_OUT_MARK    "Failed to insert output marker"
+#define ERR_PERSIST     "Failed to persist data"
 #define ERR_POPUP_IN    "Failed to get popup window input"
 #define ERR_PULSE_CMD   "Failed to pulse header title color"
 #define ERR_REND_LAYOUT "Failed to render layout"
@@ -61,11 +64,11 @@
 
 // misc
 #define DEFAULT                         WHITE_BLACK
-#define MAIN_TITLE_COLOR                GREEN_BLACK
-#define LAYOUT_TITLE_COLOR              MAGENTA_BLACK
 #define TITLE_KEY_COLOR                 YELLOW_BLACK
 
 // header
+#define MAIN_TITLE_COLOR                GREEN_BLACK
+#define LAYOUT_TITLE_COLOR              MAGENTA_BLACK
 #define HEADER_TITLE_COLOR              GREEN_BLACK
 #define FOCUS_TITLE_KEY_COLOR           GREEN_BLACK
 #define FOCUS_HEADER_TITLE_COLOR        YELLOW_BLACK
@@ -77,6 +80,15 @@
 #define FOCUS_BORDER_COLOR              YELLOW_BLACK
 #define FOCUS_WINDOW_TITLE_KEY_COLOR    BLUE_BLACK
 #define WINDOW_INPUT_TITLE_COLOR        WHITE_BLUE
+#define BREAK_INDEX_COLOR               YELLOW_BLACK
+#define BREAK_FILE_COLOR                GREEN_BLACK
+#define BREAK_LINE_COLOR                MAGENTA_BLACK
+#define LOC_VAR_COLOR                   GREEN_BLACK
+#define PROG_OUT_NEW_RUN_COLOR          GREEN_BLACK
+#define SRC_LINE_COLOR                  GREEN_BLACK
+#define SRC_BREAK_LINE_COLOR            MAGENTA_BLACK
+#define WAT_INDEX_COLOR                 YELLOW_BLACK
+#define WAT_VAR_COLOR                   GREEN_BLACK
 
 // form
 #define FORM_INPUT_FIELD                WHITE_BLUE
@@ -134,38 +146,47 @@ typedef struct layout {
 #define FILE_PATH_LEN     256
 #define ADDRESS_LEN       48
 #define FUNC_LEN          128
-#define ORIG_BUF_LEN      16384     // Double buffer size 3x to 32768 -> 65536 -> 131072
-#define MAX_DOUBLE_TIMES  3         // before it loops back around                            
+#define ORIG_BUF_LEN      16384     // Double ORIG_BUF_LEN  MAX_DOUBLE_TIMES before
+#define MAX_DOUBLE_TIMES  3         // before it loops back around (3x: 32768 -> 65536 -> 131072)
                                         
 /*
     buff_data_t
     --------
     state->plugins[i]->win->buff_data
 
-    buff        - window data buffer
-    buff_len    - buffer size
-    buff_pos    - current index position of terminating null
-    changed     - signals for buffer data to be reloaded before being displayed
-    rows        - lines of data in buffer 
-    max_cols    - last index of longest line
-    scroll_row  - current scroll row
-    scroll_col  - first character of each line to be displayed
-    new_data    - signals that new Dbg or Prg window data is in the debugger's buffer(s) 
-                  and should be appended to the respective window_t buffer
+    code          - plugin code string
+    changed       - signals for buffer data to be reloaded before being displayed
+    new_data      - signals that new Dbg or Prg window data is in the debugger's buffer(s) 
+                    and should be appended to the respective window_t buffer
+    text_wrapped  - signals if buffer text is displayed wrapped
+
+    buff          - window data buffer
+    buff_len      - buffer size
+    buff_pos      - current index position of terminating null
+    times_doubled - number of times buffer size doubled from ORIG_BUF_LEN, limited by MAX_DOUBLE_TIMES
+
+    rows          - lines of data in buffer 
+    max_cols      - last index of longest line
+    scroll_row    - current scroll row
+    scroll_col    - first character of each line to be displayed
 */
 typedef struct {
 
     char   code [CODE_LEN+1];
+    bool   changed;
+    bool   new_data;
+    bool   text_wrapped;
+
     char  *buff;  
     int    buff_len;
     int    buff_pos;
     int    times_doubled;
-    bool   changed;
+
+    char  *buff_ptr;
     int    rows;
     int    max_cols;
     int    scroll_row;
     int    scroll_col;
-    bool   new_data;
 
 } buff_data_t;
 
@@ -410,6 +431,7 @@ typedef struct {
     data_pos    - BEG_DATA, END_DATA, LINE_DATA
     win_type    - BUFF_TYPE, FILE_TYPE
     has_window  - plugin has window in current layout
+    win         - window_t pointer
 */
 typedef struct {
 
@@ -432,7 +454,8 @@ typedef struct {
 #define CONFIG_PATH_LEN  128
 #define PID_LEN          8
 #define DATA_PATH_LEN    CONFIG_PATH_LEN
-#define BREAK_LEN        128
+#define BREAK_PATH_LEN   128
+#define BREAK_LINE_LEN   8
 #define WATCH_LEN        84
 #define INPUT_BUFF_LEN   4096
 
@@ -441,14 +464,16 @@ typedef struct {
     -------
     state->breakpoints
 
-    index       - breakpoint index set by debugger
-    path_line   - <file path>:<line_number> string
-    next        - next breakpoint_t in linked list
+    index  - breakpoint index (created by debugger)
+    path   - path string
+    line   - line string
+    next   - next breakpoint_t in linked list
 */
 typedef struct breakpoint {
 
     char  index [8];
-    char  path_line [BREAK_LEN];
+    char  path  [BREAK_PATH_LEN];
+    char  line  [BREAK_LINE_LEN];
     struct breakpoint *next;
 
 } breakpoint_t;
@@ -475,8 +500,8 @@ typedef struct watchpoint {
 /*
     state_t
     -----
-    - Base data struct that contains all the above structs
     - state->...
+    - Base data struct that contains all other structs
 
     num_plugins         - total number of plugins
     plugin_key_index    - array that matches key binding to its plugin's index  (see plugins.h)
@@ -514,6 +539,7 @@ typedef struct {
     char         **command;
     watchpoint_t  *watchpoints;
     breakpoint_t  *breakpoints;
+    bool           new_run;
 
 } state_t;
 

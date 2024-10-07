@@ -22,10 +22,14 @@
 #
 #   - Resume debugged process by pressing any key
 #
-#   - Restart sessions
-#       - Quit debugged process from this script's session or quit debugged process directly
+#   - Restart session
+#       - Quit debugged termfu process:
+#           - From inside the debugged process:  (q)uit
+#           - From the debugger:  (gdb) signal 2
 #       - Rerun `make proc_<debugger>`
-#       - Quit, rerun `make conn_proc_gdbtui` to attach to new debugged process
+#       - Reconnect debugger:
+#           - Quit, rerun `make conn_proc_gdbtui` (gets PID automatically from file)
+#           - Manually attach to new PID (see process message):  (gdb) attach <new pid>
 #
 
 PID_FILE="/tmp/termfu.pid"

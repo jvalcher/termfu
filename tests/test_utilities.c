@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include "test_utilities.h"
 
@@ -23,3 +24,5 @@ process_pause (void)
     // wait...
     getchar ();
 }
+
+

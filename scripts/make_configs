@@ -41,10 +41,10 @@ cmd_label = '''
 [ command ]
 
 '''
-cmd_run_gdb          = cmd_label + 'gdb --quiet --interpreter=mi misc/hello\n'
+cmd_run_gdb          = cmd_label + 'gdb --quiet --interpreter=mi misc/vars\n'
 cmd_run_pdb          = cmd_label + 'python -m pdb misc/gcd.py\n'
 cmd_conn_proc_termfu = cmd_label + 'gdb --quiet --interpreter=mi\n'
-cmd_proc_gdb         = cmd_label + 'gdb --quiet --interpreter=mi misc/hello\n'
+cmd_proc_gdb         = cmd_label + 'gdb --quiet --interpreter=mi misc/vars\n'
 cmd_proc_pdb         = cmd_label + 'python -m pdb misc/gcd.py\n'
 
 
@@ -115,6 +115,60 @@ wpT
 
 '''
 
+gdb_layout_split_1 = '''
+[ layout : Main ]
+
+>h
+mtlq
+rns
+cufk
+
+>w
+eo
+vw
+dp
+
+[ layout : Asm/Reg/Stk ]
+
+>h
+mtlq
+rns
+cufk
+
+>w
+ag
+oT
+
+'''
+
+
+pdb_layout_split_1 = '''
+[ layout : Main ]
+
+>h
+mtlq
+rns
+cufk
+
+>w
+boo
+vww
+dpp
+
+[ layout : Asm/Reg/Stk ]
+
+>h
+mtlq
+rns
+cufk
+
+>w
+ag
+oT
+
+'''
+
+
 pdb_layout_1    = '''
 [ layout : Main ]
 
@@ -128,13 +182,23 @@ wwoooo
 vvoooo
 TTppdd
 
+[ layout : Asm/Reg/Stk ]
+
+>h
+mlq
+rnscufk
+
+>w
+ag
+oT
+
 '''
 
 layout_run_gdb          = gdb_layout_1
 layout_run_pdb          = pdb_layout_1
-layout_conn_proc_termfu = gdb_layout_1
-layout_proc_gdb         = gdb_layout_1
-layout_proc_pdb         = pdb_layout_1
+layout_conn_proc_termfu = gdb_layout_split_1
+layout_proc_gdb         = gdb_layout_split_1
+layout_proc_pdb         = pdb_layout_split_1
 
 
 

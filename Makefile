@@ -26,11 +26,13 @@ C_UPDATE_FILES  = $(wildcard ./src/update_window_data/*.c)
 C_FORM_IN_FILES = $(wildcard ./src/get_form_input/*.c)
 
 # configuration, data files  (see scripts/create_configs)
-CONFIG_BASE    = scripts/.termfu
-CONFIG_RUN_GDB = $(CONFIG_BASE)_run_gdb
-CONFIG_RUN_PDB = $(CONFIG_BASE)_run_pdb
-DATA_RUN_GDB   = $(CONFIG_RUN_GDB)_data
-DATA_RUN_PDB   = $(CONFIG_RUN_PDB)_data
+GDB_BUILD_SCRIPT = build_vars
+GDB_BINARY       = vars
+CONFIG_BASE      = scripts/.termfu
+CONFIG_RUN_GDB   = $(CONFIG_BASE)_run_gdb
+CONFIG_RUN_PDB   = $(CONFIG_BASE)_run_pdb
+DATA_RUN_GDB     = $(CONFIG_RUN_GDB)_data
+DATA_RUN_PDB     = $(CONFIG_RUN_PDB)_data
 
 
 .PHONY: help all dev devf devformat configs build_gdb run_gdb run_pdb plugins conn_proc_gdbtui conn_proc_termfu proc_gdb proc_pdb clean_prod clean_dev
@@ -84,7 +86,7 @@ configs:
 	@./scripts/make_configs
 
 build_gdb:
-	@(cd misc && ./build_hello)
+	@(cd misc && ./$(GDB_BUILD_SCRIPT))
 
 run_gdb:
 	@./$(B_FILE_DEV) -c $(CONFIG_RUN_GDB) -p $(DATA_RUN_GDB)

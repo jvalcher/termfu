@@ -16,36 +16,6 @@
 #include "get_stack_data.h"
 #include "get_watchpoint_data.h"
 
-int update_window (int, state_t*);
-
-
-
-int
-update_windows (state_t *state,
-                int num_updates,
-                ...)
-{
-    int plugin,
-        ret;
-    va_list  plugins;
-
-    va_start (plugins, num_updates);
-
-    for (int i = 0; i < num_updates; i++) {
-
-        plugin = va_arg (plugins, int);
-
-        ret = update_window (plugin, state);
-        if (ret == FAIL) {
-            pfemr ("Update window loop failed");
-        }
-    }
-
-    va_end (plugins);
-
-    return A_OK;
-}
-
 
 
 int
@@ -124,9 +94,9 @@ update_window (int      plugin_index,
     }
 
     ret = display_lines (state->plugins[plugin_index]->win_type,
-                       state->plugins[plugin_index]->data_pos,
-                       plugin_index,
-                       state);
+                         state->plugins[plugin_index]->data_pos,
+                         plugin_index,
+                         state);
     if (ret == FAIL) {
         pfem (ERR_DISP_LINES);
         goto upd_win_err;
@@ -138,5 +108,34 @@ upd_win_err:
 
     pemr ("Failed to update window (index: %d, code: \"%s\", debugger: \"%s\")",
             plugin_index, get_plugin_code (plugin_index), state->debugger->title);
+}
+
+
+
+int
+update_windows (state_t *state,
+                int num_updates,
+                ...)
+{
+    int      i,
+             plugin,
+             ret;
+    va_list  plugins;
+
+    va_start (plugins, num_updates);
+
+    for (i = 0; i < num_updates; i++) {
+
+        plugin = va_arg (plugins, int);
+
+        ret = update_window (plugin, state);
+        if (ret == FAIL) {
+            pfemr ("Update window loop failed");
+        }
+    }
+
+    va_end (plugins);
+
+    return A_OK;
 }
 

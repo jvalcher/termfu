@@ -41,15 +41,15 @@ get_assembly_data (state_t *state)
 static int
 get_assembly_data_gdb (state_t *state)
 {
-    int       ret;
-    window_t *win;
-    char     *src_ptr,
-             *dest_ptr,
-             *data_ptr,
-             *cmd,
-             *func,
-             *main = "main";
-    buff_data_t *dest_buff;
+    int              ret;
+    window_t        *win;
+    char            *src_ptr,
+                    *dest_ptr,
+                    *data_ptr,
+                    *cmd,
+                    *func,
+                    *main = "main";
+    buff_data_t     *dest_buff;
     src_file_data_t *src_data;
 
     win       = state->plugins[Asm]->win;
@@ -59,7 +59,7 @@ get_assembly_data_gdb (state_t *state)
     src_data  = state->plugins[Src]->win->src_file_data;
 
     func = (src_data->func[0] == '\0') ? main : src_data->func;
-    cmd = concatenate_strings (3, "disassemble ", func, " \n");
+    cmd = concatenate_strings (3, "disassemble ", func, "\n");
 
     ret = send_command_mp (state, cmd);
     if (ret == FAIL) {

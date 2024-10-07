@@ -1,0 +1,4 @@
+#!/bin/sh
+
+gcc -g vars.c -o vars
+

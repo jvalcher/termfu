@@ -1,7 +1,17 @@
-source ./.gdbbreaks
+set confirm off
+
+define sb
+    del
+    source ./.gdbbreaks
+end
 
 define sd
+    undisplay
     source ./.gdbdisplays
+end
+
+define s2
+    signal 2
 end
 
 define q

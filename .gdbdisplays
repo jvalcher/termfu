@@ -1,1 +1,2 @@
-disp buff_ptr
+disp/s src_ptr
+disp/s dest_data->buff

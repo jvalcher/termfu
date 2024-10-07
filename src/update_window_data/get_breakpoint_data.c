@@ -55,8 +55,9 @@ get_breakpoint_data (state_t *state)
 */
 static int
 allocate_breakpoint (state_t *state,
-                     char    *break_buff,
-                     char    *index_buff)
+                     char    *index_buff,
+                     char    *file_buff,
+                     char    *line_buff)
 {
     breakpoint_t *curr_break = state->breakpoints;
 
@@ -80,15 +81,18 @@ allocate_breakpoint (state_t *state,
     memcpy (curr_break->index, index_buff, INDEX_BUFF_LEN - 1);
     curr_break->index[INDEX_BUFF_LEN-1] = '\0';
 
-    memcpy (curr_break->path_line, break_buff, BREAK_LEN - 1);
-    curr_break->path_line[BREAK_LEN-1] = '\0';
+    memcpy (curr_break->path, file_buff, BREAK_PATH_LEN - 1);
+    curr_break->path[BREAK_PATH_LEN-1] = '\0';
+
+    memcpy (curr_break->line, line_buff, BREAK_LINE_LEN - 1);
+    curr_break->line[BREAK_LINE_LEN-1] = '\0';
 
     curr_break->next = NULL;
 
     return A_OK;
 
 alloc_break_err:
-    pemr ("index: \"%s\"; breakpoint: \"%s\"", index_buff, break_buff);
+    pemr ("index: \"%s\"; path: \"%s\"; line: \"%s\"", index_buff, file_buff, line_buff);
 }
 
 
@@ -98,12 +102,14 @@ get_breakpoint_data_gdb (state_t *state)
 {
     int          i, ret;
     char        *src_ptr,
-                 break_buff [BREAK_LEN],
-                 index_buff [INDEX_BUFF_LEN];
+                 file_buff   [BREAK_PATH_LEN],
+                 line_buff   [BREAK_LINE_LEN],
+                 index_buff  [INDEX_BUFF_LEN];
     buff_data_t *dest_buff;
     
     const char *key_number   = "number=\"",
-               *key_orig_loc = "original-location=\"",
+               *key_file     = "file=\"",
+               *key_line     = "line=\"",
                *key_nr_rows  = "nr_rows=\"";
 
     src_ptr   = state->debugger->data_buffer;
@@ -119,21 +125,26 @@ get_breakpoint_data_gdb (state_t *state)
         dest_buff->buff_pos = 0;
 
         // get number of breakpoints
+        i = 0;
         src_ptr = strstr (src_ptr, key_nr_rows);
         src_ptr += strlen (key_nr_rows);
-        i = 0;
         while (*src_ptr != '\"') {
-            break_buff[i++] = *src_ptr++;
+            file_buff[i++] = *src_ptr++;
         }
-        break_buff[i] = '\0';
+        file_buff[i] = '\0';
 
-        if (break_buff[0] > '0') {
+        if (file_buff[0] > '0') {
 
-            // get breakpoint number
+            // "number=..."
             while ((src_ptr = strstr (src_ptr, key_number)) != NULL) {
+                
+                file_buff [0]  = '\0';
+                line_buff [0]  = '\0';
+                index_buff [0] = '\0';
 
                 cp_wchar (dest_buff, '(');
 
+                // index
                 i = 0;
                 src_ptr += strlen (key_number);
                 while (*src_ptr != '\"') {
@@ -145,17 +156,31 @@ get_breakpoint_data_gdb (state_t *state)
                 cp_wchar (dest_buff, ')');
                 cp_wchar (dest_buff, ' ');
 
-                // get file:line
+                // file
                 i = 0;
-                src_ptr = strstr (src_ptr, key_orig_loc);
-                src_ptr += strlen (key_orig_loc);
+                src_ptr  = strstr (src_ptr, key_file);
+                src_ptr += strlen (key_file);
                 while (*src_ptr != '\"') {
-                    break_buff [i++] = *src_ptr;
+                    file_buff [i++] = *src_ptr;
                     cp_wchar (dest_buff, *src_ptr++);
                 }
-                break_buff [i] = '\0';
+                file_buff [i] = '\0';
 
-                ret = allocate_breakpoint (state, break_buff, index_buff);
+                // ':'
+                cp_wchar (dest_buff, ':');
+
+                // line
+                i = 0;
+                src_ptr  = strstr (src_ptr, key_line);
+                src_ptr += strlen (key_line);
+                while (*src_ptr != '\"') {
+                    line_buff [i++] = *src_ptr;
+                    cp_wchar (dest_buff, *src_ptr++);
+                }
+                line_buff [i] = '\0';
+
+                // allocate breakpoint_t
+                ret = allocate_breakpoint (state, index_buff, file_buff, line_buff);
                 if (ret == FAIL) {
                     pfemr ("Failed to allocate breakpoint");
                 }
@@ -182,10 +207,11 @@ get_breakpoint_data_pdb (state_t *state)
     int          i, ret;
     window_t    *win;
     char        *src_ptr,
-                 path_buff  [BREAK_LEN*2],
+                 path_buff  [BREAK_PATH_LEN*2],
                 *basename_ptr,
-                 break_buff [BREAK_LEN],
-                 index_buff [INDEX_BUFF_LEN];
+                 index_buff      [INDEX_BUFF_LEN],
+                 break_path_buff [BREAK_PATH_LEN],
+                 break_line_buff [BREAK_LINE_LEN];
     buff_data_t *dest_buff;
 
     const char  *at_str    = "at ",
@@ -249,21 +275,28 @@ get_breakpoint_data_pdb (state_t *state)
                 // path -> basename
                 basename_ptr = basename (path_buff);
 
-                // filename
+                // file
                 i = 0;
                 while (basename_ptr [i] != '\0') {
-                    break_buff [i] = basename_ptr [i];
-                    cp_wchar (dest_buff, break_buff [i++]);
+                    break_path_buff [i] = basename_ptr [i];
+                    cp_wchar (dest_buff, break_path_buff [i++]);
                 }
+                break_path_buff [i] = '\0';
 
-                // :line
-                while (*src_ptr != '\n') {
-                    break_buff [i++] = *src_ptr;
+                // :
+                i = 0;
+                if (*src_ptr == ':') {
                     cp_wchar (dest_buff, *src_ptr++);
-                }
-                break_buff [i] = '\0';
 
-                ret = allocate_breakpoint (state, break_buff, index_buff);
+                    // line
+                    while (*src_ptr != '\n') {
+                        break_line_buff [i++] = *src_ptr;
+                        cp_wchar (dest_buff, *src_ptr++);
+                    }
+                }
+                break_line_buff [i] = '\0';
+
+                ret = allocate_breakpoint (state, break_path_buff, break_line_buff, index_buff);
                 if (ret == FAIL) {
                     pfemr ("Failed to allocate breakpoint");
                 }

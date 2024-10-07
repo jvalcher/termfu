@@ -1,0 +1,23 @@
+> /home/jvalcher/Git/termvu/misc/gcd.py(1)<module>()
+-> from gcd2 import calc_gcd
+(Pdb) 
+The GCD of 154 and 98 is 14.
+(Pdb) 
+Breakpoint 1 at /home/jvalcher/Git/termvu/misc/gcd.py:10
+> /home/jvalcher/Git/termvu/misc/gcd.py(10)main()
+-> num1 += num2;
+(Pdb) 
+> /home/jvalcher/Git/termvu/misc/gcd.py(11)main()
+-> result_gcd = calc_gcd(num1, num2)
+(Pdb) 
+> /home/jvalcher/Git/termvu/misc/gcd.py(12)main()
+-> print(f"The GCD of {num1} and {num2} is {result_gcd}.")
+(Pdb) 
+> /home/jvalcher/Git/termvu/misc/gcd.py(13)main()
+-> print(f"Hello, world!")
+(Pdb) 
+Restarting /home/jvalcher/Git/termvu/misc/gcd.py with arguments:
+	
+> /home/jvalcher/Git/termvu/misc/gcd.py(1)<module>()
+-> from gcd2 import calc_gcd
+(Pdb) 
