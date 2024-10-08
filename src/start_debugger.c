@@ -129,7 +129,7 @@ start_debugger_proc (state_t *state)
     if (pipe (debug_in_pipe)  == -1 || 
         pipe (debug_out_pipe) == -1)
     {
-        pfemr ("Debugger pipe creation failed\n");
+        pfemr ("Debugger pipe creation failed");
     }
     debugger->stdin_pipe  = debug_in_pipe [PIPE_WRITE];
     debugger->stdout_pipe = debug_out_pipe [PIPE_READ];
@@ -138,7 +138,7 @@ start_debugger_proc (state_t *state)
     debugger_pid = fork ();
     if (debugger_pid  == -1)
     {
-        pfemr ("Debugger fork failed\n");
+        pfemr ("Debugger fork failed");
     }
 
     // start debugger

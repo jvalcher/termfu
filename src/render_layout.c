@@ -132,7 +132,7 @@ get_label_layout (char     *label,
         layouts = layouts->next;
     } while (layouts != NULL);
 
-    pfem ("Layout \"%s\" not found\n", label);
+    pfem ("Layout \"%s\" not found", label);
     return NULL;
 }
 
@@ -381,6 +381,7 @@ render_header_titles (layout_t *layout,
         // render row of plugin titles
         if (ch == '\n') {
 
+            title_str_ch_left   = title_str_len;
             header_title_indent = scr_cols - strlen (titles_str) - 2;
 
             key_color_toggle = false;
@@ -413,7 +414,7 @@ render_header_titles (layout_t *layout,
         title_str_ch_left -= strlen (curr_title) + 2;
 
         if (title_str_ch_left < 1) {
-            pfem ("To many header titles in row %d\n", row + 1);
+            pfem ("To many header titles in row %d", row + 1);
             pemr ("curr_title: %s", curr_title);
         } 
 

@@ -50,7 +50,7 @@ parse_config_file (state_t *state)
     key_arr_len = (int)'z' + 1;
     if ((state->plugin_key_index = (int*) malloc (key_arr_len * sizeof (int))) == NULL) {
         pfem ("malloc error: %s", strerror (errno));
-        pemr ("Failed to allocate state->plugin_key_index\n");
+        pemr ("Failed to allocate state->plugin_key_index");
     }
 
     // state->num_plugins
@@ -59,17 +59,17 @@ parse_config_file (state_t *state)
     // state->plugins
     ret = allocate_plugins (state);
     if (ret == FAIL) {
-        pfemr ("Failed to allocate plugins\n");
+        pfemr ("Failed to allocate plugins");
     }
 
     // state->plugins[x]->win
     ret = allocate_plugin_windows (state);
     if (ret == FAIL) {
-        pfemr ("Failed to allocate plugin windows\n");
+        pfemr ("Failed to allocate plugin windows");
     }
 
     if ((fp = open_config_file (state)) == NULL) {
-        pfemr ("Failed to open configuration file\n");
+        pfemr ("Failed to open configuration file");
     }
 
     // parse config file

@@ -62,7 +62,7 @@ get_binary_path_time_gdb (state_t *state)
         // last updated time
         if (stat (state->debugger->prog_path, &file_stat) == -1) {
             pfem ("stat error: %s", strerror (errno));
-            pemr ("Failed to get status of file \"%s\"\n", state->debugger->prog_path);
+            pemr ("Failed to get status of file \"%s\"", state->debugger->prog_path);
         }
         state->debugger->prog_update_time = file_stat.st_mtim.tv_sec;
     }
