@@ -2,6 +2,7 @@
     See README.md for more information
 */
 
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <time.h>
@@ -36,7 +37,6 @@ char *plugin_codes [] = {
     "Src",
     "Stk",
     "Stp",
-    "Trg",
     "Unt",
     "Wat"
 };
@@ -44,18 +44,6 @@ char *plugin_codes [] = {
 
 
 int win_plugins[]      = { Asm, Brk, Dbg, LcV, Prg, Reg, Src, Stk, Wat };
-int win_file_plugins[] = { Src };
-
-int win_buff_plugins[] = {
-    Asm,
-    Brk,
-    Dbg,
-    LcV,
-    Prg,
-    Reg,
-    Stk,
-    Wat
-};
 
 int win_topbar_plugins[] = {
     Brk,
@@ -73,14 +61,13 @@ char *win_topbar_titles[] = {
 int
 allocate_plugin_windows (state_t *state)
 {
+    window_t    *win;
+    buff_data_t *buff_data;
+    plugin_t    *plugin;
+
     int i, j,
         num_win_plugins       = sizeof (win_plugins) / sizeof (win_plugins[0]),
-        num_win_topbar_plugins = sizeof (win_topbar_plugins) / sizeof (win_topbar_plugins[0]),
-        num_win_file_plugins  = sizeof (win_file_plugins) / sizeof (win_file_plugins[0]),
-        num_win_buff_plugins  = sizeof (win_buff_plugins) / sizeof (win_buff_plugins[0]);
-
-    window_t *win;
-    plugin_t *plugin;
+        num_win_topbar_plugins = sizeof (win_topbar_plugins) / sizeof (win_topbar_plugins[0]);
 
     // window_t structs
     for (i = 0; i < num_win_plugins; i++) {
@@ -93,70 +80,14 @@ allocate_plugin_windows (state_t *state)
                     plugin->title, plugin->code, i);
         }
         win = plugin->win;
-        win->has_topbar = false;
-        win->key = j;
         memcpy (win->code, plugin_codes[j], CODE_LEN + 1);
-    }
+        win->index = j;
+        win->has_topbar = false;
 
-    // topbar subwindow data
-    for (i = 0; i < num_win_topbar_plugins; i++) {
-        j = win_topbar_plugins[i];
-        win = state->plugins[j]->win;
-            //
-        win->has_topbar = true;
-
-        if ((win->topbar_title = (char*) malloc (strlen (win_topbar_titles[i]) + 1)) == NULL) {
-            pfem ("malloc error: %s", strerror (errno));
-            pemr ("win->topbar_title allocation error (code: %s, title: %s)",
-                        win->code, win_topbar_titles[i]);
-        }
-        strcpy (win->topbar_title, win_topbar_titles[i]);
-    }
-
-    // src_file_data_t
-    for (i = 0; i < num_win_file_plugins; i++) {
-        j = win_file_plugins[i];
-
-        // set initial display position
-        switch (j) {
-            case Src:
-                state->plugins[j]->data_pos = LINE_DATA;
-                break;
-            default:
-                state->plugins[j]->data_pos = LINE_DATA;
-        }
-        win = state->plugins[j]->win;
-
-        state->plugins[j]->win_type = FILE_TYPE;
-
-        if ((win->src_file_data = (src_file_data_t*) malloc (sizeof (src_file_data_t))) == NULL) {
-            pfem ("malloc error: %s", strerror (errno));
-            pemr ("file_data_t allocation error (code: %s)", win->code);
-        }
-
-        win->src_file_data->path_changed = true;
-        win->src_file_data->path[0]  = '\0';
-        win->src_file_data->path_len = FILE_PATH_LEN;
-        win->src_file_data->path_pos = 0;
-        win->src_file_data->func[0]  = '\0';
-        win->src_file_data->func_len = FUNC_LEN;
-        win->src_file_data->func_pos = 0;
-        win->src_file_data->addr[0]  = '\0';
-        win->src_file_data->addr_len = ADDRESS_LEN;
-        win->src_file_data->addr_pos = 0;
-        win->buff_data = NULL;
-    }
-
-    // buff_data_t
-    for (i = 0; i < num_win_buff_plugins; i++) {
-        
-        j = win_buff_plugins[i];
-        win = state->plugins[j]->win;
-        state->plugins[j]->win_type = BUFF_TYPE;
-
-        // set display position
+        // data position
         switch (j) {
             case Asm:
+            case Src:
                 state->plugins[j]->data_pos = ROW_DATA;
                 break;
             case Brk: 
@@ -172,27 +103,43 @@ allocate_plugin_windows (state_t *state)
                 break;
             default:
                 state->plugins[j]->data_pos = BEG_DATA;
+                break;
         }
 
+        // allocate buff_data_t, ->buff
         if ((win->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t))) == NULL) {
-            pfem ("malloc error: %s", strerror (errno));
-            pemr ("buff_data_t allocation error (code: %s)", win->code);
+            pfem ("malloc error: \"%s\"", strerror (errno));
+            pemr ("Failed to allocate buff_data_t (code: \"%s\")", win->code);
         }
         if ((win->buff_data->buff = (char*) malloc (sizeof(char) * ORIG_BUF_LEN)) == NULL ) {
-            pfem ("malloc error: %s", strerror (errno));
-            pemr ("buff_data_t->buff (code: %s) allocation error", win->code);
+            pfem ("malloc error: \"%s\"", strerror (errno));
+            pemr ("Failed to allocate buff_data->buff (code: \"%s\")", win->code);
         }
+        buff_data = win->buff_data;
 
-        memcpy (win->buff_data->code, plugin_codes[j], CODE_LEN + 1);
-        win->buff_data->buff_pos = 0;
-        win->buff_data->buff_len = ORIG_BUF_LEN;
-        win->buff_data->times_doubled = 0;
-        win->buff_data->buff_ptr = NULL;
-        win->buff_data->scroll_col = 1;
-        win->buff_data->scroll_row = 1;
-        win->buff_data->changed = true;
-        win->buff_data->text_wrapped = true;
-        win->src_file_data = NULL;
+        memcpy (buff_data->code, plugin_codes[j], CODE_LEN + 1);
+        buff_data->buff_pos      = 0;
+        buff_data->buff_len      = ORIG_BUF_LEN;
+        buff_data->times_doubled = 0;
+        buff_data->scroll_col    = 1;
+        buff_data->scroll_row    = 1;
+        buff_data->changed       = true;
+        buff_data->text_wrapped  = true;
+    }
+
+    // topbar subwindow data
+    for (i = 0; i < num_win_topbar_plugins; i++) {
+        j = win_topbar_plugins[i];
+        win = state->plugins[j]->win;
+            //
+        win->has_topbar = true;
+
+        if ((win->topbar_title = (char*) malloc (strlen (win_topbar_titles[i]) + 1)) == NULL) {
+            pfem ("malloc error: %s", strerror (errno));
+            pemr ("win->topbar_title allocation error (code: %s, title: %s)",
+                        win->code, win_topbar_titles[i]);
+        }
+        strcpy (win->topbar_title, win_topbar_titles[i]);
     }
 
     return A_OK;

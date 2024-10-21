@@ -411,7 +411,7 @@ set_state_ptr (state_t *state)
 
 void
 cp_wchar (buff_data_t *dest_buff_data,
-         char ch)
+          char ch)
 {
     char *tmp;
 
@@ -450,65 +450,9 @@ cp_wchar (buff_data_t *dest_buff_data,
 
 
 void
-cp_fchar (src_file_data_t *dest_file_data,
-          char ch,
-          int type)
-{
-    char *buff;
-    int  *len,
-         *pos;
-
-    switch (type) {
-        case PATH:
-            buff = dest_file_data->path;
-            len = &dest_file_data->path_len;
-            pos = &dest_file_data->path_pos;
-            break;
-        case ADDR:
-            buff = dest_file_data->addr;
-            len = &dest_file_data->addr_len;
-            pos = &dest_file_data->addr_pos;
-            break;
-        case FUNC:
-            buff = dest_file_data->func;
-            len = &dest_file_data->func_len;
-            pos = &dest_file_data->func_pos;
-            break;
-        default:
-            pfeme ("Unrecognized buffer type \"%d\"", type);
-    }
-
-    buff[*pos] = ch;
-    buff[*pos + 1] = '\0';
-
-    if (*pos < *len - 1) {
-        *pos += 1;
-    } 
-
-    else {
-
-        pfem ("Buffer overflow");
-
-        switch (type) {
-            case PATH:
-                peme ("win->src_file_data->path : \"%s...\"", buff);
-                break;
-            case ADDR:
-                peme ("win->src_file_data->addr : \"%s...\"", buff);
-                break;
-            case FUNC:
-                peme ("win->src_file_data->func : \"%s...\"", buff);
-                break;
-        }
-    }
-}
-
-
-
-void
 cp_dchar (debugger_t *debugger,
-          char ch,
-          int buff_index)
+          char        ch,
+          int         buff_index)
 {
     int  *len,
          *pos,
@@ -516,6 +460,7 @@ cp_dchar (debugger_t *debugger,
     char *buff,
          *tmp,
          *title,
+         *path_title  = "path",
          *form_title  = "format",
          *data_title  = "data",
          *cli_title   = "cli",
@@ -524,6 +469,13 @@ cp_dchar (debugger_t *debugger,
 
 
     switch (buff_index) {
+        case PATH_BUF:
+            title   =  path_title;
+            buff    =  debugger->path_buffer;
+            len     = &debugger->path_len;
+            pos     = &debugger->path_pos;
+            doubled = &debugger->path_times_doubled;
+            break;
         case FORMAT_BUF:
             title   =  form_title;
             buff    =  debugger->format_buffer;
@@ -586,6 +538,9 @@ cp_dchar (debugger_t *debugger,
             }
 
             switch (buff_index) {
+                case PATH_BUF:
+                    debugger->path_buffer = tmp;
+                    break;
                 case FORMAT_BUF:
                     debugger->format_buffer = tmp;
                     break;
@@ -613,34 +568,24 @@ cp_dchar (debugger_t *debugger,
 
 
 
-char*
-create_buff_from_file (char *path)
+int
+copy_to_clipboard (char *str)
 {
-    int ch, i;
-    struct stat st;
-    FILE *fp;
-    char *buff;
+    int ret;
+    char *cmd_str;
 
-    // create buffer
-    if (stat (path, &st) != 0) {
-        pfem ("stat error: \"%s\"", strerror (errno));
-        pem  ("Failed to get status of file \"%s\"", path);
-        return NULL;
+    cmd_str = concatenate_strings (3, "printf \"", str, "\" | xclip -selection clipboard");
+    if (cmd_str == NULL) {
+        pfemr ("Failed to create string \"%s\"", str);
     }
-    buff = (char*) malloc (st.st_size + 1);
 
-    // copy file contents
-    if ((fp = fopen (path, "r")) == NULL) {
-        pfem ("fopen error: \"%s\"", strerror (errno));
-        pem  ("Failed to open file \"%s\"", path);
-        return NULL;
+    ret = system (cmd_str);
+    if (ret == -1) {
+        pfem ("system() error: \"%s\"", strerror (errno));
+        pemr ("Failed to send system command \"%s\"", cmd_str);
     }
-    i = 0;
-    while ((ch = fgetc (fp)) != EOF && i < st.st_size) {
-        buff [i++] = ch;
-    }
-    buff [i] = '\0';
 
-    return buff;
+    free (cmd_str);
+    return A_OK;
 }
 

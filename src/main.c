@@ -121,6 +121,7 @@ initial_configure (int   argc,
                    state_t *state)
 {
     int opt;
+    char pid_buf [8];
     extern char *optarg;
     bool debugging_mode;
     FILE *fp;
@@ -199,22 +200,43 @@ initial_configure (int   argc,
         fprintf (fp, "%ld", (long) getpid());
         fclose (fp);
 
+        // copy PID to clipboard
+        sprintf (pid_buf, "%ld", (long) getpid());
+        copy_to_clipboard (pid_buf);
+
         // print message
         printf (
             "\n"
-            "Process ID:    \033[0;36m%ld\033[0m (%s)\n"
+            "\033[0;32mDebugged process ID: \033[0;36m%s\033[0m\n"
             "\n"
-            "Connect to this process with debugger\n"
+            "   - Copied to \033[0;36m%s\033[0m\n"
+            "   - Copied to clipboard\n"
             "\n"
-            "    $ make conn_proc_<debugger>\n"
-            "    - Set breakpoint, next functions:\n"
-            "      - \033[0;32mset_state_ptr\033[0m()  (immediate)\n"
-            "      - \033[0;32mparse_config_file\033[0m()  (upon finish)\n"
-            "    - Continue\n"
+            "\033[0;32mAttach to this process with debugger\033[0m\n"
             "\n"
-            "Press any key to continue...\n"
+            "   - With new debugger session automatically through \033[0;36m%s\033[0m\n"
+            "\n"
+            "       $ make conn_proc_<debugger>\n"
+            "\n"
+            "   - With existing debugger session, paste PID currently in\n"
+            "     clipboard into prompt\033[0m\n"
+            "\n"
+            "       >> (at)tach <pid>\n"
+            "\n"
+            "\033[0;32mContinue execution with debugger\033[0m\n"
+            "\n"
+            "   - Set breakpoint after this message string in \033[0;36mmain.c\033[0m, i.e. after \033[0;36mgetchar()\033[0m\n"
+            "   - Continue execution\n"
+            "\n"
+            "\033[0;33mPress any key to continue...\033[0m\n"
+            "\n"
+            "\033[0;32mSend exit signal to debugged process\033[0m\n"
+            "\n"
+            "   >> signal 2\n"
+            "\n"
+            "\033[0;32mOr refresh terminal pane\033[0m\n"
             "\n",
-            (long) getpid (), DEBUG_PID_FILE);
+            pid_buf, DEBUG_PID_FILE, DEBUG_PID_FILE);
 
         // wait...
         getchar ();
@@ -233,9 +255,8 @@ initial_configure (int   argc,
 
 
     // ncurses
-    initscr();
-
-    if (has_colors()) {
+    initscr ();
+    if (has_colors ()) {
         start_color();
         init_pair(RED_BLACK, COLOR_RED, COLOR_BLACK);           // RED_BLACK
         init_pair(GREEN_BLACK, COLOR_GREEN, COLOR_BLACK);       // GREEN_BLACK
@@ -248,8 +269,8 @@ initial_configure (int   argc,
     } else {
         pfemr ("Terminal doesn't support colors\n");
     }
-    cbreak();
-    noecho();
+    cbreak ();
+    noecho ();
     curs_set (0);
     set_escdelay (0);
 

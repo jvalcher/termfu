@@ -5,8 +5,8 @@
 
 #include "data.h"
 #include "plugins.h"
+#include "utilities.h"
 
-static void format_window_data_Asm (state_t *state);
 static void format_window_data_Brk (state_t *state);
 static void format_window_data_LcV (state_t *state);
 static void format_window_data_Prg (state_t *state);
@@ -15,14 +15,11 @@ static void format_window_data_Wat (state_t *state);
 
 
 
-void
+int
 format_window_data (int      plugin_index,
                     state_t *state)
 {
     switch (plugin_index) {
-        case Asm:
-            format_window_data_Asm (state);
-            break;
         case Brk:
             format_window_data_Brk (state);
             break;
@@ -39,49 +36,8 @@ format_window_data (int      plugin_index,
             format_window_data_Wat (state);
             break;
     }
-}
 
-
-
-static void
-format_window_data_Asm (state_t *state)
-{
-    int       i, j, 
-              m, n,
-              ch,
-              rows, cols;
-    size_t    k, si;
-    window_t *win;
-    char     *needle;
-
-    // highlight current hex address
-    si = 0;
-    win = state->plugins[Asm]->win;
-    getmaxyx (win->DWIN, rows, cols);
-    needle = state->plugins[Src]->win->src_file_data->addr;
-    for (i = 0; i < rows; i++) {
-        for (j = 0; j < cols; j++) {
-            ch = mvwinch (win->DWIN, i, j);
-            if ((char) ch == needle [si]) {
-                if (si == 0) {
-                    m = i;
-                    n = j;
-                }
-                si += 1;
-                if (si == strlen (needle)) {
-                    wattron (win->DWIN, A_REVERSE);
-                    for (k = 0; k < strlen (needle); k++) {
-                        mvwprintw (win->DWIN, m, n + k, "%c", needle[k]);
-                    }
-                    wattroff (win->DWIN, A_REVERSE);
-                }
-            } 
-            else {
-                si = 0;
-            }
-        }
-    }
-    wrefresh (win->DWIN);
+    return A_OK;
 }
 
 
@@ -102,7 +58,7 @@ format_window_data_Brk (state_t *state)
     for (i = 0; i < rows; i++) {
         for (j = 0; j < cols; j++) {
 
-            ch = mvwinch (win->DWIN, i, j);
+            ch = mvwinch (win->DWIN, i, j) & A_CHARTEXT;
 
             if (ch == '(') {
                 
@@ -110,7 +66,7 @@ format_window_data_Brk (state_t *state)
                 ++j;
                 wattron (win->DWIN, COLOR_PAIR(BREAK_INDEX_COLOR));
                 while (true) {
-                    ch = mvwinch (win->DWIN, i, j);
+                    ch = mvwinch (win->DWIN, i, j) & A_CHARTEXT;
                     if (ch != ')') {
                         mvwprintw (win->DWIN, i, j++, "%c", ch);
                     } else {
@@ -123,7 +79,7 @@ format_window_data_Brk (state_t *state)
                 j += 2;
                 wattron (win->DWIN, COLOR_PAIR(BREAK_FILE_COLOR));
                 while (true) {
-                    ch = mvwinch (win->DWIN, i, j);
+                    ch = mvwinch (win->DWIN, i, j) & A_CHARTEXT;
                     if (ch == ':') {
                         line_num = true;
                         break;
@@ -142,7 +98,7 @@ format_window_data_Brk (state_t *state)
                 if (line_num) {
                     wattron (win->DWIN, COLOR_PAIR(BREAK_LINE_COLOR));
                     while (true) {
-                        ch = mvwinch (win->DWIN, i, j);
+                        ch = mvwinch (win->DWIN, i, j) & A_CHARTEXT;
                         if (isalnum (ch)) {
                             mvwprintw (win->DWIN, i, j, "%c", ch);
                         } else {
@@ -180,10 +136,10 @@ format_window_data_LcV (state_t *state)
             // i.e. identify start of line when text wrapped
             k = 1;
             if (  j == 0 &&
-                 (ch = mvwinch (win->DWIN, i, j))   == '(' &&
-                ((ch = mvwinch (win->DWIN, i, j + k++))  > '0' && ch <= '9')) {
+                 (ch = mvwinch (win->DWIN, i, j) & A_CHARTEXT)   == '(' &&
+                ((ch = mvwinch (win->DWIN, i, j + k++) & A_CHARTEXT)  > '0' && ch <= '9')) {
 
-                while ((ch = mvwinch (win->DWIN, i, j + k++)) != ')') {
+                while ((ch = mvwinch (win->DWIN, i, j + k++) & A_CHARTEXT) != ')') {
                     if (j+k >= cols) {
                         ch = '&';
                         break;
@@ -201,7 +157,7 @@ format_window_data_LcV (state_t *state)
                     ++j;
                     wattron (win->DWIN, COLOR_PAIR(WAT_INDEX_COLOR));
                     while (true) {
-                        ch = mvwinch (win->DWIN, i, j);
+                        ch = mvwinch (win->DWIN, i, j) & A_CHARTEXT;
                         if (ch != ')') {
                             mvwprintw (win->DWIN, i, j++, "%c", ch);
                         } else {
@@ -214,7 +170,7 @@ format_window_data_LcV (state_t *state)
                     ++j;
                     wattron (win->DWIN, COLOR_PAIR(LOC_VAR_COLOR));
                     while (true) {
-                        ch = mvwinch (win->DWIN, i, j);
+                        ch = mvwinch (win->DWIN, i, j) & A_CHARTEXT;
                         if (ch == '=' || j >= cols) {
                             break;
                         }
@@ -246,7 +202,7 @@ format_window_data_Prg (state_t *state)
     for (i = 0; i < rows; i++) {
         for (j = 0; j < cols; j++) {
 
-            ch = mvwinch (win->DWIN, i, j);
+            ch = mvwinch (win->DWIN, i, j) & A_CHARTEXT;
 
             k = 1;
             if ( j == 0 && ch == '<' &&
@@ -257,7 +213,7 @@ format_window_data_Prg (state_t *state)
                 ++j;
                 wattron (win->DWIN, COLOR_PAIR(PROG_OUT_NEW_RUN_COLOR));
                 while (true) {
-                    ch = mvwinch (win->DWIN, i, j);
+                    ch = mvwinch (win->DWIN, i, j) & A_CHARTEXT;
                     if (ch != '>') {
                         mvwprintw (win->DWIN, i, j++, "%c", ch);
                     } else {
@@ -286,100 +242,120 @@ format_window_data_Src (state_t *state)
                   rows, cols,
                   curr_line;
     char         *basefile,
-                  line_buff [8],
-                  index_buff [8];
-    bool          is_curr_line,
-                  is_break_line;
+                  line_buff [8];
+    bool          is_curr_line;
     window_t     *win;
-    breakpoint_t *brkpnt;
 
     win = state->plugins[Src]->win;
 
     // print current source code file in top bar
-    basefile = basename (win->src_file_data->path);
+    basefile = basename (state->debugger->path_buffer);
     left_spaces = (win->topbar_cols - strlen (basefile)) / 2;
     right_spaces = win->topbar_cols - strlen (basefile) - left_spaces;
     left_spaces = left_spaces > 0 ? left_spaces : 0;
     right_spaces = right_spaces > 0 ? left_spaces : 0;
 
-    wattron   (win->TWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
+    wattron   (win->TWIN, COLOR_PAIR(TOPBAR_COLOR));
     mvwprintw (win->TWIN, 0, 0, "%*c%.*s%*c", left_spaces, ' ',
                                               win->topbar_cols, basefile,
                                               right_spaces, ' ');
-    wattroff  (win->TWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
+    wattroff  (win->TWIN, COLOR_PAIR(TOPBAR_COLOR));
     wrefresh (win->TWIN);
 
 
-    // highlight line number, current line
-    if (state->breakpoints != NULL) {
+    // highlight current line
+    getmaxyx (win->DWIN, rows, cols);
+    is_curr_line = false;
+    for (i = 0; i < rows; i++) {
+        for (j = 0; j < cols; j++) {
 
-        getmaxyx (win->DWIN, rows, cols);
-        is_curr_line = false;
-        is_break_line = false;
-        for (i = 0; i < rows; i++) {
-            for (j = 0; j < cols; j++) {
+            if (is_curr_line) {
+                if (i != curr_line) {
+                    wattroff (win->DWIN, A_REVERSE);
+                    is_curr_line = false;
+                } else {
+                    ch = mvwinch (win->DWIN, i, j) & A_CHARTEXT; 
+                    mvwprintw (win->DWIN, i, j, "%c", ch);
+                }
+            }
 
-                if (is_curr_line) {
-                    if (i != curr_line) {
-                        wattroff (win->DWIN, A_REVERSE);
-                        is_curr_line = false;
+            if (j == 0) {
+
+                k = 0;
+                while (true) {
+                    ch = mvwinch (win->DWIN, i, j++) & A_CHARTEXT; 
+                    if (ch != ' ') {
+                        line_buff [k++] = ch;
                     } else {
-                        ch = mvwinch (win->DWIN, i, j); 
-                        mvwprintw (win->DWIN, i, j, "%c", ch);
+                        break;
                     }
                 }
+                line_buff [k] = '\0';
 
-                if (j == 0) {
-
-                    k = 0;
-                    while (true) {
-                        ch = mvwinch (win->DWIN, i, j++); 
-                        if (ch != ' ') {
-                            line_buff [k++] = ch;
-                        } else {
-                            break;
-                        }
-                    }
-                    line_buff [k] = '\0';
-
-                    // determine if current line a breakpoint
-                    brkpnt = state->breakpoints;
-                    do {
-                        if (strcmp (basename (win->src_file_data->path), brkpnt->path)) {
-                            if (strcmp (brkpnt->line, line_buff) == 0) {
-                                strcpy (index_buff, brkpnt->index);
-                                is_break_line = true;
-                                break;
-                            }
-                        }
-                        brkpnt = brkpnt->next;
-                    } while (brkpnt != NULL);
-
-                    if (is_break_line) {
-                        wattron   (win->DWIN, COLOR_PAIR(SRC_BREAK_LINE_COLOR));
-                        mvwprintw (win->DWIN, i, 0, "b%s", index_buff);
-                        wattroff  (win->DWIN, COLOR_PAIR(SRC_BREAK_LINE_COLOR));
-                        is_break_line = false;
-                    } else {
-                        wattron   (win->DWIN, COLOR_PAIR(SRC_LINE_COLOR));
-                        mvwprintw (win->DWIN, i, 0, "%s", line_buff);
-                        wattroff  (win->DWIN, COLOR_PAIR(SRC_LINE_COLOR));
-                    }
-
-                    if (atoi (line_buff) == win->src_file_data->line) {
-                        wattron (win->DWIN, A_REVERSE);
-                        is_curr_line = true;
-                        curr_line = i;
-                    }
+                if (atoi (line_buff) == state->debugger->curr_line) {
+                    wattron (win->DWIN, A_REVERSE);
+                    is_curr_line = true;
+                    curr_line = i;
                 }
             }
         }
-
-        wattroff (win->DWIN, COLOR_PAIR(SRC_LINE_COLOR));
-        wattroff (win->DWIN, A_REVERSE);
-        wrefresh (win->DWIN);
     }
 
+    /*
+    // replace line number with "b<breakpoint_index>"
+
+    char index_buff [8];
+    bool is_break_line;
+    breakpoint_t *brkpnt;
+
+    for (i = 0; i < rows; i++) {
+        for (j = 0; j < cols; j++) {
+
+            if (j == 0) {
+
+                // get line number
+                k = 0;
+                while (true) {
+                    ch = mvwinch (win->DWIN, i, j++) & A_CHARTEXT; 
+                    if (ch != ' ') {
+                        line_buff [k++] = ch;
+                    } else {
+                        break;
+                    }
+                }
+                line_buff [k] = '\0';
+
+                // determine if current line a breakpoint
+                is_break_line = false;
+                brkpnt = state->breakpoints;
+                do {
+                    if (strcmp (basename (state->debugger->path_buffer), brkpnt->path)) {
+                        if (strcmp (brkpnt->line, line_buff) == 0) {
+                            strcpy (index_buff, brkpnt->index);
+                            is_break_line = true;
+                            break;
+                        }
+                    }
+                    brkpnt = brkpnt->next;
+                } while (brkpnt != NULL);
+
+                if (is_break_line) {
+                    wattron   (win->DWIN, COLOR_PAIR(SRC_BREAK_LINE_COLOR));
+                    mvwprintw (win->DWIN, i, 0, "b%s", index_buff);
+                    wattroff  (win->DWIN, COLOR_PAIR(SRC_BREAK_LINE_COLOR));
+                } else {
+                    mvwprintw (win->DWIN, i, 0, "%s", line_buff);
+                }
+
+                //next line
+                ++i;
+            }
+        }
+    }
+    */
+
+    wrefresh (win->DWIN);
+    wattron  (win->DWIN, A_NORMAL);
 }
 
 
@@ -398,7 +374,7 @@ format_window_data_Wat (state_t *state)
     for (i = 0; i < rows; i++) {
         for (j = 0; j < cols; j++) {
 
-            ch = mvwinch (win->DWIN, i, j);
+            ch = mvwinch (win->DWIN, i, j) & A_CHARTEXT;
 
             if (j == 0 && ch == '(') {
                 
@@ -406,7 +382,7 @@ format_window_data_Wat (state_t *state)
                 ++j;
                 wattron (win->DWIN, COLOR_PAIR(WAT_INDEX_COLOR));
                 while (true) {
-                    ch = mvwinch (win->DWIN, i, j);
+                    ch = mvwinch (win->DWIN, i, j) & A_CHARTEXT;
                     if (ch != ')') {
                         mvwprintw (win->DWIN, i, j++, "%c", ch);
                     } else {
@@ -419,7 +395,7 @@ format_window_data_Wat (state_t *state)
                 j += 2;
                 wattron (win->DWIN, COLOR_PAIR(WAT_VAR_COLOR));
                 while (true) {
-                    ch = mvwinch (win->DWIN, i, j);
+                    ch = mvwinch (win->DWIN, i, j) & A_CHARTEXT;
                     if (ch == '=') {
                         break;
                     } else {

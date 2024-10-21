@@ -93,8 +93,7 @@ update_window (int      plugin_index,
             goto upd_win_err;
     }
 
-    ret = display_lines (state->plugins[plugin_index]->win_type,
-                         state->plugins[plugin_index]->data_pos,
+    ret = display_lines (state->plugins[plugin_index]->data_pos,
                          plugin_index,
                          state);
     if (ret == FAIL) {
@@ -118,22 +117,18 @@ update_windows (state_t *state,
                 ...)
 {
     int      i,
-             plugin,
+             plugin_index,
              ret;
     va_list  plugins;
 
     va_start (plugins, num_updates);
-
     for (i = 0; i < num_updates; i++) {
-
-        plugin = va_arg (plugins, int);
-
-        ret = update_window (plugin, state);
+        plugin_index = va_arg (plugins, int);
+        ret = update_window (plugin_index, state);
         if (ret == FAIL) {
             pfemr ("Update window loop failed");
         }
     }
-
     va_end (plugins);
 
     return A_OK;

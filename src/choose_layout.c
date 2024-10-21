@@ -156,7 +156,7 @@ choose_layout:
             pfemr (ERR_REND_LAYOUT);
         }
 
-        state->plugins[Src]->win->src_file_data->path_changed = true;
+        state->debugger->path_changed = true;
         ret = update_windows (state, 9, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Stk, Wat);
         if (ret == FAIL) {
             pfemr (ERR_UPDATE_WINS);

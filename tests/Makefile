@@ -11,9 +11,10 @@ FLAGS          = -g -Wall -Wextra
 NCURSES_CFLAGS = $(shell ncurses5-config --cflags)
 NCURSES_LIBS   = $(shell ncurses5-config --libs) -lform
 
-C_FILES        = $(filter-out ../src/main.c, $(wildcard ../src/*.c))
-C_UPDATE_FILES = $(wildcard ../src/update_window_data/*.c)
-C_FORM_IN_FILES  = $(wildcard ../src/get_form_input/*.c)
+C_FILES         = $(filter-out ../src/main.c, $(wildcard ../src/*.c))
+C_UPDATE_FILES  = $(wildcard ../src/update_window_data/*.c)
+C_FORM_IN_FILES = $(wildcard ../src/get_form_input/*.c)
+C_DEBUG_FILES   = $(wildcard ../src/debug/*.c)
 
 
 .PHONY: all help debug clean
@@ -21,6 +22,7 @@ C_FORM_IN_FILES  = $(wildcard ../src/get_form_input/*.c)
 all: C_FILES += $(t)
 all: C_FILES += $(C_UPDATE_FILES)
 all: C_FILES += $(C_FORM_IN_FILES)
+all: C_FILES += $(C_DEBUG_FILES)
 all: clean $(B_FILE)
 	@./$(B_FILE)
 	@echo ""

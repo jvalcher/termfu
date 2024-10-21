@@ -41,10 +41,16 @@ send_debugger_command (int      plugin_index,
         case Con:
             switch (debugger_index) {
                 case (DEBUGGER_GDB):
-                    if (send_command (state, "-exec-continue\n") == FAIL) goto dbg_cmd_err;
+                    ret = send_command (state, "-exec-continue\n");
+                    if (ret == FAIL) {
+                        goto dbg_cmd_err;
+                    }
                     break;
                 case (DEBUGGER_PDB):
-                    if (send_command (state, "continue\n") == FAIL) goto dbg_cmd_err;
+                    ret = send_command (state, "continue\n");
+                    if (ret == FAIL) {
+                        goto dbg_cmd_err;
+                    }
                     break;
             }
             break;
@@ -52,10 +58,16 @@ send_debugger_command (int      plugin_index,
         case Fin:
             switch (debugger_index) {
                 case (DEBUGGER_GDB):
-                    if (send_command (state, "-exec-finish\n") == FAIL) goto dbg_cmd_err;
+                    ret = send_command (state, "-exec-finish\n");
+                    if (ret == FAIL) {
+                        goto dbg_cmd_err;
+                    }
                     break;
                 case (DEBUGGER_PDB):
-                    if (send_command (state, "return\n") == FAIL) goto dbg_cmd_err;
+                    ret = send_command (state, "return\n");
+                    if (ret == FAIL) {
+                        goto dbg_cmd_err;
+                    }
                     break;
             }
             break;
@@ -63,10 +75,16 @@ send_debugger_command (int      plugin_index,
         case Kil:
             switch (debugger_index) {
                 case (DEBUGGER_GDB):
-                    if (send_command (state, "kill\n") == FAIL) goto dbg_cmd_err;
+                    ret = send_command (state, "kill\n");
+                    if (ret == FAIL) {
+                        goto dbg_cmd_err;
+                    }
                     break;
                 case (DEBUGGER_PDB):
-                    if (send_command (state, "restart\n") == FAIL) goto dbg_cmd_err;
+                    ret = send_command (state, "restart\n");
+                    if (ret == FAIL) {
+                        goto dbg_cmd_err;
+                    }
                     break;
             }
             break;
@@ -74,10 +92,16 @@ send_debugger_command (int      plugin_index,
         case Nxt:
             switch (debugger_index) {
                 case (DEBUGGER_GDB):
-                    if (send_command (state, "-exec-next\n") == FAIL) goto dbg_cmd_err;
+                    ret = send_command (state, "-exec-next\n");
+                    if (ret == FAIL) {
+                        goto dbg_cmd_err;
+                    }
                     break;
                 case (DEBUGGER_PDB):
-                    if (send_command (state, "next\n") == FAIL) goto dbg_cmd_err;
+                    ret = send_command (state, "next\n");
+                    if (ret == FAIL) {
+                        goto dbg_cmd_err;
+                    }
                     break;
             }
             break;
@@ -85,15 +109,23 @@ send_debugger_command (int      plugin_index,
         case Run:
             switch (debugger_index) {
                 case (DEBUGGER_GDB):
-                    if (send_command (state, "-exec-run\n") == FAIL) goto dbg_cmd_err;
-                    if (file_was_updated (state->debugger->prog_update_time, state->debugger->prog_path)) {
-                        state->plugins[Src]->win->src_file_data->path_changed = true;
+                    ret = send_command (state, "-exec-run\n");
+                    if (ret == FAIL) {
+                        goto dbg_cmd_err;
+                    }
+                    if (file_was_updated (state->debugger->prog_update_time,
+                                          state->debugger->prog_path))
+                    {
+                        state->debugger->path_changed = true;
                     }
                     state->new_run = true;
                     break;
                 case (DEBUGGER_PDB):
-                    if (send_command (state, "restart\n") == FAIL) goto dbg_cmd_err;
-                    state->plugins[Src]->win->src_file_data->path_changed = true;
+                    ret = send_command (state, "restart\n");
+                    if (ret == FAIL) {
+                        goto dbg_cmd_err;
+                    }
+                    state->debugger->path_changed = true;
                     break;
             }
             break;
@@ -101,22 +133,34 @@ send_debugger_command (int      plugin_index,
         case Stp:
             switch (debugger_index) {
                 case (DEBUGGER_GDB):
-                    if (send_command (state, "step\n") == FAIL) goto dbg_cmd_err;
+                    ret = send_command (state, "step\n");
+                    if (ret == FAIL) {
+                        goto dbg_cmd_err;
+                    }
                     break;
                 case (DEBUGGER_PDB):
-                    if (send_command (state, "step\n") == FAIL) goto dbg_cmd_err;
+                    ret = send_command (state, "step\n");
+                    if (ret == FAIL) {
+                        goto dbg_cmd_err;
+                    }
                     break;
             }
             break;
 
-        case 27:
+        case ESC:
         case Qut:
             switch (debugger_index) {
                 case (DEBUGGER_GDB):
-                    if (send_command (state, "-gdb-exit\n") == FAIL) goto dbg_cmd_err;
+                    ret = send_command (state, "-gdb-exit\n");
+                    if (ret == FAIL) {
+                        goto dbg_cmd_err;
+                    }
                     break;
                 case (DEBUGGER_PDB):
-                    if (send_command (state, "quit\n") == FAIL) goto dbg_cmd_err;
+                    ret = send_command (state, "quit\n");
+                    if (ret == FAIL) {
+                        goto dbg_cmd_err;
+                    }
                     break;
             }
             state->debugger->running = false;

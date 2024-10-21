@@ -1,2 +1,1 @@
-disp/s src_ptr
-disp/s dest_data->buff
+disp plugin_index

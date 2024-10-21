@@ -114,22 +114,6 @@ void cp_wchar (buff_data_t *dest_buff_data, char ch);
 
 
 /*
-    Copy character into src_file_data_t buffers
-    --------
-    state->plugins[Src]->win->src_file_data  (->path, ->addr, ->func)
-
-    Uses:
-        ->path_pos
-        ->path_len
-        ->addr_ ...
-*/
-enum { PATH, ADDR, FUNC };      // type
-
-void cp_fchar (src_file_data_t *dest_file_data, char ch, int type);
-
-
-
-/*
     Copy character into debugger buffer
     ---------
     state->debugger
@@ -141,19 +125,18 @@ void cp_fchar (src_file_data_t *dest_file_data, char ch, int type);
         ->data_pos
         ->data_ ..l
 */
-enum { FORMAT_BUF, DATA_BUF, CLI_BUF, PROGRAM_BUF, ASYNC_BUF };     // buff_index
+enum { PATH_BUF, FORMAT_BUF, DATA_BUF, CLI_BUF, PROGRAM_BUF, ASYNC_BUF };     // buff_index
 
 void cp_dchar (debugger_t *debugger, char ch, int buff_index);
 
 
 
 /*
-    Create buffer from file
+    Copy <str> to system clipboard
     -------
-    - Returns pointer to buffer or NULL
-    - Must be freed
+    - Returns A_OK, FAIL
 */
-char* create_buff_from_file (char *path);
+int copy_to_clipboard (char *str);
 
 
 

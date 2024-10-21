@@ -67,7 +67,6 @@ Prm : m : pro(m)pt
 Qut : q : (q)uit
 Run : r : (r)un
 Stp : s : (s)tep
-Trg : t : (t)arget
 Unt : u : (u)ntil
 
 # windows
@@ -88,11 +87,18 @@ Wat : w : (w)atch
 # Layouts
 #
 
-gdb_layout_1 = '''
+layout_run_gdb          = ''    # full
+layout_run_pdb          = ''    # full
+layout_conn_proc_termfu = ''    # split
+layout_proc_gdb         = ''    # split
+layout_proc_pdb         = ''    # split
+
+
+layout_run_gdb = '''
 [ layout : Main ]
 
 >h
-mAtlq
+mlq
 rnscufk
 
 >w
@@ -104,7 +110,7 @@ TTpppddd
 [ layout : Assembly / Registers ]
 
 >h
-mAtlq
+mlq
 rnscufk
 
 >w
@@ -115,38 +121,53 @@ wpT
 
 '''
 
-gdb_layout_split_1 = '''
+layout_run_pdb = '''
 [ layout : Main ]
 
 >h
-mtlq
-rns
-cufk
+mlq
+rnscufk
 
 >w
-eo
-vw
-dp
+eeeooooo
+wwwooooo
+vvvooooo
+TTpppddd
 
-[ layout : Asm/Reg/Stk ]
+[ layout : Assembly / Registers ]
 
 >h
-mtlq
-rns
-cufk
+mlq
+rnscufk
 
 >w
-ag
-oT
+oag
+oag
+oag
+wpT
 
 '''
 
-
-pdb_layout_split_1 = '''
+layout_conn_proc_termfu = '''
 [ layout : Main ]
 
 >h
-mtlq
+Amlq
+rns
+cufk
+
+>w
+eoo
+woo
+vdd
+
+'''
+
+layout_proc_gdb = '''
+[ layout : Main ]
+
+>h
+Amlq
 rns
 cufk
 
@@ -158,7 +179,7 @@ dpp
 [ layout : Asm/Reg/Stk ]
 
 >h
-mtlq
+mlq
 rns
 cufk
 
@@ -168,8 +189,7 @@ oT
 
 '''
 
-
-pdb_layout_1    = '''
+layout_proc_pdb = '''
 [ layout : Main ]
 
 >h
@@ -194,16 +214,10 @@ oT
 
 '''
 
-layout_run_gdb          = gdb_layout_1
-layout_run_pdb          = pdb_layout_1
-layout_conn_proc_termfu = gdb_layout_split_1
-layout_proc_gdb         = gdb_layout_split_1
-layout_proc_pdb         = pdb_layout_split_1
-
 
 
 #
-# File content
+# Complete config file
 #
 
 config_run_gdb          = cmd_run_gdb          + plugins + layout_run_gdb

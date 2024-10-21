@@ -6,7 +6,6 @@ debug.out
 progr.out
 misc/hello
 misc/vars
-scripts/.termfu_*
 
 venv
 __pycache__

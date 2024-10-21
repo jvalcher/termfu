@@ -1,4 +1,3 @@
-disp src_ptr
-disp break_path_buff
-disp index_buff
-disp dest_buff->buff
+disp *cp
+disp cp
+disp chars

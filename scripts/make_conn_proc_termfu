@@ -45,6 +45,7 @@ if [ -e $PID_FILE ]; then
 
     # Get most recent PID
     TERMFU_PID=`cat ${PID_FILE}`
+    echo $TERMFU_PID
 
     #
     # Add PID to gdb command
@@ -52,9 +53,9 @@ if [ -e $PID_FILE ]; then
     # In order to load the debugged process' persisted breakpoints it must be attached to immediately
     # via the -p flag in the initial GDB command inside the termfu configuration file. 
     #
-    sed -i "s|gdb --quiet --interpreter=mi|gdb --interpreter=mi -p $TERMFU_PID|" "$CONFIG"
+    sed -i "s|gdb --quiet --interpreter=mi.*|gdb --quiet --interpreter=mi -p $TERMFU_PID|" "$CONFIG"
 
-    sudo ./termfu -c $CONFIG -p $DATA
+    sudo ./termfu_dev -c $CONFIG -p $DATA
     
 else
     echo "PID file \"${PID_FILE}\" not found. Start debugged process first."

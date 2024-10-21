@@ -488,11 +488,11 @@ render_window (window_t *win)
         left_spaces = left_spaces > 0 ? left_spaces : 0;
         right_spaces = right_spaces > 0 ? left_spaces : 0;
 
-        wattron   (win->TWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
+        wattron   (win->TWIN, COLOR_PAIR(TOPBAR_COLOR) | A_BOLD);
         mvwprintw (win->TWIN, 0, 0, "%*c%.*s%*c", left_spaces, ' ',
                                                   win->topbar_cols, win->topbar_title,
                                                   right_spaces, ' ');
-        wattroff  (win->TWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
+        wattroff  (win->TWIN, COLOR_PAIR(TOPBAR_COLOR) | A_BOLD);
         wrefresh  (win->TWIN);
     }
 

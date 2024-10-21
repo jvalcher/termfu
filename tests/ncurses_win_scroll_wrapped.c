@@ -1,7 +1,12 @@
 #include <ncurses.h>
 #include <form.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "test_utilities.h"
+#include "../src/data.h"
+#include "../src/utilities.h"
+#include "../src/display_lines.h"
 
 #define BUF_LEN  8192
 #define ESC      27
@@ -11,31 +16,44 @@
 int
 main (void)
 {
-    int     ch, i, c,
-            rows, cols, extra_rows, y, x,
-            scr_rows, scr_cols,
-            offset;
+    int     ch, i,
+            y, x,
+            scr_rows, scr_cols;
     bool    running;
-    char    buffer [BUF_LEN] = {'\0'},
-           *buff_ptr;
     FILE   *fp;
-    WINDOW *win_body,
-           *win_data;
-    bool    last_line_reached;
 
-    process_pause();
+    window_t *win = (window_t*) malloc (sizeof (window_t));
+    win->data_win_cols = 48;
+    win->data_win_rows = 28;
+    win->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t));
+    buff_data_t *buff_data = win->buff_data;
+    buff_data->buff = malloc (BUF_LEN);
+    buff_data->scroll_row = 1;      // beginning data
 
-    // get file
+    //process_pause();
+
+    // create buffer
     fp = fopen ("../src/main.c", "r");
     for (i = 0; i < BUF_LEN; i++) {
         ch = fgetc (fp);
         if (ch == EOF) {
-            buffer [i] = '\0';
+            buff_data->buff [i] = '\0';
             break;
         }
-        buffer [i] = (char) ch;
+        buff_data->buff [i] = (char) ch;
     }
     fclose (fp);
+
+    // allocate llist
+    create_scroll_buffer_llist (win);
+
+    /*
+    buff_line = buff_data->head;
+    do {
+        printf ("(%d) %.*s\n", buff_line->line, buff_line->len, buff_line->ptr);
+        buff_line = buff_line->next;
+    } while (buff_line != NULL);
+    */
 
     initscr();
     cbreak();
@@ -44,116 +62,36 @@ main (void)
     init_pair (1, COLOR_WHITE, COLOR_BLUE);
     init_pair (2, COLOR_BLACK, COLOR_GREEN);
     keypad (stdscr, TRUE);
+    curs_set (0);
     refresh();
 
-    // field dimensions
-    cols = 48;
-    rows = 24;
     getmaxyx (stdscr, scr_rows, scr_cols);
-    y = (scr_rows - (rows+2)) / 2;
-    x = (scr_cols - (cols+2)) / 2;
+    y = (scr_rows - (win->data_win_rows+2)) / 2;
+    x = (scr_cols - (win->data_win_cols+2)) / 2;
 
-    win_body = newwin (rows+2, cols+2, y, x);
-    box (win_body, 0, 0);
-    wrefresh (win_body);
+    win->WIN = newwin (win->data_win_rows+2, win->data_win_cols+2, y, x);
+    box (win->WIN, 0, 0);
+    wrefresh (win->WIN);
 
-    win_data = derwin (win_body, rows, cols, 1, 1);
-    wrefresh (win_data);
+    win->DWIN = derwin (win->WIN, win->data_win_rows, win->data_win_cols, 1, 1);
+    wrefresh (win->DWIN);
 
-    buff_ptr = buffer;
-    waddstr(win_data, buff_ptr);
-    getyx (win_data, y, x);
-    wrefresh (win_data);
+    display_scroll_buff_lines (BEG_DATA, win);
 
     running = true;
-    last_line_reached = false;
-
     while (running) {
 
         ch = getch ();
 
-        wclear (win_data);
-
-        switch (ch) {
-
-            case 'q':
-            case ESC:
-                running = false;
-                break;
-
-            case KEY_HOME:
-                buff_ptr = buffer;
-                break;
-
-            case 'j':
-            case KEY_DOWN:
-
-                if (y >= (rows - 1)) {
-
-                    c = 0;
-                    while (*(buff_ptr + c) != '\n') {
-                        ++c;
-                    }
-
-                    if (c <= cols) {
-                        buff_ptr += (c + 1);
-                    } else {
-                        buff_ptr += cols;
-                    }
-                }
-                break;
-
-            case 'k':
-            case KEY_UP:
-
-                if (buff_ptr != buffer) {
-
-                    c = 0;
-
-                    if (*(buff_ptr - 1) == '\n') {
-                        if ((buff_ptr - 1) != buffer) {
-                            ++c;
-                            --buff_ptr;
-                            offset = 2;
-                        }
-                    }
-                            
-                    else {
-                        offset = 1;
-                    }
-
-                    while (*(buff_ptr - c) != '\n' &&
-                            (buff_ptr - c) != buffer) {
-                        ++c;
-                    }
-                            
-                    if ((buff_ptr - 1) == buffer) {
-                        buff_ptr = buffer;
-                    }
-
-                    else {
-                        if ((c - offset) <= cols) {
-                            buff_ptr -= (c - 1);
-                        } else {
-                            if (((c - offset) % cols) != 0) {
-                                buff_ptr -= ((c - offset) % cols) + 1;
-                            } else {
-                                buff_ptr -= (cols + 1);
-                            }
-                        }
-                    }
-                }
-
-                break;
+        if (ch == 'q' || ch == ESC) {
+            running = false;
+            break;
         }
-        
-        wmove (win_data, 0, 0); 
-        waddstr(win_data, buff_ptr);
-        getyx (win_data, y, x);
-        wclrtoeol (win_data);
-        wrefresh (win_data);
+
+        display_scroll_buff_lines (ch, win);
     }
 
+    curs_set (1);
     endwin();
 
     return 0;

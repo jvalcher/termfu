@@ -1,0 +1,56 @@
+
+[ command ]
+
+gdb --quiet --interpreter=mi misc/hello
+
+[ plugins ]
+
+# header commands
+AtP : A : (A)ttach
+Con : c : (c)ontinue
+Fin : f : (f)inish
+Kil : k : (k)ill
+Lay : l : (l)ayouts
+Nxt : n : (n)ext
+Prm : m : pro(m)pt
+Qut : q : (q)uit
+Run : r : (r)un
+Stp : s : (s)tep
+Unt : u : (u)ntil
+
+# windows
+Asm : a : (a)ssembly
+Brk : e : br(e)akpoints
+Dbg : d : (d)ebug out
+LcV : v : local (v)ars
+Prg : p : (p)rogram out
+Reg : g : re(g)isters
+Src : o : s(o)urce file
+Stk : T : s(T)ack
+Wat : w : (w)atch
+
+
+[ layout : Main ]
+
+>h
+mAlq
+rnscufk
+
+>w
+eeeooooo
+wwwooooo
+vvvooooo
+TTpppddd
+
+[ layout : Assembly / Registers ]
+
+>h
+mAlq
+rnscufk
+
+>w
+oag
+oag
+oag
+wpT
+
