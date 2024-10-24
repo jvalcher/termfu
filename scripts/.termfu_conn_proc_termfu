@@ -1,7 +1,7 @@
 
 [ command ]
 
-gdb --quiet --interpreter=mi -p 105762
+gdb --quiet --interpreter=mi -p 18945
 
 [ plugins ]
 

@@ -121,8 +121,6 @@ allocate_plugin_windows (state_t *state)
         buff_data->buff_pos      = 0;
         buff_data->buff_len      = ORIG_BUF_LEN;
         buff_data->times_doubled = 0;
-        buff_data->scroll_col    = 1;
-        buff_data->scroll_row    = 1;
         buff_data->changed       = true;
         buff_data->text_wrapped  = true;
     }

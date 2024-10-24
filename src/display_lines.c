@@ -59,55 +59,12 @@ disp_lines_err:
 
 
 
-/*
-    Create buffer from source file
-    -------
-    - Returns pointer to buffer or NULL if failed
-    - Buffer must be freed
-*/
-static char*
-create_buff_from_src_file (char *path)
-{
-    int ch, i;
-    struct stat st;
-    FILE *fp;
-    char *buff;
-
-    // create buffer
-    if (stat (path, &st) != 0) {
-        pfem ("stat error: \"%s\"", strerror (errno));
-        pem  ("Failed to get status of file \"%s\"", path);
-        return NULL;
-    }
-    if ((buff = (char*) malloc (st.st_size + 1)) == NULL) {
-        pfem ("malloc error: \"%s\"", strerror (errno));
-        pem  ("Failed to allocate buffer for path \"%s\"", path);
-        return NULL;
-    }
-
-    // copy file contents
-    if ((fp = fopen (path, "r")) == NULL) {
-        pfem ("fopen error: \"%s\"", strerror (errno));
-        pem  ("Failed to open file \"%s\"", path);
-        return NULL;
-    }
-    i = 0;
-    while ((ch = fgetc (fp)) != EOF && i < st.st_size) {
-        buff [i++] = ch;
-    }
-    buff [i] = '\0';
-    fclose (fp);
-
-    return buff;
-}
-
-
-
 int
 create_scroll_buffer_llist (int      plugin_index,
                             state_t *state)
 {
-    int   chars;
+    int   chars,
+          max_chars;
     char *ptr;
     window_t           *win;
     buff_data_t        *buff_data;
@@ -138,7 +95,7 @@ create_scroll_buffer_llist (int      plugin_index,
             free (buff_data->buff);
         }
 
-        buff_data->buff = create_buff_from_src_file (state->debugger->path_buffer);
+        buff_data->buff = create_buff_from_file (state->debugger->path_buffer);
         if (buff_data->buff == NULL) {
             pfemr ("Failed to create buffer from file \"%s\"", state->debugger->path_buffer);
         }
@@ -170,31 +127,33 @@ create_scroll_buffer_llist (int      plugin_index,
         curr_buff_line->next = NULL;
         buff_data->rows += 1;
 
-        // TODO: add buff_data->max_len
         // add text pointer, number of characters
         chars = 1;
         curr_buff_line->ptr = ptr;
         while (*ptr != '\n' && *ptr != '\0') {
-            switch (plugin_index) {
-                case Asm:
-                case Src:
+            if (plugin_index != Asm && plugin_index != Src) {
+                if (chars >= win->data_win_cols) {
                     break;
-                default:
-                    if (chars >= win->data_win_cols) {
-                        break;
-                    }
+                }
             }
             ++chars;
             ++ptr;
         }
+
+        curr_buff_line->len = chars;
+
+        if (chars > max_chars) {
+            max_chars = chars;
+        }
         if (*ptr == '\n') {
-            ++chars;
             ++ptr;
         }
-        curr_buff_line->len = chars - 1;
         
     } while (*ptr != '\0');
 
+    buff_data->scroll_row = 1;
+    buff_data->scroll_col_offset = 0;
+    buff_data->max_chars = max_chars;
     buff_data->tail_line = curr_buff_line;
     buff_data->rows = curr_buff_line->line;
 
@@ -208,15 +167,17 @@ display_scroll_buff_lines (int      key,
                            int      plugin_index,
                            state_t *state)
 {
-    int i,
-        rem_lines,
-        text_len,
-        print_len,
-        max_scroll_row,
-        print_row,
-        line_num_len,
-        last_line_num,
-        rem_spaces;
+    int   i,
+          rem_lines,
+          text_len,
+          print_len,
+          max_scroll_row,
+          print_row,
+          line_num_len,
+          last_line_num,
+          rem_spaces;
+    char *ptr,
+         *blank_line = " ";
     window_t           *win;
     buff_data_t        *buff_data;
     scroll_buff_line_t *buff_line;
@@ -258,13 +219,23 @@ display_scroll_buff_lines (int      key,
             if (buff_data->rows <= win->data_win_rows) {
                 print_row = 1;
             } else {
-                print_row = state->debugger->curr_line - (win->data_win_rows / 2);
+                switch (plugin_index) {
+                    case Src:
+                        print_row = state->debugger->curr_Src_line - (win->data_win_rows / 2);
+                        break;
+                    case Asm:
+                        print_row = state->debugger->curr_Asm_line - (win->data_win_rows / 2);
+                        break;
+                    default:
+                        print_row = 1;
+                }
                 if (print_row < 1) {
                     print_row = 1;
                 } else if (print_row > (buff_data->tail_line->line - win->data_win_rows + 1)) {
                     print_row = buff_data->tail_line->line - win->data_win_rows + 1;
                 } 
             }
+            buff_data->scroll_row = print_row;
 
             if (buff_data->curr_line->line < print_row) {
                 while (buff_data->curr_line->line != print_row) {
@@ -325,9 +296,24 @@ display_scroll_buff_lines (int      key,
                 --buff_data->scroll_row;
             }
             break;
+
+        case 'h':
+        case KEY_LEFT:
+            if (buff_data->scroll_col_offset > 0) {
+                --buff_data->scroll_col_offset;
+            }
+            break;
+
+        case 'l':
+        case KEY_RIGHT:
+            if (buff_data->max_chars - buff_data->scroll_col_offset > win->data_win_cols) {
+                ++buff_data->scroll_col_offset;
+            }
+            break;
+
     }
     
-    // if source file window, calculate line number offset
+    // calculate line number offset (Src)
     if (win->index == Src) {
         line_num_len = 1;
         last_line_num = win->buff_data->tail_line->line;
@@ -343,11 +329,26 @@ display_scroll_buff_lines (int      key,
     i = 0;
     buff_line = buff_data->curr_line;
     text_len = win->data_win_cols - line_num_len;
+
     while (i < win->data_win_rows && buff_line != NULL) {
+
         switch (win->index) {
 
             case Asm:
-                waddnstr (win->DWIN, buff_line->ptr, win->data_win_cols);
+
+                if ((buff_line->len - buff_data->scroll_col_offset) < win->data_win_cols) {
+                    print_len = buff_line->len - buff_data->scroll_col_offset;
+                    if (print_len <= 0) {
+                        ptr = blank_line; 
+                    } else {
+                        ptr = buff_line->ptr + buff_data->scroll_col_offset;
+                    }
+                } else {
+                    print_len = win->data_win_cols;
+                    ptr = buff_line->ptr + buff_data->scroll_col_offset;
+                }
+                waddnstr (win->DWIN, ptr, print_len);
+
                 break;
 
             case Src:
@@ -358,7 +359,9 @@ display_scroll_buff_lines (int      key,
                 else if (buff_line->line < 1000) rem_spaces = line_num_len - 3;
                 else if (buff_line->line < 10000) rem_spaces = line_num_len - 4;
                 else if (buff_line->line < 100000) rem_spaces = line_num_len - 5;
-                else {
+                else if (buff_line->line < 1000000) rem_spaces = line_num_len - 6;
+                else 
+                {
                     pfemr ("Max buffer line length exceeded (last line num: %d, len: %d)",
                                 last_line_num, line_num_len - 1);
                 }
@@ -367,18 +370,26 @@ display_scroll_buff_lines (int      key,
                 wattroff (win->DWIN, COLOR_PAIR(SRC_LINE_COLOR));
 
                 // text
-                if (buff_line->len < text_len) {
-                    print_len = buff_line->len;
+                if ((buff_line->len - buff_data->scroll_col_offset) < win->data_win_cols) {
+                    print_len = buff_line->len - buff_data->scroll_col_offset;
+                    if (print_len <= 0) {
+                        ptr = blank_line; 
+                    } else {
+                        ptr = buff_line->ptr + buff_data->scroll_col_offset;
+                    }
                 } else {
                     print_len = text_len;
+                    ptr = buff_line->ptr + buff_data->scroll_col_offset;
                 }
-                waddnstr (win->DWIN, buff_line->ptr, print_len);
+                waddnstr (win->DWIN, ptr, print_len);
+
                 break;
 
             default:
                 waddnstr (win->DWIN, buff_line->ptr, buff_line->len);
                 break;
         }
+
         buff_line = buff_line->next;
         ++i;
     }

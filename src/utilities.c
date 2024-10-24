@@ -589,3 +589,43 @@ copy_to_clipboard (char *str)
     return A_OK;
 }
 
+
+
+char*
+create_buff_from_file (char *path)
+{
+    int ch, i;
+    struct stat st;
+    FILE *fp;
+    char *buff;
+
+    // create buffer
+    if (stat (path, &st) != 0) {
+        pfem ("stat error: \"%s\"", strerror (errno));
+        pem  ("Failed to get status of file \"%s\"", path);
+        return NULL;
+    }
+    if ((buff = (char*) malloc (st.st_size + 1)) == NULL) {
+        pfem ("malloc error: \"%s\"", strerror (errno));
+        pem  ("Failed to allocate buffer for path \"%s\"", path);
+        return NULL;
+    }
+
+    // copy file contents
+    if ((fp = fopen (path, "r")) == NULL) {
+        pfem ("fopen error: \"%s\"", strerror (errno));
+        pem  ("Failed to open file \"%s\"", path);
+        return NULL;
+    }
+    i = 0;
+    while ((ch = fgetc (fp)) != EOF && i < st.st_size) {
+        buff [i++] = ch;
+    }
+    buff [i] = '\0';
+    fclose (fp);
+
+    return buff;
+}
+
+
+

@@ -30,6 +30,17 @@ Stk : T : s(T)ack
 Wat : w : (w)atch
 
 
+[ layout : Asm/Reg/Stk ]
+
+>h
+mlq
+rns
+cufk
+
+>w
+ago
+oTw
+
 [ layout : Main ]
 
 >h
@@ -41,15 +52,4 @@ cufk
 oo
 oo
 ew
-
-[ layout : Asm/Reg/Stk ]
-
->h
-mlq
-rns
-cufk
-
->w
-ag
-oT
 

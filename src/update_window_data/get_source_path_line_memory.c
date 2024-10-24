@@ -124,9 +124,9 @@ get_source_path_line_memory_gdb (state_t *state)
             while (*src_ptr != '\"') {
                 cp_dchar (debugger, *src_ptr++, FORMAT_BUF);
             }
-            debugger->curr_line = atoi (debugger->format_buffer);
+            debugger->curr_Src_line = atoi (debugger->format_buffer);
         } else {
-            debugger->curr_line = 1;
+            debugger->curr_Src_line = 1;
         }
 
         win->buff_data->changed = true;
@@ -146,13 +146,11 @@ get_source_path_line_memory_pdb (state_t *state)
     int   ret;
     char *src_ptr,
          *path_ptr;
-    window_t *win;
     debugger_t *debugger;
 
     const char *curr_path_symbol = "\n> ",
                *caret_str        = "<string>";
 
-    win = state->plugins[Src]->win;
     debugger = state->debugger;
     src_ptr   = state->debugger->cli_buffer;
 
@@ -187,9 +185,10 @@ get_source_path_line_memory_pdb (state_t *state)
         do {
             cp_dchar (debugger, *src_ptr++, FORMAT_BUF);
         } while (*src_ptr != ')');
-        win->buff_data->scroll_row = atoi (debugger->format_buffer);
+        debugger->curr_Src_line = atoi (debugger->format_buffer);
     }
 
+    state->plugins[Src]->win->buff_data->scroll_col_offset = 0;
     state->debugger->cli_buffer[0] = '\0';
     state->debugger->format_buffer[0] = '\0';
 

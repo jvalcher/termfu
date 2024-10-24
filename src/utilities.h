@@ -141,6 +141,16 @@ int copy_to_clipboard (char *str);
 
 
 /*
+    Create buffer from file
+    -------
+    - Returns pointer to buffer or NULL if failed
+    - Buffer must be freed
+*/
+char* create_buff_from_file (char *path);
+
+
+
+/*
   Print formatted error messages
   ----------
   - For error propagation that will ultimately exit the program

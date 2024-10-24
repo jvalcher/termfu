@@ -108,22 +108,23 @@ get_assembly_data_gdb (state_t *state)
                 cp_wchar (dest_data, *src_ptr++);
             }
         }
+
         state->debugger->cli_buffer[0]  = '\0';
         state->debugger->data_buffer[0] = '\0';
 
         dest_data->changed = true;
     }
 
-    // set scroll row on '=>'
+    // set state->debugger->curr_Asm_line to '=>'
     dest_ptr = win->buff_data->buff;
-    win->buff_data->scroll_row = 1;
+    state->debugger->curr_Asm_line = 1;
     while (*dest_ptr != '\0') {
         if ( *dest_ptr      == '=' &&
             *(dest_ptr + 1) == '>') {
             break;
         }
         if (*dest_ptr == '\n') {
-            ++win->buff_data->scroll_row;
+            ++state->debugger->curr_Asm_line;
         }
         ++dest_ptr;
     }
@@ -138,6 +139,8 @@ get_assembly_data_pdb (state_t *state)
 {
     no_buff_data (Asm, state); 
 
+    state->debugger->curr_Asm_line = 1;
+    state->plugins[Asm]->win->buff_data->scroll_col_offset = 0;
     state->plugins[Asm]->win->buff_data->changed = true;
 
     return A_OK;

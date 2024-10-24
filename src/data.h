@@ -204,7 +204,8 @@ typedef struct {
 
     int    rows;
     int    scroll_row;
-    int    scroll_col;
+    int    scroll_col_offset;
+    int    max_chars;
     
     scroll_buff_line_t  *head_line;
     scroll_buff_line_t  *curr_line;
@@ -356,7 +357,8 @@ typedef struct {
     char    prog_path [PROGRAM_PATH_LEN];
     time_t  prog_update_time;
 
-    int     curr_line;
+    int     curr_Src_line;
+    int     curr_Asm_line;
     char    curr_func [FUNC_LEN];
 
     char   *path_buffer;

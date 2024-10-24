@@ -5,7 +5,6 @@
 
 #include "data.h"
 #include "plugins.h"
-#include "utilities.h"
 
 static void format_window_data_Brk (state_t *state);
 static void format_window_data_LcV (state_t *state);
@@ -279,6 +278,7 @@ format_window_data_Src (state_t *state)
                 }
             }
 
+            // if at start of line
             if (j == 0) {
 
                 k = 0;
@@ -292,7 +292,7 @@ format_window_data_Src (state_t *state)
                 }
                 line_buff [k] = '\0';
 
-                if (atoi (line_buff) == state->debugger->curr_line) {
+                if (atoi (line_buff) == state->debugger->curr_Src_line) {
                     wattron (win->DWIN, A_REVERSE);
                     is_curr_line = true;
                     curr_line = i;
@@ -300,6 +300,7 @@ format_window_data_Src (state_t *state)
             }
         }
     }
+    wattroff (win->DWIN, A_REVERSE);
 
     /*
     // replace line number with "b<breakpoint_index>"
@@ -355,7 +356,6 @@ format_window_data_Src (state_t *state)
     */
 
     wrefresh (win->DWIN);
-    wattron  (win->DWIN, A_NORMAL);
 }
 
 
