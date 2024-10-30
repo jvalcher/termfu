@@ -75,11 +75,14 @@ choose_layout (state_t *state)
     curr_option = 0;
     print_option = 0;
     do {
-        if (print_option == curr_option) {
+        if (strcmp (curr_layout->label, state->curr_layout->label) == 0) {
             wattron  (data_popup_win_sel, A_REVERSE);
+            waddnstr (data_popup_win_sel, curr_layout->label, cols - 3);
+            wattroff (data_popup_win_sel, A_REVERSE);
+            curr_option = print_option;
+        } else {
+            waddnstr (data_popup_win_sel, curr_layout->label, cols - 3);
         }
-        waddnstr (data_popup_win_sel, curr_layout->label, cols - 3);
-        wattroff (data_popup_win_sel, A_REVERSE);
         waddstr  (data_popup_win_sel, "\n");
         ++print_option;
         curr_layout = curr_layout->next;
@@ -117,20 +120,23 @@ choose_layout (state_t *state)
                     }
                     curr_layout = curr_layout->next;
                 } while (curr_layout != NULL);
+
                 goto choose_layout;
         }
 
         // reprint options
         curr_layout = state->layouts;
         print_option = 0;
-        wclear (data_popup_win_sel);
+        werase (data_popup_win_sel);
             //
         do {
             if (print_option == curr_option) {
                 wattron  (data_popup_win_sel, A_REVERSE);
+                waddnstr (data_popup_win_sel, curr_layout->label, cols - 3);
+                wattroff (data_popup_win_sel, A_REVERSE);
+            } else {
+                waddnstr (data_popup_win_sel, curr_layout->label, cols - 3);
             }
-            waddnstr (data_popup_win_sel, curr_layout->label, cols - 3);
-            wattroff (data_popup_win_sel, A_REVERSE);
             waddstr  (data_popup_win_sel, "\n");
             ++print_option;
             curr_layout = curr_layout->next;
