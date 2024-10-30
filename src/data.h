@@ -415,6 +415,7 @@ typedef struct {
  *********/
 
 #define PLUGIN_CODE_LEN  3      // Asm, Src, ...
+#define ESC              27
 
 #define BEG_DATA         0      // display from beginning of data buffer
 #define END_DATA         1      // display end of buffer data

@@ -7,7 +7,6 @@
 #include "utilities.h"
 #include "plugins.h"
 
-#define ESC        27
 #define BUFF_LEN  256
 
 static int  select_window_color    (int plugin_index, state_t *state);

@@ -71,9 +71,13 @@ main (int   argc,
             break;
         }
 
-        ret = run_plugin (state.plugin_key_index[key], &state);
-        if (ret == FAIL) {
-            pfeme ("Failed to run plugin for key \"%c\" (%d)", key, key);
+        // run plugin
+        if ((key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z')) {
+
+            ret = run_plugin (state.plugin_key_index[key], &state);
+            if (ret == FAIL) {
+                pfeme ("Failed to run plugin for key \"%c\" (%d)", key, key);
+            }
         }
     }
 
@@ -273,6 +277,7 @@ initial_configure (int   argc,
     noecho ();
     curs_set (0);
     set_escdelay (0);
+    keypad (stdscr, TRUE);
 
     return A_OK;
 }

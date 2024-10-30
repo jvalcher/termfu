@@ -1,6 +1,0 @@
->w
-win->data_win_cols
-buff_line->ptr
-buff_line->len
->b
-./src/display_lines.c:358

@@ -61,102 +61,108 @@ get_watchpoint_data_gdb (state_t *state)
     win->buff_data->buff_pos = 0;
     win->buff_data->changed = true;
 
+    if (watch == NULL) {
+        cp_wchar (dest_data, '\0');
+    }
+
     // create buffer, add values
-    while (watch != NULL) {
+    else {
+        while (watch != NULL) {
 
-        // send watchpoint command
-        cmd = concatenate_strings (3, "print ", watch->var, "\n");    
-        ret = send_command_mp (state, cmd);
-        if (ret == FAIL) {
-            pfemr (ERR_DBG_CMD);
-        }
-        free (cmd);
+            // send watchpoint command
+            cmd = concatenate_strings (3, "print ", watch->var, "\n");    
+            ret = send_command_mp (state, cmd);
+            if (ret == FAIL) {
+                pfemr (ERR_DBG_CMD);
+            }
+            free (cmd);
 
-        src_ptr  = state->debugger->cli_buffer;
-        data_ptr = state->debugger->data_buffer;
-        watch_val = watch->value;
+            src_ptr  = state->debugger->cli_buffer;
+            data_ptr = state->debugger->data_buffer;
+            watch_val = watch->value;
 
-        cp_wchar (dest_data, '(');
+            cp_wchar (dest_data, '(');
 
-        // index
-        i = 0;
-        ret = snprintf (index_buff, INDEX_BUF_LEN - 1, "%d", watch->index);
-        if (ret < 0) {
-            pfemr ("Failed to convert index int to string");
-        }
-        while (index_buff [i] != '\0') {
-            cp_wchar (dest_data, index_buff [i++]);
-        }
+            // index
+            i = 0;
+            ret = snprintf (index_buff, INDEX_BUF_LEN - 1, "%d", watch->index);
+            if (ret < 0) {
+                pfemr ("Failed to convert index int to string");
+            }
+            while (index_buff [i] != '\0') {
+                cp_wchar (dest_data, index_buff [i++]);
+            }
 
-        cp_wchar (dest_data, ')');
-        cp_wchar (dest_data, ' ');
+            cp_wchar (dest_data, ')');
+            cp_wchar (dest_data, ' ');
 
-        // variable
-        i = 0;
-        while (watch->var[i] != '\0') {
-            cp_wchar (dest_data, watch->var[i++]);
-        }
+            // variable
+            i = 0;
+            while (watch->var[i] != '\0') {
+                cp_wchar (dest_data, watch->var[i++]);
+            }
 
-        cp_wchar (dest_data, ' ');
-        cp_wchar (dest_data, '=');
-        cp_wchar (dest_data, ' ');
+            cp_wchar (dest_data, ' ');
+            cp_wchar (dest_data, '=');
+            cp_wchar (dest_data, ' ');
 
-        if (strstr (data_ptr, "error") == NULL) {
+            if (strstr (data_ptr, "error") == NULL) {
 
-            // skip hex value or '='
-            ptr = src_ptr;
-            src_ptr = strstr (src_ptr, hex);
-            if (src_ptr != NULL) {
+                // skip hex value or '='
+                ptr = src_ptr;
+                src_ptr = strstr (src_ptr, hex);
+                if (src_ptr != NULL) {
+                    i = 0;
+                    while (*src_ptr != ' ') {
+                        cp_wchar (dest_data, *src_ptr);
+                        if (i < WATCH_LEN) {
+                            watch_val [i++] = *src_ptr;
+                        }
+                        ++src_ptr;
+                    }
+                    watch_val [i] = '\0';
+                } else {
+                    src_ptr = ptr;
+                    src_ptr = strstr (src_ptr, "=");
+                    src_ptr += 1;
+                }
+
+                src_ptr = strstr (src_ptr, " ");
+
+                // copy value
                 i = 0;
-                while (*src_ptr != ' ') {
+                while (*src_ptr != '\n') {
                     cp_wchar (dest_data, *src_ptr);
                     if (i < WATCH_LEN) {
                         watch_val [i++] = *src_ptr;
-                    }
+                    } 
                     ++src_ptr;
                 }
                 watch_val [i] = '\0';
-            } else {
-                src_ptr = ptr;
-                src_ptr = strstr (src_ptr, "=");
-                src_ptr += 1;
+
+                // remove trailing newline character
+                dest_ptr = win->buff_data->buff;
+                last_char_offset = win->buff_data->buff_pos - 1;
+                if (*(dest_ptr + last_char_offset) == 'n' && *(dest_ptr + (last_char_offset - 1)) == '\\') {
+                    win->buff_data->buff_pos -= 2;
+                }
+
+                cp_wchar (dest_data, '\n');
             }
 
-            src_ptr = strstr (src_ptr, " ");
-
-            // copy value
-            i = 0;
-            while (*src_ptr != '\n') {
-                cp_wchar (dest_data, *src_ptr);
-                if (i < WATCH_LEN) {
-                    watch_val [i++] = *src_ptr;
-                } 
-                ++src_ptr;
-            }
-            watch_val [i] = '\0';
-
-            // remove trailing newline character
-            dest_ptr = win->buff_data->buff;
-            last_char_offset = win->buff_data->buff_pos - 1;
-            if (*(dest_ptr + last_char_offset) == 'n' && *(dest_ptr + (last_char_offset - 1)) == '\\') {
-                win->buff_data->buff_pos -= 2;
+            else {
+                strcpy (watch->value, "none");
+                i = 0;
+                while (watch->value [i] != '\0') {
+                    cp_wchar (dest_data, watch->value [i++]);
+                }
+                cp_wchar (dest_data, '\n');
             }
 
-            cp_wchar (dest_data, '\n');
+            state->debugger->cli_buffer[0] = '\0';
+            state->debugger->data_buffer[0] = '\0';
+            watch = watch->next;
         }
-
-        else {
-            strcpy (watch->value, "none");
-            i = 0;
-            while (watch->value [i] != '\0') {
-                cp_wchar (dest_data, watch->value [i++]);
-            }
-            cp_wchar (dest_data, '\n');
-        }
-
-        state->debugger->cli_buffer[0] = '\0';
-        state->debugger->data_buffer[0] = '\0';
-        watch = watch->next;
     }
 
     return A_OK;
