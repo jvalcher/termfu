@@ -1,11 +1,15 @@
 
-# termfu
+<h1 align="center">termfu</h1>
 
 A multi-language Linux terminal debugger
 
-- Blazingly fast
+- ___Fast___
 - Easy to use
 - Create and switch between custom layouts
+- Scroll through window data
+- Self-documenting, single-key bindings
+- Breakpoint, watchpoint persistence
+- Debugger prompt access
 
 <br>
 <p align="center"><img margin-left="auto" src="./misc/layout1.png"></p>
@@ -49,84 +53,18 @@ termfu
 
 - `-h` prints usage instructions.
 - `-c` sets the configuration file path.
-- `-p` sets the data persist file path.
+- `-p` sets the data persistence file path.
 ```bash
 termfu -c .termfu_01 -p .termfu_01_data
 ```
 
 - Configure the debugger command, key bindings, titles, and layouts inside the configuration file  _(see below)_.
-- Switch between layouts with your `(l)ayouts` shortcut.
+- Switch between layouts with your `(l)ayouts` key binding.
 - Window data can be scrolled through using the arrow or `hjkl` keys.
 <br><br>
 
 
 ## Configuration
-Each three-character, case-sensitive plugin code corresponds to a specific header command or window. 
-<br>
-
-### Plugins
-
-__Header Commands__
-<br>
-
-| Code    | Description           | GDB                | PDB                |
-| :-----: | ------                | :----:             | :----:             |
-| AtP     | Attach to PID, file   | :heavy_check_mark: |                    |
-| Con     | Continue              | :heavy_check_mark: | :heavy_check_mark: |
-| Fin     | Finish                | :heavy_check_mark: | :heavy_check_mark: |
-| Kil     | Kill                  | :heavy_check_mark: | :heavy_check_mark: |
-| Lay     | Choose layout         | :heavy_check_mark: | :heavy_check_mark: |
-| Nxt     | Next                  | :heavy_check_mark: | :heavy_check_mark: |
-| Prm     | Debugger prompt       | :heavy_check_mark: | :heavy_check_mark: |
-| Qut     | Quit                  | :heavy_check_mark: | :heavy_check_mark: |
-| Run     | Run, reload program   | :heavy_check_mark: | :heavy_check_mark: |
-| Stp     | Step                  | :heavy_check_mark: | :heavy_check_mark: |
-| Trg     | Target remote server  | :heavy_check_mark: |                    |
-| Unt     | Until                 | :heavy_check_mark: | :heavy_check_mark: |
-<br>
-
-__Windows__
-<br>
-
-| Code    | Description      | GDB                | PDB                |
-| :-----: | -----            | :-----:            | :------:           |
-| Asm     | Assembly code    | :heavy_check_mark: |                    |   
-| Brk     | Breakpoints      | :heavy_check_mark: | :heavy_check_mark: |
-| Dbg     | Debugger output  | :heavy_check_mark: | :heavy_check_mark: |
-| LcV     | Local variables  | :heavy_check_mark: | :heavy_check_mark: |
-| Prg     | Program output   | :heavy_check_mark: | :heavy_check_mark: |
-| Reg     | Registers        | :heavy_check_mark: |                    |
-| Src     | Source file      | :heavy_check_mark: | :heavy_check_mark: |
-| Stk     | Stack            | :heavy_check_mark: | :heavy_check_mark: |
-| Wat     | Watchpoints      | :heavy_check_mark: | :heavy_check_mark: |
-<br>
-
-
-### Configuration setup
-
-Plugin codes are mapped to case-sensitive letter keys, which are used both as shortcuts and to create custom layouts.
-<br>
-
-- Add parentheses around a shortcut key in its `<(t)itle>` for easy reference. These characters will have a different color than the surrounding letters.
-- The order and line of command titles in the header are set by the order and line of the key bindings.
-- Window size ratios and position are set via "key-binding ASCII art."
-- Only newline `# comments` are supported, not inline.
-
-### Sections
-
-| Section   | Description |
-| :----:    |  :----: |
-| command | Debugger command |
-| plugins | \<plugin code\> : \<key binding\> : \<title\> |
-| layout  | \[ layout : \<label\> \] <br>`>h` : header commands,  `>w` : windows |
-
-### Supported commands
-
-| Debugger | Command |
-| :-----:  | ------  |
-| GDB      | `gdb --interpreter=mi ...` |
-| PDB      | `python -m pdb ...` |
-<br>
 
 ### Example `.termfu` configuration
 
@@ -139,6 +77,7 @@ gdb --quiet --interpreter=mi misc/vars
 [ plugins ]
 
 # header commands
+# <plugin code> : <key binding> : <title>
 AtP : A : (A)ttach
 Con : c : (c)ontinue
 Fin : f : (f)inish
@@ -194,6 +133,72 @@ wdT
 
 <img src='./misc/layout1.png'>
 <img src='./misc/layout2.png'>
+<br>
+
+### Plugins
+Each three-character, case-sensitive plugin code corresponds to a specific header command or window. 
+<br>
+
+__Header Commands__
+<br>
+
+| Code    | Description           | GDB                | PDB                |
+| :-----: | ------                | :----:             | :----:             |
+| AtP     | Attach to PID, file   | :heavy_check_mark: |                    |
+| Con     | Continue              | :heavy_check_mark: | :heavy_check_mark: |
+| Fin     | Finish                | :heavy_check_mark: | :heavy_check_mark: |
+| Kil     | Kill                  | :heavy_check_mark: | :heavy_check_mark: |
+| Lay     | Choose layout         | :heavy_check_mark: | :heavy_check_mark: |
+| Nxt     | Next                  | :heavy_check_mark: | :heavy_check_mark: |
+| Prm     | Debugger prompt       | :heavy_check_mark: | :heavy_check_mark: |
+| Qut     | Quit                  | :heavy_check_mark: | :heavy_check_mark: |
+| Run     | Run, reload program   | :heavy_check_mark: | :heavy_check_mark: |
+| Stp     | Step                  | :heavy_check_mark: | :heavy_check_mark: |
+| Trg     | Target remote server  | :heavy_check_mark: |                    |
+| Unt     | Until                 | :heavy_check_mark: | :heavy_check_mark: |
+<br>
+
+__Windows__
+<br>
+
+| Code    | Description      | GDB                | PDB                |
+| :-----: | -----            | :-----:            | :------:           |
+| Asm     | Assembly code    | :heavy_check_mark: |                    |   
+| Brk     | Breakpoints      | :heavy_check_mark: | :heavy_check_mark: |
+| Dbg     | Debugger output  | :heavy_check_mark: | :heavy_check_mark: |
+| LcV     | Local variables  | :heavy_check_mark: | :heavy_check_mark: |
+| Prg     | Program output   | :heavy_check_mark: | :heavy_check_mark: |
+| Reg     | Registers        | :heavy_check_mark: |                    |
+| Src     | Source file      | :heavy_check_mark: | :heavy_check_mark: |
+| Stk     | Stack            | :heavy_check_mark: | :heavy_check_mark: |
+| Wat     | Watchpoints      | :heavy_check_mark: | :heavy_check_mark: |
+<br>
+
+
+### Configuration setup
+
+Plugin codes are mapped to case-sensitive letter keys, which are used both as shortcuts and to create custom layouts.
+<br>
+
+- Add parentheses around a shortcut key in its `<(t)itle>` for easy reference. These characters will have a different color than the surrounding letters.
+- The order and row of each header command title is set by the order and row of its key binding.
+- Window size ratios and position are set via "key-binding ASCII art."
+- Only newline `# comments` are supported, not inline.
+
+### Sections
+
+| Section   | Description |
+| :----:    |  :----: |
+| command | Debugger command |
+| plugins | \<plugin code\> : \<key binding\> : \<title\> |
+| layout  | \[ layout : \<label\> \] <br>`>h` : header commands,  `>w` : windows |
+
+### Supported commands
+
+| Debugger | Command |
+| :-----:  | ------  |
+| GDB      | `gdb --interpreter=mi ...` |
+| PDB      | `python -m pdb ...` |
 <br>
 
 ## Debugging tips
