@@ -1,8 +1,8 @@
 
 <h1 align="center">termfu</h1>
-<p align="center">A frictionless, multi-language terminal debugger for Linux<br> that allows users to create and switch between custom layouts</p>
+<h3 align="center">A frictionless, multi-language terminal debugger for Linux that allows users to create and switch between custom layouts</h3>
 <br>
-<p align="center"><img margin-left="auto" src="./misc/layout1.png" width="700px"></p>
+<p align="center"><img margin-left="auto" src="./misc/layout1.png"></p>
 <br>
 
 
@@ -186,8 +186,8 @@ wdT
 
 ### Resulting layouts
 
-<img src='./misc/layout1.png' height='400px'>
-<img src='./misc/layout2.png' height='400px'>
+<img src='./misc/layout1.png'>
+<img src='./misc/layout2.png'>
 <br>
 
 ## Debugging tips
