@@ -39,44 +39,28 @@ select_window (int      plugin_index,
 
         key = getch ();
 
-        // TODO: pg up/down, home, end
         switch (key) {
+
             case 'k':
             case KEY_UP:
-                ret = display_lines (KEY_UP, plugin_index, state);
-                if (ret == FAIL) {
-                    pfem ("Failed to display lines (KEY_UP)");
-                    goto sel_win_err;
-                }
-                key_not_pressed = false;
-                break;
             case 'j':
             case KEY_DOWN:
-                ret = display_lines (KEY_DOWN, plugin_index, state);
-                if (ret == FAIL) {
-                    pfem ("Failed to display lines (KEY_DOWN)");
-                    goto sel_win_err;
-                }
-                key_not_pressed = false;
-                break;
             case 'l':
             case KEY_RIGHT:
-                ret = display_lines (KEY_RIGHT, plugin_index, state);
-                if (ret == FAIL) {
-                    pfem ("Failed to display lines (KEY_RIGHT)");
-                    goto sel_win_err;
-                }
-                key_not_pressed = false;
-                break;
             case 'h':
             case KEY_LEFT:
-                ret = display_lines (KEY_LEFT, plugin_index, state);
+            case KEY_PPAGE:
+            case KEY_NPAGE:
+            case KEY_END:
+            case KEY_HOME:
+                ret = display_lines (key, plugin_index, state);
                 if (ret == FAIL) {
-                    pfem ("Failed to display lines (KEY_LEFT)");
+                    pfem ("Failed to display lines (%d)", key);
                     goto sel_win_err;
                 }
                 key_not_pressed = false;
                 break;
+
             case 'q':
             case ESC:
                 in_loop = false;

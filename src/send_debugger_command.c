@@ -23,7 +23,6 @@ send_debugger_command (int      plugin_index,
     int ret,
         debugger_index = state->debugger->index;
 
-    // OPTIMIZE: make this a separate thread so that termfu can continue
     ret = pulse_header_title_color (plugin_index, state, ON);
     if (ret == FAIL) {
         pfem (ERR_PULSE_CMD);

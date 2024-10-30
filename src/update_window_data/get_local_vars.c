@@ -200,7 +200,9 @@ get_local_vars_pdb (state_t *state)
             // locate ':'
             if (*src_ptr == '\'' && *(src_ptr + 1) == ':') {
 
-                // index  (used by format_window_data_LcV() to identify start of line when text wrapped)
+                // index
+                // - used by format_window_data_LcV() to identify start
+                //   of line when text wrapped
                 cp_wchar (dest_data, '(');
                 tmp_index = index;
                 do {

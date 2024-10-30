@@ -7,8 +7,6 @@
 #include "../plugins.h"
 
 
-// TODO: store, persist invalid breakpoints
-
 int
 insert_breakpoint (state_t *state)
 {
