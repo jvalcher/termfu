@@ -194,7 +194,7 @@ send_debugger_command (int      plugin_index,
 
         state->plugins[Dbg]->win->buff_data->new_data = true;
         state->plugins[Prg]->win->buff_data->new_data = true;
-        ret = update_windows (state, 9, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Stk, Wat);
+        ret = update_windows (state, 9, Dbg, Prg, Asm, Brk, LcV, Reg, Stk, Wat, Src);
         if (ret == FAIL) {
             pfem (ERR_UPDATE_WINS);
             goto dbg_cmd_err_end;

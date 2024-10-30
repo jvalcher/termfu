@@ -53,11 +53,6 @@ main (int   argc,
         pfeme ("Failed to start debugger");
     }
 
-    ret = update_windows (&state, 2, Src, Asm);
-    if (ret == FAIL) {
-        pfeme ("Failed to update windows");
-    }
-
     ret = get_persisted_data (&state);
     if (ret == FAIL) {
         pfeme ("Failed to get persisted data");

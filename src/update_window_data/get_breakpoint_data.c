@@ -208,9 +208,8 @@ get_breakpoint_data_pdb (state_t *state)
     window_t    *win;
     char        *src_ptr,
                  path_buff  [BREAK_PATH_LEN*2],
-                *basename_ptr,
+                *file_ptr,
                  index_buff      [INDEX_BUFF_LEN],
-                 break_path_buff [BREAK_PATH_LEN],
                  break_line_buff [BREAK_LINE_LEN];
     buff_data_t *dest_buff;
 
@@ -273,15 +272,13 @@ get_breakpoint_data_pdb (state_t *state)
                 path_buff[i] = '\0';
 
                 // path -> basename
-                basename_ptr = basename (path_buff);
+                file_ptr = basename (path_buff);
 
                 // file
                 i = 0;
-                while (basename_ptr [i] != '\0') {
-                    break_path_buff [i] = basename_ptr [i];
-                    cp_wchar (dest_buff, break_path_buff [i++]);
+                while (file_ptr [i] != '\0') {
+                    cp_wchar (dest_buff, file_ptr [i++]);
                 }
-                break_path_buff [i] = '\0';
 
                 // :
                 i = 0;
@@ -296,7 +293,7 @@ get_breakpoint_data_pdb (state_t *state)
                 }
                 break_line_buff [i] = '\0';
 
-                ret = allocate_breakpoint (state, break_path_buff, break_line_buff, index_buff);
+                ret = allocate_breakpoint (state, index_buff, file_ptr, break_line_buff);
                 if (ret == FAIL) {
                     pfemr ("Failed to allocate breakpoint");
                 }

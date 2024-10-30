@@ -100,6 +100,7 @@ get_source_path_line_memory_gdb (state_t *state)
     debugger->curr_func [i] = '\0';
 
     // absolute path
+    debugger->format_pos = 0;
     src_ptr = strstr (src_ptr, key_fullname);
     if (src_ptr != NULL) {
         src_ptr += strlen (key_fullname);
@@ -110,6 +111,7 @@ get_source_path_line_memory_gdb (state_t *state)
         // path changed
         if (strcmp (debugger->format_buffer, debugger->src_path_buffer) != 0) {
             path_ptr = debugger->format_buffer;
+            debugger->src_path_pos = 0;
             while (*path_ptr != '\0') {
                 cp_dchar (debugger, *path_ptr++, PATH_BUF);
             }
@@ -146,13 +148,15 @@ get_source_path_line_memory_pdb (state_t *state)
     int   ret;
     char *src_ptr,
          *path_ptr;
-    debugger_t *debugger;
+    debugger_t  *debugger;
+    buff_data_t *buff_data;
 
     const char *curr_path_symbol = "\n> ",
                *caret_str        = "<string>";
 
-    debugger = state->debugger;
+    debugger  = state->debugger;
     src_ptr   = state->debugger->cli_buffer;
+    buff_data = state->plugins[Src]->win->buff_data;
 
     debugger->src_path_pos = 0;
 
@@ -167,18 +171,20 @@ get_source_path_line_memory_pdb (state_t *state)
     // path
     state->debugger->format_pos = 0;
     while (*src_ptr != '(') {
-        cp_dchar (state->debugger, *src_ptr++, FORMAT_BUF);
+        cp_dchar (debugger, *src_ptr++, FORMAT_BUF);
     }
-    ++src_ptr;
-    if (strcmp (state->debugger->format_buffer, caret_str) != 0) {
-
+    if (strcmp (debugger->format_buffer, caret_str) != 0) {
         if (strcmp (debugger->format_buffer, debugger->src_path_buffer) != 0) {
             path_ptr = debugger->format_buffer;
+            debugger->src_path_pos = 0;
             while (*path_ptr != '\0') {
                 cp_dchar (debugger, *path_ptr++, PATH_BUF);
             }
+            buff_data->changed = true;
             debugger->src_path_changed = true;
         }
+
+        ++src_ptr;
 
         // line number
         debugger->format_pos = 0;
@@ -188,9 +194,9 @@ get_source_path_line_memory_pdb (state_t *state)
         debugger->curr_Src_line = atoi (debugger->format_buffer);
     }
 
-    state->plugins[Src]->win->buff_data->scroll_col_offset = 0;
-    state->debugger->cli_buffer[0] = '\0';
-    state->debugger->format_buffer[0] = '\0';
+    buff_data->scroll_col_offset = 0;
+    debugger->cli_buffer[0] = '\0';
+    debugger->format_buffer[0] = '\0';
 
     return A_OK;
 }

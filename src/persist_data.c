@@ -115,7 +115,7 @@ get_persisted_data (state_t *state)
         fclose (fp);
     }
 
-    ret = update_windows (state, 3, Wat, Brk, Src);
+    ret = update_windows (state, 4, Wat, Brk, Src, Asm);
     if (ret == FAIL) {
         pfemr (ERR_UPDATE_WINS);
     }
