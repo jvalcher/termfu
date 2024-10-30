@@ -1,7 +1,7 @@
 
 [ command ]
 
-gdb --quiet --interpreter=mi misc/hello
+gdb --quiet --interpreter=mi misc/fib
 
 [ plugins ]
 

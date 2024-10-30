@@ -92,6 +92,7 @@ configs:
 build_gdb:
 	(cd misc && ./build_hello)
 	(cd misc && ./build_vars)
+	(cd misc && ./build_fib)
 
 run_gdb:
 	@./$(B_FILE_DEV) -c $(CONFIG_RUN_GDB) -p $(DATA_RUN_GDB)
