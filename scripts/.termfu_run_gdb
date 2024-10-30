@@ -30,24 +30,10 @@ Stk : T : s(T)ack
 Wat : w : (w)atch
 
 
-[ layout : Assembly / Registers ]
-
->h
-mlq
-rns
-cufk
-
->w
-oag
-oag
-oag
-wpT
-
 [ layout : Main ]
 
 >h
-mlq
-rns
+mlqrns
 cufk
 
 >w
@@ -55,4 +41,16 @@ eeeooooo
 wwwooooo
 vvvooooo
 TTpppddd
+
+[ layout : Assembly / Registers ]
+
+>h
+mlqrns
+cufk
+
+>w
+ooa
+ooa
+ooa
+wgT
 

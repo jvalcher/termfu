@@ -150,7 +150,16 @@ typedef struct layout {
 /*
     scroll_buff_line_t
     --------
-    ...
+    - Ncurses WINDOW data buffer individual line data
+
+    state->plugins[i]->win->buff_data->head_line, curr_line, tail_line
+
+    prev    - previous node
+    next    - next node
+
+    ptr     - pointer to start of line in buffer
+    len     - number of characters in line
+    line    - line number
 */
 typedef struct sbl_t {
 
@@ -166,29 +175,31 @@ typedef struct sbl_t {
 /*
     buff_data_t
     --------
+    - Data for each Ncurses WINDOW
+
     state->plugins[i]->win->buff_data
 
-    code            - plugin code string
-    changed         - signals for buffer data to be reloaded before being displayed
-    new_data        - signals that new Dbg or Prg window data is in the debugger's buffer(s) 
-                      and should be appended to the respective window_t buffer
-    text_wrapped    - signals if buffer text is displayed wrapped
+    code              - plugin code string
+    changed           - boolean signal for buffer data to be reloaded before being displayed
+    new_data          - boolean signal that new Dbg and/or Prg window data is in the debugger's 
+                        buffer(s) and should be appended to the respective window_t buffer
+    text_wrapped      - boolean signal for wrapped buffer text (all except Asm, Src)
 
-    buff            - window data buffer
-    buff_len        - buffer size
-    buff_pos        - current index position of terminating null
-    times_doubled   - number of times buffer size doubled from ORIG_BUF_LEN,
-                      limited by MAX_DOUBLE_TIMES
+    buff              - window data buffer
+    buff_len          - buffer size
+    buff_pos          - current index position of terminating null
+    times_doubled     - number of times buffer size doubled from ORIG_BUF_LEN,
+                        limited by MAX_DOUBLE_TIMES
 
-    rows            - lines of data in buffer 
-    scroll_row      - current scroll row
-    scroll_col      - first character of each line to be displayed
+    rows              - lines of data in buffer 
+    scroll_row        - current scroll row, used to calculate curr_line
+    scroll_col_offset - offset from first line characters
+    max_chars         - number of characters in longest line, used for non-wrapped 
+                        buffers (Asm, Src)
 
-    head_line       - head of scroll_buff_line_t linked list
-    curr_line       - current
-    tail_line       - last
-
-    path_data       - source file path_data_t struct (if applicable)
+    head_line         - head node of scroll_buff_line_t linked list
+    curr_line         - current node
+    tail_line         - last node
 */
 typedef struct {
 
@@ -217,6 +228,7 @@ typedef struct {
     window_t
     ------
     - Individual ncurses WINDOW data
+
     state->plugins[i]->win
 
     WIN                 - parent ncurses WINDOW
@@ -228,11 +240,15 @@ typedef struct {
     has_topbar          - signals window has topbar
     path                - file path (if applicable)
 
+    --- parent window ---
+
     rows                - parent rows
     cols                - columns
     y                   - top left screen row coordinate
     x                   - top left screen column coordinate
     border              - border settings required by wborder()
+
+    --- topbar title subwindow if exists ---
 
     topbar_rows         - topbar subwindow rows
     topbar_cols         - columns
@@ -240,6 +256,8 @@ typedef struct {
     topbar_x            - top left column coordinate    "
     topbar_title        - title string
                         
+    --- data subwindow ---
+
     data_win_rows       - data subwindow rows
     data_win_cols       - columns
     data_win_y          - top left row coordinate relative to parent window
@@ -259,21 +277,18 @@ typedef struct {
     int           key;
     bool          has_topbar;
 
-    // parent window
     int           rows;                   
     int           cols;                   
     int           y;                      
     int           x;                      
     int           border [8];
 
-    // topbar title subwindow
     int           topbar_rows;
     int           topbar_cols;
     int           topbar_y;
     int           topbar_x;
     char         *topbar_title;
 
-    // data subwindow
     int           data_win_rows;
     int           data_win_cols;
     int           data_win_y;
@@ -316,21 +331,21 @@ enum { READER_RECEIVING, READER_DONE };
 
     curr_func               - current function
                                         
-    path_buffer             - path of current source file
-    path_len                - buffer size
-    path_pos                - null terminator index
-    path_times_doubled      - times buffer size doubled
-    path_changed            - source file path changed boolean
+    src_path_buffer         - path string of current source file
+    src_path_len            - string buffer size
+    src_path_pos            - null terminator index
+    src_path_times_doubled  - times buffer size doubled
+    src_path_changed        - source file path changed boolean
 
     reader_state            - READER_RECEIVING, RECEIVER_DONE
-    reader_buffer           - debugger process initial read() output buffer
+    reader_buffer           - read() output buffer for debugger process
                                         
     format_buffer           - misc buffer for formatting output
     format_len              - buffer size
     format_pos              - null terminator index
     format_times_doubled    - times buffer size doubled
     data_buffer             - data stream buffer
-    data_len                -     "
+    data_len
     data_pos                
     data_times_doubled      
     cli_buffer              - cli stream buffer
@@ -361,11 +376,11 @@ typedef struct {
     int     curr_Asm_line;
     char    curr_func [FUNC_LEN];
 
-    char   *path_buffer;
-    int     path_len;
-    int     path_pos;
-    int     path_times_doubled;
-    bool    path_changed;
+    char   *src_path_buffer;
+    int     src_path_len;
+    int     src_path_pos;
+    int     src_path_times_doubled;
+    bool    src_path_changed;
 
     int     reader_state;
     char    reader_buffer [READER_BUF_LEN];
@@ -399,23 +414,29 @@ typedef struct {
   Plugins
  *********/
 
-#define PLUGIN_CODE_LEN  3
+#define PLUGIN_CODE_LEN  3      // Asm, Src, ...
 
-#define BEG_DATA         0      // display beginning buffer, file data
-#define END_DATA         1      // display end of buffer, file data
-#define ROW_DATA         3      // center data on state->plugins[i]->win->buff_data->scroll_row
+#define BEG_DATA         0      // display from beginning of data buffer
+#define END_DATA         1      // display end of buffer data
+#define ROW_DATA         3      // center data on state->debugger->curr_Src/Asm_line
 
 /*
     plugin_t
     ------
-    - Indexes matche those set in enum array in plugins.h
-    state->plugins[i]
+    - Debugger command or window base struct
+    - Plugin index corresponds to enum array value in plugins.h
+
+    enum {
+        Asm,
+        ...
+    }
+    state->plugins[Asm]->code == "Asm"
 
     key         - plugin key binding
     code        - plugin code string
     title       - plugin header/window title string
     data_pos    - BEG_DATA, END_DATA, LINE_DATA
-    has_window  - plugin has window in current layout
+    has_window  - plugin has window in curr_layout
     win         - window_t pointer
 */
 typedef struct {
@@ -491,24 +512,25 @@ typedef struct watchpoint {
 /*
     state_t
     -------
-    - state->...
     - Base data struct that contains all other structs
 
+    state->...
+
     num_plugins         - total number of plugins
-    plugin_key_index    - array that matches key binding to its plugin's index  (see plugins.h)
-                          - plugin_key_index [key] = plugin index
-    config_path         - configuration file path set by -c flag
-    data_path           - data persistence path set by -p flag
+    plugin_key_index    - array that matches key bindings to respective plugin's index in plugins.h
+                          - plugin_key_index [key] = index
+    config_path         - configuration file path set by CONFIG_FILE or -c flag
+    data_path           - data persistence path set by PERSIST_FILE or -p flag
     input_buffer        - popup window input buffer
 
     plugins             - pointer array for plugin_t structs
 
     layouts             - linked list of layout_t structs
     curr_layout         - current layout_t struct
-    header              - ncurses header WINDOW
+    header              - header Ncurses WINDOW
 
     debugger            - debugger_t struct
-    command             - debugger command string array for execvp()
+    command             - debugger command string array for execvp() in start_debugger()
     wathcpoints         - linked list of watchpoint_t structs
     breakpoints         - linked list of breakpoint_t structs
 */

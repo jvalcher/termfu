@@ -97,7 +97,7 @@ clean_up (void)
                 error_triggered = true;
             }
         }
-            // data subwindows
+            // data windows
         ret = free_nc_window_data (state_ptr);
         if (ret == FAIL) {
             if (error_triggered) {
@@ -108,7 +108,7 @@ clean_up (void)
             }
         }
 
-            // misc
+            // exit
         curs_set (1);
         endwin ();
 
@@ -125,14 +125,14 @@ clean_up (void)
 
         // close DEBUG_OUT_FILE
         if (debug_out_ptr != NULL) {
-            fclose (debug_out_ptr);
-            if (error_triggered) {
-                pem ("fclose error: \"%s\"", strerror (errno));
-                pem (ERR_DBG_FCLOSE);
-            } else {
-                pfem ("fclose error: \"%s\"", strerror (errno));
-                pem (ERR_DBG_FCLOSE);
-                error_triggered = true;
+            if ((ret = fclose (debug_out_ptr)) != 0) {
+                if (error_triggered) {
+                    pem ("fclose error: \"%s\"", strerror (errno));
+                    pem (ERR_DBG_FCLOSE);
+                } else {
+                    pfem ("fclose error: \"%s\"", strerror (errno));
+                    pem (ERR_DBG_FCLOSE);
+                }
             }
         }
     }
@@ -211,9 +211,9 @@ send_command_mp (state_t *state,
         pfemr (ERR_OUT_MARK);
     }
 
-    if (write (state->debugger->stdin_pipe, command, strlen (command)) == -1) {
-        pfem ("write error: %s", strerror (errno));
-        pemr ("Command: \"%s\"", command);
+    ret = send_command (state, command);
+    if (ret == FAIL) {
+        pfemr ("Failed to send command");
     }
 
     ret = insert_output_end_marker (state);
@@ -471,10 +471,10 @@ cp_dchar (debugger_t *debugger,
     switch (buff_index) {
         case PATH_BUF:
             title   =  path_title;
-            buff    =  debugger->path_buffer;
-            len     = &debugger->path_len;
-            pos     = &debugger->path_pos;
-            doubled = &debugger->path_times_doubled;
+            buff    =  debugger->src_path_buffer;
+            len     = &debugger->src_path_len;
+            pos     = &debugger->src_path_pos;
+            doubled = &debugger->src_path_times_doubled;
             break;
         case FORMAT_BUF:
             title   =  form_title;
@@ -539,7 +539,7 @@ cp_dchar (debugger_t *debugger,
 
             switch (buff_index) {
                 case PATH_BUF:
-                    debugger->path_buffer = tmp;
+                    debugger->src_path_buffer = tmp;
                     break;
                 case FORMAT_BUF:
                     debugger->format_buffer = tmp;

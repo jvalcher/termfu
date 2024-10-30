@@ -229,7 +229,7 @@ parse_debugger_output_gdb (debugger_t *debugger)
                 cp_dchar (debugger, *buff_ptr++, CLI_BUF);
             }
 
-        } // is_gdb_output
+        }
 
         // program output
         else if (is_prog_output) {

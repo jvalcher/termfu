@@ -5,6 +5,7 @@
 
 #include "data.h"
 #include "plugins.h"
+#include "utilities.h"
 
 static void format_window_data_Brk (state_t *state);
 static void format_window_data_LcV (state_t *state);
@@ -229,8 +230,6 @@ format_window_data_Prg (state_t *state)
 
 
 
-// TODO: Replace source file line number with colored "b2" breakpoint index number
-
 static void
 format_window_data_Src (state_t *state)
 {
@@ -248,7 +247,7 @@ format_window_data_Src (state_t *state)
     win = state->plugins[Src]->win;
 
     // print current source code file in top bar
-    basefile = basename (state->debugger->path_buffer);
+    basefile = basename (state->debugger->src_path_buffer);
     left_spaces = (win->topbar_cols - strlen (basefile)) / 2;
     right_spaces = win->topbar_cols - strlen (basefile) - left_spaces;
     left_spaces = left_spaces > 0 ? left_spaces : 0;
@@ -292,22 +291,25 @@ format_window_data_Src (state_t *state)
                 }
                 line_buff [k] = '\0';
 
-                if (atoi (line_buff) == state->debugger->curr_Src_line) {
-                    wattron (win->DWIN, A_REVERSE);
-                    is_curr_line = true;
-                    curr_line = i;
+                if (k != 0) {
+                    if (atoi (line_buff) == state->debugger->curr_Src_line) {
+                        wattron (win->DWIN, A_REVERSE);
+                        is_curr_line = true;
+                        curr_line = i;
+                    }
                 }
             }
         }
     }
     wattroff (win->DWIN, A_REVERSE);
 
-    /*
     // replace line number with "b<breakpoint_index>"
-
-    char index_buff [8];
+    char  index_buff [8],
+         *src_file_ptr;
     bool is_break_line;
     breakpoint_t *brkpnt;
+
+    (void) src_file_ptr;
 
     for (i = 0; i < rows; i++) {
         for (j = 0; j < cols; j++) {
@@ -329,31 +331,32 @@ format_window_data_Src (state_t *state)
                 // determine if current line a breakpoint
                 is_break_line = false;
                 brkpnt = state->breakpoints;
-                do {
-                    if (strcmp (basename (state->debugger->path_buffer), brkpnt->path)) {
-                        if (strcmp (brkpnt->line, line_buff) == 0) {
-                            strcpy (index_buff, brkpnt->index);
-                            is_break_line = true;
-                            break;
+                if (brkpnt != NULL) {
+                    do {
+                        src_file_ptr = basename (state->debugger->src_path_buffer);
+                        if (strcmp (basename (state->debugger->src_path_buffer), brkpnt->path) == 0) {
+                            if (strcmp (brkpnt->line, line_buff) == 0) {
+                                strcpy (index_buff, brkpnt->index);
+                                is_break_line = true;
+                                break;
+                            }
                         }
-                    }
-                    brkpnt = brkpnt->next;
-                } while (brkpnt != NULL);
+                        brkpnt = brkpnt->next;
+                    } while (brkpnt != NULL);
+                }
 
+                // insert break string
                 if (is_break_line) {
                     wattron   (win->DWIN, COLOR_PAIR(SRC_BREAK_LINE_COLOR));
                     mvwprintw (win->DWIN, i, 0, "b%s", index_buff);
                     wattroff  (win->DWIN, COLOR_PAIR(SRC_BREAK_LINE_COLOR));
-                } else {
-                    mvwprintw (win->DWIN, i, 0, "%s", line_buff);
-                }
+                } 
 
                 //next line
-                ++i;
+                j = cols;
             }
         }
     }
-    */
 
     wrefresh (win->DWIN);
 }

@@ -17,7 +17,6 @@
 #include "plugins.h"
 #include "utilities.h"
 
-static int         allocate_plugins       (state_t*);
 static FILE*       open_config_file       (state_t*);
 static int         get_category_and_label (FILE *file, char *category, char *label);
 static char      **create_command         (FILE*, state_t*);
@@ -131,28 +130,6 @@ parse_config_file (state_t *state)
 
     state->layouts = head_layout;
     state->curr_layout = NULL;
-
-    return A_OK;
-}
-
-
-
-static int
-allocate_plugins (state_t *state)
-{
-    // state->plugins
-    if ((state->plugins = (plugin_t**) malloc (state->num_plugins * sizeof (plugin_t*))) == NULL) {
-        pfem ("malloc error: %s", strerror (errno));
-        pemr ("Failed to allocate plugin array for %d plugins", state->num_plugins);
-    }
-
-    // state->plugins[i]
-    for (int i = 0; i < state->num_plugins; i++) {
-        if ((state->plugins [i] = (plugin_t*) malloc (sizeof (plugin_t))) == NULL) {
-            pfem ("malloc error: %s", strerror (errno));
-            pemr ("plugin_t pointer allocation failed (index: %d, code: %s)", i, get_plugin_code (i));
-        }
-    }
 
     return A_OK;
 }
@@ -522,7 +499,7 @@ create_layout (FILE* file,
                 if (section_ch == 'h') {
                     memcpy (layout->hdr_key_str, keys, LAYOUT_KEY_STR_LEN - 1);
                     layout->hdr_key_str [LAYOUT_KEY_STR_LEN - 1] = '\0';
-                } else {
+                } else {  // 'w'
                     memcpy (layout->win_key_str, keys, LAYOUT_KEY_STR_LEN - 1);
                     layout->win_key_str [LAYOUT_KEY_STR_LEN - 1] = '\0';
                     win_keys = layout->win_key_str;

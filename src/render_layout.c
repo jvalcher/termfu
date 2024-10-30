@@ -132,7 +132,7 @@ calculate_layout (layout_t *layout,
     win_rows = scr_rows - header_offset;
 
 
-    // Create matrices for number of rows, columns per segment
+    // create matrices for number of rows, columns per segment
     //
     //      Example: 
     //
@@ -165,11 +165,11 @@ calculate_layout (layout_t *layout,
     floor_segm_rows = win_rows / row_ratio;  // floor row amount per segment
     floor_segm_cols = win_cols / col_ratio;
 
-        // Calculate total row, column remainders
+        // calculate total row, column remainders
     segm_row_rem = win_rows - (floor_segm_rows * row_ratio);
     segm_col_rem = win_cols - (floor_segm_cols * col_ratio);
 
-        // Add base segment rows, columns, distribute remainders
+        // add base segment rows, columns, distribute remainders
     for (y = 0; y < row_ratio; y++) {
         col_rem = segm_col_rem;
         for (x = 0; x < col_ratio; x++) {
@@ -180,7 +180,7 @@ calculate_layout (layout_t *layout,
         segm_row_rem -= 1;
     }
 
-    // Create matrices for top left y and x segment coordinates
+    // create matrices for top left y and x segment coordinates
     //
     //     x - -
     //     - - -        
@@ -203,22 +203,20 @@ calculate_layout (layout_t *layout,
 
     // clear has_window statuses
     for (i = 0; i < state->num_plugins; i++) {
-        if (state->plugins[i]->win != NULL) {
-            state->plugins[i]->has_window = false;
-        }
+        state->plugins[i]->has_window = false;
     }
 
-    layout_matrix = (char**) layout->win_matrix;
 
-    // Set window_t structs data
+    // set window_t structs data
+    layout_matrix = (char**) layout->win_matrix;
+        //
     for (y = 0; y < row_ratio; y++) {
         for (x = 0; x < col_ratio; x++) {
 
-            // If unused segment
+            // if segment not processed
             if (used_segm_matrix [y][x] == 0) {
 
-                key = layout_matrix [y][x];
-
+                key          = layout_matrix [y][x];
                 plugin_index = state->plugin_key_index [(int)key];
 
                 state->plugins[plugin_index]->has_window = true;
@@ -230,7 +228,7 @@ calculate_layout (layout_t *layout,
                             state->plugins[plugin_index]->code);
                 }
 
-                // Calculate rows, cols
+                // calculate rows, cols
                 //           
                 //         ┌──a
                 //         │ssa
@@ -264,7 +262,7 @@ calculate_layout (layout_t *layout,
                 curr_window->y = segm_ys [y][x];
                 curr_window->x = segm_xs [y][x];
 
-                // Overlap borders
+                // overlap borders
                 if (y > 0) {
                     curr_window->y -= 1;
                     curr_window->rows += 1;
@@ -274,7 +272,7 @@ calculate_layout (layout_t *layout,
                     curr_window->cols += 1;
                 }
 
-                // Set used segments
+                // set used segments
                 //
                 //      1110
                 //      1110
@@ -297,87 +295,112 @@ calculate_layout (layout_t *layout,
 
 /*
     Render header plugin titles
-    -------
-    - Used by render_header()
 */
 static int
 render_header_titles (layout_t *layout,
                       state_t *state)
 {
+    size_t    i, j;
     int       row, ch, 
               header_title_indent,
-              title_str_len,
-              title_str_ch_left;
+              title_row_len,
+              title_row_rem_chars,
+              prog_lay_pad_len,
+              right_pad_len;
     bool      key_color_toggle;
     WINDOW   *header;
-    char     *titles_str,
-             *curr_title;
+    char     *row_titles,
+             *curr_title,
+             *title_padding;
 
-    row                 = 0;
-    header_title_indent = 0;
-    title_str_len       = scr_cols - (strlen (PROGRAM_NAME) + 4);
-    title_str_ch_left   = title_str_len;
     header              = state->header;
 
-    if ((titles_str = (char*) malloc (sizeof (char) * title_str_len)) == NULL) {
+    // set max header titles row length
+    prog_lay_pad_len    = strlen ("  :   ");    // "_termfu_:_layout1__"
+    title_row_len       = scr_cols - (strlen (PROGRAM_NAME) +
+                                      strlen (state->curr_layout->label) +
+                                      prog_lay_pad_len);
+    title_row_rem_chars = title_row_len;
+
+    // create title padding string
+    right_pad_len = 2;                    
+    if ((title_padding = (char*) malloc (right_pad_len + 1)) == NULL) {
         pfem ("malloc: %s", strerror (errno));
-        pemr ("Failed to allocate header title (len: %d)", title_str_len);
+        pemr ("Failed to allocate header title padding string (len: %d)", right_pad_len);
     }
+    for (i = 0; i < (size_t) right_pad_len; i++) {
+        title_padding[i] = ' ';
+    }
+    title_padding [i] = '\0';
 
-    memset (titles_str, '\0', title_str_len);
-    titles_str [0] = ' ';
+    // create header row titles buffer
+    if ((row_titles = (char*) malloc (title_row_len + 1)) == NULL) {
+        pfem ("malloc: %s", strerror (errno));
+        pemr ("Failed to allocate header row string (len: %d)", title_row_len);
+    }
+    row_titles [0] = '\0';
 
-    for (size_t j = 0; j < strlen (layout->hdr_key_str); j++) {
+    // parse hdr_key_str into header title rows
+    row                 = 0;
+    header_title_indent = 0;
+    wattron (header, COLOR_PAIR(HEADER_TITLE_COLOR));
+        //
+    for (i = 0; i < strlen (layout->hdr_key_str); i++) {
 
-        ch = layout->hdr_key_str [j];
+        ch = layout->hdr_key_str [i];
         
         // render row of plugin titles
         if (ch == '\n') {
 
-            header_title_indent = scr_cols - strlen (titles_str) - 2;
-
-            key_color_toggle = false;
+            header_title_indent = scr_cols - strlen (row_titles) - right_pad_len;
+            key_color_toggle    = false;
 
             // print title
-            wattron (header, COLOR_PAIR(HEADER_TITLE_COLOR));
-            for (size_t i = 0; i < strlen(titles_str) + 1; i++) {
+            for (j = 0; j < strlen (row_titles) + 1; j++) {
 
-                mvwprintw (header, row, header_title_indent + i, "%c", titles_str[i]);
+                mvwprintw (header, row, header_title_indent + j, "%c", row_titles [j]);
 
-                // alternate (_) character color
+                // change parenthesized character's color in t(i)tle
                 if (key_color_toggle) {
                     wattron (header, COLOR_PAIR(HEADER_TITLE_COLOR));
                     key_color_toggle = false;
                 }
-                if (titles_str[i] == '(') {
+                else if (row_titles [j] == '(') {
                     wattron (header, COLOR_PAIR(TITLE_KEY_COLOR));
                     key_color_toggle = true;
                 }
             }
 
-            titles_str[0] = '\0';
-            row += 1;
-            continue;
+            ++row;
+            row_titles [0]      = '\0';
+            title_row_rem_chars = title_row_len;
         }
 
-
-        // append title to titles_str
-        curr_title         = state->plugins[state->plugin_key_index [ch]]->title;
-        title_str_ch_left -= strlen (curr_title) + 2;
-
-        if (title_str_ch_left < 1) {
-            pfem ("To many header titles in row %d", row + 1);
-            pemr ("curr_title: %s", curr_title);
-        } 
-
+        // append title to header row string
         else {
-            strcat (titles_str, curr_title);
-            strcat (titles_str, "  ");
+
+            curr_title = state->plugins[state->plugin_key_index [ch]]->title;
+
+            // check if space for title
+            title_row_rem_chars -= (strlen (curr_title) + right_pad_len);
+            if (title_row_rem_chars < 1) {
+                pfem ("To many header titles in row %d", row + 1);
+                pem  ("Current title:      \"%s\"", curr_title);
+                pemr ("Current row string: \"%s\"", row_titles);
+            } 
+
+            // append title
+            else {
+                strcat (row_titles, curr_title);
+                strcat (row_titles, title_padding);
+            }
         }
     }
 
+    free (row_titles);
+    free (title_padding);
+
     wrefresh (header);
-    free (titles_str);
 
     return A_OK;
 }

@@ -61,6 +61,7 @@ allocate_breakpoint (state_t *state,
 {
     breakpoint_t *curr_break = state->breakpoints;
 
+    // allocate
     if (state->breakpoints == NULL) {
         if ((curr_break = (breakpoint_t*) malloc (sizeof (breakpoint_t))) == NULL) {
             pfem ("malloc error (first): %s", strerror (errno));
@@ -77,17 +78,16 @@ allocate_breakpoint (state_t *state,
         }
         curr_break = curr_break->next;
     }
+    curr_break->next = NULL;
 
+    // add data
     memcpy (curr_break->index, index_buff, INDEX_BUFF_LEN - 1);
     curr_break->index[INDEX_BUFF_LEN-1] = '\0';
-
     memcpy (curr_break->path, file_buff, BREAK_PATH_LEN - 1);
     curr_break->path[BREAK_PATH_LEN-1] = '\0';
-
     memcpy (curr_break->line, line_buff, BREAK_LINE_LEN - 1);
     curr_break->line[BREAK_LINE_LEN-1] = '\0';
 
-    curr_break->next = NULL;
 
     return A_OK;
 

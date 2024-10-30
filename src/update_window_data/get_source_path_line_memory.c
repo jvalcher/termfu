@@ -53,7 +53,7 @@ get_source_path_line_memory_gdb (state_t *state)
 
     win = state->plugins[Src]->win;
     debugger = state->debugger;
-    debugger->path_pos = 0;
+    debugger->src_path_pos = 0;
 
     is_running = true;
 
@@ -108,12 +108,12 @@ get_source_path_line_memory_gdb (state_t *state)
         }
 
         // path changed
-        if (strcmp (debugger->format_buffer, debugger->path_buffer) != 0) {
+        if (strcmp (debugger->format_buffer, debugger->src_path_buffer) != 0) {
             path_ptr = debugger->format_buffer;
             while (*path_ptr != '\0') {
                 cp_dchar (debugger, *path_ptr++, PATH_BUF);
             }
-            debugger->path_changed = true;
+            debugger->src_path_changed = true;
         } 
 
         // line number
@@ -154,7 +154,7 @@ get_source_path_line_memory_pdb (state_t *state)
     debugger = state->debugger;
     src_ptr   = state->debugger->cli_buffer;
 
-    debugger->path_pos = 0;
+    debugger->src_path_pos = 0;
 
     ret = send_command_mp (state, "where\n");
     if (ret == FAIL) {
@@ -172,12 +172,12 @@ get_source_path_line_memory_pdb (state_t *state)
     ++src_ptr;
     if (strcmp (state->debugger->format_buffer, caret_str) != 0) {
 
-        if (strcmp (debugger->format_buffer, debugger->path_buffer) != 0) {
+        if (strcmp (debugger->format_buffer, debugger->src_path_buffer) != 0) {
             path_ptr = debugger->format_buffer;
             while (*path_ptr != '\0') {
                 cp_dchar (debugger, *path_ptr++, PATH_BUF);
             }
-            debugger->path_changed = true;
+            debugger->src_path_changed = true;
         }
 
         // line number

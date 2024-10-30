@@ -15,10 +15,10 @@
 /*
     Plugin codes
     -------
-    Must be in alphabetical order [A-Z,a-z]
+    - Case sensitive
+    - MUST be sorted alphabetically to match enums in plugins.h
 */
 char *plugin_codes [] = {
-    
     "Asm",
     "AtP",
     "Brk",
@@ -43,8 +43,32 @@ char *plugin_codes [] = {
 
 
 
+int
+allocate_plugins (state_t *state)
+{
+    // state->plugins
+    if ((state->plugins = (plugin_t**) malloc (state->num_plugins * sizeof (plugin_t*))) == NULL) {
+        pfem ("malloc error: %s", strerror (errno));
+        pemr ("Failed to allocate plugin array for %d plugins", state->num_plugins);
+    }
+
+    // state->plugins[i]
+    for (int i = 0; i < state->num_plugins; i++) {
+        if ((state->plugins [i] = (plugin_t*) malloc (sizeof (plugin_t))) == NULL) {
+            pfem ("malloc error: %s", strerror (errno));
+            pemr ("plugin_t pointer allocation failed (index: %d, code: %s)", i, get_plugin_code (i));
+        }
+    }
+
+    return A_OK;
+}
+
+
+
+// plugins with Ncurses WINDOWs
 int win_plugins[]      = { Asm, Brk, Dbg, LcV, Prg, Reg, Src, Stk, Wat };
 
+// window plugins with a topbar
 int win_topbar_plugins[] = {
     Brk,
     Src,
@@ -52,7 +76,7 @@ int win_topbar_plugins[] = {
 };
 char *win_topbar_titles[] = {
     "(c)reate  (d)elete  clear (a)ll",
-    "",                                     // set dynamically
+    "",                                     // current source file
     "(c)reate  (d)elete  clear (a)ll"
 };
 
@@ -84,7 +108,7 @@ allocate_plugin_windows (state_t *state)
         win->index = j;
         win->has_topbar = false;
 
-        // data position
+        // data display position
         switch (j) {
             case Asm:
             case Src:
@@ -103,7 +127,6 @@ allocate_plugin_windows (state_t *state)
                 break;
             default:
                 state->plugins[j]->data_pos = BEG_DATA;
-                break;
         }
 
         // allocate buff_data_t, ->buff
@@ -117,12 +140,21 @@ allocate_plugin_windows (state_t *state)
         }
         buff_data = win->buff_data;
 
+        // text wrapping
+        switch (j) {
+            case Asm:
+            case Src:
+                buff_data->text_wrapped = false;
+                break;
+            default:
+                buff_data->text_wrapped = true;
+        }
+
         memcpy (buff_data->code, plugin_codes[j], CODE_LEN + 1);
         buff_data->buff_pos      = 0;
         buff_data->buff_len      = ORIG_BUF_LEN;
         buff_data->times_doubled = 0;
         buff_data->changed       = true;
-        buff_data->text_wrapped  = true;
     }
 
     // topbar subwindow data

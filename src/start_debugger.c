@@ -71,14 +71,14 @@ start_debugger (state_t *state)
 static int
 configure_debugger (debugger_t *debugger)
 {
-    if ((debugger->path_buffer = (char*) malloc (sizeof (char) * PROGRAM_PATH_LEN)) == NULL) {
+    if ((debugger->src_path_buffer = (char*) malloc (sizeof (char) * PROGRAM_PATH_LEN)) == NULL) {
         pfem ("malloc error: %s", strerror (errno));
         pemr ("Path buffer allocation failed");
     }
-    debugger->path_buffer[0] = '\0';
-    debugger->path_len = PROGRAM_PATH_LEN;
-    debugger->path_pos = 0;
-    debugger->path_times_doubled = 0;
+    debugger->src_path_buffer[0] = '\0';
+    debugger->src_path_len = PROGRAM_PATH_LEN;
+    debugger->src_path_pos = 0;
+    debugger->src_path_times_doubled = 0;
 
     if ((debugger->format_buffer = (char*) malloc (sizeof (char) * ORIG_BUF_LEN)) == NULL) {
         pfem ("malloc error: %s", strerror (errno));

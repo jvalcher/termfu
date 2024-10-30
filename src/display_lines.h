@@ -19,17 +19,6 @@ int  display_lines (int key, int plugin_index, state_t *state);
 
 
 
-/*********
-  Testing
- *********/
-
-/*
-    Create scroll_buff_line_t linked list
-*/
-int create_scroll_buffer_llist (int plugin_index, state_t *state);
-
-
-
 /*
     Display buffer lines
 */

@@ -116,7 +116,7 @@ send_debugger_command (int      plugin_index,
                     if (file_was_updated (state->debugger->prog_update_time,
                                           state->debugger->prog_path))
                     {
-                        state->debugger->path_changed = true;
+                        state->debugger->src_path_changed = true;
                     }
                     state->new_run = true;
                     break;
@@ -125,7 +125,7 @@ send_debugger_command (int      plugin_index,
                     if (ret == FAIL) {
                         goto dbg_cmd_err;
                     }
-                    state->debugger->path_changed = true;
+                    state->debugger->src_path_changed = true;
                     break;
             }
             break;

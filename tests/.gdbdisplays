@@ -1,3 +1,2 @@
-disp *cp
-disp cp
-disp chars
+disp *ptr
+disp ptr
