@@ -16,6 +16,8 @@ char long_string[] = "This is a very long string variable that is over 150 chara
                      "have more than 150 characters easily.";
 int integer_array[5] = {1, 2, 3, 4, 5};
 
+
+
 // Function prototypes
 void print_variables();
 int calculate_sum(int a, int b);
