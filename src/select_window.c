@@ -84,8 +84,6 @@ select_window (int      plugin_index,
                 continue;
             }
 
-            // TODO: global window commands driver; wrap text toggle
-
             // specific window commands
             switch (plugin_index) {
 
@@ -167,9 +165,6 @@ sel_win_err:
 }
 
 
-
-// TODO: change top, right, left borders color
-// - corrected corner characters stored in state->plugins[x]->win->border
 
 /*
     Change Ncurses window title color to indicate focus

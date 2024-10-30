@@ -1,7 +1,6 @@
 
 //
 // TODO: re-render layout on terminal screen size change
-// TODO: put parse_configuration_file() through its paces; add more error handling
 //
 
 #include <unistd.h>
@@ -16,8 +15,6 @@
 #include "start_debugger.h"
 #include "run_plugin.h"
 #include "persist_data.h"
-#include "update_window_data/_update_window_data.h"
-#include "plugins.h"
 
 static int  initial_configure   (int, char*[], state_t*);
 static void exit_signal_handler (int sig_num);
