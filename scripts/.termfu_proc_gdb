@@ -1,7 +1,7 @@
 
 [ command ]
 
-gdb --quiet --interpreter=mi misc/vars
+gdb --quiet --interpreter=mi misc/hello
 
 [ plugins ]
 
@@ -38,8 +38,8 @@ rns
 cufk
 
 >w
-ago
-oTw
+ag
+oe
 
 [ layout : Main ]
 
