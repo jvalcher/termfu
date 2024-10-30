@@ -306,7 +306,8 @@ format_window_data_Src (state_t *state)
     // replace line number with "b<breakpoint_index>"
     char  index_buff [8],
          *src_file_ptr;
-    bool is_break_line;
+    int   num_spaces;
+    bool  is_break_line;
     breakpoint_t *brkpnt;
 
     (void) src_file_ptr;
@@ -346,9 +347,15 @@ format_window_data_Src (state_t *state)
                 }
 
                 // insert break string
+                if (strlen (line_buff) >= strlen (index_buff)) {
+                    num_spaces = strlen (line_buff) - strlen (index_buff);
+                } else {
+                    num_spaces = 0;
+                }
                 if (is_break_line) {
                     wattron   (win->DWIN, COLOR_PAIR(SRC_BREAK_LINE_COLOR));
-                    mvwprintw (win->DWIN, i, 0, "b%s", index_buff);
+                    mvwprintw (win->DWIN, i, 0, "b%s%*c",
+                                index_buff, num_spaces, ' ');
                     wattroff  (win->DWIN, COLOR_PAIR(SRC_BREAK_LINE_COLOR));
                 } 
 
