@@ -1,6 +1,6 @@
 
 <h1 align="center">termfu</h1>
-<h3 align="center">A frictionless, multi-language terminal debugger for Linux that allows users to create and switch between custom layouts</h3>
+<p align="center">A frictionless, multi-language terminal debugger for Linux that allows users to create and switch between custom layouts</p>
 <br>
 <p align="center"><img margin-left="auto" src="./misc/layout1.png"></p>
 <br>
