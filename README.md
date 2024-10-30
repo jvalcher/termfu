@@ -1,6 +1,6 @@
 
 <h1 align="center">termfu</h1>
-<p align="center">A frictionless, multi-language terminal debugger for Linux that allows users to create and switch between custom layouts</p>
+<p align="center">A frictionless, multi-language terminal debugger for Linux<br> that allows users to create and switch between custom layouts</p>
 <br>
 <p align="center"><img margin-left="auto" src="./misc/layout1.png" width="700px"></p>
 <br>
@@ -18,10 +18,11 @@
 
 ### Dependencies
 
-The Makefile uses `ncurses6`.
+Ubuntu:
 ```
-sudo apt-get install libncurses-dev gdb pdb make gcc
+sudo apt-get install libncurses6-dev gdb pdb make gcc
 ```
+
 ### Build
 ```
 make
@@ -224,7 +225,7 @@ vim.keymap.set('n', '<leader>b', create_break, {desc = 'Create debugger breakpoi
 
 ### General Guidelines
 - For any significant contributions outside of patches, open an issue first.
-- Bug fixes, optimizations, new debugger implementations, and new plugins are welcome.
+- Bug fixes, optimizations, new debugger implementations, tips, and new plugins are welcome.
 - Blank space and comment PRs have a high probability of being closed.
 - Use existing code conventions.
 
@@ -234,7 +235,7 @@ vim.keymap.set('n', '<leader>b', create_break, {desc = 'Create debugger breakpoi
 - Run `make todo` to print all source file tags, such as `TODO`, `FIX`, etc.
 - You can debug `termfu` with the `GDB` TUI or with `termfu` itself. The `make proc_<debugger>` scripts start a termfu_dev process to be debugged by the `make conn_proc_<debugger>` scripts.
 - The `logd()` function in `src/utilities.h` allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
-- Run `make help` in `tests/` directory to view available scripts.
+- Run `make help` in the `tests/` directory to view available scripts.
 - All errors that require the program to exit must propagate back to `main()` using the formatted error macro functions in `utilities.h`. Standard library function error checking must include the `errno` message when available.
 - It is recommended to create a shortcut for refreshing your terminal screen, as `ncurses` will make a mess of it when not shut down properly.
 
