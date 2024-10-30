@@ -10,66 +10,49 @@
 int
 main (void)
 {
-    state_t *state = (state_t*) malloc (sizeof (state_t));
-    state->debugger = (debugger_t*) malloc (sizeof (debugger_t));
-    state->plugins = (plugin_t**) malloc (sizeof (plugin_t*));
-    state->plugins[Dbg] = (plugin_t*) malloc (sizeof (plugin_t));
-    state->plugins[Dbg]->win = (window_t*) malloc (sizeof (window_t));
-    state->plugins[Dbg]->win->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t));
-    window_t *win = state->plugins[Dbg]->win;
-    win->buff_data->buff = (char*) malloc (sizeof (char) * Dbg_BUF_LEN);
+    //////////// allocate structs
+    //////////// set plugin_index variables
 
-    win->buff_data->buff_len = Dbg_BUF_LEN;
-    state->debugger->index = DEBUGGER_PDB;
+    int plugin_index = Dbg;
+
+    state_t *state = (state_t*) malloc (sizeof (state_t));
+    set_state_ptr (state);
+    state->debugger = (debugger_t*) malloc (sizeof (debugger_t));
+    set_num_plugins (state);
+    allocate_plugins (state);
+    allocate_plugin_windows (state);
+
+    debugger_t *debugger   = state->debugger;
+    plugin_t *plugin       = state->plugins[plugin_index];
+    window_t *win          = plugin->win;
+    //buff_data_t *buff_data = win->buff_data;
+
+    ////////////
+
     char *cmd[] = {"python3", "-m", "pdb", "../misc/gcd.py", NULL };
     state->command = cmd;
-
+    debugger->index = DEBUGGER_PDB;
     start_debugger (state);
 
-    win->buff_data->new_data = true;
-    insert_output_start_marker (state);
-    send_command (state, "break 10\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
-
+    send_command_mp (state, "break 10\n");
     get_debugger_output (state);
-    printf ("break 10: %s\n\n", win->buff_data->buff);
+    printf ("break 10: \n%s\n\n", win->buff_data->buff);
     
-    win->buff_data->new_data = true;
-    insert_output_start_marker (state);
-    send_command (state, "restart\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
-
+    send_command_mp (state, "restart\n");
     get_debugger_output (state);
-    printf ("restart: %s\n\n", win->buff_data->buff);
+    printf ("restart: \n%s\n\n", win->buff_data->buff);
     
-    win->buff_data->new_data = true;
-    insert_output_start_marker (state);
-    send_command (state, "next\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
-
+    send_command_mp (state, "next\n");
     get_debugger_output (state);
-    printf ("next: %s\n\n", win->buff_data->buff);
+    printf ("next: \n%s\n\n", win->buff_data->buff);
     
-    win->buff_data->new_data = true;
-    insert_output_start_marker (state);
-    send_command (state, "next\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
-
+    send_command_mp (state, "next\n");
     get_debugger_output (state);
-    printf ("next: %s\n\n", win->buff_data->buff);
+    printf ("next: \n%s\n\n", win->buff_data->buff);
     
-    win->buff_data->new_data = true;
-    insert_output_start_marker (state);
-    send_command (state, "continue\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
-
+    send_command_mp (state, "continue\n");
     get_debugger_output (state);
-    printf ("continue: %s\n\n", win->buff_data->buff);
+    printf ("continue: \n%s\n\n", win->buff_data->buff);
 
     return 0;
 }

@@ -9,25 +9,20 @@
 /*
     Display buffer or file data in Ncurses window
     ----------
-    type:  BUFF_TYPE, FILE_TYPE
-    key:   key pressed (e.g. KEY_UP, KEY_LEFT, ...) in window loop
+    - Variables: 
+        key: BEG_DATA, END_DATA, ROW_DATA,
+             KEY_UP, KEY_DOWN, KEY_PPAGE, KEY_NPAGE, KEY_HOME, KEY_END
+    - Returns:
+        - A_OK, FAIL
 */
-
-int  display_lines (int type, int key, int plugin_index, state_t *state);
+int  display_lines (int key, int plugin_index, state_t *state);
 
 
 
 /*
-    Get number of rows, max cols, et al. in new window buffer string
+    Display buffer lines
 */
-void  set_buff_rows_cols (window_t *win);
-
-
-
-/*
-    Get number of file rows, max columns, et al. in new window data file
-*/
-int  set_file_rows_cols (window_t *win);
+int display_scroll_buff_lines (int key, int plugin_index, state_t *state);
 
 
 

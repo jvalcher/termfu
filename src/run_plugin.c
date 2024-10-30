@@ -5,10 +5,9 @@
 #include "select_window.h"
 #include "choose_layout.h"
 #include "utilities.h"
-#include "get_form_input/attach_to_process.h"
 #include "get_form_input/run_custom_command.h"
-#include "get_form_input/target_remote_server.h"
 #include "get_form_input/execute_until.h"
+#include "debug/attach_to_process.h"
 
 
 
@@ -30,7 +29,7 @@ run_plugin (int      plugin_index,
         case Qut:
             ret = send_debugger_command (plugin_index, state);
             if (ret == FAIL) {
-                pfem ("FAIL: send_debugger_command (plugin_index, state)");
+                pfem ("Failed to send debugger command");
                 goto run_plugin_err;
             }
             break;
@@ -48,45 +47,40 @@ run_plugin (int      plugin_index,
             if (state->plugins[plugin_index]->has_window) {
                 ret = select_window (plugin_index, state);
                 if (ret == FAIL) {
-                    pfem ("FAIL: select_window (plugin_index, state)");
+                    pfem ("Failed to select window");
                     goto run_plugin_err;
                 }
             }
             break;
 
-        // popup window
-        case AtP:
-            ret = attach_to_process (state);
-            if (ret == FAIL) {
-                pfem ("FAIL: attach_to_process(state)");
-                goto run_plugin_err;
-            }
-            break;
         case Lay: 
             ret = choose_layout (state);
             if (ret == FAIL) {
-                pfem ("FAIL: choose_layout (state)");
+                pfem ("Failed to choose layout");
                 goto run_plugin_err;
             }
             break;
         case Prm: 
             ret = run_custom_command (state);
             if (ret == FAIL) {
-                pfem ("FAIL: run_custom_command (state)");
-                goto run_plugin_err;
-            }
-            break;
-        case Trg: 
-            ret = target_remote_server (state);
-            if (ret == FAIL) {
-                pfem ("FAIL: target_retmote_server (state)");
+                pfem ("Failed to run custom prompt command");
                 goto run_plugin_err;
             }
             break;
         case Unt: 
             ret = execute_until (state);
             if (ret == FAIL) {
-                pfem ("FAIL: execute_until (state)");
+                pfem ("Failed to execute until");
+                goto run_plugin_err;
+            }
+            break;
+
+
+        // other
+        case AtP:
+            ret = attach_to_process (state);
+            if (ret == FAIL) {
+                pfem ("Failed to attach to debugged process");
                 goto run_plugin_err;
             }
             break;

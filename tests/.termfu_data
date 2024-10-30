@@ -1,8 +1,0 @@
->w
-buff_ptr
-buff
-debugger->program_buffer
-*len
-*pos
->b
-pdb_parse.c:34

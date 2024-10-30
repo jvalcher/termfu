@@ -7,6 +7,7 @@
 #include "../plugins.h"
 
 
+// TODO: store, persist invalid breakpoints
 
 int
 insert_breakpoint (state_t *state)
@@ -38,7 +39,7 @@ insert_breakpoint (state_t *state)
     }
     free (cmd);
 
-    ret = update_window (Brk, state);
+    ret = update_windows (state, 2, Brk, Src);
     if (ret == FAIL) {
         pfemr (ERR_UPDATE_WIN);
     }
@@ -78,7 +79,7 @@ delete_breakpoint (state_t *state)
     }
     free (cmd);
 
-    ret = update_window (Brk, state);
+    ret = update_windows (state, 2, Brk, Src);
     if (ret == FAIL) {
         pfemr (ERR_UPDATE_WIN);
     }
@@ -123,7 +124,7 @@ clear_all_breakpoints (state_t *state)
     }
     state->breakpoints = NULL;
 
-    ret = update_window (Brk, state);
+    ret = update_windows (state, 2, Brk, Src);
     if (ret == FAIL) {
         pfemr (ERR_UPDATE_WIN);
     }

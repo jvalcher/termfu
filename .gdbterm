@@ -1,12 +1,21 @@
-source ./.gdbbreaks
+set confirm off
+
+define a
+    attach $arg0
+end
+
+define sb
+    del
+    source ./.gdbbreaks
+end
 
 define sd
+    undisplay
     source ./.gdbdisplays
 end
 
-define q
-    save breakpoints ./.gdbbreaks
-    quit
+define s2
+    signal 2
 end
 
 define plist

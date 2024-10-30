@@ -13,26 +13,35 @@ static void insert_watchpoint_pdb (state_t *state, char *var);
 int
 main (void)
 {
+    //////////// allocate structs
+    //////////// set plugin_index variables
+
+    int plugin_index = Wat;
+
     state_t *state = (state_t*) malloc (sizeof (state_t));
+    set_state_ptr (state);
     state->debugger = (debugger_t*) malloc (sizeof (debugger_t));
-    state->plugins = (plugin_t**) malloc (sizeof (plugin_t*));
-    state->plugins[Wat] = (plugin_t*) malloc (sizeof (plugin_t));
-    state->plugins[Wat]->win = (window_t*) malloc (sizeof (window_t));
-    window_t *win = state->plugins[Wat]->win;
-    win->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t));
-    win->buff_data->buff = (char*) malloc (sizeof (char) * Wat_BUF_LEN);
+    set_num_plugins (state);
+    allocate_plugins (state);
+    allocate_plugin_windows (state);
+
+    debugger_t *debugger   = state->debugger;
+    plugin_t *plugin       = state->plugins[plugin_index];
+    window_t *win          = plugin->win;
+    //buff_data_t *buff_data = win->buff_data;
+
+    ////////////
+
     watchpoint_t *watch;
 
-    win->buff_data->buff_len = Wat_BUF_LEN;
-    state->debugger->index = DEBUGGER_PDB;
     char *cmd[] = {"python3", "-m", "pdb", "../misc/gcd.py", NULL };
     state->command = cmd;
+    debugger->index = DEBUGGER_PDB;
 
     start_debugger (state);
 
     // no watchpoints
     get_watchpoint_data (state);
-
     putchar ('\n');
     printf ("No watchpoints: \n\"\n%s\n\"\n\n", win->buff_data->buff);
 
@@ -52,22 +61,12 @@ main (void)
 
     // watchpoints, not running
     get_watchpoint_data (state);
-
     printf ("Watchpoints, not running: \n\"\n%s\n\"\n\n", win->buff_data->buff);
 
     // watchpoints, running
-    insert_output_start_marker (state);
-    send_command (state, "break 10\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
-
-    insert_output_start_marker (state);
-    send_command (state, "continue\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
-
+    send_command_mp (state, "break 10\n");
+    send_command_mp (state, "continue\n");
     get_watchpoint_data (state);
-
     printf ("Watchpoints, running: \n\"\n%s\n\"\n\n", win->buff_data->buff);
 
     return 0;

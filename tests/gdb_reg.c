@@ -11,19 +11,24 @@
 int
 main (void)
 {
+    //////////// allocate structs
+    //////////// set plugin_index variables
+
+    int plugin_index = Reg;
+
     state_t *state = (state_t*) malloc (sizeof (state_t));
-    set_num_plugins (state);
+    set_state_ptr (state);
     state->debugger = (debugger_t*) malloc (sizeof (debugger_t));
-    state->plugins = (plugin_t**) malloc (sizeof (plugin_t*) * state->num_plugins);
-    state->plugins[Reg] = (plugin_t*) malloc (sizeof (plugin_t));
-    state->plugins[Reg]->win = (window_t*) malloc (sizeof (window_t));
-    window_t *win = state->plugins[Reg]->win;
-    win->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t));
-    win->buff_data->buff = (char*) malloc (sizeof (char) * Reg_BUF_LEN);
-    win->buff_data->buff_pos = 0;
-    win->buff_data->buff_len = Reg_BUF_LEN;
-    win->buff_data->new_data = true;
-    state->debugger->index = DEBUGGER_GDB;
+    set_num_plugins (state);
+    allocate_plugins (state);
+    allocate_plugin_windows (state);
+
+    //debugger_t *debugger   = state->debugger;
+    plugin_t *plugin       = state->plugins[plugin_index];
+    window_t *win          = plugin->win;
+    //buff_data_t *buff_data = win->buff_data;
+
+    ////////////
 
     char *cmd[] = {"gdb", "--quiet", "--interpreter=mi", "../misc/hello"};
     state->command = cmd;
@@ -32,20 +37,10 @@ main (void)
 
     putchar ('\n');
 
-    win->buff_data->new_data = true;
-    insert_output_start_marker (state);
-    send_command (state, "-break-insert 12\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
-
-    win->buff_data->new_data = true;
-    insert_output_start_marker (state);
-    send_command (state, "-exec-run\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
+    send_command_mp (state, "-break-insert 12\n");
+    send_command_mp (state, "-exec-run\n");
 
     get_register_data (state);
-
     printf ("%s\n", win->buff_data->buff);
 
     return 0;

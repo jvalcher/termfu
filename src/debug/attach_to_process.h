@@ -5,10 +5,11 @@
 
 
 
+/*
+    Reattach to DEBUG_PID_FILE process, reload persisted data
+*/
 int attach_to_process (state_t *state);
 
 
 
 #endif
-
-

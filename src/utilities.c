@@ -7,13 +7,15 @@
 #include <errno.h>
 
 #include "utilities.h"
+#include "plugins.h"
 #include "data.h"
 #include "insert_output_marker.h"
 #include "parse_debugger_output.h"
 #include "persist_data.h"
 
-FILE *debug_out_ptr = NULL;
+FILE    *debug_out_ptr = NULL;
 state_t *state_ptr = NULL;
+bool     program_cleaned_up = false;
 
 
 
@@ -35,21 +37,104 @@ logd (const char *formatted_string, ...)
 
 
 
+int
+free_nc_window_data (state_t *state)
+{
+    int ret;
+
+    for (int i = 0; i < state->num_plugins; i++) {
+
+        if (state->plugins[i]->has_window) {
+
+            if (state->plugins[i]->win->TWIN != NULL) {
+                ret = delwin (state->plugins[i]->win->TWIN);
+                if (ret == ERR) {
+                    pfemr ("Unable to delete TWIN (index: %d, code: %s)", 
+                                i, get_plugin_code (i));
+                }
+            }
+
+            if (state->plugins[i]->win->DWIN != NULL) {
+                ret = delwin (state->plugins[i]->win->DWIN);
+                if (ret == ERR) {
+                    pfemr ("Unable to delete DWIN (index: %d, code: %s)", 
+                                i, get_plugin_code (i));
+                }
+            }
+
+            if (state->plugins[i]->win->WIN != NULL) {
+                ret = delwin (state->plugins[i]->win->WIN);
+                if (ret == ERR) {
+                    pfemr ("Unable to delete WIN (index: %d, code: %s)", 
+                                i, get_plugin_code (i));
+                }
+            }
+            refresh ();
+        }
+    }
+    return A_OK;
+}
+
+
+
 void
 clean_up (void)
 {
     int ret;
+    bool error_triggered = false;
 
-    curs_set (1);
-    endwin ();
+    if (program_cleaned_up == false) {
 
-    ret = persist_data (state_ptr);
-    if (ret == FAIL) {
-        fprintf (stderr, "\nFailed to persist data during cleanup\n\n");
-    }
+        program_cleaned_up = true;
 
-    if (debug_out_ptr != NULL) {
-        fclose (debug_out_ptr);
+        // exit ncurses
+
+            // header subwindow
+        if (state_ptr->header != NULL) {
+            ret = delwin (state_ptr->header);
+            if (ret == ERR) {
+                pfem ("Failed to delete ncurses header subwindow");
+                error_triggered = true;
+            }
+        }
+            // data windows
+        ret = free_nc_window_data (state_ptr);
+        if (ret == FAIL) {
+            if (error_triggered) {
+                pem (ERR_NC_FREE);
+            } else {
+                pfem (ERR_NC_FREE);
+                error_triggered = true;
+            }
+        }
+
+            // exit
+        curs_set (1);
+        endwin ();
+
+        // persist breakpoint, watchpoint data
+        ret = persist_data (state_ptr);
+        if (ret == FAIL) {
+            if (error_triggered) {
+                pem (ERR_PERSIST);
+            } else {
+                pfem (ERR_PERSIST);
+                error_triggered = true;
+            }
+        }
+
+        // close DEBUG_OUT_FILE
+        if (debug_out_ptr != NULL) {
+            if ((ret = fclose (debug_out_ptr)) != 0) {
+                if (error_triggered) {
+                    pem ("fclose error: \"%s\"", strerror (errno));
+                    pem (ERR_DBG_FCLOSE);
+                } else {
+                    pfem ("fclose error: \"%s\"", strerror (errno));
+                    pem (ERR_DBG_FCLOSE);
+                }
+            }
+        }
     }
 }
 
@@ -58,26 +143,40 @@ clean_up (void)
 char*
 concatenate_strings (int num_strs, ...)
 {
-    char     buffer [FILE_PATH_LEN] = {0},
-            *sub_str,
+    int      str_len;
+    char    *sub_str,
             *str;
-    va_list  strs;
-
-    // create path string
+    va_list strs;
+    
+    // calculate total string length
     va_start (strs, num_strs);
+    str_len = 0;
     for (int i = 0; i < num_strs; i++) {
-        sub_str = va_arg (strs, char*);
-        strncat (buffer, sub_str, sizeof(buffer) - strlen(buffer) - 1);
+        str_len += strlen (va_arg (strs, char*));
     }
     va_end (strs);
 
     // allocate
-    if ((str = (char*) malloc (strlen (buffer) + 1)) == NULL) {
+    if ((str = (char*) malloc (str_len + 1)) == NULL) {
         pfem ("malloc error: %s", strerror (errno));
-        peme ("Failed to concatenate strings \"%s\"", buffer);
+        pem  ("Failed to allocate space for strings:");
+        va_start (strs, num_strs);
+        for (int i = 0; i < num_strs; i++) {
+            sub_str = va_arg (strs, char*);
+            pem ("\"%s\"", sub_str);
+        }
+        va_end (strs);
+        return NULL;
     }
+    str [0] = '\0';
 
-    strcpy (str, buffer);
+    // create string
+    va_start (strs, num_strs);
+    for (int i = 0; i < num_strs; i++) {
+        sub_str = va_arg (strs, char*);
+        strncat (str, sub_str, str_len - strlen(str));
+    }
+    va_end (strs);
 
     return str;
 }
@@ -112,9 +211,9 @@ send_command_mp (state_t *state,
         pfemr (ERR_OUT_MARK);
     }
 
-    if (write (state->debugger->stdin_pipe, command, strlen (command)) == -1) {
-        pfem ("write error: %s", strerror (errno));
-        pemr ("Command: \"%s\"", command);
+    ret = send_command (state, command);
+    if (ret == FAIL) {
+        pfemr ("Failed to send command");
     }
 
     ret = insert_output_end_marker (state);
@@ -312,7 +411,7 @@ set_state_ptr (state_t *state)
 
 void
 cp_wchar (buff_data_t *dest_buff_data,
-         char ch)
+          char ch)
 {
     char *tmp;
 
@@ -351,65 +450,9 @@ cp_wchar (buff_data_t *dest_buff_data,
 
 
 void
-cp_fchar (src_file_data_t *dest_file_data,
-          char ch,
-          int type)
-{
-    char *buff;
-    int  *len,
-         *pos;
-
-    switch (type) {
-        case PATH:
-            buff = dest_file_data->path;
-            len = &dest_file_data->path_len;
-            pos = &dest_file_data->path_pos;
-            break;
-        case ADDR:
-            buff = dest_file_data->addr;
-            len = &dest_file_data->addr_len;
-            pos = &dest_file_data->addr_pos;
-            break;
-        case FUNC:
-            buff = dest_file_data->func;
-            len = &dest_file_data->func_len;
-            pos = &dest_file_data->func_pos;
-            break;
-        default:
-            pfeme ("Unrecognized buffer type \"%d\"", type);
-    }
-
-    buff[*pos] = ch;
-    buff[*pos + 1] = '\0';
-
-    if (*pos < *len - 1) {
-        *pos += 1;
-    } 
-
-    else {
-
-        pfem ("Buffer overflow");
-
-        switch (type) {
-            case PATH:
-                peme ("win->src_file_data->path : \"%s...\"", buff);
-                break;
-            case ADDR:
-                peme ("win->src_file_data->addr : \"%s...\"", buff);
-                break;
-            case FUNC:
-                peme ("win->src_file_data->func : \"%s...\"", buff);
-                break;
-        }
-    }
-}
-
-
-
-void
 cp_dchar (debugger_t *debugger,
-          char ch,
-          int buff_index)
+          char        ch,
+          int         buff_index)
 {
     int  *len,
          *pos,
@@ -417,6 +460,7 @@ cp_dchar (debugger_t *debugger,
     char *buff,
          *tmp,
          *title,
+         *path_title  = "path",
          *form_title  = "format",
          *data_title  = "data",
          *cli_title   = "cli",
@@ -425,6 +469,13 @@ cp_dchar (debugger_t *debugger,
 
 
     switch (buff_index) {
+        case PATH_BUF:
+            title   =  path_title;
+            buff    =  debugger->src_path_buffer;
+            len     = &debugger->src_path_len;
+            pos     = &debugger->src_path_pos;
+            doubled = &debugger->src_path_times_doubled;
+            break;
         case FORMAT_BUF:
             title   =  form_title;
             buff    =  debugger->format_buffer;
@@ -487,6 +538,9 @@ cp_dchar (debugger_t *debugger,
             }
 
             switch (buff_index) {
+                case PATH_BUF:
+                    debugger->src_path_buffer = tmp;
+                    break;
                 case FORMAT_BUF:
                     debugger->format_buffer = tmp;
                     break;
@@ -511,4 +565,67 @@ cp_dchar (debugger_t *debugger,
         }
     }
 }
+
+
+
+int
+copy_to_clipboard (char *str)
+{
+    int ret;
+    char *cmd_str;
+
+    cmd_str = concatenate_strings (3, "printf \"", str, "\" | xclip -selection clipboard");
+    if (cmd_str == NULL) {
+        pfemr ("Failed to create string \"%s\"", str);
+    }
+
+    ret = system (cmd_str);
+    if (ret == -1) {
+        pfem ("system() error: \"%s\"", strerror (errno));
+        pemr ("Failed to send system command \"%s\"", cmd_str);
+    }
+
+    free (cmd_str);
+    return A_OK;
+}
+
+
+
+char*
+create_buff_from_file (char *path)
+{
+    int ch, i;
+    struct stat st;
+    FILE *fp;
+    char *buff;
+
+    // create buffer
+    if (stat (path, &st) != 0) {
+        pfem ("stat error: \"%s\"", strerror (errno));
+        pem  ("Failed to get status of file \"%s\"", path);
+        return NULL;
+    }
+    if ((buff = (char*) malloc (st.st_size + 1)) == NULL) {
+        pfem ("malloc error: \"%s\"", strerror (errno));
+        pem  ("Failed to allocate buffer for path \"%s\"", path);
+        return NULL;
+    }
+
+    // copy file contents
+    if ((fp = fopen (path, "r")) == NULL) {
+        pfem ("fopen error: \"%s\"", strerror (errno));
+        pem  ("Failed to open file \"%s\"", path);
+        return NULL;
+    }
+    i = 0;
+    while ((ch = fgetc (fp)) != EOF && i < st.st_size) {
+        buff [i++] = ch;
+    }
+    buff [i] = '\0';
+    fclose (fp);
+
+    return buff;
+}
+
+
 

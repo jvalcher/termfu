@@ -33,7 +33,7 @@ run_custom_command (state_t *state)
         
         state->plugins[Dbg]->win->buff_data->new_data = true;
         state->plugins[Prg]->win->buff_data->new_data = true;
-        ret = update_windows (state, 8, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Wat);
+        ret = update_windows (state, 8, Dbg, Prg, Asm, Brk, LcV, Reg, Wat, Src);
         if (ret == FAIL) {
             pfemr (ERR_UPDATE_WINS);
         }

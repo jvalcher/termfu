@@ -2,98 +2,305 @@
 #include <string.h>
 #include <ncurses.h>
 #include <stdlib.h>
-#include <libgen.h>
-#include <errno.h>
+#include <sys/stat.h>
 
 #include "display_lines.h"
 #include "data.h"
 #include "utilities.h"
 #include "plugins.h"
+#include "format_window_data.h"
+#include "create_scroll_buffer_llist.h"
 
 #define LINE_NUM_TEXT_SPACES  2
-
-static void  display_lines_buff  (int, int, state_t*);
-static void  display_lines_file  (int, window_t*);
-static void  format_win_data     (int, state_t*);
 
 
 
 int
-display_lines (int       type,
-               int       key,
-               int       plugin_index,
-               state_t  *state)
+display_lines (int      key,
+               int      plugin_index,
+               state_t *state)
 {
     int ret;
     window_t *win = state->plugins[plugin_index]->win;
 
     if (state->plugins[plugin_index]->has_window) {
 
-        switch (type) {
+        if (win->buff_data->changed) {
 
-        case BUFF_TYPE:
-
-            if (win->buff_data->changed) {
-
-                set_buff_rows_cols (win);
-                if (plugin_index != Asm) {
-                    win->buff_data->scroll_row = 1;
-                }
-                win->buff_data->scroll_col = 1;
-                win->buff_data->changed = false;
-            }
-
-            display_lines_buff (key, plugin_index, state);
-            break;
-
-        case FILE_TYPE:
-
-            if (win->src_file_data->path_changed) {
-
-                // free file pointer, offsets
-                if (win->src_file_data->ptr != NULL) {
-                    fclose (win->src_file_data->ptr);
-                }
-                if (win->src_file_data->offsets != NULL) {
-                    free (win->src_file_data->offsets);
-                }
-
-                // open new file
-                if ((win->src_file_data->ptr = fopen (win->src_file_data->path, "r")) == NULL) {
-                    pfem ("fopen error: %s", strerror (errno));
-                    pem ("Failed to open file \"%s\"", win->src_file_data->path);
-                    goto disp_lines_err;
-                }
-
-                ret = set_file_rows_cols (win);
-                if (ret == FAIL) {
-                    pfem ("Failed to set file rows, cols");
-                    goto disp_lines_err;
-                }
-                win->src_file_data->path_changed = false;
-            }
-
-            if (win->src_file_data->ptr != NULL) {
-                display_lines_file (key, win);
-            } else {
-                pfem ("NULL file pointer");
+            ret = create_scroll_buffer_llist (plugin_index, state);
+            if (ret == FAIL) {
+                pfem ("Failed to create scroll_buff_line_t linked list");
                 goto disp_lines_err;
             }
 
-            break;
+            win->buff_data->changed = false;
         }
 
-        format_win_data (plugin_index, state);
+        ret = display_scroll_buff_lines (key, plugin_index, state);
+        if (ret == FAIL) {
+            pfem ("Failed to display window lines");
+            goto disp_lines_err;
+        }
+
+        ret = format_window_data (plugin_index, state);
+        if (ret == FAIL) {
+            pfem ("Failed to format window data");
+            goto disp_lines_err;
+        }
     }
 
     return A_OK;
 
 disp_lines_err:
+
     pemr ("Key: \"%d\", plugin index: \"%d\", plugin code: \"%s\"",
                 key, plugin_index, get_plugin_code (plugin_index));
 }
 
 
+
+int
+display_scroll_buff_lines (int      key,
+                           int      plugin_index,
+                           state_t *state)
+{
+    int   i,
+          rem_lines,
+          text_len,
+          print_len,
+          max_scroll_row,
+          print_row,
+          line_num_len,
+          last_line_num,
+          rem_spaces;
+    char *ptr,
+         *blank_line = " ";
+    window_t           *win;
+    buff_data_t        *buff_data;
+    scroll_buff_line_t *buff_line;
+
+    win       = state->plugins[plugin_index]->win;
+    buff_data = win->buff_data;
+
+    // erase window
+    werase (win->DWIN);
+
+    // set curr_line
+    if (buff_data->curr_line == NULL) {
+        buff_data->curr_line = buff_data->head_line;
+    }
+
+    // calculate line number offset for Src
+    if (win->index == Src) {
+        line_num_len = 1;
+        last_line_num = win->buff_data->tail_line->line;
+        while (last_line_num > 0) {
+            ++line_num_len;
+            last_line_num /= 10;
+        }
+    } else {
+        line_num_len = 0;
+    }
+
+    switch (key) {
+
+        case BEG_DATA:
+        case KEY_HOME:
+            buff_data->scroll_row = 1;
+            buff_data->curr_line = buff_data->head_line;
+            break;
+
+        case END_DATA:
+        case KEY_END:
+            if (buff_data->rows < win->data_win_rows) {
+                buff_data->scroll_row = 1;
+                buff_data->curr_line = buff_data->head_line;
+            } else {
+                buff_data->curr_line = buff_data->tail_line;
+                buff_data->scroll_row = buff_data->rows;
+                for (i = 0; i < (win->data_win_rows - 1); i++) {
+                    buff_data->curr_line = buff_data->curr_line->prev;
+                    --buff_data->scroll_row;
+                }
+            }
+            break;
+
+        case ROW_DATA:
+
+            if (buff_data->rows <= win->data_win_rows) {
+                print_row = 1;
+            } else {
+                switch (plugin_index) {
+                    case Src:
+                        print_row = state->debugger->curr_Src_line - (win->data_win_rows / 2);
+                        break;
+                    case Asm:
+                        print_row = state->debugger->curr_Asm_line - (win->data_win_rows / 2);
+                        break;
+                    default:
+                        print_row = 1;
+                }
+                if (print_row < 1) {
+                    print_row = 1;
+                } else if (print_row > (buff_data->tail_line->line - win->data_win_rows + 1)) {
+                    print_row = buff_data->tail_line->line - win->data_win_rows + 1;
+                } 
+            }
+            buff_data->scroll_row = print_row;
+
+            if (buff_data->curr_line->line < print_row) {
+                while (buff_data->curr_line->line != print_row) {
+                    buff_data->curr_line = buff_data->curr_line->next;
+                }
+            } else if (buff_data->curr_line->line > print_row) {
+                while (buff_data->curr_line->line != print_row) {
+                    buff_data->curr_line = buff_data->curr_line->prev;
+                }
+            }
+            break;
+
+        case KEY_PPAGE:
+            if ((buff_data->scroll_row - win->data_win_rows) <= 0) {
+                 buff_data->scroll_row = 1;
+                 buff_data->curr_line  = buff_data->head_line;
+            } else {
+                buff_data->scroll_row -= (win->data_win_rows - 1);
+                for (i = 0; i < (win->data_win_rows - 1); i++) {
+                    buff_data->curr_line = buff_data->curr_line->prev;
+                    --buff_data->scroll_row;
+                }
+            }
+            break;
+
+        case KEY_NPAGE:
+            rem_lines = buff_data->rows - buff_data->scroll_row;
+            max_scroll_row = buff_data->rows - (win->data_win_rows - 1);
+            if (rem_lines >= win->data_win_rows) {
+                for (i = 0; i < (win->data_win_rows - 1); i++) {
+                    if (buff_data->scroll_row == max_scroll_row) {
+                        break;
+                    }
+                    buff_data->curr_line = buff_data->curr_line->next;
+                    ++buff_data->scroll_row;
+                } 
+            } else {
+                while (buff_data->scroll_row < max_scroll_row) {
+                    buff_data->curr_line = buff_data->curr_line->next;
+                    ++buff_data->scroll_row;
+                }
+            }
+            break;
+
+        case 'j':
+        case KEY_DOWN:
+            rem_lines = buff_data->rows - buff_data->scroll_row;
+            if (rem_lines >= win->data_win_rows) {
+                buff_data->curr_line = buff_data->curr_line->next;
+                ++buff_data->scroll_row;
+            }
+            break;
+
+        case 'k':
+        case KEY_UP:
+            if (buff_data->scroll_row > 1) {
+                buff_data->curr_line = buff_data->curr_line->prev;
+                --buff_data->scroll_row;
+            }
+            break;
+
+        case 'h':
+        case KEY_LEFT:
+            if (buff_data->text_wrapped == false) {
+                if (buff_data->scroll_col_offset > 0) {
+                    --buff_data->scroll_col_offset;
+                }
+            }
+            break;
+
+        case 'l':
+        case KEY_RIGHT:
+            if (buff_data->text_wrapped == false) {
+                if ((buff_data->max_chars - buff_data->scroll_col_offset) >
+                    (win->data_win_cols - line_num_len))
+                {
+                    ++buff_data->scroll_col_offset;
+                }
+            }
+            break;
+    }
+    
+    // print lines
+    i = 0;
+    buff_line = buff_data->curr_line;
+    text_len = win->data_win_cols - line_num_len;
+
+    while (i < win->data_win_rows && buff_line != NULL) {
+
+        switch (win->index) {
+
+            case Asm:
+
+                print_len = buff_line->len - buff_data->scroll_col_offset;
+                if (print_len <= 0) {
+                    ptr = blank_line; 
+                    print_len = 1;
+                } else {
+                    ptr = buff_line->ptr + buff_data->scroll_col_offset;
+                }
+                mvwprintw (win->DWIN, i, 0, "%.*s", print_len, ptr);
+
+                break;
+
+            case Src:
+
+                // line number
+                if      (buff_line->line < 10) rem_spaces = line_num_len - 1;
+                else if (buff_line->line < 100) rem_spaces = line_num_len - 2;
+                else if (buff_line->line < 1000) rem_spaces = line_num_len - 3;
+                else if (buff_line->line < 10000) rem_spaces = line_num_len - 4;
+                else if (buff_line->line < 100000) rem_spaces = line_num_len - 5;
+                else if (buff_line->line < 1000000) rem_spaces = line_num_len - 6;
+                else 
+                {
+                    pfemr ("Max buffer line length exceeded (last line num: %d, len: %d)",
+                                last_line_num, line_num_len - 1);
+                }
+                wattron  (win->DWIN, COLOR_PAIR(SRC_LINE_COLOR));
+                mvwprintw  (win->DWIN, i, 0, "%d%*c", buff_line->line, rem_spaces, ' ');
+                wattroff (win->DWIN, COLOR_PAIR(SRC_LINE_COLOR));
+
+                // text
+                print_len = buff_line->len - buff_data->scroll_col_offset;
+                if (print_len <= 0) {
+                    ptr = blank_line; 
+                    print_len = 1;
+                } else {
+                    ptr = buff_line->ptr + buff_data->scroll_col_offset;
+                    if (print_len >= text_len) {
+                        print_len = text_len;
+                    }
+                }
+                mvwprintw (win->DWIN, i, line_num_len, "%.*s", print_len, ptr);
+
+                break;
+
+            default:
+                waddnstr (win->DWIN, buff_line->ptr, buff_line->len);
+                break;
+        }
+
+        buff_line = buff_line->next;
+        ++i;
+    }
+
+    wrefresh (win->DWIN);
+
+    return A_OK;
+}
+
+
+
+/*
 
 void
 set_buff_rows_cols (window_t *win)
@@ -121,20 +328,20 @@ set_buff_rows_cols (window_t *win)
 
 
 static void
-display_lines_buff (int      key,
-                    int      plugin_index,
-                    state_t *state)
+display_lines_buff_no_wrap (int      key,
+                            int      plugin_index,
+                            state_t *state)
 {
-    char   *buff_ptr,
-           *newline_ptr;
-    int     wy,
-            wx,
-            data_row,
-            win_rows,
-            win_mid_row,
-            scroll_row,
-            buff_rows,
-            len;
+    char     *buff_ptr,
+             *newline_ptr;
+    int       wy,
+              wx,
+              data_row,
+              win_rows,
+              win_mid_row,
+              scroll_row,
+              buff_rows,
+              len;
     window_t *win;
 
     win = state->plugins[plugin_index]->win;
@@ -256,12 +463,103 @@ display_lines_buff (int      key,
 
     wrefresh (win->DWIN);
 }
+
+
+
+// CURRENT: scroll not working
+
+static void
+display_lines_buff_wrap (int      key,
+                         int      plugin_index,
+                         state_t *state)
+{
+    int       x, c,
+              rows, cols,
+              offset;
+    char     *buff_ptr;
+    window_t *win;
+
+    win = state->plugins[plugin_index]->win;
+    (void) x;
+    rows = win->data_win_rows;
+    cols = win->data_win_cols;
+
+    switch (key) {
+
+        case END_DATA:
+        case ROW_DATA:
+        case BEG_DATA:
+        case KEY_HOME:
+            win->buff_data->buff_ptr = win->buff_data->buff;
+            break;
+
+        case KEY_DOWN:
+
+            c = 0;
+            if (win->buff_data->wrap_y >= (rows - 1)) {
+                while (*(win->buff_data->buff_ptr + c) != '\n') {
+                    ++c;
+                }
+                if (c <= cols) {
+                    win->buff_data->buff_ptr += (c + 1);
+                } else {
+                    win->buff_data->buff_ptr += cols;
+                }
+            }
+            break;
+
+        case KEY_UP:
+
+            c = 0;
+            offset = 2;
+            buff_ptr = win->buff_data->buff_ptr;
+            if (buff_ptr != win->buff_data->buff) {
+                if (*(buff_ptr - 1) == '\n') {
+                    if ((buff_ptr - 1) != win->buff_data->buff) {
+                        ++c;
+                        --buff_ptr;
+                        offset = 2;
+                    }
+                }
+                else {
+                    offset = 1;
+                }
+                while (*(buff_ptr - c) != '\n' &&
+                        (buff_ptr - c) != win->buff_data->buff) {
+                    ++c;
+                }
+                        
+                if ((buff_ptr - 1) == win->buff_data->buff) {
+                    buff_ptr = win->buff_data->buff;
+                }
+                else {
+                    if ((c - offset) <= cols) {
+                        buff_ptr -= (c - 1);
+                    } else {
+                        if (((c - offset) % cols) != 0) {
+                            buff_ptr -= ((c - offset) % cols) + 1;
+                        } else {
+                            buff_ptr -= (cols + 1);
+                        }
+                    }
+                }
+                win->buff_data->buff_ptr = buff_ptr;
+            }
+            break;
+
+        default:
+            win->buff_data->buff_ptr = win->buff_data->buff;
+    }
+
+    wmove     (win->DWIN, 0, 0); 
+    waddstr   (win->DWIN, win->buff_data->buff_ptr);
+    getyx     (win->DWIN, win->buff_data->wrap_y, x);
+    wclrtoeol (win->DWIN);
+    wrefresh  (win->DWIN);
+}
                 
 
 
-/*
-    Calculate file rows, columns, etc.
-*/
 int
 set_file_rows_cols (window_t *win)
 {
@@ -315,7 +613,7 @@ set_file_rows_cols (window_t *win)
 
 
 
-static void
+static int
 display_lines_file (int key,
                     window_t *win) 
 {
@@ -328,9 +626,8 @@ display_lines_file (int key,
          line_index,
          i, spaces, win_text_len;
 
-    wclear (win->DWIN);
+    werase (win->DWIN);
 
-    // shift mid_line, first_char
     // TODO: page up/down, home, end
     switch (key) {
 
@@ -391,7 +688,10 @@ display_lines_file (int key,
         fseek (win->src_file_data->ptr, win->src_file_data->offsets[print_line++ - 1], SEEK_SET);
 
         // get line
-        fgets (line, sizeof (line), win->src_file_data->ptr);
+        if ((fgets (line, sizeof (line), win->src_file_data->ptr)) == NULL) {
+            pfem ("fgets error: \"%s\"", strerror (errno));
+            pemr ("Unable to get source file line");
+        }
         line_len = strlen (line);
 
         // if line characters visible
@@ -421,18 +721,9 @@ display_lines_file (int key,
 
         spaces = win->src_file_data->line_num_digits - sprintf (buff, "%d", print_line - 1) + LINE_NUM_TEXT_SPACES;
 
-        // highlight current line
-        if ((print_line - 1) == win->src_file_data->line) {
-            wattron (win->DWIN, A_REVERSE);
-        }
-
         // print line
         mvwprintw (win->DWIN, row++, col, "%d%*c%.*s",
                 print_line - 1, spaces, ' ', win_text_len, (const char*)(line + line_index));
-
-        if ((print_line - 1) == win->src_file_data->line) {
-            wattroff (win->DWIN, A_REVERSE);
-        }
 
         // break if end of file
         if (print_line > win->src_file_data->rows) {
@@ -441,76 +732,8 @@ display_lines_file (int key,
     }
 
     wrefresh(win->DWIN);
+    return A_OK;
 }
+*/
 
-
-
-static void
-format_win_data (int plugin_index,
-                 state_t *state)
-{
-    int       i, j, 
-              m, n,
-              ch,
-              rows, cols,
-              left_spaces,
-              right_spaces;
-    size_t    k, si;
-    window_t *win;
-    char     *needle,
-             *basefile;
-
-    win = state->plugins[plugin_index]->win;
-
-    if (plugin_index == Asm) {
-
-        // highlight current hex address (wherever it occurs)
-        si = 0;
-        getmaxyx (win->DWIN, rows, cols);
-        needle = state->plugins[Src]->win->src_file_data->addr;
-
-        for (i = 0; i < rows; i++) {
-            for (j = 0; j < cols; j++) {
-                ch = mvwinch (win->DWIN, i, j);
-                if ((char) ch == needle [si]) {
-                    if (si == 0) {
-                        m = i;
-                        n = j;
-                    }
-                    si += 1;
-                    if (si == strlen (needle)) {
-                        wattron (win->DWIN, A_REVERSE);
-                        for (k = 0; k < strlen (needle); k++) {
-                            mvwprintw (win->DWIN, m, n + k, "%c", needle[k]);
-                        }
-                        wattroff (win->DWIN, A_REVERSE);
-                        wrefresh (win->DWIN);
-                    }
-                } 
-                else {
-                    si = 0;
-                }
-            }
-        }
-    }
-
-    else if (plugin_index == Src) {
-            
-        // TODO: Replace source file line number with colored "b2" breakpoint index number
-
-        // print current source code file in top bar
-        basefile = basename (win->src_file_data->path);
-        left_spaces = (win->topbar_cols - strlen (basefile)) / 2;
-        right_spaces = win->topbar_cols - strlen (basefile) - left_spaces;
-        left_spaces = left_spaces > 0 ? left_spaces : 0;
-        right_spaces = right_spaces > 0 ? left_spaces : 0;
-
-        wattron   (win->TWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
-        mvwprintw (win->TWIN, 0, 0, "%*c%.*s%*c", left_spaces, ' ',
-                                                  win->topbar_cols, basefile,
-                                                  right_spaces, ' ');
-        wattroff  (win->TWIN, COLOR_PAIR(WINDOW_INPUT_TITLE_COLOR));
-        wrefresh  (win->TWIN);
-    }
-}
 

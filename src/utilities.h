@@ -23,17 +23,24 @@ void logd (const char *formatted_string, ...);
 /*
     Clean up before exiting program
 */
-void  clean_up  (void);
+void clean_up (void);
+
+
+
+/*
+    Free all ncurses windows in current layout except state->header
+*/
+int free_nc_window_data (state_t *state);
 
 
 
 /*
     Concatenate variable number of strings
     -------
-    - Returns pointer to created string
-    - Must free after use
+    - Returns pointer to allocated string or NULL on error
+    - Must free string after use
 */
-char  *concatenate_strings  (int num_strings, ...);
+char *concatenate_strings (int num_strings, ...);
 
 
 
@@ -107,22 +114,6 @@ void cp_wchar (buff_data_t *dest_buff_data, char ch);
 
 
 /*
-    Copy character into src_file_data_t buffers
-    --------
-    state->plugins[Src]->win->src_file_data  (->path, ->addr, ->func)
-
-    Uses:
-        ->path_pos
-        ->path_len
-        ->addr_ ...
-*/
-enum { PATH, ADDR, FUNC };      // type
-
-void cp_fchar (src_file_data_t *dest_file_data, char ch, int type);
-
-
-
-/*
     Copy character into debugger buffer
     ---------
     state->debugger
@@ -134,9 +125,28 @@ void cp_fchar (src_file_data_t *dest_file_data, char ch, int type);
         ->data_pos
         ->data_ ..l
 */
-enum { FORMAT_BUF, DATA_BUF, CLI_BUF, PROGRAM_BUF, ASYNC_BUF };     // buff_index
+enum { PATH_BUF, FORMAT_BUF, DATA_BUF, CLI_BUF, PROGRAM_BUF, ASYNC_BUF };     // buff_index
 
 void cp_dchar (debugger_t *debugger, char ch, int buff_index);
+
+
+
+/*
+    Copy <str> to system clipboard
+    -------
+    - Returns A_OK, FAIL
+*/
+int copy_to_clipboard (char *str);
+
+
+
+/*
+    Create buffer from file
+    -------
+    - Returns pointer to buffer or NULL if failed
+    - Buffer must be freed
+*/
+char* create_buff_from_file (char *path);
 
 
 

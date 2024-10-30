@@ -39,52 +39,79 @@ get_local_vars (state_t *state)
 static int
 get_local_vars_gdb (state_t *state)
 {
-    int ret;
-    window_t *win;
-    const
+    int          ret,
+                 index,
+                 tmp_index,
+                 rem_index;
+    window_t    *win;
+    char        *src_ptr;
+    buff_data_t *dest_data;
+
     char *key_name  = "name=\"",
          *key_value = "value=\"";
-    char *src_ptr;
-    buff_data_t *dest_buff;
 
     win       = state->plugins[LcV]->win;
     src_ptr   = state->debugger->data_buffer;
-    dest_buff = win->buff_data;
+    dest_data = win->buff_data;
+    index     = 1;
 
     ret = send_command_mp (state, "-stack-list-locals 1\n");
     if (ret == FAIL) {
         pfemr (ERR_DBG_CMD);
     }
 
-    dest_buff->buff_pos = 0;
+    dest_data->buff_pos = 0;
 
     if (strstr (src_ptr, "error") == NULL) {
 
-        // variable
         while ((src_ptr = strstr (src_ptr, key_name)) != NULL) {
+
+            // index  (used by format_window_data_LcV() to identify start of line when text wrapped)
+            cp_wchar (dest_data, '(');
+            tmp_index = index;
+            do {
+                rem_index = tmp_index % 10;
+                cp_wchar (dest_data, rem_index + '0');
+                tmp_index /= 10;
+            } while (tmp_index != 0);
+            ++index;
+            cp_wchar (dest_data, ')');
+            cp_wchar (dest_data, ' ');
+
+            // variable
             src_ptr += strlen (key_name);
             while (*src_ptr != '\"') {
-                cp_wchar (dest_buff, *src_ptr++);
+                cp_wchar (dest_data, *src_ptr++);
             }
 
-            cp_wchar (dest_buff, ' ');
-            cp_wchar (dest_buff, '=');
-            cp_wchar (dest_buff, ' ');
+            cp_wchar (dest_data, ' ');
+            cp_wchar (dest_data, '=');
+            cp_wchar (dest_data, ' ');
 
             // value
             src_ptr = strstr (src_ptr, key_value);
             src_ptr += strlen (key_value);
-            while ( *src_ptr != '}' ) {
+
+            while ( *src_ptr != '}') {
+
+                // skip string hex address
+                if ( *src_ptr      == '0' &&
+                    *(src_ptr + 1) == 'x')
+                {
+                    while (*src_ptr != ' ' && *src_ptr != '\"') {
+                        ++src_ptr;
+                    }
+                }
 
                 //  \\\t, \\\n  ->  \t, \n
                 if (*src_ptr == '\\' && isalpha(*(src_ptr + 1))) {
                     if (*(src_ptr + 1) == 'n') {
-                        cp_wchar (dest_buff, '\\');
-                        cp_wchar (dest_buff, 'n');
+                        cp_wchar (dest_data, '\\');
+                        cp_wchar (dest_data, 'n');
                         src_ptr += 2;
                     } else if (*(src_ptr + 1) == 't') {
-                        cp_wchar (dest_buff, '\\');
-                        cp_wchar (dest_buff, 't');
+                        cp_wchar (dest_data, '\\');
+                        cp_wchar (dest_data, 't');
                         src_ptr += 2;
                     } 
                 }
@@ -92,7 +119,7 @@ get_local_vars_gdb (state_t *state)
                 //  \\\"  ->  \"
                 else if (*src_ptr == '\\' && *(src_ptr + 1) == '\"' ) {
                     src_ptr += 1;
-                    cp_wchar (dest_buff, *src_ptr++);
+                    cp_wchar (dest_data, *src_ptr++);
                 }
 
                 //  \\\\  ->  '\\'
@@ -106,24 +133,24 @@ get_local_vars_gdb (state_t *state)
                 }
 
                 else {
-                    cp_wchar (dest_buff, *src_ptr++);
+                    cp_wchar (dest_data, *src_ptr++);
                 }
             }
 
             // ..., 4, 5 '}'
             if (*(src_ptr + 1) == '\"') {
-                cp_wchar (dest_buff, '}');
+                cp_wchar (dest_data, '}');
             }
 
-            cp_wchar (dest_buff, '\n');
+            cp_wchar (dest_data, '\n');
         }
     } 
 
     else {
-        cp_wchar (dest_buff, '\0');
+        cp_wchar (dest_data, '\0');
     }
 
-    dest_buff->changed = true;
+    dest_data->changed = true;
     state->debugger->data_buffer[0]  = '\0';
 
     return A_OK;
@@ -135,6 +162,9 @@ static int
 get_local_vars_pdb (state_t *state)
 {
     int          open_arrs,
+                 index,
+                 tmp_index,
+                 rem_index,
                  ret;
     window_t    *win;
     char        *src_ptr;
@@ -145,6 +175,7 @@ get_local_vars_pdb (state_t *state)
     win       = state->plugins[LcV]->win;
     src_ptr   = state->debugger->program_buffer;
     dest_data = win->buff_data;
+    index     = 1;
 
     ret = send_command_mp (state, "locals()\n");
     if (ret == FAIL) {
@@ -168,6 +199,18 @@ get_local_vars_pdb (state_t *state)
 
             // locate ':'
             if (*src_ptr == '\'' && *(src_ptr + 1) == ':') {
+
+                // index  (used by format_window_data_LcV() to identify start of line when text wrapped)
+                cp_wchar (dest_data, '(');
+                tmp_index = index;
+                do {
+                    rem_index = tmp_index % 10;
+                    cp_wchar (dest_data, rem_index + '0');
+                    tmp_index /= 10;
+                } while (tmp_index != 0);
+                ++index;
+                cp_wchar (dest_data, ')');
+                cp_wchar (dest_data, ' ');
 
                 // variable
                 src_ptr -= 1;      // skip second ' in 'var'

@@ -7,9 +7,15 @@
 
 
 /*
-   Plugin indexes
-   --------
-   - Order matches respective code strings in *plugin_codes[] in plugins.c  (i.e. alphabetical)
+    Plugin indexes
+    --------
+    - Used to identify plugins and access all associated data
+
+        Asm == 0
+        plugin_codes[Asm] == "Asm"
+        state->plugins[Asm]->...
+
+    - MUST be sorted alphabetically for get_plugin_code_index()  [A-Z,a-z]
 */
 enum {
     Asm,
@@ -30,7 +36,6 @@ enum {
     Src,
     Stk,
     Stp,
-    Trg,
     Unt,
     Wat
 };
@@ -45,7 +50,16 @@ void set_num_plugins  (state_t*);
 
 
 /*
-    Return plugin code index matching its enum above
+    Allocate state->plugins
+    ---------
+    Returns A_OK or FAIL
+*/
+int allocate_plugins (state_t *state);
+
+
+
+/*
+    Return plugin code's index
     ------
     Returns index or FAIL
 */
@@ -72,9 +86,9 @@ int allocate_plugin_windows (state_t*);
 
 
 /*
-    Print plugin indexes and codes  (debugging)
+    Print plugin indexes, codes  (debugging)
     ---------
-    Run with `make plugins`
+    $ make plugins
 */
 void print_plugin_indexes_codes (void);
 

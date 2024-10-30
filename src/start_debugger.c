@@ -16,8 +16,9 @@
 #include "update_window_data/_update_window_data.h"
 #include "update_window_data/get_binary_path_time.h"
 
-static int configure_debugger (debugger_t*);
+static int configure_debugger  (debugger_t*);
 static int start_debugger_proc (state_t*);
+static int send_setup_commands (state_t*);
 
 
 
@@ -39,6 +40,11 @@ start_debugger (state_t *state)
     ret = insert_output_end_marker (state);
     if (ret == FAIL) {
         pfemr (ERR_OUT_MARK);
+    }
+
+    ret = send_setup_commands (state);
+    if (ret == FAIL) {
+        pfemr ("Failed to send setup commands");
     }
 
     ret = parse_debugger_output (state);
@@ -65,6 +71,15 @@ start_debugger (state_t *state)
 static int
 configure_debugger (debugger_t *debugger)
 {
+    if ((debugger->src_path_buffer = (char*) malloc (sizeof (char) * PROGRAM_PATH_LEN)) == NULL) {
+        pfem ("malloc error: %s", strerror (errno));
+        pemr ("Path buffer allocation failed");
+    }
+    debugger->src_path_buffer[0] = '\0';
+    debugger->src_path_len = PROGRAM_PATH_LEN;
+    debugger->src_path_pos = 0;
+    debugger->src_path_times_doubled = 0;
+
     if ((debugger->format_buffer = (char*) malloc (sizeof (char) * ORIG_BUF_LEN)) == NULL) {
         pfem ("malloc error: %s", strerror (errno));
         pemr ("Format buffer allocation failed");
@@ -173,3 +188,22 @@ start_debugger_proc (state_t *state)
     return A_OK;
 }
 
+
+
+static int
+send_setup_commands (state_t *state)
+{
+    int   ret;
+    char *cmd_confirm_off = "set confirm off\n";
+
+    switch (state->debugger->index) {
+        case DEBUGGER_GDB:
+            ret = send_command_mp (state, cmd_confirm_off);
+            if (ret == FAIL) {
+                pfemr ("Failed to send GDB setup command");
+            }
+            break;
+    }
+
+    return A_OK;
+}

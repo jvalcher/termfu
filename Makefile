@@ -24,13 +24,16 @@ C_FILES         = $(wildcard ./src/*.c)
 C_TEST_FILES    = $(filter-out ./src/main.c, $(wildcard ./src/*.c))
 C_UPDATE_FILES  = $(wildcard ./src/update_window_data/*.c)
 C_FORM_IN_FILES = $(wildcard ./src/get_form_input/*.c)
+C_DEBUG_FILES   = $(wildcard ./src/debug/*.c)
 
 # configuration, data files  (see scripts/create_configs)
-CONFIG_BASE    = scripts/.termfu
-CONFIG_RUN_GDB = $(CONFIG_BASE)_run_gdb
-CONFIG_RUN_PDB = $(CONFIG_BASE)_run_pdb
-DATA_RUN_GDB   = $(CONFIG_RUN_GDB)_data
-DATA_RUN_PDB   = $(CONFIG_RUN_PDB)_data
+GDB_BUILD_SCRIPT = build_vars
+GDB_BINARY       = vars
+CONFIG_BASE      = scripts/.termfu
+CONFIG_RUN_GDB   = $(CONFIG_BASE)_run_gdb
+CONFIG_RUN_PDB   = $(CONFIG_BASE)_run_pdb
+DATA_RUN_GDB     = $(CONFIG_RUN_GDB)_data
+DATA_RUN_PDB     = $(CONFIG_RUN_PDB)_data
 
 
 .PHONY: help all dev devf devformat configs build_gdb run_gdb run_pdb plugins conn_proc_gdbtui conn_proc_termfu proc_gdb proc_pdb clean_prod clean_dev
@@ -39,12 +42,14 @@ DATA_RUN_PDB   = $(CONFIG_RUN_PDB)_data
 all: FLAGS   += $(PROD_FLAGS)
 all: C_FILES += $(C_UPDATE_FILES)
 all: C_FILES += $(C_FORM_IN_FILES)
+all: C_FILES += $(C_DEBUG_FILES)
 all: clean_prod $(B_FILE_PROD)
 	@echo ""
 
 dev: FLAGS   += $(DEV_FLAGS)
 dev: C_FILES += $(C_UPDATE_FILES)
 dev: C_FILES += $(C_FORM_IN_FILES)
+dev: C_FILES += $(C_DEBUG_FILES)
 dev: clean_dev $(B_FILE_DEV)
 	@echo ""
 
@@ -55,6 +60,7 @@ devf:
 devformat: FLAGS   += $(FORMAT_FLAGS)
 devformat: C_FILES += $(C_UPDATE_FILES)
 devformat: C_FILES += $(C_FORM_IN_FILES)
+devformat: C_FILES += $(C_DEBUG_FILES)
 devformat: clean_dev $(B_FILE_DEV)
 
 clean_prod:
@@ -84,7 +90,8 @@ configs:
 	@./scripts/make_configs
 
 build_gdb:
-	@(cd misc && ./build_hello)
+	(cd misc && ./build_hello)
+	(cd misc && ./build_vars)
 
 run_gdb:
 	@./$(B_FILE_DEV) -c $(CONFIG_RUN_GDB) -p $(DATA_RUN_GDB)

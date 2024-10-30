@@ -1,22 +1,23 @@
 
 [ command ]
 
-gdb --interpreter=mi a.out
+gdb --interpreter=mi --quiet a.out
 
 [ plugins ]
 
 # header commands
-Prm : m : pro(m)pt
-Trg : t : (t)arget
-Lay : l : (l)ayouts
-Qut : q : (q)uit
-Run : r : (r)un
-Nxt : n : (n)ext
-Stp : s : (s)tep
+AtP : A : (A)ttach
 Con : c : (c)ontinue
-Unt : u : (u)ntil
 Fin : f : (f)inish
 Kil : k : (k)ill
+Lay : l : (l)ayouts
+Nxt : n : (n)ext
+Prm : m : pro(m)pt
+Qut : q : (q)uit
+Run : r : (r)un
+Stp : s : (s)tep
+Trg : t : (t)arget
+Unt : u : (u)ntil
 
 # windows
 Asm : a : (a)ssembly
@@ -29,28 +30,15 @@ Src : o : s(o)urce file
 Stk : T : s(T)ack
 Wat : w : (w)atch
 
-
 [ layout : Main ]
 
 >h
 mtlq
-rnscufk
+rns
+cufk
 
 >w
-eeeooooo
-wwwooooo
-vvvooooo
-TTpppddd
-
-[ layout : Assembly / Registers ]
-
->h
-mtlq
-rnscufk
-
->w
-oag
-oag
-oag
-wpT
+boo
+voo
+dww
 

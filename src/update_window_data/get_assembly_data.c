@@ -41,26 +41,22 @@ get_assembly_data (state_t *state)
 static int
 get_assembly_data_gdb (state_t *state)
 {
-    int       ret;
-    window_t *win;
-    char     *src_ptr,
-             *dest_ptr,
-             *data_ptr,
-             *cmd,
-             *func,
-             *main = "main";
-    buff_data_t *dest_buff;
-    src_file_data_t *src_data;
+    int          ret;
+    window_t    *win;
+    char        *src_ptr,
+                *dest_ptr,
+                *data_ptr,
+                *cmd,
+                *func;
+    buff_data_t *dest_data;
 
     win       = state->plugins[Asm]->win;
     src_ptr   = state->debugger->cli_buffer;
     data_ptr  = state->debugger->data_buffer;
-    dest_buff = win->buff_data;
-    src_data  = state->plugins[Src]->win->src_file_data;
+    dest_data = win->buff_data;
 
-    func = (src_data->func[0] == '\0') ? main : src_data->func;
-    cmd = concatenate_strings (3, "disassemble ", func, " \n");
-
+    func = (state->debugger->curr_func[0] == '\0') ? "main" : state->debugger->curr_func;
+    cmd = concatenate_strings (3, "disassemble ", func, "\n");
     ret = send_command_mp (state, cmd);
     if (ret == FAIL) {
         pfemr (ERR_DBG_CMD);
@@ -70,7 +66,7 @@ get_assembly_data_gdb (state_t *state)
 
     if (strstr (data_ptr, "error") == NULL) {
 
-        dest_buff->buff_pos = 0;
+        dest_data->buff_pos = 0;
 
         while (*src_ptr != '\0') {
 
@@ -109,25 +105,26 @@ get_assembly_data_gdb (state_t *state)
             }
 
             else {
-                cp_wchar (dest_buff, *src_ptr++);
+                cp_wchar (dest_data, *src_ptr++);
             }
         }
+
         state->debugger->cli_buffer[0]  = '\0';
         state->debugger->data_buffer[0] = '\0';
 
-        dest_buff->changed = true;
+        dest_data->changed = true;
     }
 
-    // set scroll row on '=>'
+    // set state->debugger->curr_Asm_line to '=>'
     dest_ptr = win->buff_data->buff;
-    win->buff_data->scroll_row = 1;
+    state->debugger->curr_Asm_line = 1;
     while (*dest_ptr != '\0') {
         if ( *dest_ptr      == '=' &&
             *(dest_ptr + 1) == '>') {
             break;
         }
         if (*dest_ptr == '\n') {
-            ++win->buff_data->scroll_row;
+            ++state->debugger->curr_Asm_line;
         }
         ++dest_ptr;
     }
@@ -142,6 +139,8 @@ get_assembly_data_pdb (state_t *state)
 {
     no_buff_data (Asm, state); 
 
+    state->debugger->curr_Asm_line = 1;
+    state->plugins[Asm]->win->buff_data->scroll_col_offset = 0;
     state->plugins[Asm]->win->buff_data->changed = true;
 
     return A_OK;

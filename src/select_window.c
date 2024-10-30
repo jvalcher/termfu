@@ -24,12 +24,9 @@ select_window (int      plugin_index,
                state_t *state)
 {
     int           key,
-                  type,
                   ret;
     bool          in_loop         = true,
                   key_not_pressed = true;
-
-    type = state->plugins[plugin_index]->win_type;
 
     ret = select_window_color (plugin_index, state);
     if (ret == FAIL) {
@@ -47,7 +44,7 @@ select_window (int      plugin_index,
         switch (key) {
             case 'k':
             case KEY_UP:
-                ret = display_lines (type, KEY_UP, plugin_index, state);
+                ret = display_lines (KEY_UP, plugin_index, state);
                 if (ret == FAIL) {
                     pfem ("Failed to display lines (KEY_UP)");
                     goto sel_win_err;
@@ -56,7 +53,7 @@ select_window (int      plugin_index,
                 break;
             case 'j':
             case KEY_DOWN:
-                ret = display_lines (type, KEY_DOWN, plugin_index, state);
+                ret = display_lines (KEY_DOWN, plugin_index, state);
                 if (ret == FAIL) {
                     pfem ("Failed to display lines (KEY_DOWN)");
                     goto sel_win_err;
@@ -65,7 +62,7 @@ select_window (int      plugin_index,
                 break;
             case 'l':
             case KEY_RIGHT:
-                ret = display_lines (type, KEY_RIGHT, plugin_index, state);
+                ret = display_lines (KEY_RIGHT, plugin_index, state);
                 if (ret == FAIL) {
                     pfem ("Failed to display lines (KEY_RIGHT)");
                     goto sel_win_err;
@@ -74,7 +71,7 @@ select_window (int      plugin_index,
                 break;
             case 'h':
             case KEY_LEFT:
-                ret = display_lines (type, KEY_LEFT, plugin_index, state);
+                ret = display_lines (KEY_LEFT, plugin_index, state);
                 if (ret == FAIL) {
                     pfem ("Failed to display lines (KEY_LEFT)");
                     goto sel_win_err;

@@ -24,10 +24,13 @@
 #define FAIL  -1
 
 #define ERR_DBG_CMD     "Failed to send debugger command"
+#define ERR_DBG_FCLOSE  "Failed to close DEBUG_OUT_FILE"
 #define ERR_DBG_PARSE   "Failed to parse debugger output"
 #define ERR_DISP_LINES  "Failed to display lines"
 #define ERR_NC_ATTR     "Failed to set ncurses attribute"
+#define ERR_NC_FREE     "Failed to free ncurses layout windows"
 #define ERR_OUT_MARK    "Failed to insert output marker"
+#define ERR_PERSIST     "Failed to persist data"
 #define ERR_POPUP_IN    "Failed to get popup window input"
 #define ERR_PULSE_CMD   "Failed to pulse header title color"
 #define ERR_REND_LAYOUT "Failed to render layout"
@@ -50,37 +53,46 @@
 
         <TEXT>_<BACKGROUND>
 */
-#define RED_BLACK       20
-#define GREEN_BLACK     21
-#define YELLOW_BLACK    22
-#define BLUE_BLACK      23
-#define MAGENTA_BLACK   24
-#define CYAN_BLACK      25
-#define WHITE_BLACK     26
-#define WHITE_BLUE      27
+#define RED_BLACK           20
+#define GREEN_BLACK         21
+#define YELLOW_BLACK        22
+#define BLUE_BLACK          23
+#define MAGENTA_BLACK       24
+#define CYAN_BLACK          25
+#define WHITE_BLACK         26
+#define WHITE_BLUE          27
 
 // misc
-#define DEFAULT                         WHITE_BLACK
-#define MAIN_TITLE_COLOR                GREEN_BLACK
-#define LAYOUT_TITLE_COLOR              MAGENTA_BLACK
-#define TITLE_KEY_COLOR                 YELLOW_BLACK
+#define DEFAULT                       WHITE_BLACK
+#define TITLE_KEY_COLOR               YELLOW_BLACK
 
 // header
-#define HEADER_TITLE_COLOR              GREEN_BLACK
-#define FOCUS_TITLE_KEY_COLOR           GREEN_BLACK
-#define FOCUS_HEADER_TITLE_COLOR        YELLOW_BLACK
+#define MAIN_TITLE_COLOR              GREEN_BLACK
+#define LAYOUT_TITLE_COLOR            MAGENTA_BLACK
+#define HEADER_TITLE_COLOR            GREEN_BLACK
+#define FOCUS_TITLE_KEY_COLOR         GREEN_BLACK
+#define FOCUS_HEADER_TITLE_COLOR      YELLOW_BLACK
 
 // window
-#define WINDOW_TITLE_COLOR              CYAN_BLACK
-#define BORDER_COLOR                    BLUE_BLACK
-#define FOCUS_WINDOW_TITLE_COLOR        YELLOW_BLACK
-#define FOCUS_BORDER_COLOR              YELLOW_BLACK
-#define FOCUS_WINDOW_TITLE_KEY_COLOR    BLUE_BLACK
-#define WINDOW_INPUT_TITLE_COLOR        WHITE_BLUE
+#define WINDOW_TITLE_COLOR            CYAN_BLACK
+#define BORDER_COLOR                  BLUE_BLACK
+#define FOCUS_WINDOW_TITLE_COLOR      YELLOW_BLACK
+#define FOCUS_BORDER_COLOR            YELLOW_BLACK
+#define FOCUS_WINDOW_TITLE_KEY_COLOR  BLUE_BLACK
+#define TOPBAR_COLOR                  WHITE_BLUE
+#define BREAK_INDEX_COLOR             YELLOW_BLACK
+#define BREAK_FILE_COLOR              GREEN_BLACK
+#define BREAK_LINE_COLOR              MAGENTA_BLACK
+#define LOC_VAR_COLOR                 GREEN_BLACK
+#define PROG_OUT_NEW_RUN_COLOR        GREEN_BLACK
+#define SRC_LINE_COLOR                GREEN_BLACK
+#define SRC_BREAK_LINE_COLOR          MAGENTA_BLACK
+#define WAT_INDEX_COLOR               YELLOW_BLACK
+#define WAT_VAR_COLOR                 GREEN_BLACK
 
 // form
-#define FORM_INPUT_FIELD                WHITE_BLUE
-#define FORM_BUTTON                     WHITE_BLUE
+#define FORM_INPUT_FIELD              WHITE_BLUE
+#define FORM_BUTTON                   WHITE_BLUE
 
 
 
@@ -132,98 +144,91 @@ typedef struct layout {
 #define CODE_LEN          3
 #define NO_DATA_MSG       "Not supported by "
 #define FILE_PATH_LEN     256
-#define ADDRESS_LEN       48
-#define FUNC_LEN          128
-#define ORIG_BUF_LEN      16384     // Double buffer size 3x to 32768 -> 65536 -> 131072
-#define MAX_DOUBLE_TIMES  3         // before it loops back around                            
+#define ORIG_BUF_LEN      16384     // Double ORIG_BUF_LEN  MAX_DOUBLE_TIMES before
+#define MAX_DOUBLE_TIMES  3         // before it loops back around (3x: 32768 -> 65536 -> 131072)
+
+/*
+    scroll_buff_line_t
+    --------
+    - Ncurses WINDOW data buffer individual line data
+
+    state->plugins[i]->win->buff_data->head_line, curr_line, tail_line
+
+    prev    - previous node
+    next    - next node
+
+    ptr     - pointer to start of line in buffer
+    len     - number of characters in line
+    line    - line number
+*/
+typedef struct sbl_t {
+
+    struct sbl_t *prev;
+    struct sbl_t *next;
+
+    char *ptr;
+    int   len;
+    int   line;
+
+} scroll_buff_line_t;
                                         
 /*
     buff_data_t
     --------
+    - Data for each Ncurses WINDOW
+
     state->plugins[i]->win->buff_data
 
-    buff        - window data buffer
-    buff_len    - buffer size
-    buff_pos    - current index position of terminating null
-    changed     - signals for buffer data to be reloaded before being displayed
-    rows        - lines of data in buffer 
-    max_cols    - last index of longest line
-    scroll_row  - current scroll row
-    scroll_col  - first character of each line to be displayed
-    new_data    - signals that new Dbg or Prg window data is in the debugger's buffer(s) 
-                  and should be appended to the respective window_t buffer
+    code              - plugin code string
+    changed           - boolean signal for buffer data to be reloaded before being displayed
+    new_data          - boolean signal that new Dbg and/or Prg window data is in the debugger's 
+                        buffer(s) and should be appended to the respective window_t buffer
+    text_wrapped      - boolean signal for wrapped buffer text (all except Asm, Src)
+
+    buff              - window data buffer
+    buff_len          - buffer size
+    buff_pos          - current index position of terminating null
+    times_doubled     - number of times buffer size doubled from ORIG_BUF_LEN,
+                        limited by MAX_DOUBLE_TIMES
+
+    rows              - lines of data in buffer 
+    scroll_row        - current scroll row, used to calculate curr_line
+    scroll_col_offset - offset from first line characters
+    max_chars         - number of characters in longest line, used for non-wrapped 
+                        buffers (Asm, Src)
+
+    head_line         - head node of scroll_buff_line_t linked list
+    curr_line         - current node
+    tail_line         - last node
 */
 typedef struct {
 
     char   code [CODE_LEN+1];
+    bool   changed;
+    bool   new_data;
+    bool   text_wrapped;
+
     char  *buff;  
     int    buff_len;
     int    buff_pos;
     int    times_doubled;
-    bool   changed;
+
     int    rows;
-    int    max_cols;
     int    scroll_row;
-    int    scroll_col;
-    bool   new_data;
+    int    scroll_col_offset;
+    int    max_chars;
+    
+    scroll_buff_line_t  *head_line;
+    scroll_buff_line_t  *curr_line;
+    scroll_buff_line_t  *tail_line;
 
 } buff_data_t;
-
-/*
-    src_file_data_t
-    --------
-    state->plugins[i]->win->src_file_data
-
-    ptr                 - source file pointer
-    line                - current display line
-    line_num_digits     - number of columns required to display line numbers
-    first_char          - column index of first character to be displayed for each line
-    rows                - number of lines in file
-    max_cols            - column index of last character in longest line
-    min_mid             - minimum middle line to display given number of rows in window
-    max_mid             - maximum middle line to display given number of rows in window
-    offsets             - first character of each line offsets
-
-    path                - current file path buffer
-    path_len            - buffer size
-    path_pos            - current index of null terminator
-    path_changed        - signals that there is a new source file that must be processed before display
-    addr                - current hex address of program's execution buffer
-    addr_len            - buffer size
-    addr_pos            - current index of null terminator
-    func                - current function buffer
-    func_len            - buffer size
-    func_pos            - current index of null terminator
-*/
-typedef struct {
-
-    FILE  *ptr;
-    int    line;
-    int    line_num_digits;
-    int    first_char;
-    int    rows;
-    int    max_cols;
-    int    min_mid;
-    int    max_mid;
-    long  *offsets;
-
-    char   path [FILE_PATH_LEN];    
-    int    path_len;
-    int    path_pos;
-    bool   path_changed;
-    char   addr [ADDRESS_LEN];
-    int    addr_len;
-    int    addr_pos;
-    char   func [FUNC_LEN];
-    int    func_len;
-    int    func_pos;
-
-} src_file_data_t;
 
 /*
     window_t
     ------
     - Individual ncurses WINDOW data
+
     state->plugins[i]->win
 
     WIN                 - parent ncurses WINDOW
@@ -233,6 +238,9 @@ typedef struct {
     key                 - plugin key binding
     code                - plugin code
     has_topbar          - signals window has topbar
+    path                - file path (if applicable)
+
+    --- parent window ---
 
     rows                - parent rows
     cols                - columns
@@ -240,12 +248,16 @@ typedef struct {
     x                   - top left screen column coordinate
     border              - border settings required by wborder()
 
+    --- topbar title subwindow if exists ---
+
     topbar_rows         - topbar subwindow rows
     topbar_cols         - columns
     topbar_y            - top left row coordinate relative to parent window
     topbar_x            - top left column coordinate    "
     topbar_title        - title string
                         
+    --- data subwindow ---
+
     data_win_rows       - data subwindow rows
     data_win_cols       - columns
     data_win_y          - top left row coordinate relative to parent window
@@ -253,7 +265,6 @@ typedef struct {
     data_win_mid_line   - middle row index
 
     buff_data           - buff_data_t pointer
-    src_file_data       - src_file_data_t pointer
 */
 typedef struct {
 
@@ -261,34 +272,30 @@ typedef struct {
     WINDOW       *TWIN;
     WINDOW       *DWIN;
 
-    int           key;
+    int           index;
     char          code[CODE_LEN + 1];
+    int           key;
     bool          has_topbar;
 
-    // parent window
     int           rows;                   
     int           cols;                   
     int           y;                      
     int           x;                      
     int           border [8];
 
-    // topbar title subwindow
     int           topbar_rows;
     int           topbar_cols;
     int           topbar_y;
     int           topbar_x;
     char         *topbar_title;
 
-    // data subwindow
     int           data_win_rows;
     int           data_win_cols;
     int           data_win_y;
     int           data_win_x;
     int           data_win_mid_line;
 
-    // buffer, source file window data
     buff_data_t      *buff_data;
-    src_file_data_t  *src_file_data;
 
 } window_t;
 
@@ -298,11 +305,12 @@ typedef struct {
   Debugger
  **********/
 
-#define PIPE_READ        0
-#define PIPE_WRITE       1
-#define DEBUG_TITLE_LEN  8
-#define PROGRAM_PATH_LEN 256
-#define READER_BUF_LEN   8192
+#define PIPE_READ         0
+#define PIPE_WRITE        1
+#define DEBUG_TITLE_LEN   8
+#define PROGRAM_PATH_LEN  256
+#define READER_BUF_LEN    8192
+#define FUNC_LEN          128
 
 enum { DEBUGGER_GDB, DEBUGGER_PDB };
 enum { READER_RECEIVING, READER_DONE };
@@ -315,49 +323,67 @@ enum { READER_RECEIVING, READER_DONE };
     index                   - DEBUGGER_GDB, DEBUGGER_PDB, ...
     title                   - "gdb", "pdb", ...
     running                 - controls main() loop state
-    prog_path               - binary, main script path buffer
-    prog_update_time        - file's last update time (st_mtim.tv_sec), used to signal reload
-                                        
     stdin_pipe;             - debugger process input pipe
     stdout_pipe;            - debugger process output pipe
+
+    prog_path               - binary, main script path buffer
+    prog_update_time        - file's last update time (st_mtim.tv_sec), used to signal reload
+
+    curr_func               - current function
                                         
+    src_path_buffer         - path string of current source file
+    src_path_len            - string buffer size
+    src_path_pos            - null terminator index
+    src_path_times_doubled  - times buffer size doubled
+    src_path_changed        - source file path changed boolean
+
     reader_state            - READER_RECEIVING, RECEIVER_DONE
-    reader_buffer           - debugger process initial output buffer
+    reader_buffer           - read() output buffer for debugger process
                                         
     format_buffer           - misc buffer for formatting output
     format_len              - buffer size
     format_pos              - null terminator index
     format_times_doubled    - times buffer size doubled
     data_buffer             - data stream buffer
-    data_len                - buffer size
-    data_pos                - null terminator index
-    data_times_doubled      - times buffer size doubled
+    data_len
+    data_pos                
+    data_times_doubled      
     cli_buffer              - cli stream buffer
-    cli_len                 - buffer size
-    cli_pos                 - null terminator index
-    cli_times_doubled       - times buffer size doubled
+    cli_len                 
+    cli_pos                 
+    cli_times_doubled       
     program_buffer          - program output buffer
-    program_len             - buffer size
-    program_pos             - null terminator index
-    program_times_doubled   - times buffer size doubled
+    program_len             
+    program_pos             
+    program_times_doubled   
     async_buffer            - async (status) buffer
-    async_len               - buffer size
-    async_pos               - null terminator index
-    async_times_doubled     - times buffer size doubled
+    async_len               
+    async_pos               
+    async_times_doubled     
 */
 typedef struct {
 
     int     index;
-    char    title         [DEBUG_TITLE_LEN];
+    char    title [DEBUG_TITLE_LEN];
     bool    running;
-    char    prog_path     [PROGRAM_PATH_LEN];
-    time_t  prog_update_time;
-
     int     stdin_pipe;
     int     stdout_pipe;
 
+    char    prog_path [PROGRAM_PATH_LEN];
+    time_t  prog_update_time;
+
+    int     curr_Src_line;
+    int     curr_Asm_line;
+    char    curr_func [FUNC_LEN];
+
+    char   *src_path_buffer;
+    int     src_path_len;
+    int     src_path_pos;
+    int     src_path_times_doubled;
+    bool    src_path_changed;
+
     int     reader_state;
-    char    reader_buffer  [READER_BUF_LEN];
+    char    reader_buffer [READER_BUF_LEN];
 
     char   *format_buffer;
     int     format_len;
@@ -388,67 +414,68 @@ typedef struct {
   Plugins
  *********/
 
-#define PLUGIN_CODE_LEN  3
+#define PLUGIN_CODE_LEN  3      // Asm, Src, ...
 
-#define BEG_DATA         0      // display beginning buffer, file data
-#define END_DATA         1      // display end of buffer, file data
-#define LINE_DATA        2      // center data on state->plugins[i]->win->src_file_data->line
-#define ROW_DATA         3      // center data on state->plugins[i]->win->buff_data->scroll_row
-
-#define BUFF_TYPE        0      // buff_data_t
-#define FILE_TYPE        1      // src_file_data_t
+#define BEG_DATA         0      // display from beginning of data buffer
+#define END_DATA         1      // display end of buffer data
+#define ROW_DATA         3      // center data on state->debugger->curr_Src/Asm_line
 
 /*
     plugin_t
     ------
-    - Indexes matche those set in enum array in plugins.h
-    state->plugins[i]
+    - Debugger command or window base struct
+    - Plugin index corresponds to enum array value in plugins.h
+
+    enum {
+        Asm,
+        ...
+    }
+    state->plugins[Asm]->code == "Asm"
 
     key         - plugin key binding
     code        - plugin code string
     title       - plugin header/window title string
     data_pos    - BEG_DATA, END_DATA, LINE_DATA
-    win_type    - BUFF_TYPE, FILE_TYPE
-    has_window  - plugin has window in current layout
+    has_window  - plugin has window in curr_layout
+    win         - window_t pointer
 */
 typedef struct {
 
     char      key;
     char      code [PLUGIN_CODE_LEN + 1];
     char     *title;
-    int       data_pos;         // BEG_DATA, END_DATA, LINE_DATA
-    int       win_type;         // BUFF_TYPE, FILE_TYPE
-    bool      has_window;       // in current layout
+    int       data_pos;         
+    bool      has_window;
     window_t *win;
 
 } plugin_t;
 
 
 
-/*******
-  State
- *******/
+/****************
+  Persisted Data
+ ****************/
 
-#define CONFIG_PATH_LEN  128
 #define PID_LEN          8
-#define DATA_PATH_LEN    CONFIG_PATH_LEN
-#define BREAK_LEN        128
+#define BREAK_PATH_LEN   128
+#define BREAK_LINE_LEN   8
 #define WATCH_LEN        84
-#define INPUT_BUFF_LEN   4096
 
 /*
     breakpoint_t
     -------
     state->breakpoints
 
-    index       - breakpoint index set by debugger
-    path_line   - <file path>:<line_number> string
-    next        - next breakpoint_t in linked list
+    index  - breakpoint index (created by debugger)
+    path   - path string
+    line   - line string
+    next   - next breakpoint_t in linked list
 */
 typedef struct breakpoint {
 
     char  index [8];
-    char  path_line [BREAK_LEN];
+    char  path  [BREAK_PATH_LEN];
+    char  line  [BREAK_LINE_LEN];
     struct breakpoint *next;
 
 } breakpoint_t;
@@ -472,27 +499,38 @@ typedef struct watchpoint {
 
 } watchpoint_t;
 
+
+
+/***************
+  Program State
+ ***************/
+
+#define CONFIG_PATH_LEN  128
+#define DATA_PATH_LEN    CONFIG_PATH_LEN
+#define INPUT_BUFF_LEN   4096
+
 /*
     state_t
-    -----
-    - Base data struct that contains all the above structs
-    - state->...
+    -------
+    - Base data struct that contains all other structs
+
+    state->...
 
     num_plugins         - total number of plugins
-    plugin_key_index    - array that matches key binding to its plugin's index  (see plugins.h)
-                          - plugin_key_index [key] = plugin index
-    config_path         - configuration file path set by -c flag
-    data_path           - data persistence path set by -p flag
+    plugin_key_index    - array that matches key bindings to respective plugin's index in plugins.h
+                          - plugin_key_index [key] = index
+    config_path         - configuration file path set by CONFIG_FILE or -c flag
+    data_path           - data persistence path set by PERSIST_FILE or -p flag
     input_buffer        - popup window input buffer
 
     plugins             - pointer array for plugin_t structs
 
     layouts             - linked list of layout_t structs
     curr_layout         - current layout_t struct
-    header              - ncurses header WINDOW
+    header              - header Ncurses WINDOW
 
     debugger            - debugger_t struct
-    command             - debugger command string array for execvp()
+    command             - debugger command string array for execvp() in start_debugger()
     wathcpoints         - linked list of watchpoint_t structs
     breakpoints         - linked list of breakpoint_t structs
 */
@@ -514,6 +552,7 @@ typedef struct {
     char         **command;
     watchpoint_t  *watchpoints;
     breakpoint_t  *breakpoints;
+    bool           new_run;
 
 } state_t;
 

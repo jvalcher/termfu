@@ -30,7 +30,7 @@ get_persisted_data (state_t *state)
     int           ch, i,
                   ret;
     watchpoint_t *watch;
-    char  break_buff [BREAK_LEN],
+    char  break_buff [BREAK_PATH_LEN],
          *cmd_base_gdb = "-break-insert ",
          *cmd_base_pdb = "break ",
          *cmd_base,
@@ -115,7 +115,7 @@ get_persisted_data (state_t *state)
         fclose (fp);
     }
 
-    ret = update_windows (state, 2, Wat, Brk);
+    ret = update_windows (state, 3, Wat, Brk, Src);
     if (ret == FAIL) {
         pfemr (ERR_UPDATE_WINS);
     }
@@ -164,7 +164,7 @@ persist_data (state_t *state)
         fprintf (fp, ">b\n");
 
         do {
-            fprintf (fp, "%s\n", curr_break->path_line);
+            fprintf (fp, "%s:%s\n", curr_break->path, curr_break->line);
             curr_break = curr_break->next;
         } while (curr_break != NULL);
     }

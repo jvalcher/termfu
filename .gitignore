@@ -5,7 +5,7 @@ tags
 debug.out
 progr.out
 misc/hello
-scripts/.termfu_*
+misc/vars
 
 venv
 __pycache__
