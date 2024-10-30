@@ -61,6 +61,7 @@
 #define CYAN_BLACK          25
 #define WHITE_BLACK         26
 #define WHITE_BLUE          27
+#define BLACK_BLUE          28
 
 // misc
 #define DEFAULT                       WHITE_BLACK
