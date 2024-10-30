@@ -175,7 +175,7 @@ __Windows__
 <br>
 
 
-### Configuration setup
+### Configuration details
 
 Plugin codes are mapped to case-sensitive letter keys, which are used both as shortcuts and to create custom layouts.
 <br>
