@@ -30,8 +30,8 @@ A multi-language Linux terminal debugger
 
 Ubuntu:
 ```
-sudo apt-get install make gcc libncurses6-dev gdb pdb
-```
+sudo apt-get install make gcc libncurses-dev gdb python3
+ ```
 
 ### Build
 ```
