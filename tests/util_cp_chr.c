@@ -4,29 +4,38 @@
 #include "../src/data.h"
 #include "../src/plugins.h"
 #include "../src/utilities.h"
+#include "../src/start_debugger.h"
 
 
 
 int
 main (void)
 {
-    int i;
+    //////////// allocate structs
+    //////////// set plugin_index variables
+
+    int plugin_index = Src;
+
     state_t *state = (state_t*) malloc (sizeof (state_t));
+    set_state_ptr (state);
     state->debugger = (debugger_t*) malloc (sizeof (debugger_t));
-    state->debugger->data_buffer = (char*) malloc (sizeof (char) * ORIG_BUF_LEN);
-    state->debugger->data_len = ORIG_BUF_LEN;
-    state->debugger->data_pos = 0;
-    state->debugger->data_times_doubled = 0;
-    debugger_t *dbgr = state->debugger;
     set_num_plugins (state);
-    state->plugins = (plugin_t**) malloc (sizeof (char) * state->num_plugins);
-    state->plugins[Dbg] = (plugin_t*) malloc (sizeof (plugin_t));
-    state->plugins[Dbg]->win = (window_t*) malloc (sizeof (window_t));
-    window_t *win = state->plugins[Dbg]->win;
-    win->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t));
-    win->buff_data->buff = (char*) malloc (sizeof (char) * ORIG_BUF_LEN); 
-    win->buff_data->buff_len = ORIG_BUF_LEN;
-    win->buff_data->buff_pos = 0;
+    allocate_plugins (state);
+    allocate_plugin_windows (state);
+
+    debugger_t *debugger   = state->debugger;
+    plugin_t *plugin       = state->plugins[plugin_index];
+    window_t *win          = plugin->win;
+    //buff_data_t *buff_data = win->buff_data;
+
+    ////////////
+
+    int i;
+
+    char *cmd[] = {"python3", "-m", "pdb", "../misc/gcd.py", NULL };
+    state->command = cmd;
+    debugger->index = DEBUGGER_PDB;
+    start_debugger (state);
 
     // calculate maximum buffer size before loop around
     int max_size = ORIG_BUF_LEN;
@@ -34,20 +43,19 @@ main (void)
         max_size *= 2;
     }
     printf ("Max buffer size: %d\n", max_size);
+    max_size += 8;
 
     printf ("\nPress any key to continue...\n\n");
     getchar();
 
-    max_size += 8;
-
     // debugger_t buffer
     for (i = 0; i < max_size; i++) {
-        cp_dchar (dbgr, 'a', DATA_BUF);
+        cp_dchar (debugger, 'a', DATA_BUF);
         printf ("pos: %d,  len: %d,  doubled: %d,  strlen: %ld\n",
-                    dbgr->data_pos,
-                    dbgr->data_len,
-                    dbgr->data_times_doubled,
-                    strlen (dbgr->data_buffer));
+                    debugger->data_pos,
+                    debugger->data_len,
+                    debugger->data_times_doubled,
+                    strlen (debugger->data_buffer));
     }
 
     printf ("\nPress any key to continue...\n\n");
@@ -62,6 +70,8 @@ main (void)
                     win->buff_data->times_doubled,
                     strlen (win->buff_data->buff));
     }
+
+    printf ("\n\n");
 
     return 0;
 }

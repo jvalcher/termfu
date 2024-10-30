@@ -9,21 +9,24 @@
 int
 main (void)
 {
+    //////////// allocate structs
+    //////////// set plugin_index variables
+
+    int plugin_index = Src;
+
     state_t *state = (state_t*) malloc (sizeof (state_t));
-    set_num_plugins (state);
+    set_state_ptr (state);
     state->debugger = (debugger_t*) malloc (sizeof (debugger_t));
-    state->debugger->index = DEBUGGER_GDB;
+    set_num_plugins (state);
+    allocate_plugins (state);
+    allocate_plugin_windows (state);
 
-    state->plugins = (plugin_t**) malloc (sizeof (plugin_t*) * state->num_plugins);
-    state->plugins[Src] = (plugin_t*) malloc (sizeof (plugin_t));
-    state->plugins[Src]->win = (window_t*) malloc (sizeof (window_t));
-    window_t *win = state->plugins[Src]->win;
+    debugger_t *debugger   = state->debugger;
+    plugin_t *plugin       = state->plugins[plugin_index];
+    window_t *win          = plugin->win;
+    buff_data_t *buff_data = win->buff_data;
 
-    win->file_data = (file_data_t*) malloc (sizeof (file_data_t));
-    win->file_data->path_changed = true;
-    win->file_data->path_len = FILE_PATH_LEN;
-    win->file_data->addr_len = ADDRESS_LEN;
-    win->file_data->func_len = FUNC_LEN;
+    ////////////
 
     char *cmd[] = {"gdb", "--quiet", "--interpreter=mi", "../misc/hello"};
     state->command = cmd;
@@ -34,29 +37,19 @@ main (void)
 
     // program not running
     get_source_path_line_memory (state);
-
-    printf ("%s\n", win->file_data->path);
-    printf ("%s\n", win->file_data->func);
-    printf ("%d\n", win->file_data->line);
+    printf ("Source path: \"%s\"\n", debugger->src_path_buffer);
+    printf ("Source line: %d\n", debugger->curr_Src_line);
+    printf ("Function: \"%s\"\n", debugger->curr_func);
 
     putchar ('\n');
 
     // program running
-    insert_output_start_marker (state);
-    send_command (state, "-break-insert hello2.c:9\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
-
-    insert_output_start_marker (state);
-    send_command (state, "-exec-run\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
-
+    send_command_mp (state, "-break-insert hello2.c:9\n");
+    send_command_mp (state, "-exec-run\n");
     get_source_path_line_memory (state);
-
-    printf ("%s\n", win->file_data->path);
-    printf ("%s\n", win->file_data->func);
-    printf ("%d\n", win->file_data->line);
+    printf ("Source path: \"%s\"\n", debugger->src_path_buffer);
+    printf ("Source line: %d\n", debugger->curr_Src_line);
+    printf ("Function: \"%s\"\n", debugger->curr_func);
 
     return 0;
 }

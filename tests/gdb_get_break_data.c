@@ -14,55 +14,36 @@
 int
 main (void)
 {
+    //////////// allocate structs
+    //////////// set plugin_index variables
+
+    int plugin_index = Brk;
+
     state_t *state = (state_t*) malloc (sizeof (state_t));
-    set_num_plugins (state);
+    set_state_ptr (state);
     state->debugger = (debugger_t*) malloc (sizeof (debugger_t));
-    state->plugins = (plugin_t**) malloc (sizeof (plugin_t*) * state->num_plugins);
+    set_num_plugins (state);
+    allocate_plugins (state);
+    allocate_plugin_windows (state);
 
-    state->plugins[Brk] = (plugin_t*) malloc (sizeof (plugin_t));
-    state->plugins[Brk]->win = (window_t*) malloc (sizeof (window_t));
-    window_t *win = state->plugins[Brk]->win;
-    win->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t));
-    win->buff_data->buff = (char*) malloc (sizeof (char) * ORIG_BUF_LEN);
-    win->buff_data->buff_pos = 0;
-    win->buff_data->buff_len = ORIG_BUF_LEN;
-    win->buff_data->new_data = true;
+    //debugger_t *debugger   = state->debugger;
+    plugin_t *plugin       = state->plugins[plugin_index];
+    window_t *win          = plugin->win;
+    buff_data_t *buff_data = win->buff_data;
 
-    state->plugins[Dbg] = (plugin_t*) malloc (sizeof (plugin_t));
-    state->plugins[Dbg]->win = (window_t*) malloc (sizeof (window_t));
-    window_t *dwin = state->plugins[Dbg]->win;
-    dwin->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t));
-    dwin->buff_data->buff = (char*) malloc (sizeof (char) * ORIG_BUF_LEN);
-    dwin->buff_data->buff_pos = 0;
-    dwin->buff_data->buff_len = ORIG_BUF_LEN;
-    dwin->buff_data->new_data = true;
+    ////////////
 
-    state->debugger->index = DEBUGGER_GDB;
     char *cmd[] = {"gdb", "--quiet", "--interpreter=mi", "../misc/hello"};
     state->command = cmd;
 
     start_debugger (state);
 
-    // create breakpoints for ../misc/hello
-    insert_output_start_marker (state);
-    send_command (state, "-break-insert 16\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
+    send_command_mp (state, "-break-insert 16\n");
+    send_command_mp (state, "-break-insert hello.c:17\n");
+    send_command_mp (state, "-break-insert hello2.c:9\n");
 
-    insert_output_start_marker (state);
-    send_command (state, "-break-insert hello.c:17\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
-
-    insert_output_start_marker (state);
-    send_command (state, "-break-insert hello2.c:9\n");
-    insert_output_end_marker (state);
-    parse_debugger_output (state);
-
-    // get data
     get_breakpoint_data (state);
-
-    printf ("\nWIN (%lu): \n\n%s\n", strlen(win->buff_data->buff), win->buff_data->buff);
+    printf ("\nWIN (%lu): \n\n%s\n", strlen(buff_data->buff), buff_data->buff);
 
     return 0;
 }

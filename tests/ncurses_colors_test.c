@@ -57,7 +57,6 @@ int main(void)
         napms(1000);
         flash();
 
-
         /* print colors */
         printw("fg MACRO \t fg \t bg \n");
         printw("-------- \t----\t----\n");
@@ -87,7 +86,6 @@ int main(void)
         } else {
             printw("can_change_color() returned false: terminal unable to mix colors\n\n\n");
         }
-
 
     // terminal colors not enabled
     } else {

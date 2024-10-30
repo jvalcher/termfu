@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <ncurses.h>
 
 #include "test_utilities.h"
+#include "../src/data.h"
 
 void
 process_pause (void)
@@ -26,3 +28,21 @@ process_pause (void)
 }
 
 
+void
+create_ncurses_data_window (window_t *win)
+{
+    win->data_win_rows = win->rows - 2;
+    win->data_win_cols = win->cols - 2;
+    win->data_win_y = 1;
+    win->data_win_x = 1;
+
+    // create ncurses windows
+        // parent
+    win->WIN = newwin (win->rows, win->cols, win->y, win->x);
+    box (win->WIN, 0, 0);
+    wrefresh (win->WIN);
+
+        // data win
+    win->DWIN = derwin (win->WIN, win->data_win_rows, win->data_win_cols, win->data_win_y, win->data_win_x);
+    wrefresh (win->DWIN);
+}

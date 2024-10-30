@@ -1,6 +1,6 @@
 #include "../src/utilities.h"
 
-#define MOCK_WATCH  "mock.gdb_watch"
+#define MOCK_WATCH  "mock.gdb_win_watch"
 
 
 
