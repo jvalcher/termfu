@@ -26,7 +26,7 @@ C_UPDATE_FILES  = $(wildcard ./src/update_window_data/*.c)
 C_FORM_IN_FILES = $(wildcard ./src/get_form_input/*.c)
 C_DEBUG_FILES   = $(wildcard ./src/debug/*.c)
 
-# configuration, data files  (see scripts/create_configs)
+# configuration, data files  (see scripts/.termfu_*)
 GDB_BUILD_SCRIPT = build_vars
 GDB_BINARY       = vars
 CONFIG_BASE      = scripts/.termfu
