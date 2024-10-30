@@ -20,7 +20,7 @@
 
 Ubuntu:
 ```
-sudo apt-get install libncurses6-dev gdb pdb make gcc
+sudo apt-get install make gcc libncurses6-dev gdb pdb
 ```
 
 ### Build
