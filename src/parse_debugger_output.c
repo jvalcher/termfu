@@ -119,7 +119,7 @@ parse_debugger_output_gdb (debugger_t *debugger)
             }
 
             // program
-            else if (isalpha (*buff_ptr)) {
+            else if (isalnum (*buff_ptr)) {
                 is_prog_output = true;
             }
         }
