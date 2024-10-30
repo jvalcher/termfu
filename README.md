@@ -127,7 +127,7 @@ Plugin codes are mapped to case-sensitive letter keys, which are used both as sh
 ```
 [ command ]
 
-gdb --interpreter=mi --quiet misc/hello
+gdb --quiet --interpreter=mi misc/vars
 
 [ plugins ]
 
@@ -142,7 +142,6 @@ Prm : m : pro(m)pt
 Qut : q : (q)uit
 Run : r : (r)un
 Stp : s : (s)tep
-Trg : t : (t)arget
 Unt : u : (u)ntil
 
 # windows
@@ -160,8 +159,8 @@ Wat : w : (w)atch
 [ layout : Main ]
 
 >h
-mAtlq
-rnscufk
+mlqrns
+cufk
 
 >w
 eeeooooo
@@ -172,14 +171,14 @@ TTpppddd
 [ layout : Assembly / Registers ]
 
 >h
-mAtlq
-rnscufk
+mlqrns
+cufk
 
 >w
 oag
 oag
 oag
-wpT
+wdT
 ```
 <br>
 
