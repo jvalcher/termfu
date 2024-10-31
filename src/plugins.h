@@ -42,15 +42,18 @@ enum {
 
 
 
+
 /*
-    Set number of plugins in state->num_plugins
+    Set number of plugins
+    ------
+    state->num_plugins
 */
 void set_num_plugins  (state_t*);
 
 
 
 /*
-    Allocate state->plugins
+    Allocate state->plugins[i]
     ---------
     Returns A_OK or FAIL
 */
@@ -79,14 +82,17 @@ char* get_plugin_code (int plugin_index);
 /*
     Allocate plugin window_t structs et al.
     ----------
-    Returns A_OK, FAIL
+
+    state->plugins[i]->win
+
+    - Returns A_OK, FAIL
 */
 int allocate_plugin_windows (state_t*);
 
 
 
 /*
-    Print plugin indexes, codes  (debugging)
+    Print plugin indexes, codes
     ---------
     $ make plugins
 */

@@ -15,21 +15,15 @@ make_commands = f'''
     {T}All configuration and data files for these scripts are located in scripts/.termfu_*.{R}
                     -----------------------------
 
-{M}make help             {R}- List make commands, description, associated scripts  {S}(scripts/make_help)
-{M}make                  {R}- Build production binary
-{M}make dev              {R}- Build development binary
-{M}make devf             {R}- Build development binary (formatted errors)  {S}(scripts/make_devf)
-{M}make build_gdb        {R}- Build sample binaries for below GDB run scripts  {S}(misc/build_hello, ..vars, ..fib)
-{M}make run_gdb          {R}- Run termfu_dev with sample GDB binary (run {M}build_gdb{R} first)
-{M}make run_pdb          {R}- Run termfu_dev with sample PDB python script
-                                                                                          
-{M}make todo             {R}- Print source code tags, e.g. TODO, FIXME {S}(scripts/make_todo)
-{M}make plugins          {R}- Print plugin indexes and codes {S}(scripts/make_plugins)
-{M}make conn_proc_gdbtui {R}- Debug termfu_dev procces with GDB TUI {S}(scripts/make_conn_proc_gdbtui)
-{M}make conn_proc_termfu {R}- Debug termfu_dev process with termfu_dev {S}(scripts/make_conn_proc_termfu)
-{M}make proc_gdb         {R}- Start termfu_dev process running GDB {S}(scripts/make_proc_gdb)
-{M}make proc_pdb         {R}- Start termfu_dev process running PDB {S}(scripts/make_proc_pdb)
-
+{M}make help              {R}- List make commands, description, associated scripts  {S}(scripts/make_help)
+{M}make                   {R}- Build production binary
+{M}make dev               {R}- Build development binary
+{M}make devf              {R}- Build development binary (formatted errors)  {S}(scripts/make_devf)
+{M}make build_gdb         {R}- Build sample binaries for below GDB run scripts  {S}(misc/build_hello, ..vars, ..fib)
+{M}make run_gdb           {R}- Run termfu_dev with sample GDB binary (run {M}build_gdb{R} first)
+{M}make run_pdb           {R}- Run termfu_dev with sample PDB python script
+{M}make todo              {R}- Print source code tags, e.g. TODO, FIXME {S}(scripts/make_todo)
+{M}make plugins           {R}- Print plugin indexes and codes {S}(scripts/make_plugins)
 
 '''
 

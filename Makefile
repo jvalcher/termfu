@@ -26,17 +26,16 @@ C_UPDATE_FILES  = $(wildcard ./src/update_window_data/*.c)
 C_FORM_IN_FILES = $(wildcard ./src/get_form_input/*.c)
 C_DEBUG_FILES   = $(wildcard ./src/debug/*.c)
 
-# configuration, data files  (see scripts/.termfu_*)
-GDB_BUILD_SCRIPT = build_vars
-GDB_BINARY       = vars
-CONFIG_BASE      = scripts/.termfu
-CONFIG_RUN_GDB   = $(CONFIG_BASE)_run_gdb
-CONFIG_RUN_PDB   = $(CONFIG_BASE)_run_pdb
-DATA_RUN_GDB     = $(CONFIG_RUN_GDB)_data
-DATA_RUN_PDB     = $(CONFIG_RUN_PDB)_data
+# termfu configuration, data files
+SCRIPT_CONFIG   = scripts/.termfu
+CONFIG_RUN_GDB	= $(SCRIPT_CONFIG)_run_gdb
+DATA_RUN_GDB	= $(SCRIPT_CONFIG)_run_gdb_data
+CONFIG_RUN_PDB	= $(SCRIPT_CONFIG)_run_pdb
+DATA_RUN_PDB	= $(SCRIPT_CONFIG)_run_pdb_data
+CONFIG_DEBUG	= $(SCRIPT_CONFIG)_debug
+DATA_DEBUG		= $(SCRIPT_CONFIG)_debug_data
 
-
-.PHONY: help all dev devf devformat configs build_gdb run_gdb run_pdb plugins conn_proc_gdbtui conn_proc_termfu proc_gdb proc_pdb clean_prod clean_dev
+.PHONY: help all dev devf devformat build_gdb run_gdb run_pdb plugins debug_proc_gdbtui debug_proc_termfu proc_gdb proc_pdb clean_prod clean_dev
 
 
 all: FLAGS   += $(PROD_FLAGS)
@@ -86,9 +85,6 @@ $(B_FILE_DEV):
 help:
 	@./scripts/make_help
 
-configs:
-	@./scripts/make_configs
-
 build_gdb:
 	(cd misc && ./build_hello)
 	(cd misc && ./build_vars)
@@ -100,24 +96,12 @@ run_gdb:
 run_pdb:
 	@./$(B_FILE_DEV) -c $(CONFIG_RUN_PDB) -p $(DATA_RUN_PDB)
 
-
+debug:
+	@./$(B_FILE_PROD) -c $(CONFIG_DEBUG) -p $(DATA_DEBUG)
 
 todo:
 	@./scripts/make_todo
 
 plugins:
 	@./scripts/make_plugins
-
-conn_proc_gdbtui:
-	@./scripts/make_conn_proc_gdbtui
-
-conn_proc_termfu:
-	@./scripts/make_conn_proc_termfu
-
-proc_gdb:
-	@./scripts/make_proc_gdb
-
-proc_pdb:
-	@./scripts/make_proc_pdb
-
 

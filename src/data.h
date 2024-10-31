@@ -296,7 +296,7 @@ typedef struct {
     int           data_win_x;
     int           data_win_mid_line;
 
-    buff_data_t      *buff_data;
+    buff_data_t  *buff_data;
 
 } window_t;
 

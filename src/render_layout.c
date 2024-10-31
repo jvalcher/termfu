@@ -549,11 +549,12 @@ render_window (window_t *win)
 /*
     Fix single ncurses border corner character
     ---------------
-    - Returns correct corner character int
     - Called by fix_corners()
 
         y, x    - window top left coordinates on stdscr
 
+    - Returns correct corner character int or 0 if character matches
+      one that has already been fixed
 */
 static int
 fix_corner_char (int y, 
@@ -565,12 +566,6 @@ fix_corner_char (int y,
         vert_line;
 
     // get border character
-    //
-    //     curscr:
-    //       - terminal or "physical" screen
-    //       - i.e. allows access to every character currently on 
-    //         screen without needing to know what window it is in
-    //
     ch = mvwinch (curscr, y, x) & A_CHARTEXT;
 
     // check for surrounding border characters
@@ -652,19 +647,19 @@ fix_corners (state_t *state)
     int       i, y, x,
               rows, cols,
               tl, tr, bl, br,
-              of = header_offset;
-    window_t  *win;
+              of;
+    window_t *win;
 
+    // fix corners (run twice to handle border overwrites)
     for (i = 0; i < state->num_plugins; i++) {
 
         if (state->plugins[i]->has_window) {
-            if ((win = state->plugins[i]->win) == NULL) {
-                pfemr ("Unable to fix corners for window \"%s\"", state->plugins[i]->code);
-            }
+            win = state->plugins[i]->win;
         } else {
             continue;
         }
 
+        of   = header_offset;
         y    = win->y;
         x    = win->x;
         rows = win->rows;

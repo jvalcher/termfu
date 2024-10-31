@@ -1,0 +1,8 @@
+#!/bin/sh
+
+#
+# Debug termfu_dev with <PATH>/termfu
+#
+
+termfu -c scripts/.termfu_debugger -p scripts/.termfu_debugger_data
+

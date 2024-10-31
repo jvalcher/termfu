@@ -7,7 +7,7 @@
 #include "utilities.h"
 #include "get_form_input/run_custom_command.h"
 #include "get_form_input/execute_until.h"
-#include "debug/attach_to_process.h"
+#include "get_form_input/attach_to_process.h"
 
 
 

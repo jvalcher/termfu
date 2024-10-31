@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include <signal.h>
 #include <ncurses.h>
-#include <errno.h>
 
 #include "data.h"
 #include "utilities.h"
@@ -15,6 +14,7 @@
 #include "start_debugger.h"
 #include "run_plugin.h"
 #include "persist_data.h"
+#include "plugins.h"
 
 static int  initial_configure   (int, char*[], state_t*);
 static void exit_signal_handler (int sig_num);
@@ -117,18 +117,14 @@ initial_configure (int   argc,
                    state_t *state)
 {
     int opt;
-    char pid_buf [8];
     extern char *optarg;
-    bool debugging_mode;
-    FILE *fp;
 
     //
     // CLI arguments
     //
     state->config_path[0] = '\0';
     state->data_path[0]   = '\0';
-    debugging_mode = false;
-    char *optstring = "hdc:p:";
+    char *optstring = "hc:p:";
 
     while ((opt = getopt (argc, argv, optstring)) != -1) {
         switch (opt) {
@@ -149,8 +145,6 @@ initial_configure (int   argc,
                 "\n"
                 "       -c CONFIG_FILE    Use this configuration file\n"
                 "       -p PERSIST_FILE   Persist sessions with this file\n"
-                "\n"
-                "       -d                Start in debug mode\n"
                 "\n",
 
                 CONFIG_FILE, PERSIST_FILE);
@@ -167,11 +161,6 @@ initial_configure (int   argc,
                 strncpy (state->data_path, optarg, DATA_PATH_LEN - 1);
                 break;
 
-            // debugger mode
-            case 'd':
-                debugging_mode = true;
-                break;
-
             default:
                 fprintf (stderr,
 
@@ -183,72 +172,13 @@ initial_configure (int   argc,
         }
     }
 
-
-    // debugging mode
-    if (debugging_mode) {
-
-        // write debugged termfu PID to DEBUG_PID_FILE
-        fp = fopen (DEBUG_PID_FILE, "w");
-        if (fp == NULL) {
-            pfem ("fopen error: %s", strerror (errno));
-            pemr ("Unable to open debug PID file \"%s\"\n", DEBUG_PID_FILE);
-        }
-        fprintf (fp, "%ld", (long) getpid());
-        fclose (fp);
-
-        // copy PID to clipboard
-        sprintf (pid_buf, "%ld", (long) getpid());
-        copy_to_clipboard (pid_buf);
-
-        // print message
-        printf (
-            "\n"
-            "\033[0;32mDebugged process ID: \033[0;36m%s\033[0m\n"
-            "\n"
-            "   - Copied to \033[0;36m%s\033[0m\n"
-            "   - Copied to clipboard\n"
-            "\n"
-            "\033[0;32mAttach to this process with debugger\033[0m\n"
-            "\n"
-            "   - With new debugger session automatically through \033[0;36m%s\033[0m\n"
-            "\n"
-            "       $ make conn_proc_<debugger>\n"
-            "\n"
-            "   - With existing debugger session, paste PID currently in\n"
-            "     clipboard into prompt\033[0m\n"
-            "\n"
-            "       >> (at)tach <pid>\n"
-            "\n"
-            "\033[0;32mContinue execution with debugger\033[0m\n"
-            "\n"
-            "   - Set breakpoint after this message string in \033[0;36mmain.c\033[0m, i.e. after \033[0;36mgetchar()\033[0m\n"
-            "   - Continue execution\n"
-            "\n"
-            "\033[0;33mPress any key to continue...\033[0m\n"
-            "\n"
-            "\033[0;32mSend exit signal to debugged process\033[0m\n"
-            "\n"
-            "   >> signal 2\n"
-            "\n"
-            "\033[0;32mOr refresh terminal pane\033[0m\n"
-            "\n",
-            pid_buf, DEBUG_PID_FILE, DEBUG_PID_FILE);
-
-        // wait...
-        getchar ();
-    }
-
-
+    // misc state
     state->new_run = true;
-    
-
-    // Set state pointer in utilities.c for exiting ncurses, persisting data with clean_up()
     set_state_ptr (state);
-
+    set_num_plugins (state);
 
     // signal handlers
     signal (SIGINT, exit_signal_handler);     // Ctrl-C;  (gdb) signal 2
-
 
     // ncurses
     initscr ();

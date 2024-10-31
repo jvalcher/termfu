@@ -52,9 +52,6 @@ parse_config_file (state_t *state)
         pemr ("Failed to allocate state->plugin_key_index");
     }
 
-    // state->num_plugins
-    set_num_plugins (state);
-
     // state->plugins
     ret = allocate_plugins (state);
     if (ret == FAIL) {
