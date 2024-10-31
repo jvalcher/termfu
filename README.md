@@ -4,10 +4,9 @@
 A multi-language Linux terminal debugger
 
 - ___Fast___
-- Easy to use
+- Single-key bindings documented on-screen
 - Create and switch between custom layouts
 - Scroll through window data
-- Self-documenting, single-key bindings
 - Breakpoint, watchpoint persistence
 - Debugger prompt access
 
