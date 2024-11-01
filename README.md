@@ -35,11 +35,9 @@ sudo apt-get install make gcc libncurses-dev gdb python3
 ### Build
 ```
 make
+sudo make install
 ```
 <br>
-
-Copy `termfu` to the desired executable directory, e.g. `/usr/bin`. 
-<br><br>
 
 
 ## Usage

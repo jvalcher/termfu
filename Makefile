@@ -35,7 +35,7 @@ DATA_RUN_DEV   = configs/.termfu_run_dev_data
 CONFIG_DEBUG   = configs/.termfu_debugger
 DATA_DEBUG	   = configs/.termfu_debugger_data
 
-.PHONY: help all dev devf devformat build_gdb run_dev plugins clean_prod clean_dev
+.PHONY: help all install dev devf devformat build_gdb run_dev plugins clean_prod clean_dev
 
 
 all: FLAGS   += $(PROD_FLAGS)
@@ -61,6 +61,9 @@ devformat: C_FILES += $(C_UPDATE_FILES)
 devformat: C_FILES += $(C_FORM_IN_FILES)
 devformat: C_FILES += $(C_DEBUG_FILES)
 devformat: clean_dev $(B_FILE_DEV)
+
+install:
+	cp termfu /usr/bin/
 
 clean_prod:
 	@echo ""
