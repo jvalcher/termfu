@@ -73,8 +73,9 @@ gdb --quiet --interpreter=mi misc/vars
 
 [ plugins ]
 
-# header commands
 # <plugin code> : <key binding> : <title>
+
+# header commands
 AtP : A : (A)ttach
 Con : c : (c)ontinue
 Fin : f : (f)inish
