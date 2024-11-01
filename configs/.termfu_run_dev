@@ -1,7 +1,8 @@
 
 [ command ]
 
-python -m pdb misc/gcd.py
+gdb --quiet --interpreter=mi test_programs/fib
+#python -m pdb test_programs/gcd.py
 
 [ plugins ]
 
@@ -33,8 +34,8 @@ Wat : w : (w)atch
 [ layout : Main ]
 
 >h
-mAlq
-rnscufk
+mlqrns
+cufk
 
 >w
 eeeooooo
@@ -45,12 +46,24 @@ TTpppddd
 [ layout : Assembly / Registers ]
 
 >h
-mAlq
-rnscufk
+mlqrns
+cufk
 
 >w
 oag
 oag
 oag
-wpT
+wdT
+
+[ layout : Assembly ]
+
+>h
+mlqrns
+cufk
+
+>w
+oa
+oa
+oa
+wd
 

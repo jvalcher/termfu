@@ -26,16 +26,16 @@ C_UPDATE_FILES  = $(wildcard ./src/update_window_data/*.c)
 C_FORM_IN_FILES = $(wildcard ./src/get_form_input/*.c)
 C_DEBUG_FILES   = $(wildcard ./src/debug/*.c)
 
-# termfu configuration, data files
-SCRIPT_CONFIG   = scripts/.termfu
-CONFIG_RUN_GDB	= $(SCRIPT_CONFIG)_run_gdb
-DATA_RUN_GDB	= $(SCRIPT_CONFIG)_run_gdb_data
-CONFIG_RUN_PDB	= $(SCRIPT_CONFIG)_run_pdb
-DATA_RUN_PDB	= $(SCRIPT_CONFIG)_run_pdb_data
-CONFIG_DEBUG	= $(SCRIPT_CONFIG)_debug
-DATA_DEBUG		= $(SCRIPT_CONFIG)_debug_data
+# test programs directory
+TEST_PROGS_DIR = test_programs
 
-.PHONY: help all dev devf devformat build_gdb run_gdb run_pdb plugins debug_proc_gdbtui debug_proc_termfu proc_gdb proc_pdb clean_prod clean_dev
+# configuration, data files
+CONFIG_RUN_DEV = configs/.termfu_run_dev
+DATA_RUN_DEV   = configs/.termfu_run_dev_data
+CONFIG_DEBUG   = configs/.termfu_debugger
+DATA_DEBUG	   = configs/.termfu_debugger_data
+
+.PHONY: help all dev devf devformat build_gdb run_dev plugins clean_prod clean_dev
 
 
 all: FLAGS   += $(PROD_FLAGS)
@@ -54,7 +54,7 @@ dev: clean_dev $(B_FILE_DEV)
 
 devf:
 	@echo ""
-	@./scripts/make_devf
+	./scripts/make_devf
 
 devformat: FLAGS   += $(FORMAT_FLAGS)
 devformat: C_FILES += $(C_UPDATE_FILES)
@@ -80,28 +80,23 @@ $(B_FILE_DEV):
 	$(CC) $(FLAGS) $(NCURSES_CFLAGS) $(C_FILES) -o $(B_FILE_DEV) $(NCURSES_LIBS)
 	@echo ""
 
-
-
 help:
 	@./scripts/make_help
 
 build_gdb:
-	(cd misc && ./build_hello)
-	(cd misc && ./build_vars)
-	(cd misc && ./build_fib)
+	(cd $(TEST_PROGS_DIR) && ./build_hello)
+	(cd $(TEST_PROGS_DIR) && ./build_vars)
+	(cd $(TEST_PROGS_DIR) && ./build_fib)
 
-run_gdb:
-	@./$(B_FILE_DEV) -c $(CONFIG_RUN_GDB) -p $(DATA_RUN_GDB)
-
-run_pdb:
-	@./$(B_FILE_DEV) -c $(CONFIG_RUN_PDB) -p $(DATA_RUN_PDB)
+run_dev:
+	./$(B_FILE_DEV) -c $(CONFIG_RUN_DEV) -p $(DATA_RUN_DEV)
 
 debug:
-	@./$(B_FILE_PROD) -c $(CONFIG_DEBUG) -p $(DATA_DEBUG)
+	$(B_FILE_PROD) -c $(CONFIG_DEBUG) -p $(DATA_DEBUG)
 
 todo:
-	@./scripts/make_todo
+	./scripts/make_todo
 
 plugins:
-	@./scripts/make_plugins
+	./scripts/make_plugins
 

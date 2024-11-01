@@ -1,7 +1,7 @@
 
 [ command ]
 
-gdb --quiet --interpreter=mi misc/fib
+gdb --quiet --interpreter=mi --args termfu_dev -c configs/.termfu_debugged -p configs/.termfu_debugged_data
 
 [ plugins ]
 
@@ -33,36 +33,11 @@ Wat : w : (w)atch
 [ layout : Main ]
 
 >h
-mlqrns
-cufk
+Amlr
+nscufkq
 
 >w
-eeeooooo
-wwwooooo
-vvvooooo
-TTpppddd
-
-[ layout : Assembly / Registers ]
-
->h
-mlqrns
-cufk
-
->w
-oag
-oag
-oag
-wdT
-
-[ layout : Assembly ]
-
->h
-mlqrns
-cufk
-
->w
-oa
-oa
-oa
-wd
+eoo
+woo
+vdd
 

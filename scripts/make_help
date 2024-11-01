@@ -9,21 +9,25 @@ R = RESET
 
 make_commands = f'''
 
-                    -----------------------------
-          {T}Read the comments in the associated scripts for usage instructions.{R}
-                    -----------------------------
-    {T}All configuration and data files for these scripts are located in scripts/.termfu_*.{R}
-                    -----------------------------
+{M}make           {R}- Build production binary
 
-{M}make help              {R}- List make commands, description, associated scripts  {S}(scripts/make_help)
-{M}make                   {R}- Build production binary
-{M}make dev               {R}- Build development binary
-{M}make devf              {R}- Build development binary (formatted errors)  {S}(scripts/make_devf)
-{M}make build_gdb         {R}- Build sample binaries for below GDB run scripts  {S}(misc/build_hello, ..vars, ..fib)
-{M}make run_gdb           {R}- Run termfu_dev with sample GDB binary (run {M}build_gdb{R} first)
-{M}make run_pdb           {R}- Run termfu_dev with sample PDB python script
-{M}make todo              {R}- Print source code tags, e.g. TODO, FIXME {S}(scripts/make_todo)
-{M}make plugins           {R}- Print plugin indexes and codes {S}(scripts/make_plugins)
+{M}make dev       {R}- Build development binary
+
+{M}make devf      {R}- Build development binary (formatted errors)
+
+{M}make plugins   {R}- Print plugin indexes and codes
+
+{M}make todo      {R}- Print source code tags, e.g. TODO, FIXME
+
+{M}make build_gdb {R}- Build sample binaries for {M}run_dev{R} below
+
+{M}make run_dev   {R}- Run termfu_dev with sample binary or script
+               {R}- Adjust {S}configs/.termfu_run_dev{R} as needed
+
+{M}make debug     {R}- Start {M}termfu{R} to debug {M}termfu_dev{R}
+               {R}- Requires {M}termfu{R} to be in your {M}PATH{R}
+               {R}- See {M}Developer notes{R} in {S}README.md{R} for more details
+               {R}- Adjust {S}configs/.termfu_debugger{R} and {S}configs/.termfu_debugged{R} as needed
 
 '''
 

@@ -1,7 +1,8 @@
 
 [ command ]
 
-gdb --quiet --interpreter=mi termfu_dev
+gdb --quiet --interpreter=mi test_programs/fib
+#python -m pdb test_programs/gcd.py
 
 [ plugins ]
 
