@@ -1,4 +1,3 @@
-
 #include "breakpoints.h"
 #include "_get_form_input.h"
 #include "../data.h"
@@ -6,6 +5,11 @@
 #include "../update_window_data/_update_window_data.h"
 #include "../plugins.h"
 
+
+// TODO: make ALL breakpoints persist
+// Currently breakpoints that return an error are ignored
+// Change creation process to be more like watchpoints
+// Breakpoints that don't exist in current program show a 'none' value
 
 int
 insert_breakpoint (state_t *state)

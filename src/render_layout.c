@@ -22,6 +22,7 @@ int scr_rows,
     header_offset;
 
 
+// TODO: re-render layout on terminal screen size change
 
 int
 render_layout (char     *label,

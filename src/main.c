@@ -1,8 +1,3 @@
-
-//
-// TODO: re-render layout on terminal screen size change
-//
-
 #include <unistd.h>
 #include <signal.h>
 #include <ncurses.h>
