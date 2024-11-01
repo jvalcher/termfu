@@ -4,5 +4,5 @@
 # Debug termfu_dev with <PATH>/termfu
 #
 
-termfu -c scripts/.termfu_debugger -p scripts/.termfu_debugger_data
+termfu -c configs/.termfu_debugger -p configs/.termfu_debugger_data
 
