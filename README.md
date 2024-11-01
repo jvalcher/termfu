@@ -240,9 +240,9 @@ vim.keymap.set('n', '<leader>b', create_break, {desc = 'Create debugger breakpoi
 - Use existing code conventions.
 
 ### Developer notes
-- Run `make help` to print all commands, descriptions, and associated scripts. Read the script comments for more information and usage instructions.
+- Run `make help` to print all scripts.
 - Run `make todo` to print all source file tags, such as `TODO`, `FIX`, etc.
-- You can debug `termfu_dev` with `GDB` or `termfu`. Open a separate terminal or pane for the debugged process, copy the terminal file name's path (`$ tty`), and then run sleep (`$ sleep 99999`). Back in your debugger, run `>>> tty <copied /dev/pts/x>` at the prompt and begin debugging. Adjust the `configs/.termfu_debugger` and `configs/.termfu_debugged` configuration files as needed.
+- You can debug `termfu_dev` with `GDB` or `termfu`. Open a separate terminal or pane for the debugged process, copy the terminal file name's path (`$ tty`), and then run sleep (`$ sleep 99999`). Back in your debugger, run `>>> tty <copied /dev/pts/x>` at the prompt and begin debugging.
 - The `logd()` function in `src/utilities.h` allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
 - Run `make help` in the `tests/` directory to view available scripts.
 - All errors that require the program to exit must propagate back to `main()` using the formatted error macro functions in `utilities.h`. Standard library function error checking must include the `errno` message when available. See the source code for example usage.
