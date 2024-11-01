@@ -3,12 +3,12 @@ termfu*
 core
 tags
 debug.out
-progr.out
-misc/hello
-misc/vars
-misc/fib
-.termfu_data
-scripts/.*_data
+
+test_programs/hello
+test_programs/vars
+test_programs/fib
+
+configs/.*_data
 
 venv
 __pycache__
