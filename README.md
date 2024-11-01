@@ -133,8 +133,28 @@ wdT
 <img src='./misc/layout2.png'>
 <br>
 
+### Sections
+- Only newline `# comments` are supported, not inline.
+
+| Section   | Description |
+| :----:    |  :----: |
+| command | Debugger command |
+| plugins | \<plugin code\> : \<key binding\> : \<title\> |
+| layout  | \[ layout : \<label\> \] <br>`>h` : header commands,  `>w` : windows |
+<br>
+
+### Commands
+
+| Debugger | Command |
+| :-----:  | ------  |
+| GDB      | `gdb --interpreter=mi ...` |
+| PDB      | `python -m pdb ...` |
+<br>
+
 ### Plugins
 Each three-character, case-sensitive plugin code corresponds to a specific header command or window. 
+- Add parentheses around a shortcut key in its `<(t)itle>` for easy reference. These characters will have a different color than the surrounding letters.
+
 <br>
 
 __Header Commands__
@@ -173,31 +193,11 @@ __Windows__
 <br>
 
 
-### Configuration details
-
-Plugin codes are mapped to case-sensitive letter keys, which are used both as shortcuts and to create custom layouts.
-<br>
-
-- Add parentheses around a shortcut key in its `<(t)itle>` for easy reference. These characters will have a different color than the surrounding letters.
+### Layouts
 - The order and row of each header command title is set by the order and row of its key binding.
 - Window size ratios and position are set via "key-binding ASCII art."
-- Only newline `# comments` are supported, not inline.
-
-### Sections
-
-| Section   | Description |
-| :----:    |  :----: |
-| command | Debugger command |
-| plugins | \<plugin code\> : \<key binding\> : \<title\> |
-| layout  | \[ layout : \<label\> \] <br>`>h` : header commands,  `>w` : windows |
-
-### Supported commands
-
-| Debugger | Command |
-| :-----:  | ------  |
-| GDB      | `gdb --interpreter=mi ...` |
-| PDB      | `python -m pdb ...` |
 <br>
+
 
 ## Debugging tips
 
