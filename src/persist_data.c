@@ -63,21 +63,16 @@ get_persisted_data (state_t *state)
                 if (ch == 'w') {
                     while ((ch = fgetc (fp)) != '>' && ch != EOF) {
 
-                        if (isalpha (ch)) {
-
-                            ungetc (ch, fp);
-
-                            if ((watch = create_watchpoint (state)) == NULL) {
-                                pfemr ("Failed to create watchpoint");
-                            }
-
-                            // variable
-                            i = 0;
-                            while ((ch = fgetc (fp)) != '\n' && ch != EOF) {
-                                watch->var[i++] = (char) ch;
-                            }
-                            watch->var[i] = '\0';
+                        if ((watch = create_watchpoint (state)) == NULL) {
+                            pfemr ("Failed to create watchpoint");
                         }
+
+                        // variable
+                        i = 0;
+                        while ((ch = fgetc (fp)) != '\n' && ch != EOF) {
+                            watch->var[i++] = (char) ch;
+                        }
+                        watch->var[i] = '\0';
                     }
                     ungetc (ch, fp);
                 }
