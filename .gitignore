@@ -1,4 +1,3 @@
-*/*.out
 termfu*
 core
 tags
@@ -10,7 +9,9 @@ test_programs/fib
 
 configs/.*_data
 
+.gdb_history
+
+*/*.out
+
 venv
 __pycache__
-
-.gdb_history
