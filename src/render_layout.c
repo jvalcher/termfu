@@ -633,6 +633,8 @@ fix_corner_char (int y,
 }
 
 
+// FIX: some fixed corner characters redrawn by wborder() 
+// See misc/layout1.png
 
 /*
     Fix broken border corners caused by overlapping in calculate_layout()
@@ -650,7 +652,6 @@ fix_corners (state_t *state)
               of;
     window_t *win;
 
-    // fix corners (run twice to handle border overwrites)
     for (i = 0; i < state->num_plugins; i++) {
 
         if (state->plugins[i]->has_window) {
