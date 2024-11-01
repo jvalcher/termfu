@@ -234,7 +234,6 @@ vim.keymap.set('n', '<leader>b', create_break, {desc = 'Create debugger breakpoi
 ### General Guidelines
 - For any significant contributions outside of patches, open an issue first.
 - Bug fixes, optimizations, new debugger implementations, tips, and new plugins are welcome.
-- Blank space and comment PRs have a high probability of being closed.
 - Use existing code conventions.
 
 ### Developer notes
