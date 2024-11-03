@@ -152,7 +152,7 @@ wdT
 <br>
 
 ### Plugins
-Each three-character, case-sensitive plugin code corresponds to a specific header command or window. 
+- Each three-character, case-sensitive plugin code corresponds to a specific header command or window. 
 - Add parentheses around a shortcut key in its `<(t)itle>` for easy reference. These characters will have a different color than the surrounding letters.
 
 <br>
