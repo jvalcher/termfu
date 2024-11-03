@@ -119,8 +119,8 @@
     win_key_str         - window layout string derived from CONFIG_FILE or -c file
     num_hdr_key_rows    - number of lines of commands in header
     win_matrix          - window key matrix, used to render window layout
-    row_ratio           - number of rows of keys in CONFIG_FILE ASCII-art window layout
-    col_ratio           - number of cols of keys in CONFIG_FILE ASCII-art window layout
+    row_ratio           - number of rows of keys in ASCII-art window layout
+    col_ratio           - number of cols of keys in ASCII-art window layout
     next                - next layout_t in linked list
 */
 typedef struct layout {
@@ -145,8 +145,8 @@ typedef struct layout {
 #define CODE_LEN          3
 #define NO_DATA_MSG       "Not supported by "
 #define FILE_PATH_LEN     256
-#define ORIG_BUF_LEN      16384     // Double ORIG_BUF_LEN  MAX_DOUBLE_TIMES before
-#define MAX_DOUBLE_TIMES  3         // before it loops back around (3x: 32768 -> 65536 -> 131072)
+#define ORIG_BUF_LEN      16384     // Double ORIG_BUF_LEN MAX_DOUBLE_TIMES before
+#define MAX_DOUBLE_TIMES  3         // it loops back around to start of buffer
 
 /*
     scroll_buff_line_t
