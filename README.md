@@ -59,7 +59,7 @@ termfu -c .termfu_01 -p .termfu_01_data
 
 - Configure the debugger command, key bindings, titles, and layouts inside the configuration file  _(see below)_.
 - Switch between layouts with your `(l)ayouts` key binding.
-- Window data can be scrolled through using the arrow or `hjkl` keys.
+- A window's data can be scrolled through by selecting it with its key binding and then using the arrow or `hjkl` keys.
 <br><br>
 
 
