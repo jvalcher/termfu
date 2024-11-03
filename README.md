@@ -239,12 +239,12 @@ vim.keymap.set('n', '<leader>b', create_break, {desc = 'Create debugger breakpoi
 ### Developer notes
 - Run `make help` to print all scripts.
 - Run `make todo` to print all source file tags, such as `TODO`, `FIX`, etc.
-- You can debug `termfu_dev` with `GDB` or `termfu`.
+- You can debug `termfu_dev` with `termfu`.
   - Run `$ make debug`, which requires `termfu` to be in your path.
   - Open a separate terminal or pane for the debugged process
-  - Copy the terminal file name's path (`$ tty`).
-  - Run sleep (`$ sleep 99999`).
-  - Back in your debugger, run `>>> tty <copied /dev/pts/x>` at the prompt.
+  - Run `$ tty` and copy the terminal file name's path.
+  - Run `$ sleep 99999`.
+  - Back in your debugger, run `>>> tty </dev/pts/x>` at the prompt.
   - Start debugging.
 - The `logd()` function in `src/utilities.h` allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
 - Run `make help` in the `tests/` directory to view available scripts.
