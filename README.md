@@ -1,7 +1,7 @@
 
 <h1 align="center">termfu</h1>
 
-A multi-language debugger TUI for Linux
+A multi-language debugger frontend for the Linux terminal
 
 - ___Fast___
 - Single-key bindings documented on-screen
