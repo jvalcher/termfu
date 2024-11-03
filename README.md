@@ -244,7 +244,7 @@ vim.keymap.set('n', '<leader>b', create_break, {desc = 'Create debugger breakpoi
   - Open a separate terminal or pane for the debugged process
   - Run `$ tty` and copy the terminal file name's path.
   - Run `$ sleep 99999`.
-  - Back in your debugger, run `>>> tty </dev/pts/x>` at the prompt.
+  - Back in your debugger, run `>>> tty /dev/pts/<x>` at the prompt.
   - Start debugging.
 - The `logd()` function in `src/utilities.h` allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
 - Run `make help` in the `tests/` directory to view available scripts.
