@@ -10,6 +10,8 @@
 void parse_debugger_output_gdb (debugger_t*);
 void parse_debugger_output_pdb (debugger_t*);
 
+// TODO: Add Java debugger via the JVM Tool Interface
+
 
 
 int
