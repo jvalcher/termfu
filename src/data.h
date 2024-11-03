@@ -115,8 +115,8 @@
     state->layouts
 
     label               - layout title, displayed at top of screen
-    hdr_key_str         - header layout string derived from CONFIG_FILE
-    win_key_str         - window layout string derived from CONFIG_FILE
+    hdr_key_str         - header layout string derived from CONFIG_FILE or -c file
+    win_key_str         - window layout string derived from CONFIG_FILE or -c file
     num_hdr_key_rows    - number of lines of commands in header
     win_matrix          - window key matrix, used to render window layout
     row_ratio           - number of rows of keys in CONFIG_FILE ASCII-art window layout
@@ -437,7 +437,7 @@ typedef struct {
     key         - plugin key binding
     code        - plugin code string
     title       - plugin header/window title string
-    data_pos    - BEG_DATA, END_DATA, LINE_DATA
+    data_pos    - BEG_DATA, END_DATA, ROW_DATA
     has_window  - plugin has window in curr_layout
     win         - window_t pointer
 */
