@@ -22,6 +22,7 @@ A multi-language debugger frontend for the Linux terminal
 |   :----:   | -----     |
 | [GDB](https://sourceware.org/gdb/) | C, C++, D, Go, Objective-C, Fortran, OpenCL C, Pascal, Rust, assembly, Modula-2, Ada |
 | [PDB](https://docs.python.org/3/library/pdb.html) | Python |
+| [JDB](https://docs.oracle.com/javase/7/docs/technotes/tools/windows/jdb.html) | Java (in progress) |
 <br>
 
 ## Install from source
