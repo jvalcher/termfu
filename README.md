@@ -240,6 +240,7 @@ vim.keymap.set('n', '<leader>b', create_break, {desc = 'Create debugger breakpoi
 - Run `make help` to print all scripts.
 - Run `make todo` to print all source file tags, such as `TODO`, `FIX`, etc.
 - You can debug `termfu_dev` with `GDB` or `termfu`.
+  - Run `$ make debug`, which requires `termfu` to be in your path.
   - Open a separate terminal or pane for the debugged process
   - Copy the terminal file name's path (`$ tty`).
   - Run sleep (`$ sleep 99999`).
