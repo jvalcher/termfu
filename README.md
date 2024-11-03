@@ -220,7 +220,7 @@ __Vim__
 __Neovim__
 ```lua
 local function create_break ()
-    local filename = vim.fn.expand('%:t')
+    local filename   = vim.fn.expand('%:t')
     local linenumber = vim.fn.line('.')
     local breakpoint = filename .. ':' .. linenumber
     vim.fn.setreg('+', breakpoint)
