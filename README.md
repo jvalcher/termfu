@@ -172,7 +172,6 @@ __Header Commands__
 | Qut     | Quit                  | :heavy_check_mark: | :heavy_check_mark: |
 | Run     | Run, reload program   | :heavy_check_mark: | :heavy_check_mark: |
 | Stp     | Step                  | :heavy_check_mark: | :heavy_check_mark: |
-| Trg     | Target remote server  | :heavy_check_mark: |                    |
 | Unt     | Until                 | :heavy_check_mark: | :heavy_check_mark: |
 <br>
 
