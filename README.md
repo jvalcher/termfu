@@ -6,7 +6,7 @@ A multi-language debugger frontend for the Linux terminal
 - ___Fast___
 - Easy to configure
 - Single-key bindings documented on-screen
-- Create and switch between custom layouts
+- Switch between custom layouts
 - Scroll through window data
 - Breakpoint, watchpoint persistence
 - Debugger prompt access
