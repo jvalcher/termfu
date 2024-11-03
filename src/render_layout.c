@@ -93,7 +93,7 @@ get_label_layout (char     *label,
 
 
 /*
-    Calculate layout dimentions
+    Calculate layout dimensions
     ------------
     - Calculate position, dimensions in window_t
     - Allocate window_t structs if needed
