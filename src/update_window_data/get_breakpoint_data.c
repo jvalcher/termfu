@@ -22,13 +22,13 @@ get_breakpoint_data (state_t *state)
     // free current breakpoints
     if (state->breakpoints != NULL) {
         curr_break = state->breakpoints;
-        do {
-            tmp_break = curr_break->next;
-            if (curr_break) {
+        if (curr_break) {
+            do {
+                tmp_break = curr_break->next;
                 free (curr_break);
-            }
-            curr_break = tmp_break;  
-        } while (curr_break != NULL);
+                curr_break = tmp_break;  
+            } while (curr_break != NULL);
+        }
     }
     state->breakpoints = NULL;
 
