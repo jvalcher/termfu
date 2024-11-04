@@ -39,16 +39,12 @@ DATA_DEBUG	   = configs/.termfu_debugger_data
 
 
 all: FLAGS   += $(PROD_FLAGS)
-all: C_FILES += $(C_UPDATE_FILES)
-all: C_FILES += $(C_FORM_IN_FILES)
-all: C_FILES += $(C_DEBUG_FILES)
+all: C_FILES += $(C_UPDATE_FILES) $(C_FORM_IN_FILES) $(C_DEBUG_FILES)
 all: clean_prod $(B_FILE_PROD)
 	@echo ""
 
 dev: FLAGS   += $(DEV_FLAGS)
-dev: C_FILES += $(C_UPDATE_FILES)
-dev: C_FILES += $(C_FORM_IN_FILES)
-dev: C_FILES += $(C_DEBUG_FILES)
+dev: C_FILES += $(C_UPDATE_FILES) $(C_FORM_IN_FILES) $(C_DEBUG_FILES)
 dev: clean_dev $(B_FILE_DEV)
 	@echo ""
 
@@ -57,9 +53,7 @@ devf:
 	./scripts/make_devf
 
 devformat: FLAGS   += $(FORMAT_FLAGS)
-devformat: C_FILES += $(C_UPDATE_FILES)
-devformat: C_FILES += $(C_FORM_IN_FILES)
-devformat: C_FILES += $(C_DEBUG_FILES)
+devformat: C_FILES += $(C_UPDATE_FILES) $(C_FORM_IN_FILES) $(C_DEBUG_FILES)
 devformat: clean_dev $(B_FILE_DEV)
 
 install:
@@ -87,9 +81,7 @@ help:
 	@./scripts/make_help
 
 build:
-	(cd $(TEST_PROGS_DIR) && ./build_hello)
-	(cd $(TEST_PROGS_DIR) && ./build_vars)
-	(cd $(TEST_PROGS_DIR) && ./build_fib)
+	(cd $(TEST_PROGS_DIR) && ./build_hello && ./build_vars && ./build_fib)
 
 run_dev:
 	./$(B_FILE_DEV) -c $(CONFIG_RUN_DEV) -p $(DATA_RUN_DEV)
