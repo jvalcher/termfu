@@ -17,7 +17,7 @@ insert_breakpoint (state_t *state)
     int   ret;
     char *cmd_base_gdb = "-break-insert ",
          *cmd_base_pdb = "break ",
-         *cmd_base,
+         *cmd_base = NULL,
          *cmd;
 
     ret = get_form_input ("Insert breakpoint: ", state->input_buffer);
@@ -57,7 +57,7 @@ delete_breakpoint (state_t *state)
     int   ret;
     char *cmd_base_gdb = "-break-delete ",
          *cmd_base_pdb = "clear ",
-         *cmd_base,
+         *cmd_base = NULL,
          *cmd;
 
     ret = get_form_input ("Delete breakpoint: ", state->input_buffer);
@@ -98,7 +98,7 @@ clear_all_breakpoints (state_t *state)
     int   ret;
     char *cmd_base_gdb = "-break-delete ",
          *cmd_base_pdb = "clear ",
-         *cmd_base,
+         *cmd_base = NULL,
          *cmd;
 
     switch (state->debugger->index) {

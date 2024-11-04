@@ -15,7 +15,7 @@ execute_until (state_t *state)
     int ret;
     char *cmd_base_gdb = "-exec-until ",
          *cmd_base_pdb = "until ",
-         *cmd_base,
+         *cmd_base = NULL,
          *cmd;
 
     ret = get_form_input ("Execute until (line, filename:line): ", state->input_buffer);

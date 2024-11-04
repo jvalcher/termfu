@@ -33,7 +33,7 @@ get_persisted_data (state_t *state)
     char  break_buff [BREAK_PATH_LEN],
          *cmd_base_gdb = "-break-insert ",
          *cmd_base_pdb = "break ",
-         *cmd_base,
+         *cmd_base = NULL,
          *cmd;
 
     switch (state->debugger->index) {

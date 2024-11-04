@@ -21,8 +21,8 @@ pulse_header_title_color (int plugin_index,
 {
     size_t  i;
     int     x, y,
-            title_color,
-            keych_color,
+            title_color = FOCUS_HEADER_TITLE_COLOR,
+            keych_color = FOCUS_TITLE_KEY_COLOR,
             ret;
     double  diff;
     bool    key_color_toggle,

@@ -417,7 +417,7 @@ create_layout (FILE* file,
                num_chars,
                i;
     char       keys [LAYOUT_KEY_STR_LEN],
-              *win_keys,
+              *win_keys = NULL,
              **layout_matrix;
     bool       is_key = false;
     layout_t  *layout = NULL;
