@@ -245,6 +245,7 @@ vim.keymap.set('n', '<leader>b', create_break, {desc = 'Create debugger breakpoi
 ### Developer notes
 - Run `make help` to print all scripts.
 - Run `make todo` to print all source file tags, such as `TODO`, `FIX`, etc.
+- Run `make build` to compile all test programs.
 - You can debug (and explore) `termfu_dev` with `termfu`.
   - Run `$ make debug`, which requires `termfu` to be in your path.
   - Open a separate terminal or pane for the debugged process

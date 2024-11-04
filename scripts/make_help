@@ -19,7 +19,7 @@ make_commands = f'''
 
 {M}make todo      {R}- Print source code tags, e.g. TODO, FIXME
 
-{M}make build_gdb {R}- Build sample binaries for {M}run_dev{R} below
+{M}make build     {R}- Build sample binaries for {M}run_dev{R} below
 
 {M}make run_dev   {R}- Run termfu_dev with sample binary or script
                {R}- Adjust {S}configs/.termfu_run_dev{R} as needed

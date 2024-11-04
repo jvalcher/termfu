@@ -35,7 +35,7 @@ DATA_RUN_DEV   = configs/.termfu_run_dev_data
 CONFIG_DEBUG   = configs/.termfu_debugger
 DATA_DEBUG	   = configs/.termfu_debugger_data
 
-.PHONY: help all install dev devf devformat build_gdb run_dev plugins clean_prod clean_dev
+.PHONY: help all install dev devf devformat build run_dev plugins clean_prod clean_dev
 
 
 all: FLAGS   += $(PROD_FLAGS)
@@ -86,7 +86,7 @@ $(B_FILE_DEV):
 help:
 	@./scripts/make_help
 
-build_gdb:
+build:
 	(cd $(TEST_PROGS_DIR) && ./build_hello)
 	(cd $(TEST_PROGS_DIR) && ./build_vars)
 	(cd $(TEST_PROGS_DIR) && ./build_fib)
