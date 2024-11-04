@@ -24,7 +24,9 @@ get_breakpoint_data (state_t *state)
         curr_break = state->breakpoints;
         do {
             tmp_break = curr_break->next;
-            free (curr_break);
+            if (curr_break) {
+                free (curr_break);
+            }
             curr_break = tmp_break;  
         } while (curr_break != NULL);
     }
