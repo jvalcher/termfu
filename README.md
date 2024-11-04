@@ -33,6 +33,11 @@ Ubuntu:
 sudo apt-get install make gcc libncurses-dev gdb python3
  ```
 
+Fedora:
+```
+sudo dnf install make gcc ncurses-devel gdb python3
+```
+
 ### Build
 ```
 make

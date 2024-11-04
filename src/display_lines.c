@@ -71,7 +71,7 @@ display_scroll_buff_lines (int      key,
           max_scroll_row,
           print_row,
           line_num_len,
-          last_line_num,
+          last_line_num = -1,
           rem_spaces;
     char *ptr,
          *blank_line = " ";
