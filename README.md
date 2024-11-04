@@ -174,7 +174,7 @@ Con : c : (c)ontinue
 ```
 
 - Each three-character, case-sensitive plugin code corresponds to a specific header command or window. 
-- Add parentheses around key binding in its `<(t)itle>` for easy reference. This character will have a different color than the surrounding characters.
+- Add parentheses around a key binding in its `<(t)itle>` for easy reference. This character will have a different color than the surrounding characters.
 
 <br>
 
