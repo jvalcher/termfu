@@ -16,8 +16,8 @@ FLAGS          = -Wall -Wextra
 PROD_FLAGS     = -O3
 DEV_FLAGS      = -g
 FORMAT_FLAGS   = $(DEV_FLAGS) -fdiagnostics-format=json
-NCURSES_CFLAGS = $(shell ncurses5-config --cflags)
-NCURSES_LIBS   = $(shell ncurses5-config --libs) -lform
+NCURSES_CFLAGS = $(shell ncurses6-config --cflags)
+NCURSES_LIBS   = $(shell ncurses6-config --libs) -lform
 
 # source files
 C_FILES         = $(wildcard ./src/*.c)
