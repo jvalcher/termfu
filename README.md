@@ -79,8 +79,6 @@ gdb --quiet --interpreter=mi misc/vars
 
 [ plugins ]
 
-# <plugin code> : <key binding> : <title>
-
 # header commands
 AtP : A : (A)ttach
 Con : c : (c)ontinue
@@ -169,6 +167,7 @@ gdb --quiet --interpreter=mi misc/vars
 ```
 [ plugins ]
 
+# <plugin code> : <key binding> : <title>
 AtP : A : (A)ttach
 Con : c : (c)ontinue
 
