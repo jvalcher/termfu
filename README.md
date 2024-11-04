@@ -151,6 +151,13 @@ wdT
 
 ### Commands
 
+```
+[ command ]
+
+gdb --quiet --interpreter=mi misc/vars
+
+````
+
 | Debugger | Command |
 | :-----:  | ------  |
 | GDB      | `gdb --interpreter=mi ...` |
@@ -158,8 +165,17 @@ wdT
 <br>
 
 ### Plugins
+
+```
+[ plugins ]
+
+AtP : A : (A)ttach
+Con : c : (c)ontinue
+
+```
+
 - Each three-character, case-sensitive plugin code corresponds to a specific header command or window. 
-- Add parentheses around a shortcut key in its `<(t)itle>` for easy reference. This character will have a different color than the surrounding characters.
+- Add parentheses around key binding in its `<(t)itle>` for easy reference. This character will have a different color than the surrounding characters.
 
 <br>
 
@@ -199,6 +215,21 @@ __Windows__
 
 
 ### Layouts
+
+```
+[ layout : Main ]
+
+>h
+mlqrns
+cufk
+
+>w
+eeeooooo
+wwwooooo
+vvvooooo
+TTpppddd
+```
+
 - The order and row of each header command title is set by the order and row of its key binding.
 - Window size ratios and position are set via "key-binding ASCII art."
 <br>
