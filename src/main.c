@@ -14,6 +14,7 @@
 static int  initial_configure   (int, char*[], state_t*);
 static void exit_signal_handler (int sig_num);
 
+// TODO: termfu_dev throws a "free(): invalid size" error in a fedora VM
 
 
 int
@@ -58,7 +59,6 @@ main (int   argc,
             break;
         }
 
-        // run plugin
         if ((key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z')) {
 
             ret = run_plugin (state.plugin_key_index[key], &state);
@@ -66,11 +66,6 @@ main (int   argc,
                 pfeme ("Failed to run plugin for key \"%c\" (%d)", key, key);
             }
         }
-    }
-
-    ret = persist_data (&state);
-    if (ret == FAIL) {
-        pfeme ("Failed to persist data");
     }
 
     clean_up ();
@@ -101,6 +96,7 @@ initial_configure (int   argc,
     //
     state->config_path[0] = '\0';
     state->data_path[0]   = '\0';
+
     char *optstring = "hc:p:";
 
     while ((opt = getopt (argc, argv, optstring)) != -1) {
