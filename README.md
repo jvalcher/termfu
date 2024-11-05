@@ -5,9 +5,9 @@ A multi-language debugger frontend for the Linux terminal
 
 - ___Fast___
 - Easy to configure
-- Single-key bindings documented on-screen
-- Switch between custom layouts
-- Scroll through window data
+- Single-key bindings clearly documented on-screen
+- Switch between custom layouts while debugging
+- Scrollable window data
 - Breakpoint, watchpoint persistence
 - Debugger prompt access
 
@@ -24,7 +24,7 @@ A multi-language debugger frontend for the Linux terminal
 | [PDB](https://docs.python.org/3/library/pdb.html) | Python |
 <br>
 
-## Install from source
+## Installation
 
 ### Dependencies
 
@@ -38,7 +38,7 @@ Fedora:
 sudo dnf install make gcc ncurses-devel gdb python3
 ```
 
-### Build
+### Build and install
 ```
 make
 sudo make install
@@ -49,7 +49,7 @@ sudo make install
 ## Usage
 
 - The program can be run as follows in the same directory as a `.termfu` configuration file.
-- Breakpoint and watchpoint data is stored in `.termfu_data`.
+- Breakpoint and watchpoint data will be stored in `.termfu_data`.
 ```bash
 termfu
 ```
@@ -61,9 +61,8 @@ termfu
 termfu -c .termfu_01 -p .termfu_01_data
 ```
 
-- Configure the debugger command, key bindings, titles, and layouts inside the configuration file  _(see below)_.
 - Switch between layouts with your `(l)ayouts` key binding.
-- A window's data can be scrolled through by selecting it with its key binding and then using the arrow or `hjkl` keys.
+- A window's data can be scrolled through by selecting it via its key binding and then using the arrow or `hjkl` keys.
 <br><br>
 
 
@@ -75,11 +74,9 @@ termfu -c .termfu_01 -p .termfu_01_data
 ```
 [ command ]
 
-gdb --quiet --interpreter=mi misc/vars
+gdb --interpreter=mi --quiet misc/vars
 
 [ plugins ]
-
-# <plugin code> : <key binding> : <title>
 
 # header commands
 AtP : A : (A)ttach
@@ -139,17 +136,14 @@ wdT
 <img src='./misc/layout2.png'>
 <br>
 
-### Sections
-- Only newline `# comments` are supported, not inline.
+### Command
 
-| Section   | Description |
-| :----:    |  :----: |
-| command | Debugger command |
-| plugins | \<plugin code\> : \<key binding\> : \<title\> |
-| layout  | \[ layout : \<label\> \] <br>`>h` : header commands,  `>w` : windows |
-<br>
+```
+[ command ]
 
-### Commands
+gdb --quiet --interpreter=mi misc/vars
+
+````
 
 | Debugger | Command |
 | :-----:  | ------  |
@@ -158,8 +152,19 @@ wdT
 <br>
 
 ### Plugins
+
+```
+[ plugins ]
+
+# <plugin code> : <key binding> : <title>
+
+AtP : A : (A)ttach
+Con : c : (c)ontinue
+
+```
+
 - Each three-character, case-sensitive plugin code corresponds to a specific header command or window. 
-- Add parentheses around a shortcut key in its `<(t)itle>` for easy reference. This character will have a different color than the surrounding characters.
+- Add parentheses around a key binding in its `<(t)itle>` for easy reference. This character will have a different color than the surrounding characters.
 
 <br>
 
@@ -199,8 +204,23 @@ __Windows__
 
 
 ### Layouts
-- The order and row of each header command title is set by the order and row of its key binding.
-- Window size ratios and position are set via "key-binding ASCII art."
+
+```
+[ layout : Main ]
+
+>h
+mlqrns
+cufk
+
+>w
+eeeooooo
+wwwooooo
+vvvooooo
+TTpppddd
+```
+
+- The order and row of each header (`>h`) key binding in the configuration determines the corresponding title's position in the layout.
+- Window (`>w`) size ratios and position are determinded via "key-binding ASCII art."
 <br>
 
 
