@@ -14,7 +14,7 @@
 static int  initial_configure   (int, char*[], state_t*);
 static void exit_signal_handler (int sig_num);
 
-// TODO: termfu_dev throws a "free(): invalid size" error in a fedora VM
+// FIX: termfu_dev (not termfu) throwing a "free(): invalid size" error in fedora 41 VM
 
 
 int
@@ -50,6 +50,9 @@ main (int   argc,
     if (ret == FAIL) {
         pfeme ("Failed to get persisted data");
     }
+
+    // TODO: Use a separate thread/process
+    // TODO: Allow sending a kill signal when stuck in infinite loop
 
     while (debugger.running) {
 
