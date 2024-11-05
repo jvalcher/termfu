@@ -5,6 +5,11 @@
 
 
 
+/*
+    Get stack data
+    -------
+    state->plugins[Stk]->win->buff_data
+*/
 int get_stack_data (state_t *state);
 
 

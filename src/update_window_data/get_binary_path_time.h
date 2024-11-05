@@ -9,7 +9,6 @@
 /*
     Get path and last update time of program binary
     ----------
-
     state->debugger->prog_path
     state->debugger->prog_update_time
 */

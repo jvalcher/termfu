@@ -5,6 +5,11 @@
 
 
 
+/*
+    Get debugged program CLI output
+    -------
+    state->plugins[Prg]->win->buff_data
+*/
 int get_program_output (state_t *state);
 
 

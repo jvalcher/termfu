@@ -12,7 +12,7 @@
 #include "get_local_vars.h"
 #include "get_program_output.h"
 #include "get_register_data.h"
-#include "get_source_path_line_memory.h"
+#include "get_source_path_line_func.h"
 #include "get_stack_data.h"
 #include "get_watchpoint_data.h"
 
@@ -68,7 +68,7 @@ update_window (int      plugin_index,
             }
             break;
         case Src:
-            ret = get_source_path_line_memory (state);
+            ret = get_source_path_line_func (state);
             if (ret == FAIL) {
                 pfem ("Failed to get source, line, memory data");
                 goto upd_win_err;

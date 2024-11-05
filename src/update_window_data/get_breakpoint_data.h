@@ -5,6 +5,12 @@
 
 
 
+/*
+    Get breakpoint data
+    -----
+    state->plugins[Brk]->win->buff_data
+    state->breakpoints
+*/
 int get_breakpoint_data (state_t *state);
 
 

@@ -5,6 +5,12 @@
 
 
 
+/*
+    Get watchpoint data
+    -------
+    state->plugins[Wat]->win->buff_data
+    state->watchpoints
+*/
 int get_watchpoint_data (state_t *state);
 
 

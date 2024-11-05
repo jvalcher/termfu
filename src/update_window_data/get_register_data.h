@@ -5,6 +5,11 @@
 
 
 
+/*
+    Get registers data
+    -------
+    state->plugins[Reg]->win->buff_data
+*/
 int get_register_data (state_t *state);
 
 

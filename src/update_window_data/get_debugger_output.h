@@ -5,6 +5,11 @@
 
 
 
+/*
+    Get debugger CLI output
+    -------
+    state->plugins[Dbg]->win->buff_data
+*/
 int get_debugger_output (state_t *state);
 
 
