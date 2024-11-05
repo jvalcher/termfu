@@ -21,9 +21,13 @@ parse_debugger_output (state_t *state)
     ssize_t bytes_read = 0;
 
     state->debugger->cli_pos = 0;
+    state->debugger->cli_buffer[0] = '\0';
     state->debugger->program_pos = 0;
+    state->debugger->program_buffer[0] = '\0';
     state->debugger->data_pos = 0;
+    state->debugger->data_buffer[0] = '\0';
     state->debugger->async_pos = 0;
+    state->debugger->async_buffer[0] = '\0';
 
     state->debugger->reader_state = READER_RECEIVING;
     running = true;
