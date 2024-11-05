@@ -25,25 +25,28 @@ insert_breakpoint (state_t *state)
         pfemr (ERR_POPUP_IN);
     }
 
-    switch (state->debugger->index) {
-        case DEBUGGER_GDB:
-            cmd_base = cmd_base_gdb;
-            break;
-        case DEBUGGER_PDB:
-            cmd_base = cmd_base_pdb;
-            break;
-    }
+    if (strlen (state->input_buffer) > 0) {
 
-    cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
-    ret = send_command_mp (state, cmd);
-    if (ret == FAIL) {
-        pfemr (ERR_DBG_CMD);
-    }
-    free (cmd);
+        switch (state->debugger->index) {
+            case DEBUGGER_GDB:
+                cmd_base = cmd_base_gdb;
+                break;
+            case DEBUGGER_PDB:
+                cmd_base = cmd_base_pdb;
+                break;
+        }
 
-    ret = update_windows (state, 2, Brk, Src);
-    if (ret == FAIL) {
-        pfemr (ERR_UPDATE_WIN);
+        cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
+        ret = send_command_mp (state, cmd);
+        if (ret == FAIL) {
+            pfemr (ERR_DBG_CMD);
+        }
+        free (cmd);
+
+        ret = update_windows (state, 2, Brk, Src);
+        if (ret == FAIL) {
+            pfemr (ERR_UPDATE_WIN);
+        }
     }
 
     return A_OK;

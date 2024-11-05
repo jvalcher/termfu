@@ -58,11 +58,11 @@ insert_watchpoint (state_t *state)
             watch->var [WATCH_LEN - 1] = '\0';
             watch->next = NULL;
         }
-    }
 
-    ret = update_window (Wat, state);
-    if (ret == FAIL) {
-        pfemr ("Failed to update watchpoint window");
+        ret = update_window (Wat, state);
+        if (ret == FAIL) {
+            pfemr ("Failed to update watchpoint window");
+        }
     }
 
     return A_OK;
