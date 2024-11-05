@@ -81,7 +81,7 @@ help:
 	@./scripts/make_help
 
 build:
-	(cd $(TEST_PROGS_DIR) && ./build_hello && ./build_vars && ./build_fib)
+	(cd $(TEST_PROGS_DIR) && ./build_c)
 
 run_dev:
 	./$(B_FILE_DEV) -c $(CONFIG_RUN_DEV) -p $(DATA_RUN_DEV)

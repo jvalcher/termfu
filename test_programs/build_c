@@ -1,0 +1,8 @@
+#!/bin/sh
+
+gcc -g hello.c hello2.c -o hello
+gcc -g fib.c -o fib
+gcc -g seg_fault.c -o seg_fault
+gcc -g infinite_loop.c infinite_loop_func.c -o infinite_loop
+gcc -g vars.c -o vars
+
