@@ -331,6 +331,8 @@ enum { READER_RECEIVING, READER_DONE };
     prog_update_time        - file's last update time (st_mtim.tv_sec), used to signal reload
 
     curr_func               - current function
+    curr_Src_line           - current source file line number
+    curr_Asm_line           - current assembly output line number
                                         
     src_path_buffer         - path string of current source file
     src_path_len            - string buffer size
