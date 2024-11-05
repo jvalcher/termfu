@@ -33,8 +33,6 @@ select_window (int      plugin_index,
         goto sel_win_err;
     }
 
-    keypad (stdscr, TRUE);
-
     while (in_loop) {
 
         key = getch ();
@@ -154,8 +152,6 @@ select_window (int      plugin_index,
         pfem ("Failed to deselect window color");
         goto sel_win_err;
     }
-
-    keypad (stdscr, FALSE);
 
     return A_OK;
 
