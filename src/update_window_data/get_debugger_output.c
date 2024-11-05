@@ -64,7 +64,6 @@ get_debugger_output_gdb (state_t *state)
         }
     }
 
-    state->debugger->cli_buffer[0] = '\0';
     dest_buff->new_data = false;
 
     return A_OK;
@@ -98,7 +97,6 @@ get_debugger_output_pdb (state_t *state)
         dest_buff->changed = true;
     }
 
-    state->debugger->cli_buffer[0] = '\0';
     dest_buff->new_data = false;
 
     return A_OK;

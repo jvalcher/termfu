@@ -53,7 +53,9 @@ get_source_path_line_func_gdb (state_t *state)
 
     win = state->plugins[Src]->win;
     debugger = state->debugger;
+
     debugger->src_path_pos = 0;
+    debugger->src_path_buffer[0] = '\0';
 
     is_running = true;
 
@@ -101,6 +103,8 @@ get_source_path_line_func_gdb (state_t *state)
 
     // absolute path
     debugger->format_pos = 0;
+    debugger->format_buffer[0] = '\0';
+
     src_ptr = strstr (src_ptr, key_fullname);
     if (src_ptr != NULL) {
         src_ptr += strlen (key_fullname);
@@ -134,9 +138,6 @@ get_source_path_line_func_gdb (state_t *state)
         win->buff_data->changed = true;
     }
 
-    debugger->data_buffer[0] = '\0';
-    debugger->format_buffer[0] = '\0';
-
     return A_OK;
 }
 
@@ -159,6 +160,7 @@ get_source_path_line_func_pdb (state_t *state)
     buff_data = state->plugins[Src]->win->buff_data;
 
     debugger->src_path_pos = 0;
+    debugger->src_path_buffer[0] = '\0';
 
     ret = send_command_mp (state, "where\n");
     if (ret == FAIL) {
@@ -170,6 +172,8 @@ get_source_path_line_func_pdb (state_t *state)
 
     // path
     state->debugger->format_pos = 0;
+    state->debugger->format_buffer[0] = '\0';
+
     while (*src_ptr != '(') {
         cp_dchar (debugger, *src_ptr++, FORMAT_BUF);
     }
@@ -193,10 +197,6 @@ get_source_path_line_func_pdb (state_t *state)
         } while (*src_ptr != ')');
         debugger->curr_Src_line = atoi (debugger->format_buffer);
     }
-
-    buff_data->scroll_col_offset = 0;
-    debugger->cli_buffer[0] = '\0';
-    debugger->format_buffer[0] = '\0';
 
     return A_OK;
 }

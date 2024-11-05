@@ -109,10 +109,10 @@ get_breakpoint_data_gdb (state_t *state)
                  index_buff  [INDEX_BUFF_LEN];
     buff_data_t *dest_buff;
     
-    const char *key_number   = "number=\"",
-               *key_file     = "file=\"",
-               *key_line     = "line=\"",
-               *key_nr_rows  = "nr_rows=\"";
+    char *key_number   = "number=\"",
+         *key_file     = "file=\"",
+         *key_line     = "line=\"",
+         *key_nr_rows  = "nr_rows=\"";
 
     src_ptr   = state->debugger->data_buffer;
     dest_buff = state->plugins[Brk]->win->buff_data;
@@ -122,9 +122,10 @@ get_breakpoint_data_gdb (state_t *state)
         pfemr (ERR_DBG_CMD);
     }
 
-    if (strstr (src_ptr, "error") == NULL) {
+    dest_buff->buff_pos = 0;
+    dest_buff->buff[0] = '\0';
 
-        dest_buff->buff_pos = 0;
+    if (strstr (src_ptr, "error") == NULL) {
 
         // get number of breakpoints
         i = 0;
@@ -191,10 +192,6 @@ get_breakpoint_data_gdb (state_t *state)
             }
         }
 
-        else {
-            cp_wchar (dest_buff, '\0');
-        }
-
         dest_buff->changed = true;
     }
 
@@ -209,7 +206,7 @@ get_breakpoint_data_pdb (state_t *state)
     int          i, ret;
     window_t    *win;
     char        *src_ptr,
-                 path_buff  [BREAK_PATH_LEN*2],
+                 path_buff       [BREAK_PATH_LEN*2],
                 *file_ptr,
                  index_buff      [INDEX_BUFF_LEN],
                  break_line_buff [BREAK_LINE_LEN];
@@ -226,6 +223,7 @@ get_breakpoint_data_pdb (state_t *state)
     dest_buff = win->buff_data;
 
     dest_buff->buff_pos = 0;
+    dest_buff->buff[0] = '\0';
     dest_buff->changed = true;
 
     ret = send_command_mp (state, "break\n");
@@ -314,12 +312,8 @@ get_breakpoint_data_pdb (state_t *state)
         }
     } 
 
-    else {
 skip_Brk_parse_pdb:
-        cp_wchar (dest_buff, '\0');
-    }
 
-    state->debugger->program_buffer[0]  = '\0';
     win->buff_data->changed = true;;
 
     return A_OK;

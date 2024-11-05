@@ -50,13 +50,14 @@ get_stack_data_gdb (state_t *state)
                 *file_key  = "file=\"",
                 *line_key  = "line=\"";
 
+    dest_buff->buff_pos = 0;
+    dest_buff->buff[0] = '\0';
+    dest_buff->changed = true;
+
     ret = send_command_mp (state, "-stack-list-frames\n");
     if (ret == FAIL) {
         pfemr (ERR_DBG_CMD);
     }
-
-    dest_buff->buff_pos = 0;
-    dest_buff->changed = true;
 
     if (strstr (src_ptr, "error") == NULL) {
 
@@ -115,12 +116,6 @@ get_stack_data_gdb (state_t *state)
             cp_wchar (dest_buff, '\n');
         }
     }
-
-    else {
-        cp_wchar (dest_buff, '\0');
-    }
-
-    state->debugger->data_buffer[0] = '\0';
 
     return A_OK;
 }

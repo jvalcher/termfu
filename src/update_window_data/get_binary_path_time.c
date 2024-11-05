@@ -67,8 +67,6 @@ get_binary_path_time_gdb (state_t *state)
         state->debugger->prog_update_time = file_stat.st_mtim.tv_sec;
     }
 
-    state->debugger->cli_buffer[0]  = '\0';
-
     return A_OK;
 }
 

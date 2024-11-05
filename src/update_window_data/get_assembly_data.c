@@ -109,9 +109,6 @@ get_assembly_data_gdb (state_t *state)
             }
         }
 
-        state->debugger->cli_buffer[0]  = '\0';
-        state->debugger->data_buffer[0] = '\0';
-
         dest_data->changed = true;
     }
 

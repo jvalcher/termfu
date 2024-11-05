@@ -61,6 +61,7 @@ get_local_vars_gdb (state_t *state)
     }
 
     dest_data->buff_pos = 0;
+    dest_data->buff[0] = '\0';
 
     if (strstr (src_ptr, "error") == NULL) {
 
@@ -151,7 +152,6 @@ get_local_vars_gdb (state_t *state)
     }
 
     dest_data->changed = true;
-    state->debugger->data_buffer[0]  = '\0';
 
     return A_OK;
 }
@@ -183,6 +183,7 @@ get_local_vars_pdb (state_t *state)
     }
 
     dest_data->buff_pos = 0;
+    dest_data->buff[0] = '\0';
 
     // skip __name__ ... output
     if (strncmp (src_ptr, name_str, strlen (name_str)) == 0) {
@@ -267,14 +268,9 @@ get_local_vars_pdb (state_t *state)
         cp_wchar (dest_data, '\0');
     }
 
-    // no local variables
-    else {
 skip_LcV_parse:
-        cp_wchar (dest_data, '\0');
-    }
 
     dest_data->changed = true;
-    state->debugger->program_buffer[0] = '\0';
     dest_data->new_data = false;
 
     return A_OK;

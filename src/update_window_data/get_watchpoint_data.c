@@ -59,13 +59,15 @@ get_watchpoint_data_gdb (state_t *state)
     watch     = state->watchpoints;
 
     win->buff_data->buff_pos = 0;
+    win->buff_data->buff[0] = '\0';
     win->buff_data->changed = true;
 
+    // no watchpoints
     if (watch == NULL) {
         cp_wchar (dest_data, '\0');
     }
 
-    // create buffer, add values
+    // watchpoints
     else {
         while (watch != NULL) {
 
@@ -190,7 +192,8 @@ get_watchpoint_data_pdb (state_t *state)
     dest_data = win->buff_data;
     watch     = state->watchpoints;
 
-    win->buff_data->buff_pos = 0;
+    dest_data->buff_pos = 0;
+    dest_data->buff[0] = '\0';
 
     if (watch != NULL) {
 
@@ -237,10 +240,6 @@ get_watchpoint_data_pdb (state_t *state)
             state->debugger->program_buffer[0] = '\0';
             watch = watch->next;
         }
-    }
-
-    else {
-        cp_wchar (dest_data, '\0');
     }
 
     return A_OK;
