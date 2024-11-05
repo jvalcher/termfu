@@ -15,6 +15,7 @@
 #include "get_source_path_line_func.h"
 #include "get_stack_data.h"
 #include "get_watchpoint_data.h"
+#include "../persist_data.h"
 
 
 
@@ -24,6 +25,7 @@ update_window (int      plugin_index,
 {
     int ret;
 
+    // get data
     switch (plugin_index) {
         case Asm:
             ret = get_assembly_data (state);
@@ -93,12 +95,23 @@ update_window (int      plugin_index,
             goto upd_win_err;
     }
 
+    // update window
     ret = display_lines (state->plugins[plugin_index]->data_pos,
                          plugin_index,
                          state);
     if (ret == FAIL) {
         pfem (ERR_DISP_LINES);
         goto upd_win_err;
+    }
+
+    // persist data
+    switch (plugin_index) {
+        case Brk:
+        case Wat:
+            ret = persist_data (state);
+            if (ret == FAIL) {
+                pfeme ("Failed to persist data");
+            }
     }
 
     return A_OK;

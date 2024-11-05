@@ -8,7 +8,6 @@
 #include "get_form_input/run_custom_command.h"
 #include "get_form_input/execute_until.h"
 #include "get_form_input/attach_to_process.h"
-#include "persist_data.h"
 
 
 
@@ -85,11 +84,6 @@ run_plugin (int      plugin_index,
                 goto run_plugin_err;
             }
             break;
-    }
-
-    ret = persist_data (state);
-    if (ret == FAIL) {
-        pfeme ("Failed to persist data");
     }
 
     return A_OK;
