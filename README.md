@@ -147,8 +147,8 @@ gdb --quiet --interpreter=mi misc/vars
 
 | Debugger | Command |
 | :-----:  | ------  |
-| GDB      | `gdb --interpreter=mi ...` |
-| PDB      | `python -m pdb ...` |
+| GDB      | `gdb --interpreter=mi my_prog` |
+| PDB      | `python -m pdb app.py` |
 <br>
 
 ### Plugins
