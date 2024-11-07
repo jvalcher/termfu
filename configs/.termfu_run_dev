@@ -1,8 +1,8 @@
 
 [ command ]
 
-gdb --quiet --interpreter=mi test_programs/hello
-#python -m pdb test_programs/gcd.py
+#gdb --quiet --interpreter=mi test_programs/vars
+python -m pdb test_programs/gcd.py
 
 [ plugins ]
 

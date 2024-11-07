@@ -1,7 +1,7 @@
 
 [ command ]
 
-gdb --quiet --interpreter=mi test_programs/fib
+gdb --quiet --interpreter=mi test_programs/infinite_loop
 #python -m pdb test_programs/gcd.py
 
 [ plugins ]

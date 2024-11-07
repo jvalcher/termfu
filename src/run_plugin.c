@@ -17,6 +17,8 @@ run_plugin (int      plugin_index,
 {
     int ret;
 
+    state->debugger->running_plugin = true;
+
     switch (plugin_index) {
 
         // commands
@@ -85,6 +87,8 @@ run_plugin (int      plugin_index,
             }
             break;
     }
+
+    state->debugger->running_plugin = false;
 
     return A_OK;
 

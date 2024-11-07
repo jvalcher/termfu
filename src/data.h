@@ -4,6 +4,7 @@
 
 #include <ncurses.h>
 #include <time.h>
+#include <pthread.h>
 
 
 
@@ -367,10 +368,13 @@ enum { READER_RECEIVING, READER_DONE };
 typedef struct {
 
     int     index;
+    int     pid;
     char    title [DEBUG_TITLE_LEN];
     bool    running;
     int     stdin_pipe;
     int     stdout_pipe;
+    bool    running_plugin;
+    bool    is_select_window;
 
     char    prog_path [PROGRAM_PATH_LEN];
     time_t  prog_update_time;
@@ -408,6 +412,9 @@ typedef struct {
     int     async_len;
     int     async_pos;
     int     async_times_doubled;
+
+    pthread_t send_key_thread;
+    pthread_t get_key_thread;
 
 } debugger_t;
 
@@ -542,6 +549,8 @@ typedef struct {
 
     int            num_plugins;
     int           *plugin_key_index;
+    bool           restart_prog;
+
     char           config_path  [CONFIG_PATH_LEN];
     char           data_path    [DATA_PATH_LEN];
     char           input_buffer [INPUT_BUFF_LEN];

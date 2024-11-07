@@ -1,0 +1,8 @@
+#!/bin/sh
+
+#
+# Debug termfu_dev with <PATH>/termfu
+#
+
+gdb --tui --quiet --args termfu_dev -c configs/.termfu_debugged -p configs/.termfu_debugged_data
+

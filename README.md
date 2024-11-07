@@ -61,9 +61,10 @@ termfu
 termfu -c .termfu_01 -p .termfu_01_data
 ```
 
-- Switch between layouts with your `(l)ayouts` key binding.
-- A window's data can be scrolled through by selecting it via its key binding and then using the arrow or `hjkl` keys.
+- Switch between layouts with your `(l)ayouts` key.
+- A window's data can be scrolled through by selecting it with its key and then using the arrow or `hjkl` keys.
 <br><br>
+- The program your are debugging is hung if the title of your last command (e.g. `(n)ext`) is still highlighted. Press `(k)ill`, `(q)uit`, or `Esc` if this is the case.
 
 
 ## Configuration

@@ -1,6 +1,8 @@
 #include <unistd.h>
 #include <signal.h>
 #include <ncurses.h>
+#include <sys/wait.h>
+#include <pthread.h>
 
 #include "data.h"
 #include "utilities.h"
@@ -11,17 +13,24 @@
 #include "persist_data.h"
 #include "plugins.h"
 
-static int  initial_configure   (int, char*[], state_t*);
-static void exit_signal_handler (int sig_num);
+static int   initial_configure   (int, char*[], state_t*);
+static void *get_key             (void *state_arg);
+static void *send_key            (void *state_arg);
 
 // FIX: termfu_dev (not termfu) throwing a "free(): invalid size" error in fedora 41 VM
+
+int main_pipe[2];
+pthread_mutex_t mutex;
+pthread_cond_t cond_var;
+bool in_select_window;
 
 
 int
 main (int   argc,
       char *argv[]) 
 {
-    int        key, ret;
+    int        ret,
+               status;
     state_t    state;
     debugger_t debugger;
     state.debugger = &debugger;
@@ -51,29 +60,77 @@ main (int   argc,
         pfeme ("Failed to get persisted data");
     }
 
-    // TODO: Use a separate thread/process
-    // TODO: Allow sending a kill signal when stuck in infinite loop
-
     while (debugger.running) {
 
-        key = getch ();
-
-        if (key == ESC) {
-            break;
+        // create main, select pipes
+        if (pipe (main_pipe) == -1) {
+            pfeme ("Failed to create main pipe");
         }
 
-        if ((key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z')) {
+        // start thread to get key input
+        if (pthread_create(&state.debugger->get_key_thread, NULL, get_key, (void*) &state) != 0) {
+            pfeme ("Failed to create get key thread");
+        }
 
-            ret = run_plugin (state.plugin_key_index[key], &state);
+        // start thread to send key to plugin
+        if (pthread_create(&state.debugger->send_key_thread, NULL, send_key, (void*) &state) != 0) {
+            pfeme ("Failed to create run plugin thread");
+        }
+
+        pthread_join (state.debugger->get_key_thread, NULL);
+        pthread_join (state.debugger->send_key_thread, NULL);
+
+        // restart program (e.g. quit key hit because run_plugin() hanging)
+        if (state.restart_prog) {
+
+            // kill debugger process
+            kill    (debugger.pid, SIGTERM);
+            waitpid (debugger.pid, &status, 0);
+
+            // restart program
+            ret = render_layout (FIRST_LAYOUT, &state);
             if (ret == FAIL) {
-                pfeme ("Failed to run plugin for key \"%c\" (%d)", key, key);
+                pfeme ("Failed to render \"%s\" layout\n\n", FIRST_LAYOUT);
             }
+                //
+            ret = start_debugger (&state);
+            if (ret == FAIL) {
+                pfeme ("Failed to start debugger");
+            }
+                //
+            ret = get_persisted_data (&state);
+            if (ret == FAIL) {
+                pfeme ("Failed to get persisted data");
+            }
+
+            state.restart_prog = false;
+        } 
+
+        // quit program
+        else {
+            debugger.running = false;
         }
+
+        close (main_pipe[PIPE_READ]);
+        close (main_pipe[PIPE_WRITE]);
     }
 
     clean_up ();
 
     return EXIT_SUCCESS;
+}
+
+
+
+/*
+*/
+static void
+sigint_handler (int sig_num)
+{
+    (void) sig_num;
+    clean_up ();
+    fprintf (stderr, "termfu exited (SIGINT)\n");
+    exit (EXIT_FAILURE);
 }
 
 
@@ -94,9 +151,7 @@ initial_configure (int   argc,
     int opt;
     extern char *optarg;
 
-    //
     // CLI arguments
-    //
     state->config_path[0] = '\0';
     state->data_path[0]   = '\0';
 
@@ -150,11 +205,12 @@ initial_configure (int   argc,
 
     // misc state
     state->new_run = true;
+    state->restart_prog = false;
     set_state_ptr (state);
     set_num_plugins (state);
 
-    // signal handlers
-    signal (SIGINT, exit_signal_handler);     // Ctrl-C;  (gdb) signal 2
+    // signal handler(s)
+    signal (SIGINT, sigint_handler);     // Ctrl-C;  (gdb) signal 2
 
     // ncurses
     initscr ();
@@ -183,12 +239,138 @@ initial_configure (int   argc,
 
 
 
-static void
-exit_signal_handler (int sig_num)
+/*
+    Get key input (thread function)
+*/
+static void*
+get_key (void *state_arg)
 {
-    (void) sig_num;
-    clean_up ();
-    fprintf (stderr, "termfu exited (SIGINT)\n");
-    exit (EXIT_FAILURE);
+    int      key,
+             ret_val,
+             oldtype;
+    char     key_str[8];
+    state_t *state;
+
+    pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+    in_select_window = false;
+    state = (state_t*) state_arg;
+    state->debugger->running_plugin = false;
+
+    while (true) {
+
+        // wait if in select_window()
+        while (in_select_window == true) {
+            pthread_cond_wait (&cond_var, &mutex);
+        }
+        pthread_mutex_unlock (&mutex);
+
+        // get key
+        key = getch ();
+
+        // if program hung, restart debugger with kill, quit, escape
+        if ( state->debugger->running_plugin &&
+            (state->plugin_key_index[key] == Kil ||
+             state->plugin_key_index[key] == Qut ||
+                                      key == ESC))
+        {
+            state->restart_prog = true;
+            pthread_cancel (state->debugger->send_key_thread);
+            pthread_exit (&ret_val);
+        }
+
+        // send key if plugin not running
+        else if (state->debugger->running_plugin == false) {
+
+            // signal to wait for return from select_window() plugin
+            switch (state->plugin_key_index[key]) {
+                case Asm:
+                case Brk:
+                case Dbg:
+                case LcV:
+                case Prg:
+                case Reg:
+                case Src:
+                case Stk:
+                case Wat: 
+                    in_select_window = true;
+                    pthread_mutex_lock (&mutex);
+            }
+
+            sprintf (key_str, "%d", key);
+            write (main_pipe[PIPE_WRITE], key_str, 8);
+        }
+
+    }
+
+    return NULL;
+}
+
+
+
+/*
+    Send key input to plugin function (thread function)
+*/
+static void*
+send_key (void *state_arg)
+{
+    char key_str[8];
+    int key,
+        ret,
+        oldtype;
+    state_t *state;
+
+    pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+    state = (state_t*) state_arg;
+
+    while (true) {
+
+        // read key from get_key()
+        if (read (main_pipe[PIPE_READ], key_str, 8) > 0) {
+
+            key = atoi (key_str);
+
+            // exit on Esc
+            if (key == ESC) {
+                state->debugger->running = false;
+                pthread_cancel (state->debugger->send_key_thread);
+                pthread_exit (&ret);
+            }
+
+            // run plugin
+            if ((key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z')) {
+
+                ret = run_plugin (state->plugin_key_index[key], state);
+                if (ret == FAIL) {
+                    state->debugger->running = false;
+                    pthread_cancel (state->debugger->get_key_thread);
+                    pthread_exit (&ret);
+                }
+            }
+
+            // signal get_key() that it has exited select_window()
+            switch (state->plugin_key_index[key]) {
+                case Asm:
+                case Brk:
+                case Dbg:
+                case LcV:
+                case Prg:
+                case Reg:
+                case Src:
+                case Stk:
+                case Wat: 
+                    in_select_window = false;
+                    pthread_cond_signal (&cond_var);
+                    pthread_mutex_unlock (&mutex);
+            }
+
+            // quit program
+            if (state->debugger->running == false) {
+                pthread_cancel (state->debugger->get_key_thread);
+                pthread_exit (&ret);
+            }
+        }
+    }
+
+    return NULL;
 }
 
