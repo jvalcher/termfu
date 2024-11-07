@@ -72,9 +72,10 @@ termfu -c .termfu_01 -p .termfu_01_data
 
 
 ```
+
 [ command ]
 
-gdb --interpreter=mi --quiet misc/vars
+gdb --interpreter=mi --quiet test_programs/hello
 
 [ plugins ]
 
@@ -93,39 +94,40 @@ Unt : u : (u)ntil
 
 # windows
 Asm : a : (a)ssembly
-Brk : e : br(e)akpoints
+Brk : b : (b)reakpoints
 Dbg : d : (d)ebug out
 LcV : v : local (v)ars
 Prg : p : (p)rogram out
 Reg : g : re(g)isters
 Src : o : s(o)urce file
-Stk : T : s(T)ack
+Stk : t : s(t)ack
 Wat : w : (w)atch
 
 
 [ layout : Main ]
 
 >h
-mlqrns
-cufk
+mlq
+rnscufk
 
 >w
-eeeooooo
+bbbooooo
 wwwooooo
 vvvooooo
-TTpppddd
+ttpppddd
 
 [ layout : Assembly / Registers ]
 
 >h
-mlqrns
-cufk
+mlq
+rnscufk
 
 >w
 oag
 oag
 oag
-wdT
+wdt
+
 ```
 <br>
 
