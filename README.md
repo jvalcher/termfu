@@ -10,6 +10,7 @@ A multi-language debugger frontend for the Linux terminal
 - Scrollable window data
 - Breakpoint, watchpoint persistence
 - Debugger prompt access
+- See [Updates](#Updates) for major changes
 
 <br>
 <p align="center"><img margin-left="auto" src="./misc/layout1.png"></p>
