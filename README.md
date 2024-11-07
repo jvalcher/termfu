@@ -250,7 +250,6 @@ TTpppddd
   - Set your breakpoint and start debugging.
 - The `logd()` function in `src/utilities.h` allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
 - Run `make help` in the `tests/` directory to view available scripts.
-- All errors that require the program to exit must propagate back to `main()` using the formatted error macro functions in `utilities.h`. Standard library function error checking must include the `errno` message when available. Refer to the source code for examples of this.
 - It is recommended to create a shortcut for refreshing your terminal screen, as `ncurses` will make a mess of it when not shut down properly.
 
 <br><br>
