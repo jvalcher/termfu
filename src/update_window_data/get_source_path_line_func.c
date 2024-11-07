@@ -44,7 +44,7 @@ get_source_path_line_func_gdb (state_t *state)
           curr_index;
     char *src_ptr,
          *path_ptr,
-         *main_path_ptr,
+         *main_path_ptr = NULL,
          *prev_ptr;
     window_t *win;
     bool is_running;
