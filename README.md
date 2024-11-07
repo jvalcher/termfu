@@ -247,8 +247,7 @@ TTpppddd
   - Run `$ tty` and copy the terminal file name's path.
   - Run `$ sleep 99999`.
   - Back in your debugger, run `>>> tty /dev/pts/<x>` at the prompt.
-  - Start debugging.
-  - You can kill the debugged process with `>>> signal 2`.
+  - Set your breakpoint and start debugging.
 - The `logd()` function in `src/utilities.h` allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
 - Run `make help` in the `tests/` directory to view available scripts.
 - All errors that require the program to exit must propagate back to `main()` using the formatted error macro functions in `utilities.h`. Standard library function error checking must include the `errno` message when available. Refer to the source code for examples of this.
