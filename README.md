@@ -10,7 +10,6 @@ A multi-language debugger frontend for the Linux terminal
 - Scrollable window data
 - Breakpoint, watchpoint persistence
 - Debugger prompt access
-- See [Updates](#Updates) for major changes
 
 <br>
 <p align="center"><img margin-left="auto" src="./misc/layout1.png"></p>
@@ -224,12 +223,6 @@ TTpppddd
 
 - The order and row of each header (`>h`) key binding in the configuration determines the corresponding title's position in the layout.
 - Window (`>w`) size ratios and positions are determinded via "key-binding ASCII art."
-<br>
-
-
-## Updates
-- 11-07-2024 - Added threading for killing hung debugged program; fixed source file display issue ([PR](https://github.com/jvalcher/termfu/pull/3))
-- 11-03-2024 - Existence revealed on Reddit
 <br>
 
 
