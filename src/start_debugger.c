@@ -71,15 +71,27 @@ start_debugger (state_t *state)
 static int
 configure_debugger (debugger_t *debugger)
 {
+    // src_path_buffer
     if ((debugger->src_path_buffer = (char*) malloc (sizeof (char) * PROGRAM_PATH_LEN)) == NULL) {
         pfem ("malloc error: %s", strerror (errno));
-        pemr ("Path buffer allocation failed");
+        pemr ("Source path buffer allocation failed");
     }
     debugger->src_path_buffer[0] = '\0';
     debugger->src_path_len = PROGRAM_PATH_LEN;
     debugger->src_path_pos = 0;
     debugger->src_path_times_doubled = 0;
 
+    // main_src_path_buffer
+    if ((debugger->main_src_path_buffer = (char*) malloc (sizeof (char) * PROGRAM_PATH_LEN)) == NULL) {
+        pfem ("malloc error: %s", strerror (errno));
+        pemr ("Main source path buffer allocation failed");
+    }
+    debugger->main_src_path_buffer[0] = '\0';
+    debugger->main_src_path_len = PROGRAM_PATH_LEN;
+    debugger->main_src_path_pos = 0;
+    debugger->main_src_path_times_doubled = 0;
+
+    // format_buffer
     if ((debugger->format_buffer = (char*) malloc (sizeof (char) * ORIG_BUF_LEN)) == NULL) {
         pfem ("malloc error: %s", strerror (errno));
         pemr ("Format buffer allocation failed");
@@ -89,6 +101,7 @@ configure_debugger (debugger_t *debugger)
     debugger->format_pos = 0;
     debugger->format_times_doubled = 0;
 
+    // data_buffer
     if ((debugger->data_buffer = (char*) malloc (sizeof (char) * ORIG_BUF_LEN)) == NULL) {
         pfem ("malloc error: %s", strerror (errno));
         pemr ("Data buffer allocation failed");
@@ -98,6 +111,7 @@ configure_debugger (debugger_t *debugger)
     debugger->data_pos = 0;
     debugger->data_times_doubled = 0;
 
+    // cli_buffer
     if ((debugger->cli_buffer = (char*) malloc (sizeof (char) * ORIG_BUF_LEN)) == NULL) {
         pfem ("malloc error: %s", strerror (errno));
         pemr ("CLI buffer allocation failed");
@@ -107,6 +121,7 @@ configure_debugger (debugger_t *debugger)
     debugger->cli_pos = 0;
     debugger->cli_times_doubled = 0;
 
+    // program_buffer
     if ((debugger->program_buffer = (char*) malloc (sizeof (char) * ORIG_BUF_LEN)) == NULL) {
         pfem ("malloc error: %s", strerror (errno));
         pemr ("Program out buffer allocation failed");
@@ -116,6 +131,7 @@ configure_debugger (debugger_t *debugger)
     debugger->program_pos = 0;
     debugger->program_times_doubled = 0;
 
+    // async_buffer
     if ((debugger->async_buffer = (char*) malloc (sizeof (char) * ORIG_BUF_LEN)) == NULL) {
         pfem ("malloc error: %s", strerror (errno));
         pemr ("Async buffer allocation failed");
@@ -179,6 +195,7 @@ start_debugger_proc (state_t *state)
 
     if (debugger_pid > 0) {
     
+        debugger->pid = debugger_pid;
         debugger->running = true;
 
         close (debug_in_pipe   [PIPE_READ]);

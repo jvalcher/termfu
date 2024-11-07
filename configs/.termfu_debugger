@@ -20,24 +20,24 @@ Unt : u : (u)ntil
 
 # windows
 Asm : a : (a)ssembly
-Brk : e : br(e)akpoints
+Brk : b : (b)reakpoints
 Dbg : d : (d)ebug out
 LcV : v : local (v)ars
 Prg : p : (p)rogram out
 Reg : g : re(g)isters
 Src : o : s(o)urce file
-Stk : T : s(T)ack
+Stk : t : s(t)ack
 Wat : w : (w)atch
 
 
 [ layout : Main ]
 
 >h
-Amlr
-nscufkq
+mlq
+rnscufk
 
 >w
-eoo
+boo
 woo
 vdd
 
