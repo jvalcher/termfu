@@ -143,6 +143,7 @@ allocate_plugin_windows (state_t *state)
         // text wrapping
         switch (j) {
             case Asm:
+            case Reg:
             case Src:
                 buff_data->text_wrapped = false;
                 break;

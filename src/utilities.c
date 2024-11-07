@@ -476,6 +476,13 @@ cp_dchar (debugger_t *debugger,
             pos     = &debugger->src_path_pos;
             doubled = &debugger->src_path_times_doubled;
             break;
+        case MAIN_PATH_BUF:
+            title   =  path_title;
+            buff    =  debugger->main_src_path_buffer;
+            len     = &debugger->main_src_path_len;
+            pos     = &debugger->main_src_path_pos;
+            doubled = &debugger->main_src_path_times_doubled;
+            break;
         case FORMAT_BUF:
             title   =  form_title;
             buff    =  debugger->format_buffer;

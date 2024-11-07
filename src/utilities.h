@@ -125,7 +125,9 @@ void cp_wchar (buff_data_t *dest_buff_data, char ch);
         ->data_pos
         ->data_ ..l
 */
-enum { PATH_BUF, FORMAT_BUF, DATA_BUF, CLI_BUF, PROGRAM_BUF, ASYNC_BUF };     // buff_index
+
+// buff_index
+enum { PATH_BUF, MAIN_PATH_BUF, FORMAT_BUF, DATA_BUF, CLI_BUF, PROGRAM_BUF, ASYNC_BUF };
 
 void cp_dchar (debugger_t *debugger, char ch, int buff_index);
 

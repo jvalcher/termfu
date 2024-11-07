@@ -8,6 +8,8 @@
 static int get_source_path_line_func_gdb (state_t *state);
 static int get_source_path_line_func_pdb (state_t *state);
 
+bool first_run = true;
+
 
 
 int
@@ -38,9 +40,11 @@ get_source_path_line_func (state_t *state)
 static int
 get_source_path_line_func_gdb (state_t *state)
 {
-    int   ret, i;
+    int   ret, i,
+          curr_index;
     char *src_ptr,
          *path_ptr,
+         *main_path_ptr,
          *prev_ptr;
     window_t *win;
     bool is_running;
@@ -53,11 +57,10 @@ get_source_path_line_func_gdb (state_t *state)
 
     win = state->plugins[Src]->win;
     debugger = state->debugger;
+    curr_index = debugger->curr_plugin_index;
 
     debugger->src_path_pos = 0;
     debugger->src_path_buffer[0] = '\0';
-
-    is_running = true;
 
     // check if program running
     src_ptr = state->debugger->data_buffer;
@@ -85,6 +88,8 @@ get_source_path_line_func_gdb (state_t *state)
         }
         src_ptr = state->debugger->data_buffer;
         is_running = false;
+    } else {
+        is_running = true;
     }
 
     // function
@@ -114,11 +119,35 @@ get_source_path_line_func_gdb (state_t *state)
 
         // path changed
         if (strcmp (debugger->format_buffer, debugger->src_path_buffer) != 0) {
-            path_ptr = debugger->format_buffer;
+
+            // set buffer
+            switch (curr_index) {
+                case Kil:
+                    path_ptr = debugger->main_src_path_buffer;
+                    break;
+                default:
+                    if (is_running || first_run) {
+                        path_ptr = debugger->format_buffer;
+                        main_path_ptr = path_ptr;
+                    } else {
+                        path_ptr = debugger->main_src_path_buffer;
+                    }
+            }
+
+            // copy to debugger->src_path_buffer
             debugger->src_path_pos = 0;
             while (*path_ptr != '\0') {
                 cp_dchar (debugger, *path_ptr++, PATH_BUF);
             }
+
+            // copy to debugger->main_src_path_buffer
+            if (first_run) {
+                while (*main_path_ptr != '\0') {
+                    cp_dchar (debugger, *main_path_ptr++, MAIN_PATH_BUF);
+                }
+                first_run = false;
+            }
+
             debugger->src_path_changed = true;
         } 
 

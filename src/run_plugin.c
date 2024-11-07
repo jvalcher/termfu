@@ -17,6 +17,9 @@ run_plugin (int      plugin_index,
 {
     int ret;
 
+    state->debugger->running_plugin = true;
+    state->debugger->curr_plugin_index = plugin_index;
+
     switch (plugin_index) {
 
         // commands
@@ -86,11 +89,11 @@ run_plugin (int      plugin_index,
             break;
     }
 
+    state->debugger->running_plugin = false;
+
     return A_OK;
 
 run_plugin_err:
 
     pemr ("plugin index: %d, code: \"%s\"", plugin_index, get_plugin_code (plugin_index));
 }
-
-

@@ -62,7 +62,8 @@ termfu -c .termfu_01 -p .termfu_01_data
 ```
 
 - Switch between layouts with your `(l)ayouts` key.
-- A window's data can be scrolled through by selecting it with its key and then using the arrow or `hjkl` keys.
+- Scroll window data by selecting it with its key and then using the arrow or `hjkl` keys.
+- Kill a hung program with `(k)ill`, `(q)uit`, or `Esc`.
 <br><br>
 
 ## Configuration
@@ -71,9 +72,10 @@ termfu -c .termfu_01 -p .termfu_01_data
 
 
 ```
+
 [ command ]
 
-gdb --interpreter=mi --quiet misc/vars
+gdb --interpreter=mi --quiet test_programs/hello
 
 [ plugins ]
 
@@ -92,39 +94,40 @@ Unt : u : (u)ntil
 
 # windows
 Asm : a : (a)ssembly
-Brk : e : br(e)akpoints
+Brk : b : (b)reakpoints
 Dbg : d : (d)ebug out
 LcV : v : local (v)ars
 Prg : p : (p)rogram out
 Reg : g : re(g)isters
 Src : o : s(o)urce file
-Stk : T : s(T)ack
+Stk : t : s(t)ack
 Wat : w : (w)atch
 
 
 [ layout : Main ]
 
 >h
-mlqrns
-cufk
+mlq
+rnscufk
 
 >w
-eeeooooo
+bbbooooo
 wwwooooo
 vvvooooo
-TTpppddd
+ttpppddd
 
 [ layout : Assembly / Registers ]
 
 >h
-mlqrns
-cufk
+mlq
+rnscufk
 
 >w
 oag
 oag
 oag
-wdT
+wdt
+
 ```
 <br>
 
@@ -223,6 +226,12 @@ TTpppddd
 <br>
 
 
+## Updates
+- 11-07-2024 - Added threading for killing hung debugged program; fixed source file display issue
+- 11-03-2024 - Existence revealed on Reddit
+<br>
+
+
 ## Contributing
 
 ### General Guidelines
@@ -246,4 +255,3 @@ TTpppddd
 - It is recommended to create a shortcut for refreshing your terminal screen, as `ncurses` will make a mess of it when not shut down properly.
 
 <br><br>
-

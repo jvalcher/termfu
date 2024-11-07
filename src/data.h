@@ -4,6 +4,7 @@
 
 #include <ncurses.h>
 #include <time.h>
+#include <pthread.h>
 
 
 
@@ -306,12 +307,12 @@ typedef struct {
   Debugger
  **********/
 
-#define PIPE_READ         0
-#define PIPE_WRITE        1
-#define DEBUG_TITLE_LEN   8
-#define PROGRAM_PATH_LEN  256
-#define READER_BUF_LEN    8192
-#define FUNC_LEN          128
+#define PIPE_READ          0
+#define PIPE_WRITE         1
+#define DEBUG_TITLE_LEN    8
+#define PROGRAM_PATH_LEN   256
+#define READER_BUF_LEN     8192
+#define FUNC_LEN           128
 
 enum { DEBUGGER_GDB, DEBUGGER_PDB };
 enum { READER_RECEIVING, READER_DONE };
@@ -326,7 +327,12 @@ enum { READER_RECEIVING, READER_DONE };
     running                 - controls main() loop state
     stdin_pipe;             - debugger process input pipe
     stdout_pipe;            - debugger process output pipe
+    running_plugin          - bool used to synchronize get_key(), send_key() threads
+    curr_plugin_index       - current plugin's index
 
+    reader_state            - READER_RECEIVING, RECEIVER_DONE
+    reader_buffer           - read() output buffer for debugger process
+                                        
     prog_path               - binary, main script path buffer
     prog_update_time        - file's last update time (st_mtim.tv_sec), used to signal reload
 
@@ -340,9 +346,11 @@ enum { READER_RECEIVING, READER_DONE };
     src_path_times_doubled  - times buffer size doubled
     src_path_changed        - source file path changed boolean
 
-    reader_state            - READER_RECEIVING, RECEIVER_DONE
-    reader_buffer           - read() output buffer for debugger process
-                                        
+    main_src_path_buffer    - main source file path string
+    main_src_path_len          
+    main_src_path_pos          
+    main_src_path_times_doubled
+
     format_buffer           - misc buffer for formatting output
     format_len              - buffer size
     format_pos              - null terminator index
@@ -367,10 +375,16 @@ enum { READER_RECEIVING, READER_DONE };
 typedef struct {
 
     int     index;
+    int     pid;
     char    title [DEBUG_TITLE_LEN];
     bool    running;
     int     stdin_pipe;
     int     stdout_pipe;
+    bool    running_plugin;
+    int     curr_plugin_index;
+
+    int     reader_state;
+    char    reader_buffer [READER_BUF_LEN];
 
     char    prog_path [PROGRAM_PATH_LEN];
     time_t  prog_update_time;
@@ -385,8 +399,10 @@ typedef struct {
     int     src_path_times_doubled;
     bool    src_path_changed;
 
-    int     reader_state;
-    char    reader_buffer [READER_BUF_LEN];
+    char   *main_src_path_buffer;
+    int     main_src_path_len;
+    int     main_src_path_pos;
+    int     main_src_path_times_doubled;
 
     char   *format_buffer;
     int     format_len;
@@ -408,6 +424,9 @@ typedef struct {
     int     async_len;
     int     async_pos;
     int     async_times_doubled;
+
+    pthread_t send_key_thread;
+    pthread_t get_key_thread;
 
 } debugger_t;
 
@@ -509,9 +528,9 @@ typedef struct watchpoint {
   Program State
  ***************/
 
-#define CONFIG_PATH_LEN  128
-#define DATA_PATH_LEN    CONFIG_PATH_LEN
-#define INPUT_BUFF_LEN   4096
+#define CONFIG_PATH_LEN    128
+#define DATA_PATH_LEN      CONFIG_PATH_LEN
+#define INPUT_BUFF_LEN     4096
 
 /*
     state_t
@@ -542,9 +561,11 @@ typedef struct {
 
     int            num_plugins;
     int           *plugin_key_index;
-    char           config_path  [CONFIG_PATH_LEN];
-    char           data_path    [DATA_PATH_LEN];
-    char           input_buffer [INPUT_BUFF_LEN];
+    bool           restart_prog;
+
+    char           config_path   [CONFIG_PATH_LEN];
+    char           data_path     [DATA_PATH_LEN];
+    char           input_buffer  [INPUT_BUFF_LEN];
 
     plugin_t     **plugins;
 
@@ -563,4 +584,3 @@ typedef struct {
 
 
 #endif
-
