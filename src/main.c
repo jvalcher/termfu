@@ -297,7 +297,10 @@ get_key (void *state_arg)
             }
 
             sprintf (key_str, "%d", key);
-            write (main_pipe[PIPE_WRITE], key_str, 8);
+            if (write (main_pipe[PIPE_WRITE], key_str, 8) == -1) {
+                pfem  ("write failure: \"%s\"", strerror (errno));
+                pfeme ("Failed to write to main pipe");
+            };
         }
 
     }
