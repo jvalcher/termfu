@@ -227,7 +227,7 @@ TTpppddd
 
 
 ## Updates
-- 11-07-2024 - Added threading for killing hung debugged program; fixed source file display issue
+- 11-07-2024 - Added threading for killing hung debugged program; fixed source file display issue ([PR](https://github.com/jvalcher/termfu/pull/3))
 - 11-03-2024 - Existence revealed on Reddit
 <br>
 
