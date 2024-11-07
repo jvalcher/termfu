@@ -224,36 +224,11 @@ TTpppddd
 <br>
 
 
-## Debugging tips
-
-### Easy Vim, Neovim breakpoints
-
-Use these functions to create and copy a breakpoint string (`<file>:<line>`) from the current line to paste into `termfu`'s breakpoint window.
-
-__Vim__
-```vim
-  function! CreateBreakpoint()
-      let l:filename   = expand('%:t')
-      let l:linenumber = line('.')
-      let l:breakpoint = l:filename . ':' . l:linenumber
-      let @+           = l:breakpoint
-      echo l:breakpoint
-  endfunction
-  nnoremap <leader>b :call CreateBreakpoint()<CR>
-```
-
-__Neovim__
-```lua
-local function create_break ()
-    local filename   = vim.fn.expand('%:t')
-    local linenumber = vim.fn.line('.')
-    local breakpoint = filename .. ':' .. linenumber
-    vim.fn.setreg('+', breakpoint)
-    print(breakpoint)
-end
-vim.keymap.set('n', '<leader>b', create_break, {desc = 'Create debugger breakpoint string'});
-```
+## Updates
+- 11-06-2024 - Added threading for killing hung debugged program
+- 11-03-2024 - Existence revealed on Reddit
 <br>
+
 
 ## Contributing
 
