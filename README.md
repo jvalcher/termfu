@@ -225,7 +225,7 @@ TTpppddd
 
 
 ## Updates
-- 11-06-2024 - Added threading for killing hung debugged program
+- 11-06-2024 - 0.1.1 - Added threading for killing hung debugged program
 - 11-03-2024 - Existence revealed on Reddit
 <br>
 
