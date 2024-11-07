@@ -220,7 +220,7 @@ TTpppddd
 ```
 
 - The order and row of each header (`>h`) key binding in the configuration determines the corresponding title's position in the layout.
-- Window (`>w`) size ratios and position are determinded via "key-binding ASCII art."
+- Window (`>w`) size ratios and positions are determinded via "key-binding ASCII art."
 <br>
 
 
