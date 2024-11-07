@@ -5,7 +5,7 @@ A multi-language debugger frontend for the Linux terminal
 
 - ___Fast___
 - Easy to configure
-- Single-key bindings clearly documented on-screen
+- Key bindings documented on-screen
 - Switch between custom layouts while debugging
 - Scrollable window data
 - Breakpoint, watchpoint persistence
@@ -61,10 +61,9 @@ termfu
 termfu -c .termfu_01 -p .termfu_01_data
 ```
 
-- Switch between layouts with your `(l)ayouts` key binding.
-- A window's data can be scrolled through by selecting it via its key binding and then using the arrow or `hjkl` keys.
+- Switch between layouts with your `(l)ayouts` key.
+- A window's data can be scrolled through by selecting it with its key and then using the arrow or `hjkl` keys.
 <br><br>
-
 
 ## Configuration
 
@@ -220,40 +219,9 @@ TTpppddd
 ```
 
 - The order and row of each header (`>h`) key binding in the configuration determines the corresponding title's position in the layout.
-- Window (`>w`) size ratios and position are determinded via "key-binding ASCII art."
+- Window (`>w`) size ratios and positions are determinded via "key-binding ASCII art."
 <br>
 
-
-## Debugging tips
-
-### Easy Vim, Neovim breakpoints
-
-Use these functions to create and copy a breakpoint string (`<file>:<line>`) from the current line to paste into `termfu`'s breakpoint window.
-
-__Vim__
-```vim
-  function! CreateBreakpoint()
-      let l:filename   = expand('%:t')
-      let l:linenumber = line('.')
-      let l:breakpoint = l:filename . ':' . l:linenumber
-      let @+           = l:breakpoint
-      echo l:breakpoint
-  endfunction
-  nnoremap <leader>b :call CreateBreakpoint()<CR>
-```
-
-__Neovim__
-```lua
-local function create_break ()
-    local filename   = vim.fn.expand('%:t')
-    local linenumber = vim.fn.line('.')
-    local breakpoint = filename .. ':' .. linenumber
-    vim.fn.setreg('+', breakpoint)
-    print(breakpoint)
-end
-vim.keymap.set('n', '<leader>b', create_break, {desc = 'Create debugger breakpoint string'});
-```
-<br>
 
 ## Contributing
 
@@ -272,11 +240,9 @@ vim.keymap.set('n', '<leader>b', create_break, {desc = 'Create debugger breakpoi
   - Run `$ tty` and copy the terminal file name's path.
   - Run `$ sleep 99999`.
   - Back in your debugger, run `>>> tty /dev/pts/<x>` at the prompt.
-  - Start debugging.
-  - You can kill the debugged process with `>>> signal 2`.
+  - Set your breakpoint and start debugging.
 - The `logd()` function in `src/utilities.h` allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
 - Run `make help` in the `tests/` directory to view available scripts.
-- All errors that require the program to exit must propagate back to `main()` using the formatted error macro functions in `utilities.h`. Standard library function error checking must include the `errno` message when available. Refer to the source code for examples of this.
 - It is recommended to create a shortcut for refreshing your terminal screen, as `ncurses` will make a mess of it when not shut down properly.
 
 <br><br>
