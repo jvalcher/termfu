@@ -13,9 +13,10 @@
 #include "persist_data.h"
 #include "plugins.h"
 
-static int   initial_configure   (int, char*[], state_t*);
-static void *get_key             (void *state_arg);
-static void *send_key            (void *state_arg);
+static int   initial_configure  (int, char*[], state_t*);
+static int   start_program      (state_t *state);
+static void *get_key            (void *state_arg);
+static void *send_key           (void *state_arg);
 
 // FIX: termfu_dev (not termfu) throwing a "free(): invalid size" error in fedora 41 VM
 
@@ -45,19 +46,9 @@ main (int   argc,
         pfeme ("Failed to parse configuration file\n\n");
     }
 
-    ret = render_layout (FIRST_LAYOUT, &state);
+    ret = start_program (&state);
     if (ret == FAIL) {
-        pfeme ("Failed to render \"%s\" layout\n\n", FIRST_LAYOUT);
-    }
-
-    ret = start_debugger (&state);
-    if (ret == FAIL) {
-        pfeme ("Failed to start debugger");
-    }
-
-    ret = get_persisted_data (&state);
-    if (ret == FAIL) {
-        pfeme ("Failed to get persisted data");
+        pfeme ("Failed to start termfu");
     }
 
     while (debugger.running) {
@@ -80,7 +71,7 @@ main (int   argc,
         pthread_join (state.debugger->get_key_thread, NULL);
         pthread_join (state.debugger->send_key_thread, NULL);
 
-        // restart program (e.g. quit key hit because run_plugin() hanging)
+        // restart program
         if (state.restart_prog) {
 
             // kill debugger process
@@ -88,19 +79,9 @@ main (int   argc,
             waitpid (debugger.pid, &status, 0);
 
             // restart program
-            ret = render_layout (FIRST_LAYOUT, &state);
+            ret = start_program (&state);
             if (ret == FAIL) {
-                pfeme ("Failed to render \"%s\" layout\n\n", FIRST_LAYOUT);
-            }
-                //
-            ret = start_debugger (&state);
-            if (ret == FAIL) {
-                pfeme ("Failed to start debugger");
-            }
-                //
-            ret = get_persisted_data (&state);
-            if (ret == FAIL) {
-                pfeme ("Failed to get persisted data");
+                pfeme ("Failed to start termfu");
             }
 
             state.restart_prog = false;
@@ -123,6 +104,7 @@ main (int   argc,
 
 
 /*
+    SIGINT handler (Ctrl-C)
 */
 static void
 sigint_handler (int sig_num)
@@ -239,6 +221,29 @@ initial_configure (int   argc,
 
 
 
+static int
+start_program (state_t *state)
+{
+    int ret;
+
+    ret = render_layout (FIRST_LAYOUT, state);
+    if (ret == FAIL) {
+        pfeme ("Failed to render \"%s\" layout\n\n", FIRST_LAYOUT);
+    }
+
+    ret = start_debugger (state);
+    if (ret == FAIL) {
+        pfeme ("Failed to start debugger");
+    }
+
+    ret = get_persisted_data (state);
+    if (ret == FAIL) {
+        pfeme ("Failed to get persisted data");
+    }
+
+    return A_OK;
+}
+
 /*
     Get key input (thread function)
 */
@@ -339,8 +344,6 @@ send_key (void *state_arg)
             // exit on Esc
             if (key == ESC) {
                 state->debugger->running = false;
-                pthread_cancel (state->debugger->send_key_thread);
-                pthread_exit (&ret);
             }
 
             // run plugin
@@ -349,8 +352,6 @@ send_key (void *state_arg)
                 ret = run_plugin (state->plugin_key_index[key], state);
                 if (ret == FAIL) {
                     state->debugger->running = false;
-                    pthread_cancel (state->debugger->get_key_thread);
-                    pthread_exit (&ret);
                 }
             }
 
@@ -384,3 +385,4 @@ send_key (void *state_arg)
 
     return NULL;
 }
+
