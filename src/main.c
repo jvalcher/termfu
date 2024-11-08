@@ -13,17 +13,18 @@
 #include "persist_data.h"
 #include "plugins.h"
 
-static int   initial_configure  (int, char*[], state_t*);
-static int   start_program      (state_t *state);
-static void *get_key            (void *state_arg);
-static void *send_key           (void *state_arg);
-
-// FIX: termfu_dev (not termfu) throwing a "free(): invalid size" error in fedora 41 VM
+static int   initial_configure (int, char*[], state_t*);
+static int   start_program     (state_t *state);
+static void *get_key           (void *state_arg);
+static void *send_key          (void *state_arg);
 
 int main_pipe[2];
 pthread_mutex_t mutex;
 pthread_cond_t cond_var;
 bool in_select_window;
+
+// FIX: termfu_dev (not termfu) throwing a "free(): invalid size" error in fedora 41 VM
+
 
 
 int
@@ -34,6 +35,7 @@ main (int   argc,
                status;
     state_t    state;
     debugger_t debugger;
+
     state.debugger = &debugger;
 
     ret = initial_configure (argc, argv, &state);
@@ -123,7 +125,7 @@ sigint_handler (int sig_num)
     - CLI flags
     - Set state pointer
     - Set signals
-    - Initialize Ncurses
+    - Initialize ncurses
 */
 static int
 initial_configure (int   argc,
@@ -320,15 +322,15 @@ get_key (void *state_arg)
 
 
 /*
-    Send key input to plugin function (thread function)
+    Send key input to run_plugin() (thread function)
 */
 static void*
 send_key (void *state_arg)
 {
-    char key_str[8];
-    int key,
-        ret,
-        oldtype;
+    char     key_str[8];
+    int      key,
+             ret,
+             oldtype;
     state_t *state;
 
     pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
@@ -347,32 +349,32 @@ send_key (void *state_arg)
             }
 
             // run plugin
-            if ((key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z')) {
+            else if ((key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z')) {
 
                 ret = run_plugin (state->plugin_key_index[key], state);
                 if (ret == FAIL) {
                     state->debugger->running = false;
                 }
-            }
 
-            // signal get_key() that it has exited select_window(), get_form_input()
-            switch (state->plugin_key_index[key]) {
-                case Asm:
-                case AtP:
-                case Brk:
-                case Dbg:
-                case Lay:
-                case LcV:
-                case Prg:
-                case Prm:
-                case Reg:
-                case Src:
-                case Stk:
-                case Unt:
-                case Wat: 
-                    in_select_window = false;
-                    pthread_cond_signal (&cond_var);
-                    pthread_mutex_unlock (&mutex);
+                // signal get_key() that it has exited select_window(), get_form_input()
+                switch (state->plugin_key_index[key]) {
+                    case Asm:
+                    case AtP:
+                    case Brk:
+                    case Dbg:
+                    case Lay:
+                    case LcV:
+                    case Prg:
+                    case Prm:
+                    case Reg:
+                    case Src:
+                    case Stk:
+                    case Unt:
+                    case Wat: 
+                        in_select_window = false;
+                        pthread_cond_signal (&cond_var);
+                        pthread_mutex_unlock (&mutex);
+                }
             }
 
             // quit program
