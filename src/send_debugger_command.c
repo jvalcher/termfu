@@ -6,7 +6,6 @@
 
 #include "send_debugger_command.h"
 #include "data.h"
-#include "insert_output_marker.h"
 #include "parse_debugger_output.h"
 #include "plugins.h"
 #include "utilities.h"
@@ -26,12 +25,6 @@ send_debugger_command (int      plugin_index,
     ret = pulse_header_title_color (plugin_index, state, ON);
     if (ret == FAIL) {
         pfem (ERR_PULSE_CMD);
-        goto dbg_cmd_err_end;
-    }
-
-    ret = insert_output_start_marker (state);
-    if (ret == FAIL) {
-        pfem (ERR_OUT_MARK);
         goto dbg_cmd_err_end;
     }
 
