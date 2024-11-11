@@ -162,7 +162,7 @@ choose_layout:
         }
 
         state->debugger->src_path_changed = true;
-        ret = update_windows (state, 9, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Stk, Wat);
+        ret = update_windows (9, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Stk, Wat);
         if (ret == FAIL) {
             pfemr (ERR_UPDATE_WINS);
         }

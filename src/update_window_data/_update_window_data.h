@@ -7,9 +7,16 @@
 
 
 /*
+    Update ncurses window data (thread)
+*/
+void *update_window_thread (void *statev);
+
+
+
+/*
     Update single window's data
 */
-int  update_window (int plugin_index, state_t *state);
+int  update_window (int plugin_index);
 
 
 
@@ -18,7 +25,7 @@ int  update_window (int plugin_index, state_t *state);
     ------
     num_windows == number of plugin index arguments
 */
-int  update_windows (state_t *state, int num_windows, ...);
+int  update_windows (int num_windows, ...);
 
 
 

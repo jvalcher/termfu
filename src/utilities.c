@@ -9,7 +9,6 @@
 #include "utilities.h"
 #include "plugins.h"
 #include "data.h"
-#include "insert_output_marker.h"
 #include "parse_debugger_output.h"
 #include "persist_data.h"
 
@@ -182,6 +181,33 @@ concatenate_strings (int num_strs, ...)
 }
 
 
+/*
+    ">END"
+*/
+int
+insert_output_end_marker (state_t *state)
+{
+    int ret;
+
+    switch (state->debugger->index) {
+        case (DEBUGGER_GDB):
+            ret = send_command (state,"echo >END\n");
+            if (ret == FAIL) {
+                pfemr (ERR_DBG_CMD);
+            }
+            break;
+        case (DEBUGGER_PDB):
+            ret = send_command (state, "p \">END\"\n");
+            if (ret == FAIL) {
+                pfemr (ERR_DBG_CMD);
+            }
+            break;
+    }
+
+    return A_OK;
+}
+
+
 
 int
 send_command (state_t *state,
@@ -205,11 +231,6 @@ send_command_mp (state_t *state,
                  char *command)
 {
     int ret;
-
-    ret = insert_output_start_marker (state);
-    if (ret == FAIL) {
-        pfemr (ERR_OUT_MARK);
-    }
 
     ret = send_command (state, command);
     if (ret == FAIL) {

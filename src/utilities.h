@@ -45,6 +45,13 @@ char *concatenate_strings (int num_strings, ...);
 
 
 /*
+    ">END"
+*/
+int insert_output_end_marker (state_t *state);
+
+
+
+/*
     Send debugger command only
     -------
     - Must end with '\n'

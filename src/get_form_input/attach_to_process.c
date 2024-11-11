@@ -28,7 +28,7 @@ attach_to_process (state_t *state)
     free (cmd);
 
     state->plugins[Dbg]->win->buff_data->new_data = true;
-    ret = update_window (Dbg, state);
+    ret = update_window (Dbg);
     if (ret == FAIL) {
         pfemr (ERR_UPDATE_WINS);
     }

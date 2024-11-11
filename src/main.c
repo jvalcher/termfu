@@ -7,8 +7,11 @@
 #include "data.h"
 #include "utilities.h"
 #include "parse_config_file.h"
+#include "update_window_data/_update_window_data.h"
 #include "render_layout.h"
+#include "parse_debugger_output.h"
 #include "start_debugger.h"
+#include "display_lines.h"
 #include "run_plugin.h"
 #include "persist_data.h"
 #include "plugins.h"
@@ -17,12 +20,13 @@ static int   initial_configure   (int, char*[], state_t*);
 static void *get_key             (void *state_arg);
 static void *send_key            (void *state_arg);
 
-// FIX: termfu_dev (not termfu) throwing a "free(): invalid size" error in fedora 41 VM
-
-int main_pipe[2];
+int key_pipe[2];
 pthread_mutex_t mutex;
 pthread_cond_t cond_var;
 bool in_select_window;
+
+// FIX: termfu_dev (not termfu) throwing a "free(): invalid size" error in fedora 41 VM
+
 
 
 int
@@ -45,6 +49,12 @@ main (int   argc,
         pfeme ("Failed to parse configuration file\n\n");
     }
 
+    // start thread to update window data
+    if (pthread_create (&state.debugger->update_window_thread,
+                            NULL, update_window_thread, (void*) &state) != 0) {
+        pfemr ("Failed to start update window thread");
+    }
+
     ret = render_layout (FIRST_LAYOUT, &state);
     if (ret == FAIL) {
         pfeme ("Failed to render \"%s\" layout\n\n", FIRST_LAYOUT);
@@ -63,17 +73,19 @@ main (int   argc,
     while (debugger.running) {
 
         // create main, select pipes
-        if (pipe (main_pipe) == -1) {
+        if (pipe (key_pipe) == -1) {
             pfeme ("Failed to create main pipe");
         }
 
         // start thread to get key input
-        if (pthread_create(&state.debugger->get_key_thread, NULL, get_key, (void*) &state) != 0) {
+        if (pthread_create(&state.debugger->get_key_thread, NULL,
+                            get_key, (void*) &state) != 0) {
             pfeme ("Failed to create get key thread");
         }
 
         // start thread to send key to plugin
-        if (pthread_create(&state.debugger->send_key_thread, NULL, send_key, (void*) &state) != 0) {
+        if (pthread_create(&state.debugger->send_key_thread, NULL,
+                            send_key, (void*) &state) != 0) {
             pfeme ("Failed to create run plugin thread");
         }
 
@@ -111,8 +123,8 @@ main (int   argc,
             debugger.running = false;
         }
 
-        close (main_pipe[PIPE_READ]);
-        close (main_pipe[PIPE_WRITE]);
+        close (key_pipe[PIPE_READ]);
+        close (key_pipe[PIPE_WRITE]);
     }
 
     clean_up ();
@@ -301,7 +313,7 @@ get_key (void *state_arg)
             }
 
             sprintf (key_str, "%d", key);
-            if (write (main_pipe[PIPE_WRITE], key_str, 8) == -1) {
+            if (write (key_pipe[PIPE_WRITE], key_str, 8) == -1) {
                 pfem  ("write failure: \"%s\"", strerror (errno));
                 pfeme ("Failed to write to main pipe");
             };
@@ -332,7 +344,7 @@ send_key (void *state_arg)
     while (true) {
 
         // read key from get_key()
-        if (read (main_pipe[PIPE_READ], key_str, 8) > 0) {
+        if (read (key_pipe[PIPE_READ], key_str, 8) > 0) {
 
             key = atoi (key_str);
 
