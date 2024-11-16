@@ -118,8 +118,9 @@ get_source_path_line_func_gdb (state_t *state)
         }
 
         // path changed
-        if (strcmp (debugger->format_buffer, debugger->src_path_buffer) != 0) {
-
+        if (strlen (debugger->format_buffer) > 0 &&
+            strcmp (debugger->format_buffer, debugger->src_path_buffer) != 0)
+        {
             // set buffer
             switch (curr_index) {
                 case Kil:

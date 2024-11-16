@@ -59,7 +59,7 @@ insert_watchpoint (state_t *state)
             watch->next = NULL;
         }
 
-        ret = update_window (Wat, state);
+        ret = update_window (Wat);
         if (ret == FAIL) {
             pfemr ("Failed to update watchpoint window");
         }
@@ -101,7 +101,7 @@ delete_watchpoint (state_t *state)
         watch = watch->next; 
     }
 
-    ret = update_window (Wat, state);
+    ret = update_window (Wat);
     if (ret == FAIL) {
         pfemr (ERR_UPDATE_WIN);
     }
@@ -126,7 +126,7 @@ clear_all_watchpoints (state_t *state)
     }
     state->watchpoints = NULL;
 
-    ret = update_window (Wat, state);
+    ret = update_window (Wat);
     if (ret == FAIL) {
         pfemr (ERR_UPDATE_WIN);
     }

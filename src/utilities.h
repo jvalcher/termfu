@@ -45,6 +45,18 @@ char *concatenate_strings (int num_strings, ...);
 
 
 /*
+   Insert debugger output marker after command(s)
+   -------
+   Ensures all debugger output is read when multiple read()s required
+   in parse_debugger_output()
+
+        ">END"
+*/
+int insert_output_end_marker (state_t *state);
+
+
+
+/*
     Send debugger command only
     -------
     - Must end with '\n'

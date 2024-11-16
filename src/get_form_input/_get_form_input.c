@@ -7,7 +7,7 @@
 #include "../data.h"
 #include "../utilities.h"
 
-char* trim_whitespaces (char *str);
+static char* trim_whitespaces (char *str);
 
 
 
@@ -167,7 +167,7 @@ get_form_input (char *prompt,
 
 
 
-char*
+static char*
 trim_whitespaces (char *str)
 {
     char *end;

@@ -5,7 +5,6 @@
 
 #include "data.h"
 #include "plugins.h"
-#include "utilities.h"
 
 static void format_window_data_Brk (state_t *state);
 static void format_window_data_LcV (state_t *state);

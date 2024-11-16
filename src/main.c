@@ -7,22 +7,25 @@
 #include "data.h"
 #include "utilities.h"
 #include "parse_config_file.h"
+#include "update_window_data/_update_window_data.h"
 #include "render_layout.h"
 #include "start_debugger.h"
 #include "run_plugin.h"
 #include "persist_data.h"
 #include "plugins.h"
 
-static int   initial_configure   (int, char*[], state_t*);
-static void *get_key             (void *state_arg);
-static void *send_key            (void *state_arg);
+static int   initial_configure (int, char*[], state_t*);
+static int   start_program     (state_t *state);
+static void *get_key           (void *state_arg);
+static void *send_key          (void *state_arg);
 
-// FIX: termfu_dev (not termfu) throwing a "free(): invalid size" error in fedora 41 VM
-
-int main_pipe[2];
+int key_pipe[2];
 pthread_mutex_t mutex;
 pthread_cond_t cond_var;
 bool in_select_window;
+
+// FIX: termfu_dev (not termfu) throwing a "free(): invalid size" error in fedora 41 VM
+
 
 
 int
@@ -33,6 +36,7 @@ main (int   argc,
                status;
     state_t    state;
     debugger_t debugger;
+
     state.debugger = &debugger;
 
     ret = initial_configure (argc, argv, &state);
@@ -45,42 +49,40 @@ main (int   argc,
         pfeme ("Failed to parse configuration file\n\n");
     }
 
-    ret = render_layout (FIRST_LAYOUT, &state);
+    ret = start_program (&state);
     if (ret == FAIL) {
-        pfeme ("Failed to render \"%s\" layout\n\n", FIRST_LAYOUT);
+        pfeme ("Failed to start termfu");
     }
 
-    ret = start_debugger (&state);
-    if (ret == FAIL) {
-        pfeme ("Failed to start debugger");
-    }
-
-    ret = get_persisted_data (&state);
-    if (ret == FAIL) {
-        pfeme ("Failed to get persisted data");
+    // start thread to update window data
+    if (pthread_create (&state.debugger->update_window_thread,
+                            NULL, update_window_thread, (void*) &state) != 0) {
+        pfemr ("Failed to start update window thread");
     }
 
     while (debugger.running) {
 
         // create main, select pipes
-        if (pipe (main_pipe) == -1) {
+        if (pipe (key_pipe) == -1) {
             pfeme ("Failed to create main pipe");
         }
 
         // start thread to get key input
-        if (pthread_create(&state.debugger->get_key_thread, NULL, get_key, (void*) &state) != 0) {
+        if (pthread_create(&state.debugger->get_key_thread, NULL,
+                            get_key, (void*) &state) != 0) {
             pfeme ("Failed to create get key thread");
         }
 
         // start thread to send key to plugin
-        if (pthread_create(&state.debugger->send_key_thread, NULL, send_key, (void*) &state) != 0) {
+        if (pthread_create(&state.debugger->send_key_thread, NULL,
+                            send_key, (void*) &state) != 0) {
             pfeme ("Failed to create run plugin thread");
         }
 
         pthread_join (state.debugger->get_key_thread, NULL);
         pthread_join (state.debugger->send_key_thread, NULL);
 
-        // restart program (e.g. quit key hit because run_plugin() hanging)
+        // restart program
         if (state.restart_prog) {
 
             // kill debugger process
@@ -88,19 +90,9 @@ main (int   argc,
             waitpid (debugger.pid, &status, 0);
 
             // restart program
-            ret = render_layout (FIRST_LAYOUT, &state);
+            ret = start_program (&state);
             if (ret == FAIL) {
-                pfeme ("Failed to render \"%s\" layout\n\n", FIRST_LAYOUT);
-            }
-                //
-            ret = start_debugger (&state);
-            if (ret == FAIL) {
-                pfeme ("Failed to start debugger");
-            }
-                //
-            ret = get_persisted_data (&state);
-            if (ret == FAIL) {
-                pfeme ("Failed to get persisted data");
+                pfeme ("Failed to start termfu");
             }
 
             state.restart_prog = false;
@@ -111,8 +103,8 @@ main (int   argc,
             debugger.running = false;
         }
 
-        close (main_pipe[PIPE_READ]);
-        close (main_pipe[PIPE_WRITE]);
+        close (key_pipe[PIPE_READ]);
+        close (key_pipe[PIPE_WRITE]);
     }
 
     clean_up ();
@@ -123,6 +115,7 @@ main (int   argc,
 
 
 /*
+    SIGINT handler (Ctrl-C)
 */
 static void
 sigint_handler (int sig_num)
@@ -141,7 +134,7 @@ sigint_handler (int sig_num)
     - CLI flags
     - Set state pointer
     - Set signals
-    - Initialize Ncurses
+    - Initialize ncurses
 */
 static int
 initial_configure (int   argc,
@@ -239,6 +232,29 @@ initial_configure (int   argc,
 
 
 
+static int
+start_program (state_t *state)
+{
+    int ret;
+
+    ret = render_layout (FIRST_LAYOUT, state);
+    if (ret == FAIL) {
+        pfeme ("Failed to render \"%s\" layout\n\n", FIRST_LAYOUT);
+    }
+
+    ret = start_debugger (state);
+    if (ret == FAIL) {
+        pfeme ("Failed to start debugger");
+    }
+
+    ret = get_persisted_data (state);
+    if (ret == FAIL) {
+        pfeme ("Failed to get persisted data");
+    }
+
+    return A_OK;
+}
+
 /*
     Get key input (thread function)
 */
@@ -301,7 +317,7 @@ get_key (void *state_arg)
             }
 
             sprintf (key_str, "%d", key);
-            if (write (main_pipe[PIPE_WRITE], key_str, 8) == -1) {
+            if (write (key_pipe[PIPE_WRITE], key_str, 8) == -1) {
                 pfem  ("write failure: \"%s\"", strerror (errno));
                 pfeme ("Failed to write to main pipe");
             };
@@ -315,15 +331,15 @@ get_key (void *state_arg)
 
 
 /*
-    Send key input to plugin function (thread function)
+    Send key input to run_plugin() (thread function)
 */
 static void*
 send_key (void *state_arg)
 {
-    char key_str[8];
-    int key,
-        ret,
-        oldtype;
+    char     key_str[8];
+    int      key,
+             ret,
+             oldtype;
     state_t *state;
 
     pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
@@ -332,46 +348,42 @@ send_key (void *state_arg)
     while (true) {
 
         // read key from get_key()
-        if (read (main_pipe[PIPE_READ], key_str, 8) > 0) {
+        if (read (key_pipe[PIPE_READ], key_str, 8) > 0) {
 
             key = atoi (key_str);
 
             // exit on Esc
             if (key == ESC) {
                 state->debugger->running = false;
-                pthread_cancel (state->debugger->send_key_thread);
-                pthread_exit (&ret);
             }
 
             // run plugin
-            if ((key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z')) {
+            else if ((key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z')) {
 
                 ret = run_plugin (state->plugin_key_index[key], state);
                 if (ret == FAIL) {
                     state->debugger->running = false;
-                    pthread_cancel (state->debugger->get_key_thread);
-                    pthread_exit (&ret);
                 }
-            }
 
-            // signal get_key() that it has exited select_window(), get_form_input()
-            switch (state->plugin_key_index[key]) {
-                case Asm:
-                case AtP:
-                case Brk:
-                case Dbg:
-                case Lay:
-                case LcV:
-                case Prg:
-                case Prm:
-                case Reg:
-                case Src:
-                case Stk:
-                case Unt:
-                case Wat: 
-                    in_select_window = false;
-                    pthread_cond_signal (&cond_var);
-                    pthread_mutex_unlock (&mutex);
+                // signal get_key() that it has exited select_window(), get_form_input()
+                switch (state->plugin_key_index[key]) {
+                    case Asm:
+                    case AtP:
+                    case Brk:
+                    case Dbg:
+                    case Lay:
+                    case LcV:
+                    case Prg:
+                    case Prm:
+                    case Reg:
+                    case Src:
+                    case Stk:
+                    case Unt:
+                    case Wat: 
+                        in_select_window = false;
+                        pthread_cond_signal (&cond_var);
+                        pthread_mutex_unlock (&mutex);
+                }
             }
 
             // quit program
@@ -384,3 +396,4 @@ send_key (void *state_arg)
 
     return NULL;
 }
+
