@@ -68,6 +68,7 @@ create_scroll_buffer_llist (int      plugin_index,
           max_chars;
     char *ptr;
     window_t           *win;
+    debugger_t         *debugger;
     buff_data_t        *buff_data;
     scroll_buff_line_t *buff_line,
                        *curr_buff_line,
@@ -75,6 +76,7 @@ create_scroll_buffer_llist (int      plugin_index,
 
     // free scroll_buff_line_t linked list
     win = state->plugins[plugin_index]->win;
+    debugger = state->debugger;
     buff_data = win->buff_data;
     buff_line = buff_data->head_line;
     while (buff_line != NULL) {
@@ -92,24 +94,27 @@ create_scroll_buffer_llist (int      plugin_index,
     buff_data->rows              = 0;
 
     // update source file buffer if path changed
-    if (plugin_index == Src && state->debugger->src_path_changed) {
+    if (plugin_index == Src && debugger->src_path_changed) {
 
         if (buff_data->buff != NULL) {
             free (buff_data->buff);
         }
 
-        buff_data->buff = create_buff_from_file (state->debugger->src_path_buffer);
+        buff_data->buff = create_buff_from_file (debugger->src_path_buffer);
         if (buff_data->buff == NULL) {
-            pfemr ("Failed to create buffer from file \"%s\"", state->debugger->src_path_buffer);
+            buff_data->buff = create_buff_from_file (debugger->main_src_path_buffer);
+            if (buff_data->buff == NULL) {
+                pfemr ("Failed to create buffer from file \"%s\"", debugger->main_src_path_buffer);
+            }
         }
 
-        state->debugger->src_path_changed = false;
+        debugger->src_path_changed = false;
     }
 
+    // create linked list from buffer
     ptr       = buff_data->buff;
     max_chars = 0;
-
-    // create linked list from buffer
+        //
     do {
 
         buff_data->rows += 1;
