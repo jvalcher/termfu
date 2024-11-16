@@ -1,9 +1,3 @@
-
-/*
-    Interface for plugin and other debugger-specific functions
-*/
-
-
 #include "send_debugger_command.h"
 #include "data.h"
 #include "parse_debugger_output.h"
@@ -186,7 +180,7 @@ send_debugger_command (int      plugin_index,
 
         state->plugins[Dbg]->win->buff_data->new_data = true;
         state->plugins[Prg]->win->buff_data->new_data = true;
-        ret = update_windows (state, 9, Dbg, Prg, Asm, Brk, LcV, Reg, Stk, Wat, Src);
+        ret = update_windows (9, Dbg, Prg, Asm, Brk, LcV, Reg, Stk, Wat, Src);
         if (ret == FAIL) {
             pfem (ERR_UPDATE_WINS);
             goto dbg_cmd_err_end;

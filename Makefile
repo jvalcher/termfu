@@ -30,12 +30,14 @@ C_DEBUG_FILES   = $(wildcard ./src/debug/*.c)
 TEST_PROGS_DIR = test_programs
 
 # configuration, data files
-CONFIG_RUN_DEV = configs/.termfu_run_dev
-DATA_RUN_DEV   = configs/.termfu_run_dev_data
-CONFIG_DEBUG   = configs/.termfu_debugger
-DATA_DEBUG	   = configs/.termfu_debugger_data
+CONFIG_RUN_DEV  = configs/.termfu_run_dev
+DATA_RUN_DEV    = configs/.termfu_run_dev_data
+CONFIG_DEBUG    = configs/.termfu_debugger
+DATA_DEBUG	    = configs/.termfu_debugger_data
+CONFIG_DEBUGGED = configs/.termfu_debugged
+DATA_DEBUGGED   = configs/.termfu_debugged_data
 
-.PHONY: help all install dev devf devformat build run_dev plugins clean_prod clean_dev
+.PHONY: help all install dev devf devformat debug debug_gdb build run_dev plugins clean_prod clean_dev
 
 
 all: FLAGS   += $(PROD_FLAGS)
@@ -88,6 +90,9 @@ run_dev:
 
 debug:
 	$(B_FILE_PROD) -c $(CONFIG_DEBUG) -p $(DATA_DEBUG)
+
+debug_gdb:
+	gdb --quiet --tui --args ./termfu_dev -c $(CONFIG_DEBUGGED) -p $(DATA_DEBUGGED)
 
 todo:
 	./scripts/make_todo

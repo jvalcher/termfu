@@ -19,44 +19,46 @@ parse_debugger_output (state_t *state)
 {
     bool running;
     ssize_t bytes_read = 0;
+    debugger_t *debugger;
 
-    state->debugger->cli_pos = 0;
-    state->debugger->cli_buffer[0] = '\0';
-    state->debugger->program_pos = 0;
-    state->debugger->program_buffer[0] = '\0';
-    state->debugger->data_pos = 0;
-    state->debugger->data_buffer[0] = '\0';
-    state->debugger->async_pos = 0;
-    state->debugger->async_buffer[0] = '\0';
+    debugger = state->debugger;
+    debugger->cli_pos = 0;
+    debugger->cli_buffer[0] = '\0';
+    debugger->program_pos = 0;
+    debugger->program_buffer[0] = '\0';
+    debugger->data_pos = 0;
+    debugger->data_buffer[0] = '\0';
+    debugger->async_pos = 0;
+    debugger->async_buffer[0] = '\0';
 
-    state->debugger->reader_state = READER_RECEIVING;
+    debugger->reader_state = READER_RECEIVING;
     running = true;
 
     while (running) 
     {
         // read debugger stdout
-        state->debugger->reader_buffer[0] = '\0';
-        bytes_read = read (state->debugger->stdout_pipe, 
-                           state->debugger->reader_buffer,
+        debugger->reader_buffer[0] = '\0';
+        bytes_read = read (debugger->stdout_pipe, 
+                           debugger->reader_buffer,
                            READER_BUF_LEN - 1);
         if (bytes_read == -1) {
             pfem ("read error: %s", strerror (errno));
             pemr ("Failed to read debugger stdout");
         }
-        state->debugger->reader_buffer [bytes_read] = '\0';
+        debugger->reader_buffer [bytes_read] = '\0';
 
         // parse output
-        switch (state->debugger->index) {
+        switch (debugger->index) {
             case DEBUGGER_GDB:
-                parse_debugger_output_gdb (state->debugger);
+                parse_debugger_output_gdb (debugger);
                 break;
             case DEBUGGER_PDB:
-                parse_debugger_output_pdb (state->debugger);
+                parse_debugger_output_pdb (debugger);
                 break;
         }
 
         // set reader state
-        switch (state->debugger->reader_state) {
+        switch (debugger->reader_state) {
             case READER_RECEIVING:
                 break;
             case READER_DONE:

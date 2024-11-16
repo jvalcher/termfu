@@ -181,7 +181,9 @@ concatenate_strings (int num_strs, ...)
 }
 
 
-
+/*
+    ">END"
+*/
 int
 insert_output_end_marker (state_t *state)
 {

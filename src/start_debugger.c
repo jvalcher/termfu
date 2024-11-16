@@ -15,9 +15,11 @@
 #include "update_window_data/_update_window_data.h"
 #include "update_window_data/get_binary_path_time.h"
 
-static int configure_debugger  (debugger_t*);
-static int start_debugger_proc (state_t*);
-static int send_setup_commands (state_t*);
+static int  configure_debugger       (debugger_t*);
+static void start_debugger_proc      (state_t*);
+static int  send_setup_commands      (state_t*);
+
+bool vm_started = false;
 
 bool debugger_configured = false;
 
@@ -36,10 +38,7 @@ start_debugger (state_t *state)
         debugger_configured = true;
     }
 
-    ret = start_debugger_proc (state);
-    if (ret == FAIL) {
-        pfemr ("Failed to start debugger process");
-    }
+    start_debugger_proc (state);
 
     ret = insert_output_end_marker (state);
     if (ret == FAIL) {
@@ -57,7 +56,7 @@ start_debugger (state_t *state)
     }
 
     state->plugins[Dbg]->win->buff_data->new_data = true;
-    ret = update_window (Dbg, state);
+    ret = update_window (Dbg);
     if (ret == FAIL) {
         pfemr (ERR_UPDATE_WIN);
     }
@@ -150,13 +149,12 @@ configure_debugger (debugger_t *debugger)
 
 
 
-static int
+static void
 start_debugger_proc (state_t *state)
 {
-    pid_t   debugger_pid;
-    int     i,
-            debug_in_pipe  [2],
-            debug_out_pipe [2];
+    pid_t  debugger_pid;
+    int    debug_in_pipe  [2],
+           debug_out_pipe [2];
 
     debugger_t *debugger = state->debugger;
     
@@ -164,7 +162,7 @@ start_debugger_proc (state_t *state)
     if (pipe (debug_in_pipe)  == -1 || 
         pipe (debug_out_pipe) == -1)
     {
-        pfemr ("Debugger pipe creation failed");
+        pfeme ("Debugger pipe creation failed");
     }
     debugger->stdin_pipe  = debug_in_pipe [PIPE_WRITE];
     debugger->stdout_pipe = debug_out_pipe [PIPE_READ];
@@ -173,7 +171,7 @@ start_debugger_proc (state_t *state)
     debugger_pid = fork ();
     if (debugger_pid  == -1)
     {
-        pfemr ("Debugger fork failed");
+        pfeme ("Debugger fork failed");
     }
 
     // start debugger
@@ -189,12 +187,9 @@ start_debugger_proc (state_t *state)
 
         execvp (state->command[0], state->command);
 
-        i = 0;
-        do {
-            strcat (state->debugger->format_buffer, state->command[i++]);
-            strcat (state->debugger->format_buffer, " ");
-        } while (state->command [i] != NULL);
-        pfemr ("execvp error with command: \"%s\"", state->debugger->format_buffer);
+        // error
+        pfem ("execvp error: \"%s\"", strerror (errno));
+        peme ("Failed to start debugger \"%s\"", debugger->title);
     }
 
     if (debugger_pid > 0) {
@@ -205,8 +200,6 @@ start_debugger_proc (state_t *state)
         close (debug_in_pipe   [PIPE_READ]);
         close (debug_out_pipe  [PIPE_WRITE]);
     }
-
-    return A_OK;
 }
 
 
@@ -228,3 +221,4 @@ send_setup_commands (state_t *state)
 
     return A_OK;
 }
+

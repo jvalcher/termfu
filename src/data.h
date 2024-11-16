@@ -381,6 +381,7 @@ typedef struct {
     int     stdin_pipe;
     int     stdout_pipe;
     bool    running_plugin;
+    int     update_index;
     int     curr_plugin_index;
 
     int     reader_state;
@@ -427,6 +428,9 @@ typedef struct {
 
     pthread_t send_key_thread;
     pthread_t get_key_thread;
+    pthread_t display_lines_thread;
+    pthread_t update_window_thread;
+    pthread_t parse_debug_out_thread;
 
 } debugger_t;
 

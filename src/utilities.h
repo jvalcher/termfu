@@ -49,6 +49,8 @@ char *concatenate_strings (int num_strings, ...);
    -------
    Ensures all debugger output is read when multiple read()s required
    in parse_debugger_output()
+
+        ">END"
 */
 int insert_output_end_marker (state_t *state);
 
