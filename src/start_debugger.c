@@ -20,6 +20,8 @@ static int configure_debugger  (debugger_t*);
 static int start_debugger_proc (state_t*);
 static int send_setup_commands (state_t*);
 
+bool debugger_configured = false;
+
 
 
 int
@@ -27,9 +29,12 @@ start_debugger (state_t *state)
 {
     int ret;
 
-    ret = configure_debugger (state->debugger);
-    if (ret == FAIL) {
-        pfemr ("Failed to configure debugger");
+    if (debugger_configured == false) {
+        ret = configure_debugger (state->debugger);
+        if (ret == FAIL) {
+            pfemr ("Failed to configure debugger");
+        }
+        debugger_configured = true;
     }
 
     ret = start_debugger_proc (state);
