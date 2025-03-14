@@ -28,15 +28,9 @@ A multi-language debugger frontend for the Linux terminal
 
 ### Dependencies
 
-Ubuntu:
 ```
 sudo apt-get install make gcc libncurses-dev gdb python3
  ```
-
-Fedora:
-```
-sudo dnf install make gcc ncurses-devel gdb python3
-```
 
 ### Build and install
 ```
@@ -143,7 +137,7 @@ wdt
 ```
 [ command ]
 
-gdb --quiet --interpreter=mi misc/vars
+gdb --interpreter=mi misc/vars
 
 ````
 
@@ -229,7 +223,6 @@ TTpppddd
 ## Contributing
 
 ### General Guidelines
-- For any significant contributions outside of patches, open an issue first.
 - Bug fixes, optimizations, new debugger implementations, and plugins are welcome.
 - Use existing code conventions.
 
@@ -237,15 +230,15 @@ TTpppddd
 - Run `make help` to print all scripts.
 - Run `make todo` to print all source file tags, such as `TODO`, `FIX`, etc.
 - Run `make build` to compile all test programs.
-- You can debug (and explore) `termfu_dev` with `termfu`.
-  - Run `$ make debug`, which requires `termfu` to be in your path.
-  - Open a separate terminal or pane for the debugged process
-  - Run `$ tty` and copy the terminal file name's path.
-  - Run `$ sleep 99999`.
-  - Back in your debugger, run `>>> tty /dev/pts/<x>` at the prompt.
-  - Set your breakpoint and start debugging.
 - The `logd()` function in `src/utilities.h` allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
-- Run `make help` in the `tests/` directory to view available scripts.
 - It is recommended to create a shortcut for refreshing your terminal screen, as `ncurses` will make a mess of it when not shut down properly.
+
+### Debugging termfu with termfu
+- Run `$ make debug` to start the termfu debugger. This requires `termfu` to be in your path.
+- Open a separate terminal for the debugged process.
+- Run `$ tty` and copy the terminal file name's path, e.g. `/dev/pts/1`.
+- Run `$ sleep 99999`.
+- Back in the debugger, open the prompt and run `>>> tty /dev/pts/<x>`, substituting your debugged process's terminal file name.
+- Set your breakpoint and start debugging.
 
 <br><br>
