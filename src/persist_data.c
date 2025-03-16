@@ -92,7 +92,7 @@ get_persisted_data (state_t *state)
                             break_buff [i] = '\0';
 
                             // insert breakpoint
-                            cmd = concatenate_strings (3, cmd_base, break_buff, "\n");    
+                            cmd = concatenate_strings (cmd_base, break_buff, "\n");    
 
                             ret = send_command_mp (state, cmd);
                             if (ret == FAIL) {

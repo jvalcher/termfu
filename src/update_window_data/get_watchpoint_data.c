@@ -72,7 +72,7 @@ get_watchpoint_data_gdb (state_t *state)
         while (watch != NULL) {
 
             // send watchpoint command
-            cmd = concatenate_strings (3, "print ", watch->var, "\n");    
+            cmd = concatenate_strings ("print ", watch->var, "\n");    
             ret = send_command_mp (state, cmd);
             if (ret == FAIL) {
                 pfemr (ERR_DBG_CMD);
@@ -199,7 +199,7 @@ get_watchpoint_data_pdb (state_t *state)
 
         while (watch != NULL) {
 
-            cmd = concatenate_strings (3, "p ", watch->var, "\n");    
+            cmd = concatenate_strings ("p ", watch->var, "\n");    
             ret = send_command_mp (state, cmd);
             if (ret == FAIL) {
                 pfemr (ERR_DBG_CMD);

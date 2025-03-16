@@ -2,9 +2,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <stdarg.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <stdarg.h>
 
 #include "utilities.h"
 #include "plugins.h"
@@ -32,6 +32,29 @@ logd (const char *formatted_string, ...)
     va_start (args, formatted_string);
     vfprintf (debug_out_ptr, formatted_string, args);
     va_end (args);
+}
+
+
+
+int
+copy_to_clipboard (char *str)
+{
+    int ret;
+    char *cmd_str;
+
+    cmd_str = concatenate_strings ("printf \"", str, "\" | xclip -selection clipboard");
+    if (cmd_str == NULL) {
+        pfemr ("Failed to create string \"%s\"", str);
+    }
+
+    ret = system (cmd_str);
+    if (ret == -1) {
+        pfem ("system() error: \"%s\"", strerror (errno));
+        pemr ("Failed to send system command \"%s\"", cmd_str);
+    }
+
+    free (cmd_str);
+    return A_OK;
 }
 
 
@@ -140,7 +163,7 @@ clean_up (void)
 
 
 char*
-concatenate_strings (int num_strs, ...)
+concatenate_strings_impl (int ignore, ...)
 {
     int      str_len;
     char    *sub_str,
@@ -148,10 +171,13 @@ concatenate_strings (int num_strs, ...)
     va_list strs;
     
     // calculate total string length
-    va_start (strs, num_strs);
+    va_start (strs, ignore);
     str_len = 0;
-    for (int i = 0; i < num_strs; i++) {
-        str_len += strlen (va_arg (strs, char*));
+    for (str = va_arg(strs, char*);
+         str != NULL;
+         str = va_arg(strs, char*))
+    {
+        str_len += strlen (str);
     }
     va_end (strs);
 
@@ -159,9 +185,11 @@ concatenate_strings (int num_strs, ...)
     if ((str = (char*) malloc (str_len + 1)) == NULL) {
         pfem ("malloc error: %s", strerror (errno));
         pem  ("Failed to allocate space for strings:");
-        va_start (strs, num_strs);
-        for (int i = 0; i < num_strs; i++) {
-            sub_str = va_arg (strs, char*);
+        va_start (strs, ignore);
+        for (sub_str = va_arg(strs, char*);
+             sub_str != NULL;
+             sub_str = va_arg(strs, char*))
+        {
             pem ("\"%s\"", sub_str);
         }
         va_end (strs);
@@ -170,15 +198,18 @@ concatenate_strings (int num_strs, ...)
     str [0] = '\0';
 
     // create string
-    va_start (strs, num_strs);
-    for (int i = 0; i < num_strs; i++) {
-        sub_str = va_arg (strs, char*);
+    va_start (strs, ignore);
+    for (sub_str = va_arg(strs, char*);
+         sub_str != NULL;
+         sub_str = va_arg(strs, char*))
+    {
         strncat (str, sub_str, str_len - strlen(str));
     }
     va_end (strs);
 
     return str;
 }
+
 
 
 /*
@@ -592,29 +623,6 @@ cp_dchar (debugger_t *debugger,
             *pos = 0;
         }
     }
-}
-
-
-
-int
-copy_to_clipboard (char *str)
-{
-    int ret;
-    char *cmd_str;
-
-    cmd_str = concatenate_strings (3, "printf \"", str, "\" | xclip -selection clipboard");
-    if (cmd_str == NULL) {
-        pfemr ("Failed to create string \"%s\"", str);
-    }
-
-    ret = system (cmd_str);
-    if (ret == -1) {
-        pfem ("system() error: \"%s\"", strerror (errno));
-        pemr ("Failed to send system command \"%s\"", cmd_str);
-    }
-
-    free (cmd_str);
-    return A_OK;
 }
 
 

@@ -7,12 +7,12 @@ main (void)
 {
     char *str1 = "Hello, ",
          *str2 = "world",
-         *str3 = "!\n",
+         *str3 = "!",
          *str;
 
-    str = concatenate_strings (3, str1, str2, str3);
-
-    printf ("\"%s\"", str);
+    str = concatenate_strings (str1, str2, str3);
+    printf ("\"%s\"\n", str);
+    free (str);
 
     return 0;
 }

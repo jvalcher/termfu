@@ -36,7 +36,7 @@ insert_breakpoint (state_t *state)
                 break;
         }
 
-        cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
+        cmd = concatenate_strings (cmd_base, state->input_buffer, "\n");    
         ret = send_command_mp (state, cmd);
         if (ret == FAIL) {
             pfemr (ERR_DBG_CMD);
@@ -77,7 +77,7 @@ delete_breakpoint (state_t *state)
             break;
     }
 
-    cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
+    cmd = concatenate_strings (cmd_base, state->input_buffer, "\n");    
     ret = send_command_mp (state, cmd);
     if (ret == FAIL) {
         pfemr (ERR_DBG_CMD);
@@ -117,7 +117,7 @@ clear_all_breakpoints (state_t *state)
         curr_break = state->breakpoints;
         do {
             
-            cmd = concatenate_strings (3, cmd_base, curr_break->index, "\n");    
+            cmd = concatenate_strings (cmd_base, curr_break->index, "\n");    
             ret = send_command_mp (state, cmd);
             if (ret == FAIL) {
                 pfemr (ERR_DBG_CMD);

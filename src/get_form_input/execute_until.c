@@ -33,7 +33,7 @@ execute_until (state_t *state)
                 cmd_base = cmd_base_pdb;
                 break;
         }
-        cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
+        cmd = concatenate_strings (cmd_base, state->input_buffer, "\n");    
         ret = send_command_mp (state, cmd);
         if (ret == FAIL) {
             pfemr (ERR_DBG_CMD);

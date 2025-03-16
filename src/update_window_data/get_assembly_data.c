@@ -56,7 +56,7 @@ get_assembly_data_gdb (state_t *state)
     dest_data = win->buff_data;
 
     func = (state->debugger->curr_func[0] == '\0') ? "main" : state->debugger->curr_func;
-    cmd = concatenate_strings (3, "disassemble ", func, "\n");
+    cmd = concatenate_strings ("disassemble ", func, "\n");
     ret = send_command_mp (state, cmd);
     if (ret == FAIL) {
         pfemr (ERR_DBG_CMD);

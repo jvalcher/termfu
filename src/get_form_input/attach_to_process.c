@@ -20,7 +20,7 @@ attach_to_process (state_t *state)
     }
 
     // attach to process
-    cmd = concatenate_strings (3, "attach ", state->input_buffer, "\n");
+    cmd = concatenate_strings ("attach ", state->input_buffer, "\n");
     ret = send_command_mp (state, cmd);
     if (ret == FAIL) {
         pfemr ("Failed to attach to debugged process ID \"%s\"", state->input_buffer);

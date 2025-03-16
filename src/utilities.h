@@ -40,7 +40,9 @@ int free_nc_window_data (state_t *state);
     - Returns pointer to allocated string or NULL on error
     - Must free string after use
 */
-char *concatenate_strings (int num_strings, ...);
+char *concatenate_strings_impl (int num_strings, ...);
+    //
+#define concatenate_strings(...)   concatenate_strings_impl(123, __VA_ARGS__, NULL)
 
 
 

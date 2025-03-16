@@ -15,7 +15,7 @@ run_custom_command (state_t *state)
     char *cmd,
          *prompt;
 
-    prompt = concatenate_strings (3, "(", state->debugger->title, ")");
+    prompt = concatenate_strings ("(", state->debugger->title, ")");
     ret = get_form_input (prompt, state->input_buffer);
     if (ret == FAIL) {
         pfemr (ERR_POPUP_IN);
@@ -24,7 +24,7 @@ run_custom_command (state_t *state)
 
     if (strlen (state->input_buffer) > 0) {
 
-        cmd = concatenate_strings (2, state->input_buffer, "\n");    
+        cmd = concatenate_strings (state->input_buffer, "\n");    
         ret = send_command_mp (state, cmd);
         if (ret == FAIL) {
             pfemr (ERR_DBG_CMD);
