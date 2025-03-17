@@ -48,6 +48,7 @@ sudo make install
 termfu
 ```
 
+### Flags
 - `-h` prints usage instructions.
 - `-c` sets the configuration file path.
 - `-p` sets the data persistence file path.
@@ -55,9 +56,9 @@ termfu
 termfu -c .termfu_01 -p .termfu_01_data
 ```
 
+### Basics
 - Switch between layouts with your `(l)ayouts` key.
-- Scroll window data by selecting it with its key and then using the arrow or `hjkl` keys.
-- Kill a hung program with `(k)ill`, `(q)uit`, or `Esc`.
+- Scroll window data by selecting the window via its key binding and then using the arrow, page up, etc. keys. One can also use the `hjkl` keys.
 <br><br>
 
 ## Configuration
@@ -69,7 +70,7 @@ termfu -c .termfu_01 -p .termfu_01_data
 
 [ command ]
 
-gdb --interpreter=mi --quiet test_programs/hello
+gdb --interpreter=mi test_programs/hello
 
 [ plugins ]
 
@@ -143,7 +144,7 @@ gdb --interpreter=mi misc/vars
 
 | Debugger | Command |
 | :-----:  | ------  |
-| GDB      | `gdb --interpreter=mi my_prog` |
+| GDB      | `gdb --interpreter=mi a.out` |
 | PDB      | `python -m pdb app.py` |
 <br>
 
@@ -160,7 +161,7 @@ Con : c : (c)ontinue
 ```
 
 - Each three-character, case-sensitive plugin code corresponds to a specific header command or window. 
-- Add parentheses around a key binding in its `<(t)itle>` for easy reference. This character will have a different color than the surrounding characters.
+- Add parentheses around a key binding in its `(t)itle` for easy reference. This character will have a different color than the surrounding characters.
 
 <br>
 
