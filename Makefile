@@ -59,7 +59,7 @@ devformat: C_FILES += $(C_UPDATE_FILES) $(C_FORM_IN_FILES) $(C_DEBUG_FILES)
 devformat: clean_dev $(B_FILE_DEV)
 
 install:
-	cp termfu /usr/bin/
+	cp termfu /usr/local/bin
 
 clean_prod:
 	@echo ""
