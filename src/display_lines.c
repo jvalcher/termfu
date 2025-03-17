@@ -1,4 +1,3 @@
-
 #include <string.h>
 #include <ncurses.h>
 #include <stdlib.h>
@@ -7,10 +6,13 @@
 #include "display_lines.h"
 #include "data.h"
 #include "utilities.h"
+#include "error.h"
 #include "plugins.h"
 #include "format_window_data.h"
 
 #define LINE_NUM_TEXT_SPACES  2
+#define DISP_ERR_STATE  " (Key: \"%d\", plugin index: \"%d\", plugin code: \"%s\")", \
+                        key, plugin_index, get_plugin_code (plugin_index)
 
 static int create_scroll_buffer_llist (int plugin_index, state_t *state);
 
@@ -21,41 +23,24 @@ display_lines (int      key,
                int      plugin_index,
                state_t *state)
 {
-    int ret;
     window_t *win = state->plugins[plugin_index]->win;
 
     if (state->plugins[plugin_index]->has_window) {
 
         if (win->buff_data->changed) {
-
-            ret = create_scroll_buffer_llist (plugin_index, state);
-            if (ret == FAIL) {
-                pfem ("Failed to create scroll_buff_line_t linked list");
-                goto disp_lines_err;
-            }
-
+            if ( create_scroll_buffer_llist (plugin_index, state) == FAIL ) 
+                pfemr ("Failed to create scroll_buff_line_t linked list" DISP_ERR_STATE);
             win->buff_data->changed = false;
         }
 
-        ret = display_scroll_buff_lines (key, plugin_index, state);
-        if (ret == FAIL) {
-            pfem ("Failed to display window lines");
-            goto disp_lines_err;
-        }
+        if ( display_scroll_buff_lines (key, plugin_index, state) == FAIL)
+            pfemr ("Failed to display window lines" DISP_ERR_STATE);
 
-        ret = format_window_data (plugin_index, state);
-        if (ret == FAIL) {
-            pfem ("Failed to format window data");
-            goto disp_lines_err;
-        }
+        if ( format_window_data (plugin_index, state) == FAIL)
+            pfemr ("Failed to format window data" DISP_ERR_STATE);
     }
 
     return A_OK;
-
-disp_lines_err:
-
-    pemr ("Key: \"%d\", plugin index: \"%d\", plugin code: \"%s\"",
-                key, plugin_index, get_plugin_code (plugin_index));
 }
 
 
@@ -120,10 +105,8 @@ create_scroll_buffer_llist (int      plugin_index,
         buff_data->rows += 1;
 
         // allocate scroll_buff_line_t
-        if ((buff_line = (scroll_buff_line_t*) malloc (sizeof (scroll_buff_line_t))) == NULL) {
-            pfem ("malloc error: \"%s\"", strerror (errno));
-            pemr ("Failed to allocate scroll_buff_line_t");
-        }
+        if ((buff_line = (scroll_buff_line_t*) malloc (sizeof (scroll_buff_line_t))) == NULL)
+            pfemr_errno ("Failed to allocate scroll_buff_line_t");
 
         // add to linked list
         if (buff_data->head_line == NULL) {
@@ -202,15 +185,14 @@ display_scroll_buff_lines (int      key,
     win       = state->plugins[plugin_index]->win;
     buff_data = win->buff_data;
 
-    // erase window
     werase (win->DWIN);
 
-    // set curr_line
+    // Set curr_line
     if (buff_data->curr_line == NULL) {
         buff_data->curr_line = buff_data->head_line;
     }
 
-    // calculate line number offset for Src
+    // Calculate line number offset for Src
     if (win->index == Src) {
         line_num_len = 1;
         last_line_num = win->buff_data->tail_line->line;
@@ -222,131 +204,130 @@ display_scroll_buff_lines (int      key,
         line_num_len = 0;
     }
 
+    // Calculate key changes
     switch (key) {
 
-        case BEG_DATA:
-        case KEY_HOME:
+    case BEG_DATA:
+    case KEY_HOME:
+        buff_data->scroll_row = 1;
+        buff_data->curr_line = buff_data->head_line;
+        break;
+
+    case END_DATA:
+    case KEY_END:
+        if (buff_data->rows < win->data_win_rows) {
             buff_data->scroll_row = 1;
             buff_data->curr_line = buff_data->head_line;
-            break;
-
-        case END_DATA:
-        case KEY_END:
-            if (buff_data->rows < win->data_win_rows) {
-                buff_data->scroll_row = 1;
-                buff_data->curr_line = buff_data->head_line;
-            } else {
-                buff_data->curr_line = buff_data->tail_line;
-                buff_data->scroll_row = buff_data->rows;
-                for (i = 0; i < (win->data_win_rows - 1); i++) {
-                    buff_data->curr_line = buff_data->curr_line->prev;
-                    --buff_data->scroll_row;
-                }
-            }
-            break;
-
-        case ROW_DATA:
-
-            if (buff_data->rows <= win->data_win_rows) {
-                print_row = 1;
-            } else {
-                switch (plugin_index) {
-                    case Src:
-                        print_row = state->debugger->curr_Src_line - (win->data_win_rows / 2);
-                        break;
-                    case Asm:
-                        print_row = state->debugger->curr_Asm_line - (win->data_win_rows / 2);
-                        break;
-                    default:
-                        print_row = 1;
-                }
-                if (print_row < 1) {
-                    print_row = 1;
-                } else if (print_row > (buff_data->tail_line->line - win->data_win_rows + 1)) {
-                    print_row = buff_data->tail_line->line - win->data_win_rows + 1;
-                } 
-            }
-            buff_data->scroll_row = print_row;
-
-            if (buff_data->curr_line->line < print_row) {
-                while (buff_data->curr_line->line != print_row) {
-                    buff_data->curr_line = buff_data->curr_line->next;
-                }
-            } else if (buff_data->curr_line->line > print_row) {
-                while (buff_data->curr_line->line != print_row) {
-                    buff_data->curr_line = buff_data->curr_line->prev;
-                }
-            }
-            break;
-
-        case KEY_PPAGE:
-            if ((buff_data->scroll_row - win->data_win_rows) <= 0) {
-                 buff_data->scroll_row = 1;
-                 buff_data->curr_line  = buff_data->head_line;
-            } else {
-                buff_data->scroll_row -= (win->data_win_rows - 1);
-                for (i = 0; i < (win->data_win_rows - 1); i++) {
-                    buff_data->curr_line = buff_data->curr_line->prev;
-                    --buff_data->scroll_row;
-                }
-            }
-            break;
-
-        case KEY_NPAGE:
-            rem_lines = buff_data->rows - buff_data->scroll_row;
-            max_scroll_row = buff_data->rows - (win->data_win_rows - 1);
-            if (rem_lines >= win->data_win_rows) {
-                for (i = 0; i < (win->data_win_rows - 1); i++) {
-                    if (buff_data->scroll_row == max_scroll_row) {
-                        break;
-                    }
-                    buff_data->curr_line = buff_data->curr_line->next;
-                    ++buff_data->scroll_row;
-                } 
-            } else {
-                while (buff_data->scroll_row < max_scroll_row) {
-                    buff_data->curr_line = buff_data->curr_line->next;
-                    ++buff_data->scroll_row;
-                }
-            }
-            break;
-
-        case 'j':
-        case KEY_DOWN:
-            rem_lines = buff_data->rows - buff_data->scroll_row;
-            if (rem_lines >= win->data_win_rows) {
-                buff_data->curr_line = buff_data->curr_line->next;
-                ++buff_data->scroll_row;
-            }
-            break;
-
-        case 'k':
-        case KEY_UP:
-            if (buff_data->scroll_row > 1) {
+        } else {
+            buff_data->curr_line = buff_data->tail_line;
+            buff_data->scroll_row = buff_data->rows;
+            for (i = 0; i < (win->data_win_rows - 1); i++) {
                 buff_data->curr_line = buff_data->curr_line->prev;
                 --buff_data->scroll_row;
             }
-            break;
+        }
+        break;
 
-        case 'h':
-        case KEY_LEFT:
-            if (buff_data->text_wrapped == false) {
-                if (buff_data->scroll_col_offset > 0) {
-                    --buff_data->scroll_col_offset;
-                }
+    case ROW_DATA:
+        if (buff_data->rows <= win->data_win_rows) {
+            print_row = 1;
+        } else {
+            switch (plugin_index) {
+            case Src:
+                print_row = state->debugger->curr_Src_line - (win->data_win_rows / 2);
+                break;
+            case Asm:
+                print_row = state->debugger->curr_Asm_line - (win->data_win_rows / 2);
+                break;
+            default:
+                print_row = 1;
             }
-            break;
+            if (print_row < 1) {
+                print_row = 1;
+            } else if (print_row > (buff_data->tail_line->line - win->data_win_rows + 1)) {
+                print_row = buff_data->tail_line->line - win->data_win_rows + 1;
+            } 
+        }
+        buff_data->scroll_row = print_row;
+        if (buff_data->curr_line->line < print_row) {
+            while (buff_data->curr_line->line != print_row) {
+                buff_data->curr_line = buff_data->curr_line->next;
+            }
+        } else if (buff_data->curr_line->line > print_row) {
+            while (buff_data->curr_line->line != print_row) {
+                buff_data->curr_line = buff_data->curr_line->prev;
+            }
+        }
+        break;
 
-        case 'l':
-        case KEY_RIGHT:
-            if (buff_data->text_wrapped == false) {
-                if ((buff_data->max_chars - buff_data->scroll_col_offset) >
-                    (win->data_win_cols - line_num_len))
-                {
-                    ++buff_data->scroll_col_offset;
-                }
+    case KEY_PPAGE:
+        if ((buff_data->scroll_row - win->data_win_rows) <= 0) {
+                buff_data->scroll_row = 1;
+                buff_data->curr_line  = buff_data->head_line;
+        } else {
+            buff_data->scroll_row -= (win->data_win_rows - 1);
+            for (i = 0; i < (win->data_win_rows - 1); i++) {
+                buff_data->curr_line = buff_data->curr_line->prev;
+                --buff_data->scroll_row;
             }
-            break;
+        }
+        break;
+
+    case KEY_NPAGE:
+        rem_lines = buff_data->rows - buff_data->scroll_row;
+        max_scroll_row = buff_data->rows - (win->data_win_rows - 1);
+        if (rem_lines >= win->data_win_rows) {
+            for (i = 0; i < (win->data_win_rows - 1); i++) {
+                if (buff_data->scroll_row == max_scroll_row) {
+                    break;
+                }
+                buff_data->curr_line = buff_data->curr_line->next;
+                ++buff_data->scroll_row;
+            } 
+        } else {
+            while (buff_data->scroll_row < max_scroll_row) {
+                buff_data->curr_line = buff_data->curr_line->next;
+                ++buff_data->scroll_row;
+            }
+        }
+        break;
+
+    case 'j':
+    case KEY_DOWN:
+        rem_lines = buff_data->rows - buff_data->scroll_row;
+        if (rem_lines >= win->data_win_rows) {
+            buff_data->curr_line = buff_data->curr_line->next;
+            ++buff_data->scroll_row;
+        }
+        break;
+
+    case 'k':
+    case KEY_UP:
+        if (buff_data->scroll_row > 1) {
+            buff_data->curr_line = buff_data->curr_line->prev;
+            --buff_data->scroll_row;
+        }
+        break;
+
+    case 'h':
+    case KEY_LEFT:
+        if (buff_data->text_wrapped == false) {
+            if (buff_data->scroll_col_offset > 0) {
+                --buff_data->scroll_col_offset;
+            }
+        }
+        break;
+
+    case 'l':
+    case KEY_RIGHT:
+        if (buff_data->text_wrapped == false) {
+            if ((buff_data->max_chars - buff_data->scroll_col_offset) >
+                (win->data_win_cols - line_num_len))
+            {
+                ++buff_data->scroll_col_offset;
+            }
+        }
+        break;
     }
     
     // print lines
@@ -358,56 +339,53 @@ display_scroll_buff_lines (int      key,
 
         switch (win->index) {
 
-            case Asm:
-            case Reg:
+        case Asm:
+        case Reg:
 
-                print_len = buff_line->len - buff_data->scroll_col_offset;
-                if (print_len <= 0) {
-                    ptr = blank_line; 
-                    print_len = 1;
-                } else {
-                    ptr = buff_line->ptr + buff_data->scroll_col_offset;
+            print_len = buff_line->len - buff_data->scroll_col_offset;
+            if (print_len <= 0) {
+                ptr = blank_line; 
+                print_len = 1;
+            } else {
+                ptr = buff_line->ptr + buff_data->scroll_col_offset;
+            }
+            mvwprintw (win->DWIN, i, 0, "%.*s", print_len, ptr);
+
+            break;
+
+        case Src:
+
+            // line number
+            if      (buff_line->line < 10) rem_spaces = line_num_len - 1;
+            else if (buff_line->line < 100) rem_spaces = line_num_len - 2;
+            else if (buff_line->line < 1000) rem_spaces = line_num_len - 3;
+            else if (buff_line->line < 10000) rem_spaces = line_num_len - 4;
+            else if (buff_line->line < 100000) rem_spaces = line_num_len - 5;
+            else if (buff_line->line < 1000000) rem_spaces = line_num_len - 6;
+            else 
+                pfemr ("Max line number exceeded (num: %d, len: %d)", last_line_num, line_num_len - 1);
+            wattron  (win->DWIN, COLOR_PAIR(SRC_LINE_COLOR));
+            mvwprintw  (win->DWIN, i, 0, "%d%*c", buff_line->line, rem_spaces, ' ');
+            wattroff (win->DWIN, COLOR_PAIR(SRC_LINE_COLOR));
+
+            // text
+            print_len = buff_line->len - buff_data->scroll_col_offset;
+            if (print_len <= 0) {
+                ptr = blank_line; 
+                print_len = 1;
+            } else {
+                ptr = buff_line->ptr + buff_data->scroll_col_offset;
+                if (print_len >= text_len) {
+                    print_len = text_len;
                 }
-                mvwprintw (win->DWIN, i, 0, "%.*s", print_len, ptr);
+            }
+            mvwprintw (win->DWIN, i, line_num_len, "%.*s", print_len, ptr);
 
-                break;
+            break;
 
-            case Src:
-
-                // line number
-                if      (buff_line->line < 10) rem_spaces = line_num_len - 1;
-                else if (buff_line->line < 100) rem_spaces = line_num_len - 2;
-                else if (buff_line->line < 1000) rem_spaces = line_num_len - 3;
-                else if (buff_line->line < 10000) rem_spaces = line_num_len - 4;
-                else if (buff_line->line < 100000) rem_spaces = line_num_len - 5;
-                else if (buff_line->line < 1000000) rem_spaces = line_num_len - 6;
-                else 
-                {
-                    pfemr ("Max buffer line length exceeded (last line num: %d, len: %d)",
-                                last_line_num, line_num_len - 1);
-                }
-                wattron  (win->DWIN, COLOR_PAIR(SRC_LINE_COLOR));
-                mvwprintw  (win->DWIN, i, 0, "%d%*c", buff_line->line, rem_spaces, ' ');
-                wattroff (win->DWIN, COLOR_PAIR(SRC_LINE_COLOR));
-
-                // text
-                print_len = buff_line->len - buff_data->scroll_col_offset;
-                if (print_len <= 0) {
-                    ptr = blank_line; 
-                    print_len = 1;
-                } else {
-                    ptr = buff_line->ptr + buff_data->scroll_col_offset;
-                    if (print_len >= text_len) {
-                        print_len = text_len;
-                    }
-                }
-                mvwprintw (win->DWIN, i, line_num_len, "%.*s", print_len, ptr);
-
-                break;
-
-            default:
-                waddnstr (win->DWIN, buff_line->ptr, buff_line->len);
-                break;
+        default:
+            waddnstr (win->DWIN, buff_line->ptr, buff_line->len);
+            break;
         }
 
         buff_line = buff_line->next;

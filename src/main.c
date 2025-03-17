@@ -6,6 +6,7 @@
 
 #include "data.h"
 #include "utilities.h"
+#include "error.h"
 #include "parse_config_file.h"
 #include "update_window_data/_update_window_data.h"
 #include "render_layout.h"
@@ -15,16 +16,13 @@
 #include "plugins.h"
 
 static int   initial_configure (int, char*[], state_t*);
-static int   start_program     (state_t *state);
 static void *get_key           (void *state_arg);
 static void *send_key          (void *state_arg);
 
-int key_pipe[2];
-pthread_mutex_t mutex;
-pthread_cond_t cond_var;
+int  key_pipe[2];
 bool in_select_window;
-
-// FIX: termfu_dev (not termfu) throwing a "free(): invalid size" error in fedora 41 VM
+pthread_mutex_t mutex;
+pthread_cond_t  cond_var;
 
 
 
@@ -32,82 +30,69 @@ int
 main (int   argc,
       char *argv[]) 
 {
-    int        ret,
-               status;
+    int        dstatus;
     state_t    state;
     debugger_t debugger;
 
     state.debugger = &debugger;
 
-    ret = initial_configure (argc, argv, &state);
-    if (ret == FAIL) {
-        pfeme ("Initial configuration failed\n\n");
-    }
+    if (initial_configure (argc, argv, &state) == FAIL)
+        pfeme ("Initial configuration failed");
 
-    ret = parse_config_file (&state);
-    if (ret== FAIL) {
-        pfeme ("Failed to parse configuration file\n\n");
-    }
+    if (parse_config_file (&state) == FAIL)
+        pfeme ("Failed to parse configuration file");
 
-    ret = start_program (&state);
-    if (ret == FAIL) {
-        pfeme ("Failed to start termfu");
-    }
+    if (render_layout (FIRST_LAYOUT, &state) == FAIL)
+        pfeme ("Failed to render layout");
 
-    // start thread to update window data
-    if (pthread_create (&state.debugger->update_window_thread,
-                            NULL, update_window_thread, (void*) &state) != 0) {
-        pfemr ("Failed to start update window thread");
-    }
+    if (start_debugger (&state) == FAIL)
+        pfeme ("Failed to start debugger process");
+
+    if (get_persisted_data (&state) == FAIL)
+        pfeme ("Failed to get persisted data");
+
+    if (pthread_create (&state.debugger->update_window_thread, NULL, update_window_thread, (void*) &state) != 0)
+        pfeme ("Failed to start update window thread");
 
     while (debugger.running) {
 
-        // create main, select pipes
-        if (pipe (key_pipe) == -1) {
+        if (pipe (key_pipe) == -1)
             pfeme ("Failed to create main pipe");
-        }
 
-        // start thread to get key input
-        if (pthread_create(&state.debugger->get_key_thread, NULL,
-                            get_key, (void*) &state) != 0) {
+        if (pthread_create(&state.debugger->get_key_thread, NULL, get_key, (void*) &state) != 0)
             pfeme ("Failed to create get key thread");
-        }
 
-        // start thread to send key to plugin
-        if (pthread_create(&state.debugger->send_key_thread, NULL,
-                            send_key, (void*) &state) != 0) {
+        if (pthread_create(&state.debugger->send_key_thread, NULL, send_key, (void*) &state) != 0)
             pfeme ("Failed to create run plugin thread");
-        }
 
         pthread_join (state.debugger->get_key_thread, NULL);
         pthread_join (state.debugger->send_key_thread, NULL);
 
-        // restart program
         if (state.restart_prog) {
-
-            // kill debugger process
-            kill    (debugger.pid, SIGTERM);
-            waitpid (debugger.pid, &status, 0);
-
-            // restart program
-            ret = start_program (&state);
-            if (ret == FAIL) {
-                pfeme ("Failed to start termfu");
-            }
-
             state.restart_prog = false;
-        } 
 
-        // quit program
-        else {
+            kill    (debugger.pid, SIGTERM);
+            waitpid (debugger.pid, &dstatus, 0);
+            if (WIFEXITED(dstatus) == false)
+                pfeme ("Failed to kill debugger process");
+
+            if (render_layout (FIRST_LAYOUT, &state) == FAIL)
+                pfeme ("Failed to render layout");
+
+            if (start_debugger (&state) == FAIL)
+                pfeme ("Failed to start debugger process");
+
+            if (get_persisted_data (&state) == FAIL)
+                pfeme ("Failed to get persisted data");
+        } 
+        else
             debugger.running = false;
-        }
 
         close (key_pipe[PIPE_READ]);
         close (key_pipe[PIPE_WRITE]);
     }
 
-    clean_up ();
+    clean_up (PROG_EXIT);
 
     return EXIT_SUCCESS;
 }
@@ -115,13 +100,13 @@ main (int   argc,
 
 
 /*
-    SIGINT handler (Ctrl-C)
+    SIGINT handler for Ctrl-C
 */
 static void
 sigint_handler (int sig_num)
 {
     (void) sig_num;
-    clean_up ();
+    clean_up (PROG_EXIT);
     fprintf (stderr, "termfu exited (SIGINT)\n");
     exit (EXIT_FAILURE);
 }
@@ -144,7 +129,6 @@ initial_configure (int   argc,
     int opt;
     extern char *optarg;
 
-    // CLI arguments
     state->config_path[0] = '\0';
     state->data_path[0]   = '\0';
 
@@ -156,7 +140,6 @@ initial_configure (int   argc,
             // help
             case 'h':
                 printf (
-
                 "\n"
                 "Usage: \n"
                 "\n"
@@ -170,9 +153,7 @@ initial_configure (int   argc,
                 "       -c CONFIG_FILE    Use this configuration file\n"
                 "       -p PERSIST_FILE   Persist sessions with this file\n"
                 "\n",
-
                 CONFIG_FILE, PERSIST_FILE);
-
                 exit (EXIT_SUCCESS);
 
             // configuration file
@@ -187,11 +168,9 @@ initial_configure (int   argc,
 
             default:
                 fprintf (stderr,
-
                 "\n"
                 "Run with -h flag to see usage instructions.\n"
                 "\n");
-
                 exit (EXIT_FAILURE);
         }
     }
@@ -218,9 +197,8 @@ initial_configure (int   argc,
         init_pair(WHITE_BLACK, COLOR_WHITE, COLOR_BLACK);       // WHITE_BLACK
         init_pair(WHITE_BLUE, COLOR_WHITE, COLOR_BLUE);         // WHITE_BLUE
         init_pair(BLACK_BLUE, COLOR_BLACK, COLOR_BLUE);         // WHITE_BLUE
-    } else {
-        pfemr ("Terminal doesn't support colors\n");
-    }
+    } 
+
     cbreak ();
     noecho ();
     curs_set (0);
@@ -232,31 +210,8 @@ initial_configure (int   argc,
 
 
 
-static int
-start_program (state_t *state)
-{
-    int ret;
-
-    ret = render_layout (FIRST_LAYOUT, state);
-    if (ret == FAIL) {
-        pfeme ("Failed to render \"%s\" layout\n\n", FIRST_LAYOUT);
-    }
-
-    ret = start_debugger (state);
-    if (ret == FAIL) {
-        pfeme ("Failed to start debugger");
-    }
-
-    ret = get_persisted_data (state);
-    if (ret == FAIL) {
-        pfeme ("Failed to get persisted data");
-    }
-
-    return A_OK;
-}
-
 /*
-    Get key input (thread function)
+    Get key input thread function
 */
 static void*
 get_key (void *state_arg)
@@ -275,9 +230,8 @@ get_key (void *state_arg)
     while (true) {
 
         // wait if in select_window()
-        while (in_select_window == true) {
+        while (in_select_window == true)
             pthread_cond_wait (&cond_var, &mutex);
-        }
         pthread_mutex_unlock (&mutex);
 
         // get key
@@ -317,10 +271,8 @@ get_key (void *state_arg)
             }
 
             sprintf (key_str, "%d", key);
-            if (write (key_pipe[PIPE_WRITE], key_str, 8) == -1) {
-                pfem  ("write failure: \"%s\"", strerror (errno));
-                pfeme ("Failed to write to main pipe");
-            };
+            if (write (key_pipe[PIPE_WRITE], key_str, 8) == -1)
+                pfeme_errno ("Failed to write to main key pipe");
         }
 
     }
@@ -331,14 +283,14 @@ get_key (void *state_arg)
 
 
 /*
-    Send key input to run_plugin() (thread function)
+    Send key input to run_plugin() thread function
 */
 static void*
 send_key (void *state_arg)
 {
     char     key_str[8];
     int      key,
-             ret,
+             ret_val,
              oldtype;
     state_t *state;
 
@@ -360,10 +312,8 @@ send_key (void *state_arg)
             // run plugin
             else if ((key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z')) {
 
-                ret = run_plugin (state->plugin_key_index[key], state);
-                if (ret == FAIL) {
+                if (run_plugin (state->plugin_key_index[key], state) == FAIL)
                     state->debugger->running = false;
-                }
 
                 // signal get_key() that it has exited select_window(), get_form_input()
                 switch (state->plugin_key_index[key]) {
@@ -386,10 +336,10 @@ send_key (void *state_arg)
                 }
             }
 
-            // quit program
+            // exit program
             if (state->debugger->running == false) {
                 pthread_cancel (state->debugger->get_key_thread);
-                pthread_exit (&ret);
+                pthread_exit (&ret_val);
             }
         }
     }

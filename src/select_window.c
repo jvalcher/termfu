@@ -5,9 +5,12 @@
 #include "get_form_input/watchpoints.h"
 #include "get_form_input/breakpoints.h"
 #include "utilities.h"
+#include "error.h"
 #include "plugins.h"
 
 #define BUFF_LEN  256
+#define SEL_WIN_STATE  " (index: %d, code: \"%s\", key: \"%c\" (%d))", \
+                        plugin_index, get_plugin_code (plugin_index), key, key
 
 static int  select_window_color    (int plugin_index, state_t *state);
 static int  deselect_window_color  (void);
@@ -22,142 +25,113 @@ int
 select_window (int      plugin_index,
                state_t *state)
 {
-    int           key,
-                  ret;
-    bool          in_loop         = true,
-                  key_not_pressed = true;
+    int           key = -1;
+    bool          in_loop     = true,
+                  key_pressed = false;
 
-    ret = select_window_color (plugin_index, state);
-    if (ret == FAIL) {
-        pfem ("Failed to select window color");
-        goto sel_win_err;
-    }
+    if (select_window_color (plugin_index, state) == FAIL)
+        pfemr ("Failed to select window color" SEL_WIN_STATE);
 
     while (in_loop) {
 
-        key = getch ();
+        key = getch();
 
         switch (key) {
 
-            case 'k':
-            case KEY_UP:
-            case 'j':
-            case KEY_DOWN:
-            case 'l':
-            case KEY_RIGHT:
-            case 'h':
-            case KEY_LEFT:
-            case KEY_PPAGE:
-            case KEY_NPAGE:
-            case KEY_END:
-            case KEY_HOME:
-                ret = display_lines (key, plugin_index, state);
-                if (ret == FAIL) {
-                    pfem ("Failed to display lines (%d)", key);
-                    goto sel_win_err;
-                }
-                key_not_pressed = false;
-                break;
+        // Built-in
+            // Navigation
+        case 'k':
+        case KEY_UP:
+        case 'j':
+        case KEY_DOWN:
+        case 'l':
+        case KEY_RIGHT:
+        case 'h':
+        case KEY_LEFT:
+        case KEY_PPAGE:
+        case KEY_NPAGE:
+        case KEY_END:
+        case KEY_HOME:
+            if (display_lines (key, plugin_index, state) == FAIL)
+                pfemr ("Failed to display lines" SEL_WIN_STATE);
+            key_pressed = true;
+            break;
 
-            case 'q':
-            case ESC:
-                in_loop = false;
-                key_not_pressed = false;
-                break;
+            // Deselect window
+        case ESC:
+            in_loop = false;
+            key_pressed = true;
+            break;
         }
 
-        // custom keys
-        if (in_loop && key_not_pressed) {
+        // Custom
+        if (in_loop && !key_pressed) {
 
-            // deselect window
+            // Deselect window
+                // key
             if (key == state->plugins[plugin_index]->key) {
                 in_loop = false;
                 continue;
             }
-
-            // quit
+                // Qut
             else if (key == state->plugins[Qut]->key) {
                 in_loop = false;
                 state->debugger->running = false;
                 continue;
             }
 
-            // specific window commands
+            // Window-specific
             switch (plugin_index) {
 
-                case Brk:
-                    switch (key) {
-                        case 'd': 
-                            ret = delete_breakpoint (state);
-                            if (ret == FAIL) {
-                                pfem ("Failed to delete breakpoint");
-                                goto sel_win_err;
-                            }
-                            in_loop = false;
-                            break;
-                        case 'c':
-                            ret = insert_breakpoint (state);
-                            if (ret == FAIL) {
-                                pfem ("Failed to insert breakpoint");
-                                goto sel_win_err;
-                            }
-                            in_loop = false;
-                            break;
-                        case 'a':
-                            ret = clear_all_breakpoints (state);
-                            if (ret == FAIL) {
-                                pfem ("Failed to clear all breakpoints");
-                                goto sel_win_err;
-                            }
-                            in_loop = false;
-                            break;
-                    }
+            case Brk:
+                switch (key) {
+                case 'd': 
+                    if (delete_breakpoint (state) == FAIL)
+                        pfemr ("Failed to delete breakpoint" SEL_WIN_STATE);
+                    in_loop = false;
                     break;
+                case 'c':
+                    if (insert_breakpoint (state) == FAIL)
+                        pfemr ("Failed to insert breakpoint" SEL_WIN_STATE);
+                    in_loop = false;
+                    break;
+                case 'a':
+                    if (clear_all_breakpoints (state) == FAIL)
+                        pfemr ("Failed to clear all breakpoints" SEL_WIN_STATE);
+                    in_loop = false;
+                    break;
+                }
+                break;
 
-                case Wat:
-                    switch (key) {
-                        case 'd':
-                            ret = delete_watchpoint (state);
-                            if (ret == FAIL) {
-                                pfem ("Failed to delete watchpoint");
-                                goto sel_win_err;
-                            }
-                            in_loop = false;
-                            break;
-                        case 'c':
-                            ret = insert_watchpoint (state);
-                            if (ret == FAIL) {
-                                pfem ("Failed to insert watchpoint");
-                                goto sel_win_err;
-                            }
-                            in_loop = false;
-                            break;
-                        case 'a':
-                            ret = clear_all_watchpoints (state);
-                            if (ret == FAIL) {
-                                pfem ("Failed to clear all watchpoints");
-                                goto sel_win_err;
-                            }
-                            in_loop = false;
-                            break;
-                        }
-                    }
+            case Wat:
+                switch (key) {
+                case 'd':
+                    if (delete_watchpoint (state) == FAIL)
+                        pfemr ("Failed to delete watchpoint" SEL_WIN_STATE);
+                    in_loop = false;
                     break;
+                case 'c':
+                    if (insert_watchpoint (state) == FAIL)
+                        pfemr ("Failed to insert watchpoint" SEL_WIN_STATE);
+                    in_loop = false;
+                    break;
+                case 'a':
+                    if (clear_all_watchpoints (state) == FAIL)
+                        pfemr ("Failed to clear all watchpoints" SEL_WIN_STATE);
+                    in_loop = false;
+                    break;
+                }
+            }
+            break;
         }
-        key_not_pressed = true;
+
+        key_pressed = false;
     }
 
-    ret = deselect_window_color ();
-    if (ret == FAIL) {
-        pfem ("Failed to deselect window color");
-        goto sel_win_err;
-    }
+    if (deselect_window_color() == FAIL)
+        pfemr ("Failed to deselect window color" SEL_WIN_STATE);
 
     return A_OK;
-
-sel_win_err:
-    pemr ("Select window error (index: %d, code: \"%s\")",
-            plugin_index, get_plugin_code (plugin_index));
 }
 
 
@@ -180,10 +154,8 @@ select_window_color (int      plugin_index,
     bool   key_color_toggle,
            string_exists;
 
-    if ((string_exists = find_window_string (curr_win->WIN, curr_title, &y, &x)) == false) {
+    if ((string_exists = find_window_string (curr_win->WIN, curr_title, &y, &x)) == false)
         pfemr ("Failed to find window title \"%s\"", curr_title);
-    }
-
 
     if (string_exists) {
 
@@ -199,6 +171,7 @@ select_window_color (int      plugin_index,
                 key_color_toggle = false;
             }
 
+            // window (t)itle character
             if (curr_title [i] == '(') {
                 wattron (curr_win->WIN, COLOR_PAIR(FOCUS_WINDOW_TITLE_KEY_COLOR));
                 key_color_toggle = true;
@@ -222,9 +195,8 @@ deselect_window_color (void)
     bool key_color_toggle,
          string_exists;
 
-    if ((string_exists = find_window_string (curr_win->WIN, curr_title, &y, &x)) == false) {
+    if ((string_exists = find_window_string (curr_win->WIN, curr_title, &y, &x)) == false)
         pfemr ("Failed to find window title \"%s\"", curr_title);
-    }
 
     if (string_exists) {
 
@@ -241,6 +213,7 @@ deselect_window_color (void)
                 key_color_toggle = false;
             }
 
+            // window (t)itle character
             if (curr_title[i] == '(') {
                 wattron (curr_win->WIN, COLOR_PAIR(TITLE_KEY_COLOR));
                 key_color_toggle = true;

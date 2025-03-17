@@ -4,6 +4,7 @@
 #include "../data.h"
 #include "../plugins.h"
 #include "../utilities.h"
+#include "../error.h"
 
 static int get_source_path_line_func_gdb (state_t *state);
 static int get_source_path_line_func_pdb (state_t *state);
@@ -15,23 +16,16 @@ bool first_run = true;
 int
 get_source_path_line_func (state_t *state)
 {
-    int ret;
-
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            ret = get_source_path_line_func_gdb (state);
-            if (ret == FAIL) {
+            if (get_source_path_line_func_gdb (state) == FAIL)
                 pfemr ("Failed to get source, line, memory (GDB)");
-            }
             break;
         case (DEBUGGER_PDB):
-            ret = get_source_path_line_func_pdb (state);
-            if (ret == FAIL) {
+            if (get_source_path_line_func_pdb (state) == FAIL)
                 pfemr ("Failed to get source, line, memory (PDB)");
-            }
             break;
     }
-
     return A_OK;
 }
 
@@ -40,7 +34,7 @@ get_source_path_line_func (state_t *state)
 static int
 get_source_path_line_func_gdb (state_t *state)
 {
-    int   ret, i,
+    int   i,
           curr_index;
     char *src_ptr,
          *path_ptr,
@@ -64,10 +58,9 @@ get_source_path_line_func_gdb (state_t *state)
 
     // check if program running
     src_ptr = state->debugger->data_buffer;
-    ret = send_command_mp (state, "-thread-info\n");
-    if (ret == FAIL) {
+
+    if (send_command_mp (state, "-thread-info\n") == FAIL)
         pfemr (ERR_DBG_CMD);
-    }
 
         // get number of threads
     prev_ptr = src_ptr;
@@ -82,10 +75,8 @@ get_source_path_line_func_gdb (state_t *state)
 
     // if no threads or program not running
     if (*src_ptr == ']') {
-        ret = send_command_mp (state, "-file-list-exec-source-files\n");
-        if (ret == FAIL) {
+        if (send_command_mp (state, "-file-list-exec-source-files\n") == FAIL)
             pfemr (ERR_DBG_CMD);
-        }
         src_ptr = state->debugger->data_buffer;
         is_running = false;
     } else {
@@ -176,7 +167,6 @@ get_source_path_line_func_gdb (state_t *state)
 static int
 get_source_path_line_func_pdb (state_t *state)
 {
-    int   ret;
     char *src_ptr,
          *path_ptr;
     debugger_t  *debugger;
@@ -192,10 +182,8 @@ get_source_path_line_func_pdb (state_t *state)
     debugger->src_path_pos = 0;
     debugger->src_path_buffer[0] = '\0';
 
-    ret = send_command_mp (state, "where\n");
-    if (ret == FAIL) {
+    if (send_command_mp (state, "where\n") == FAIL)
         pfemr (ERR_DBG_CMD);
-    }
 
     src_ptr = strstr (src_ptr, curr_path_symbol);
     src_ptr += strlen (curr_path_symbol);

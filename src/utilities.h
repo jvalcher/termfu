@@ -21,9 +21,18 @@ void logd (const char *formatted_string, ...);
 
 
 /*
-    Clean up before exiting program
+    Clean up before exiting program because of:
+    ---------
+    - Causes:
+
+        USER      - User exiting the program
+        ERROR     - Error condition
 */
-void clean_up (void);
+enum {
+    PROG_EXIT,
+    PROG_ERROR
+};
+void clean_up (int cause);
 
 
 
@@ -161,104 +170,6 @@ int copy_to_clipboard (char *str);
     - Buffer must be freed
 */
 char* create_buff_from_file (char *path);
-
-
-
-/*
-  Print formatted error messages
-  ----------
-  - For error propagation that will ultimately exit the program
-    - Runs clean_up()
-
-    Message, return FAIL
-  
-        pfemr ("Unknown character \"%c\"", ch);
-    
-        ERROR: src_file.c : func() : 10
-               Unknown character "c"
-
-    Message, exit program
-
-        pfeme ("Unknown character \"%c\"", ch);
-  
-    Message
-
-        pfem ("Failed to allocate buffer");
-        return NULL;
-  
-    Multiple messages, return FAIL
-  
-        pfem ("Unknown character \"%c\"", ch);
-        pem  ("Check README.md for more details");
-        pem  ("Check the website for video demos");
-        pemr ("Returning FAIL...");
-    
-        ERROR: src_file.c : func() : 10
-               Unknown character "c"
-               Check README.md for more details
-               See a physician if your symptoms persist
-               Returning FAIL...
-
-    Multiple messages then exit program
-        
-        ...
-        peme ("Exiting...");
-
-    errno message, return FAIL
-
-        if ((buff = malloc (4096)) == NULL) {
-            pfemr ("malloc error: %s", strerror (errno));
-        }
-*/
-
-// Print formatted error message
-#define pfem(...) do { \
-    clean_up();\
-\
-    fprintf (stderr, "\n\
-\033[1;31m%s\033[1;0m \
-\033[1;32m%s\033[1;0m() : \
-\033[1;36m%s\033[1;0m : \
-\033[1;33m%d\033[1;0m\n\
-       ", \
-    "ERROR:", __func__, __FILE__, __LINE__);\
-\
-    fprintf (stderr, __VA_ARGS__);\
-    fprintf (stderr, "\n"); \
-} while (0)
-
-// Print formatted error message, return
-#define pfemr(...) ({ \
-    pfem(__VA_ARGS__);\
-    return FAIL;\
-})
-
-// Print formatted error message, exit
-#define pfeme(...) do { \
-    pfem(__VA_ARGS__); \
-    fprintf (stderr, "\n");\
-    exit (EXIT_FAILURE); \
-} while (0)
-
-// Print error message
-#define pem(...) do { \
-    fprintf (stderr, "       "); \
-    fprintf (stderr, __VA_ARGS__); \
-    fprintf (stderr, "\n"); \
-} while (0)
-
-// Print error message, return
-#define pemr(...) ({\
-    pem(__VA_ARGS__);\
-    return FAIL;\
-})
-
-// Print error message, exit
-#define peme(...) do { \
-    pem(__VA_ARGS__);\
-    fprintf (stderr, "\n");\
-    exit (EXIT_FAILURE);\
-} while (0)
 
 
 

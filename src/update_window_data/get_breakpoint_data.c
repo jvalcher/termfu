@@ -3,19 +3,20 @@
 #include "get_breakpoint_data.h"
 #include "../data.h"
 #include "../utilities.h"
+#include "../error.h"
 #include "../plugins.h"
 
 static int get_breakpoint_data_gdb (state_t *state);
 static int get_breakpoint_data_pdb (state_t *state);
 
 #define INDEX_BUFF_LEN  8
-
+#define ALLOC_BRK_STATE  " (index: \"%s\"; path: \"%s\"; line: \"%s\"", \
+                         index_buff, file_buff, line_buff
 
 
 int
 get_breakpoint_data (state_t *state)
 {
-    int ret;
     breakpoint_t *tmp_break,
                  *curr_break;
 
@@ -34,16 +35,12 @@ get_breakpoint_data (state_t *state)
 
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            ret = get_breakpoint_data_gdb (state);
-            if (ret == FAIL) {
+            if (get_breakpoint_data_gdb (state) == FAIL)
                 pfemr ("Failed to get breakpoint data (GDB)");
-            }
             break;
         case (DEBUGGER_PDB):
-            ret = get_breakpoint_data_pdb (state);
-            if (ret == FAIL) {
+            if (get_breakpoint_data_pdb (state) == FAIL)
                 pfemr ("Failed to get breakpoint data (PDB)");
-            }
             break;
     }
 
@@ -63,21 +60,16 @@ allocate_breakpoint (state_t *state,
 {
     breakpoint_t *curr_break = state->breakpoints;
 
-    // allocate
+    // allocate breakpoint_t
     if (state->breakpoints == NULL) {
-        if ((curr_break = (breakpoint_t*) malloc (sizeof (breakpoint_t))) == NULL) {
-            pfem ("malloc error (first): %s", strerror (errno));
-            goto alloc_break_err;
-        }
+        if ((curr_break = (breakpoint_t*) malloc (sizeof (breakpoint_t))) == NULL)
+            pfemr_errno ("Failed to allocate breakpoint_t" ALLOC_BRK_STATE);
         state->breakpoints = curr_break;
     } else {
-        while (curr_break->next != NULL) {
+        while (curr_break->next != NULL)
             curr_break = curr_break->next;
-        }
-        if ((curr_break->next = (breakpoint_t*) malloc (sizeof (breakpoint_t))) == NULL) {
-            pfem ("malloc error: %s", strerror (errno));
-            goto alloc_break_err;
-        }
+        if ((curr_break->next = (breakpoint_t*) malloc (sizeof (breakpoint_t))) == NULL)
+            pfemr_errno ("Failed to allocate breakpoint_t" ALLOC_BRK_STATE);
         curr_break = curr_break->next;
     }
     curr_break->next = NULL;
@@ -92,9 +84,6 @@ allocate_breakpoint (state_t *state,
 
 
     return A_OK;
-
-alloc_break_err:
-    pemr ("index: \"%s\"; path: \"%s\"; line: \"%s\"", index_buff, file_buff, line_buff);
 }
 
 
@@ -102,7 +91,7 @@ alloc_break_err:
 static int
 get_breakpoint_data_gdb (state_t *state)
 {
-    int          i, ret;
+    int          i;
     char        *src_ptr,
                  file_buff   [BREAK_PATH_LEN],
                  line_buff   [BREAK_LINE_LEN],
@@ -117,10 +106,8 @@ get_breakpoint_data_gdb (state_t *state)
     src_ptr   = state->debugger->data_buffer;
     dest_buff = state->plugins[Brk]->win->buff_data;
 
-    ret = send_command_mp (state, "-break-info\n");
-    if (ret == FAIL) {
+    if (send_command_mp (state, "-break-info\n") == FAIL)
         pfemr (ERR_DBG_CMD);
-    }
 
     dest_buff->buff_pos = 0;
     dest_buff->buff[0] = '\0';
@@ -183,10 +170,8 @@ get_breakpoint_data_gdb (state_t *state)
                 line_buff [i] = '\0';
 
                 // allocate breakpoint_t
-                ret = allocate_breakpoint (state, index_buff, file_buff, line_buff);
-                if (ret == FAIL) {
+                if (allocate_breakpoint (state, index_buff, file_buff, line_buff) == FAIL)
                     pfemr ("Failed to allocate breakpoint");
-                }
 
                 cp_wchar (dest_buff, '\n');
             }
@@ -203,7 +188,7 @@ get_breakpoint_data_gdb (state_t *state)
 static int
 get_breakpoint_data_pdb (state_t *state)
 {
-    int          i, ret;
+    int          i;
     window_t    *win;
     char        *src_ptr,
                  path_buff       [BREAK_PATH_LEN*2],
@@ -221,15 +206,12 @@ get_breakpoint_data_pdb (state_t *state)
     win       = state->plugins[Brk]->win;
     src_ptr   = state->debugger->program_buffer;
     dest_buff = win->buff_data;
-
     dest_buff->buff_pos = 0;
     dest_buff->buff[0] = '\0';
     dest_buff->changed = true;
 
-    ret = send_command_mp (state, "break\n");
-    if (ret == FAIL) {
+    if (send_command_mp (state, "break\n") == FAIL)
         pfemr (ERR_DBG_CMD);
-    }
 
     if (strncmp (src_ptr, del_str, strlen (del_str)) == 0) {
         goto skip_Brk_parse_pdb;
@@ -293,10 +275,8 @@ get_breakpoint_data_pdb (state_t *state)
                 }
                 break_line_buff [i] = '\0';
 
-                ret = allocate_breakpoint (state, index_buff, file_ptr, break_line_buff);
-                if (ret == FAIL) {
+                if (allocate_breakpoint (state, index_buff, file_ptr, break_line_buff) == FAIL)
                     pfemr ("Failed to allocate breakpoint");
-                }
 
                 cp_wchar (dest_buff, '\n');
             }

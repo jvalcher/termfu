@@ -5,7 +5,7 @@
 #include <form.h>
 
 #include "../data.h"
-#include "../utilities.h"
+#include "../error.h"
 
 static char* trim_whitespaces (char *str);
 
@@ -20,7 +20,7 @@ get_form_input (char *prompt,
             total_rows, total_cols,
             scr_rows, scr_cols,
             y, x,
-            ch;
+            ch, ch_count;
     bool    running,
             form_closed;
     FORM   *form;
@@ -36,23 +36,22 @@ get_form_input (char *prompt,
 
     // save current layout
     doupdate ();
-    if ((curr_layout = dupwin (curscr)) == NULL) {
-        pfemr ("Failed to duplicate current screen");
-    }
+    if ((curr_layout = dupwin (curscr)) == NULL)
+        pfemr_errno ("Failed to duplicate current screen");
 
-    // fields
+    // configure fields
     cols = 64;
     label_rows = 2;
     input_rows = 2;
     field[0] = new_field (label_rows, cols, 0, 0, 0, 0);
     field[1] = new_field (input_rows, cols, 2, 0, 8, 0);    // 8 extra rows
     field[2] = NULL;
-    set_field_opts   (field[0], O_VISIBLE | O_PUBLIC | O_AUTOSKIP);
-    set_field_opts   (field[1], O_VISIBLE | O_PUBLIC | O_EDIT | O_ACTIVE );
-    set_field_back   (field[1], COLOR_PAIR(FORM_INPUT_FIELD));
+    set_field_opts (field[0], O_VISIBLE | O_PUBLIC | O_AUTOSKIP);
+    set_field_opts (field[1], O_VISIBLE | O_PUBLIC | O_EDIT | O_ACTIVE );
+    set_field_back (field[1], COLOR_PAIR(FORM_INPUT_FIELD));
     set_field_buffer (field[0], 0, prompt);
 
-    // form position
+    // calculate form position
     total_rows = label_rows + input_rows + 4;
     total_cols = cols + 4;
     getmaxyx (stdscr, scr_rows, scr_cols);
@@ -60,33 +59,36 @@ get_form_input (char *prompt,
     y = (scr_rows > total_rows) ? ((scr_rows - total_rows) / 2) : 1;
     x = (scr_cols > total_cols) ? ((scr_cols - total_cols) / 2) : 1;
 
-    // form window
-    form     = new_form (field);
-    scale_form   (form, &rows, &cols);
+    // create form window
+    form = new_form (field);
+    scale_form (form, &rows, &cols);
     win_body = newwin (rows + 4, cols+4, y, x);
-    box          (win_body, 0, 0);
+    box (win_body, 0, 0);
     set_form_win (form, win_body);
     set_form_sub (form, derwin (win_body, rows, cols, 2, 2));
 
-    // bottom border command strings
+    // add bottom border command strings
     wattron (form_win (form), COLOR_PAIR(FORM_BUTTON));
     mvwprintw (form_win (form), 0, cols - strlen(esc) - 2, "%s", esc);
     cols = (cols - strlen (enter)) / 2;
     mvwprintw (form_win (form), rows + 3, cols, "%s", enter);
     wattroff (form_win (form), COLOR_PAIR(FORM_BUTTON));
 
-    keypad       (form_win (form), TRUE);
+    // render form
+    keypad (form_win (form), TRUE);
     post_form (form);
     wrefresh  (form_win (form));
 
+    // get input
     running = true;
     form_closed = false;
+    ch_count = 0;
     while (running) {
 
         ch = wgetch (form_win (form));
 
         switch (ch) {
-            case '\n':              // enter, sync buffer(s), quit
+            case '\n':              // enter (sync buffer(s) and quit)
                 form_driver (form, REQ_VALIDATION);
                 running = false;
                 break;
@@ -133,17 +135,18 @@ get_form_input (char *prompt,
                 break;
         }
 
+        if (++ch_count >= INPUT_BUFF_LEN - 1)
+            pfemr ("Form input exceeded buffer size");
+
         wrefresh (form_win (form));
     }
 
-    if (form_closed) {
-
-        // no input
+    // cancelled, no input
+    if (form_closed)
         buffer [0] = '\0';
 
-    } else {
-        
-        // copy field buffer to input buffer
+    // copy field buffer to input buffer
+    else {    
         memcpy (buffer, trim_whitespaces (field_buffer (field[1], 0)), INPUT_BUFF_LEN - 1);
         buffer [INPUT_BUFF_LEN - 1] = '\0';
     }
@@ -158,9 +161,9 @@ get_form_input (char *prompt,
     // restore previous layout
     touchwin (curr_layout);
     wnoutrefresh (curr_layout);
-    doupdate ();
+    doupdate();
     curs_set (0);
-    noecho ();
+    noecho();
 
     return A_OK;
 }
@@ -173,20 +176,17 @@ trim_whitespaces (char *str)
     char *end;
 
     // trim leading space
-    while(isspace(*str)) {
+    while(isspace(*str))
         str++;
-    }
 
     // if all spaces, return
-    if(*str == '\0') {
+    if(*str == '\0')
         return str;
-    }
 
     // trim trailing space
     end = str + strlen(str) - 1;
-    while(end > str && isspace(*end)) {
+    while(end > str && isspace(*end))
         --end;
-    }
     *(end+1) = '\0';
 
     return str;

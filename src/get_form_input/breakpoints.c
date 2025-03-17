@@ -2,6 +2,7 @@
 #include "_get_form_input.h"
 #include "../data.h"
 #include "../utilities.h"
+#include "../error.h"
 #include "../update_window_data/_update_window_data.h"
 #include "../plugins.h"
 
@@ -14,16 +15,13 @@
 int
 insert_breakpoint (state_t *state)
 {
-    int   ret;
     char *cmd_base_gdb = "-break-insert ",
          *cmd_base_pdb = "break ",
          *cmd_base = NULL,
          *cmd;
 
-    ret = get_form_input ("Insert breakpoint: ", state->input_buffer);
-    if (ret == FAIL) {
+    if (get_form_input ("Insert breakpoint: ", state->input_buffer) == FAIL)
         pfemr (ERR_POPUP_IN);
-    }
 
     if (strlen (state->input_buffer) > 0) {
 
@@ -37,16 +35,12 @@ insert_breakpoint (state_t *state)
         }
 
         cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
-        ret = send_command_mp (state, cmd);
-        if (ret == FAIL) {
+        if (send_command_mp (state, cmd) == FAIL)
             pfemr (ERR_DBG_CMD);
-        }
         free (cmd);
 
-        ret = update_windows (2, Brk, Src);
-        if (ret == FAIL) {
+        if (update_windows (2, Brk, Src)  == FAIL)
             pfemr (ERR_UPDATE_WIN);
-        }
     }
 
     return A_OK;
@@ -57,16 +51,13 @@ insert_breakpoint (state_t *state)
 int
 delete_breakpoint (state_t *state)
 {
-    int   ret;
     char *cmd_base_gdb = "-break-delete ",
          *cmd_base_pdb = "clear ",
          *cmd_base = NULL,
          *cmd;
 
-    ret = get_form_input ("Delete breakpoint: ", state->input_buffer);
-    if (ret == FAIL) {
+    if (get_form_input ("Delete breakpoint: ", state->input_buffer) == FAIL)
         pfemr (ERR_POPUP_IN);
-    }
 
     switch (state->debugger->index) {
         case DEBUGGER_GDB:
@@ -78,16 +69,12 @@ delete_breakpoint (state_t *state)
     }
 
     cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
-    ret = send_command_mp (state, cmd);
-    if (ret == FAIL) {
+    if (send_command_mp (state, cmd) == FAIL)
         pfemr (ERR_DBG_CMD);
-    }
     free (cmd);
 
-    ret = update_windows (2, Brk, Src);
-    if (ret == FAIL) {
+    if (update_windows (2, Brk, Src) == FAIL)
         pfemr (ERR_UPDATE_WIN);
-    }
 
     return A_OK;
 }
@@ -98,7 +85,6 @@ int
 clear_all_breakpoints (state_t *state)
 {
     breakpoint_t *curr_break;
-    int   ret;
     char *cmd_base_gdb = "-break-delete ",
          *cmd_base_pdb = "clear ",
          *cmd_base = NULL,
@@ -118,10 +104,8 @@ clear_all_breakpoints (state_t *state)
         do {
             
             cmd = concatenate_strings (3, cmd_base, curr_break->index, "\n");    
-            ret = send_command_mp (state, cmd);
-            if (ret == FAIL) {
+            if (send_command_mp (state, cmd) == FAIL )
                 pfemr (ERR_DBG_CMD);
-            }
             free (cmd);
 
             curr_break = curr_break->next;  
@@ -129,10 +113,8 @@ clear_all_breakpoints (state_t *state)
     }
     state->breakpoints = NULL;
 
-    ret = update_windows (2, Brk, Src);
-    if (ret == FAIL) {
+    if (update_windows (2, Brk, Src) == FAIL)
         pfemr (ERR_UPDATE_WIN);
-    }
 
     return A_OK;
 }
