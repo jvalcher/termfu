@@ -234,7 +234,7 @@ TTpppddd
 - The `logd()` function in `src/utilities.h` allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
 - It is recommended to create a shortcut for refreshing your terminal screen, as `ncurses` will make a mess of it when not shut down properly.
 
-### Debugging termfu_dev with termfu
+### Debugging `termfu_dev` with `termfu`
 - Run `$ make debug` to start the termfu debugger. This requires `termfu` to be in your path.
 - Open a separate terminal for the debugged process.
 - Run `$ tty` and copy the terminal file name's path, e.g. `/dev/pts/1`.
