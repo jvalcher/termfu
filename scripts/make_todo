@@ -17,6 +17,7 @@ grep -rn \
     -e "XXX: " \
     -e "FIX: " \
     -e "BUG: " \
+    -e "TEST: " \
 \
     $CWD 2>/dev/null --color=auto | \
 \
@@ -28,7 +29,8 @@ grep -rn \
     -e "s/HACK/\x1b[0;34m&\x1b[0m/g" \
     -e "s/XXX/\x1b[0;35m&\x1b[0m/g" \
     -e "s/FIX/\x1b[0;31m&\x1b[0m/g" \
-    -e "s/BUG/\x1b[0;91m&\x1b[0m/g" | \
+    -e "s/BUG/\x1b[0;91m&\x1b[0m/g" \
+    -e "s/TEST/\x1b[0;91m&\x1b[0m/g" | \
 \
     awk -F: '{ printf "%-45s %-s\n", $1 ":" $2 ":", substr($0, index($0, "//")) }'
 

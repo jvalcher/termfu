@@ -9,6 +9,7 @@
 #include "parse_config_file.h"
 #include "render_layout.h"
 
+#define MAX_STRS  50
 
 
 /*
@@ -21,9 +22,18 @@ void logd (const char *formatted_string, ...);
 
 
 /*
-    Clean up before exiting program
+    Clean up before exiting program because of:
+    ---------
+    - Causes:
+
+        USER      - User exiting the program
+        ERROR     - Error condition
 */
-void clean_up (void);
+enum {
+    PROG_EXIT,
+    PROG_ERROR
+};
+void clean_up (int cause);
 
 
 
@@ -39,10 +49,12 @@ int free_nc_window_data (state_t *state);
     -------
     - Returns pointer to allocated string or NULL on error
     - Must free string after use
+    - Max of 50 strings
+    - Usage:
+        str = concatenate_strings (str1, str2, str3);
 */
 char *concatenate_strings_impl (int num_strings, ...);
-    //
-#define concatenate_strings(...)   concatenate_strings_impl(123, __VA_ARGS__, NULL)
+#define concatenate_strings(...)   concatenate_strings_impl(MAX_STRS, __VA_ARGS__, NULL)
 
 
 
@@ -59,20 +71,26 @@ int insert_output_end_marker (state_t *state);
 
 
 /*
-    Send debugger command only
+    Send debugger command string(s)
     -------
-    - Must end with '\n'
+    - Final command string must end with '\n'
+    - Usage:
+        send_command (state, str1, str2, str3);
 */
-int send_command (state_t *state, char *command);
+int send_command_impl (state_t *state, int max_strs, ...);
+#define send_command(state,...)   send_command_impl(state, MAX_STRS, __VA_ARGS__, NULL)
 
 
 
 /*
-    Send debugger command string with start, end markers; parse output
+    Send debugger command string(s) plus end marker and parse output
     -------
-    - Must end with '\n'
+    - Final command string must end with '\n'
+    - Usage:
+        send_command_mp (state, str1, str2, str3);
 */
-int send_command_mp (state_t *state, char *command);
+int send_command_mp_impl (state_t *state, int max_strs, ...);
+#define send_command_mp(state,...)   send_command_mp_impl(state, MAX_STRS, __VA_ARGS__, NULL)
 
 
 
@@ -163,104 +181,6 @@ int copy_to_clipboard (char *str);
     - Buffer must be freed
 */
 char* create_buff_from_file (char *path);
-
-
-
-/*
-  Print formatted error messages
-  ----------
-  - For error propagation that will ultimately exit the program
-    - Runs clean_up()
-
-    Message, return FAIL
-  
-        pfemr ("Unknown character \"%c\"", ch);
-    
-        ERROR: src_file.c : func() : 10
-               Unknown character "c"
-
-    Message, exit program
-
-        pfeme ("Unknown character \"%c\"", ch);
-  
-    Message
-
-        pfem ("Failed to allocate buffer");
-        return NULL;
-  
-    Multiple messages, return FAIL
-  
-        pfem ("Unknown character \"%c\"", ch);
-        pem  ("Check README.md for more details");
-        pem  ("Check the website for video demos");
-        pemr ("Returning FAIL...");
-    
-        ERROR: src_file.c : func() : 10
-               Unknown character "c"
-               Check README.md for more details
-               See a physician if your symptoms persist
-               Returning FAIL...
-
-    Multiple messages then exit program
-        
-        ...
-        peme ("Exiting...");
-
-    errno message, return FAIL
-
-        if ((buff = malloc (4096)) == NULL) {
-            pfemr ("malloc error: %s", strerror (errno));
-        }
-*/
-
-// Print formatted error message
-#define pfem(...) do { \
-    clean_up();\
-\
-    fprintf (stderr, "\n\
-\033[1;31m%s\033[1;0m \
-\033[1;32m%s\033[1;0m() : \
-\033[1;36m%s\033[1;0m : \
-\033[1;33m%d\033[1;0m\n\
-       ", \
-    "ERROR:", __func__, __FILE__, __LINE__);\
-\
-    fprintf (stderr, __VA_ARGS__);\
-    fprintf (stderr, "\n"); \
-} while (0)
-
-// Print formatted error message, return
-#define pfemr(...) ({ \
-    pfem(__VA_ARGS__);\
-    return FAIL;\
-})
-
-// Print formatted error message, exit
-#define pfeme(...) do { \
-    pfem(__VA_ARGS__); \
-    fprintf (stderr, "\n");\
-    exit (EXIT_FAILURE); \
-} while (0)
-
-// Print error message
-#define pem(...) do { \
-    fprintf (stderr, "       "); \
-    fprintf (stderr, __VA_ARGS__); \
-    fprintf (stderr, "\n"); \
-} while (0)
-
-// Print error message, return
-#define pemr(...) ({\
-    pem(__VA_ARGS__);\
-    return FAIL;\
-})
-
-// Print error message, exit
-#define peme(...) do { \
-    pem(__VA_ARGS__);\
-    fprintf (stderr, "\n");\
-    exit (EXIT_FAILURE);\
-} while (0)
 
 
 

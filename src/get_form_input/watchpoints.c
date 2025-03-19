@@ -1,35 +1,30 @@
 #include <string.h>
 #include <stdlib.h>
-#include <errno.h>
 
 #include "watchpoints.h"
 #include "_get_form_input.h"
 #include "../data.h"
 #include "../update_window_data/_update_window_data.h"
 #include "../plugins.h"
-#include "../utilities.h"
+#include "../error.h"
 
 
 
 int
 insert_watchpoint (state_t *state)
 {
-    int index,
-        ret;
+    int index;
     watchpoint_t *watch = NULL;
 
-    ret = get_form_input ("Create watchpoint (variable): ", state->input_buffer);
-    if (ret == FAIL) {
+    if (get_form_input ("Create watchpoint (variable): ", state->input_buffer) == FAIL)
         pfemr (ERR_POPUP_IN);
-    }
 
     if (strlen (state->input_buffer) > 0) {
 
         // first watchpoint
         if (state->watchpoints == NULL) {
             if ((state->watchpoints = (watchpoint_t*) malloc (sizeof (watchpoint_t))) == NULL) {
-                pfem ("malloc error: %s", strerror (errno));
-                pemr ("Failed to allocate watchpoint_t (var: \"%s\")", state->input_buffer);
+                pfemr_errno ("Failed to allocate watchpoint_t (var: \"%s\")", state->input_buffer);
             }
             watch = state->watchpoints;
             watch->index = 1;
@@ -48,8 +43,7 @@ insert_watchpoint (state_t *state)
                 index = watch->index;
             }
             if ((watch->next = (watchpoint_t*) malloc (sizeof (watchpoint_t))) == NULL) {
-                pfem ("malloc error: %s", strerror (errno));
-                pemr ("Failed to allocate watchpoint_t (var: \"%s\")", state->input_buffer);
+                pfemr_errno ("Failed to allocate watchpoint_t (var: \"%s\")", state->input_buffer);
             }
             watch = watch->next;
             watch->index = index + 1;
@@ -59,10 +53,8 @@ insert_watchpoint (state_t *state)
             watch->next = NULL;
         }
 
-        ret = update_window (Wat);
-        if (ret == FAIL) {
+        if (update_window (Wat) == FAIL)
             pfemr ("Failed to update watchpoint window");
-        }
     }
 
     return A_OK;
@@ -73,17 +65,14 @@ insert_watchpoint (state_t *state)
 int
 delete_watchpoint (state_t *state)
 {
-    int ret;
     watchpoint_t *prev_watch,
                  *watch;
 
     watch = state->watchpoints;
     prev_watch = watch;
 
-    ret = get_form_input ("Delete watchpoint (index): ", state->input_buffer);
-    if (ret == FAIL) {
+    if (get_form_input ("Delete watchpoint (index): ", state->input_buffer) == FAIL)
         pfemr (ERR_POPUP_IN);
-    }
 
     while (watch != NULL) {
 
@@ -101,10 +90,8 @@ delete_watchpoint (state_t *state)
         watch = watch->next; 
     }
 
-    ret = update_window (Wat);
-    if (ret == FAIL) {
+    if (update_window (Wat) == FAIL)
         pfemr (ERR_UPDATE_WIN);
-    }
 
     return A_OK;
 }
@@ -114,7 +101,6 @@ delete_watchpoint (state_t *state)
 int
 clear_all_watchpoints (state_t *state)
 {
-    int ret;
     watchpoint_t *tmp_watch,
                  *watch;
 
@@ -126,10 +112,8 @@ clear_all_watchpoints (state_t *state)
     }
     state->watchpoints = NULL;
 
-    ret = update_window (Wat);
-    if (ret == FAIL) {
+    if (update_window (Wat) == FAIL)
         pfemr (ERR_UPDATE_WIN);
-    }
 
     return A_OK;
 }

@@ -5,6 +5,7 @@
 #include "_no_buff_data.h"
 #include "../data.h"
 #include "../utilities.h"
+#include "../error.h"
 #include "../plugins.h"
 
 #define OFFSET_COLS 4
@@ -17,23 +18,16 @@ static int get_assembly_data_pdb (state_t *state);
 int
 get_assembly_data (state_t *state)
 {
-    int ret;
-
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            ret = get_assembly_data_gdb (state);
-            if (ret == FAIL) {
+            if (get_assembly_data_gdb (state) == FAIL)
                 pfemr ("Failed to get assembly data (GDB)");
-            }
             break;
         case (DEBUGGER_PDB):
-            ret = get_assembly_data_pdb (state);
-            if (ret == FAIL) {
+            if (get_assembly_data_pdb (state) == FAIL)
                 pfemr ("Failed to get assembly data (PDB)");
-            }
             break;
     }
-
     return A_OK;
 }
 
@@ -41,12 +35,10 @@ get_assembly_data (state_t *state)
 static int
 get_assembly_data_gdb (state_t *state)
 {
-    int          ret;
     window_t    *win;
     char        *src_ptr,
                 *dest_ptr,
                 *data_ptr,
-                *cmd,
                 *func;
     buff_data_t *dest_data;
 
@@ -56,13 +48,8 @@ get_assembly_data_gdb (state_t *state)
     dest_data = win->buff_data;
 
     func = (state->debugger->curr_func[0] == '\0') ? "main" : state->debugger->curr_func;
-    cmd = concatenate_strings ("disassemble ", func, "\n");
-    ret = send_command_mp (state, cmd);
-    if (ret == FAIL) {
+    if (send_command_mp (state, "disassemble ", func, "\n") == FAIL)
         pfemr (ERR_DBG_CMD);
-    }
-
-    free (cmd);
 
     if (strstr (data_ptr, "error") == NULL) {
 

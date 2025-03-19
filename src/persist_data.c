@@ -1,12 +1,11 @@
 #include <string.h>
 #include <ctype.h>
-#include <errno.h>
-
 #include "persist_data.h"
 #include "data.h"
 #include "update_window_data/_update_window_data.h"
 #include "plugins.h"
 #include "utilities.h"
+#include "error.h"
 
 static watchpoint_t *create_watchpoint (state_t *state);
 
@@ -27,14 +26,12 @@ int
 get_persisted_data (state_t *state)
 {
     FILE         *fp;
-    int           ch, i,
-                  ret;
+    int           ch, i;
     watchpoint_t *watch;
     char  break_buff [BREAK_PATH_LEN],
          *cmd_base_gdb = "-break-insert ",
          *cmd_base_pdb = "break ",
-         *cmd_base = NULL,
-         *cmd;
+         *cmd_base = NULL;
 
     switch (state->debugger->index) {
         case DEBUGGER_GDB:
@@ -63,9 +60,8 @@ get_persisted_data (state_t *state)
                 if (ch == 'w') {
                     while ((ch = fgetc (fp)) != '>' && ch != EOF) {
 
-                        if ((watch = create_watchpoint (state)) == NULL) {
+                        if ((watch = create_watchpoint (state)) == NULL)
                             pfemr ("Failed to create watchpoint");
-                        }
 
                         // variable
                         i = 0;
@@ -92,14 +88,8 @@ get_persisted_data (state_t *state)
                             break_buff [i] = '\0';
 
                             // insert breakpoint
-                            cmd = concatenate_strings (cmd_base, break_buff, "\n");    
-
-                            ret = send_command_mp (state, cmd);
-                            if (ret == FAIL) {
+                            if (send_command_mp (state, cmd_base, break_buff, "\n") == FAIL)
                                 pfemr (ERR_DBG_CMD);
-                            }
-
-                            free (cmd);
                         }
                     }
                 }
@@ -110,10 +100,8 @@ get_persisted_data (state_t *state)
         fclose (fp);
     }
 
-    ret = update_windows (4, Wat, Brk, Src, Asm);
-    if (ret == FAIL) {
+    if (update_windows (Wat, Brk, Src, Asm) == FAIL)
         pfemr (ERR_UPDATE_WINS);
-    }
 
     return A_OK;
 }
@@ -129,15 +117,11 @@ persist_data (state_t *state)
 
     // open file
     if (state->data_path[0] != '\0') {
-        if ((fp = fopen (state->data_path, "w")) == NULL) {
-            pfem ("fopen: %s", strerror (errno));
-            pemr ("Failed to open data persistence file \"%s\"\n", state->data_path);
-        }
+        if ((fp = fopen (state->data_path, "w")) == NULL)
+            pfemr_errno ("Failed to open data persistence file \"%s\"\n", state->data_path);
     } else {
-        if ((fp = fopen (PERSIST_FILE, "w")) == NULL) {
-            pfem ("fopen: %s", strerror (errno));
-            pemr ("Failed to open default data persistence file \"%s\"\n", PERSIST_FILE);
-        }
+        if ((fp = fopen (PERSIST_FILE, "w")) == NULL)
+            pfemr_errno ("Failed to open default data persistence file \"%s\"\n", PERSIST_FILE);
     }
 
     // watchpoints
@@ -179,11 +163,8 @@ create_watchpoint (state_t *state)
 
     // first watchpoint
     if (state->watchpoints == NULL) {
-        if ((state->watchpoints = (watchpoint_t*) malloc (sizeof (watchpoint_t))) == NULL) {
-            pfem ("malloc error: %s", strerror (errno));
-            pem  ("Failed to allocate state->watchpoints (first)");
-            return NULL;
-        }
+        if ((state->watchpoints = (watchpoint_t*) malloc (sizeof (watchpoint_t))) == NULL)
+            pfemn_errno  ("Failed to allocate state->watchpoints (first)");
         watch = state->watchpoints;
         watch->var[0] = '\0';
         watch->index = 1;
@@ -198,11 +179,8 @@ create_watchpoint (state_t *state)
             watch = watch->next; 
             index = watch->index;
         }
-        if ((watch->next = (watchpoint_t*) malloc (sizeof (watchpoint_t))) == NULL) {
-            pfem ("malloc error: %s", strerror (errno));
-            pem  ("Failed to allocate state->watchpoints");
-            return NULL;
-        }
+        if ((watch->next = (watchpoint_t*) malloc (sizeof (watchpoint_t))) == NULL)
+            pfemn_errno  ("Failed to allocate state->watchpoints");
         watch = watch->next;
         watch->index = index + 1;
         watch->value[0] = '\0';

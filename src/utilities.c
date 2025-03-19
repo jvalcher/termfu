@@ -5,8 +5,10 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "utilities.h"
+#include "error.h"
 #include "plugins.h"
 #include "data.h"
 #include "parse_debugger_output.h"
@@ -22,10 +24,8 @@ void
 logd (const char *formatted_string, ...)
 {
     if (debug_out_ptr == NULL) {
-        if ((debug_out_ptr = fopen (DEBUG_OUT_FILE, "w")) == NULL) {
-            pfem ("fopen error: %s", strerror (errno));
-            peme ("Failed to open debug out file \"%s\"", DEBUG_OUT_FILE);
-        }
+        if ((debug_out_ptr = fopen (DEBUG_OUT_FILE, "w")) == NULL)
+            pfeme_errno ("Failed to open debug out file \"%s\"", DEBUG_OUT_FILE);
     }
 
     va_list args;
@@ -37,60 +37,24 @@ logd (const char *formatted_string, ...)
 
 
 int
-copy_to_clipboard (char *str)
-{
-    int ret;
-    char *cmd_str;
-
-    cmd_str = concatenate_strings ("printf \"", str, "\" | xclip -selection clipboard");
-    if (cmd_str == NULL) {
-        pfemr ("Failed to create string \"%s\"", str);
-    }
-
-    ret = system (cmd_str);
-    if (ret == -1) {
-        pfem ("system() error: \"%s\"", strerror (errno));
-        pemr ("Failed to send system command \"%s\"", cmd_str);
-    }
-
-    free (cmd_str);
-    return A_OK;
-}
-
-
-
-int
 free_nc_window_data (state_t *state)
 {
-    int ret;
-
     for (int i = 0; i < state->num_plugins; i++) {
 
         if (state->plugins[i]->has_window) {
 
-            if (state->plugins[i]->win->TWIN != NULL) {
-                ret = delwin (state->plugins[i]->win->TWIN);
-                if (ret == ERR) {
-                    pfemr ("Unable to delete TWIN (index: %d, code: %s)", 
-                                i, get_plugin_code (i));
-                }
-            }
+            if (state->plugins[i]->win->TWIN != NULL)
+                if (delwin (state->plugins[i]->win->TWIN) == FAIL)
+                    pfemr ("Unable to delete TWIN (index: %d, code: %s)", i, get_plugin_code (i));
 
-            if (state->plugins[i]->win->DWIN != NULL) {
-                ret = delwin (state->plugins[i]->win->DWIN);
-                if (ret == ERR) {
-                    pfemr ("Unable to delete DWIN (index: %d, code: %s)", 
-                                i, get_plugin_code (i));
-                }
-            }
+            if (state->plugins[i]->win->DWIN != NULL)
+                if (delwin (state->plugins[i]->win->DWIN) == FAIL)
+                    pfemr ("Unable to delete DWIN (index: %d, code: %s)", i, get_plugin_code (i));
 
-            if (state->plugins[i]->win->WIN != NULL) {
-                ret = delwin (state->plugins[i]->win->WIN);
-                if (ret == ERR) {
-                    pfemr ("Unable to delete WIN (index: %d, code: %s)", 
-                                i, get_plugin_code (i));
-                }
-            }
+            if (state->plugins[i]->win->WIN != NULL)
+                if (delwin (state->plugins[i]->win->WIN) == FAIL)
+                    pfemr ("Unable to delete WIN (index: %d, code: %s)", i, get_plugin_code (i));
+
             refresh ();
         }
     }
@@ -100,105 +64,74 @@ free_nc_window_data (state_t *state)
 
 
 void
-clean_up (void)
+clean_up (int cause)
 {
-    int ret;
-    bool error_triggered = false;
-
     if (program_cleaned_up == false) {
-
         program_cleaned_up = true;
 
         // exit ncurses
+        if (state_ptr != NULL) {
 
             // header subwindow
-        if (state_ptr->header != NULL) {
-            ret = delwin (state_ptr->header);
-            if (ret == ERR) {
-                pfem ("Failed to delete ncurses header subwindow");
-                error_triggered = true;
-            }
-        }
+            if (state_ptr->header != NULL)
+                if (delwin (state_ptr->header) == ERR)
+                    pfem ("Failed to delete ncurses header subwindow");
+
             // data windows
-        ret = free_nc_window_data (state_ptr);
-        if (ret == FAIL) {
-            if (error_triggered) {
-                pem (ERR_NC_FREE);
-            } else {
+            if (free_nc_window_data (state_ptr) == FAIL)
                 pfem (ERR_NC_FREE);
-                error_triggered = true;
-            }
-        }
 
-            // exit
-        curs_set (1);
-        endwin ();
+            curs_set (1);
+            endwin ();
 
-        // persist breakpoint, watchpoint data
-        ret = persist_data (state_ptr);
-        if (ret == FAIL) {
-            if (error_triggered) {
-                pem (ERR_PERSIST);
-            } else {
+            // persist breakpoint, watchpoint data
+            if (persist_data (state_ptr) == FAIL)
                 pfem (ERR_PERSIST);
-                error_triggered = true;
-            }
         }
 
         // close DEBUG_OUT_FILE
-        if (debug_out_ptr != NULL) {
-            if ((ret = fclose (debug_out_ptr)) != 0) {
-                if (error_triggered) {
-                    pem ("fclose error: \"%s\"", strerror (errno));
-                    pem (ERR_DBG_FCLOSE);
-                } else {
-                    pfem ("fclose error: \"%s\"", strerror (errno));
-                    pem (ERR_DBG_FCLOSE);
-                }
-            }
-        }
+        if (debug_out_ptr != NULL)
+            if (fclose (debug_out_ptr) != 0)
+                pfem_errno (ERR_DBG_FCLOSE);
+
+        // print error header
+        if (cause == PROG_ERROR)
+            fprintf (stderr,  RED "ERROR" CYAN " :: " R "termfu exited\n");
     }
 }
 
 
 
 char*
-concatenate_strings_impl (int ignore, ...)
+concatenate_strings_impl (int max_strs, ...)
 {
-    int      str_len;
+    int      str_len,
+             str_count;
     char    *sub_str,
             *str;
     va_list strs;
     
     // calculate total string length
-    va_start (strs, ignore);
     str_len = 0;
+    str_count = 0;
+    va_start (strs, max_strs);
     for (str = va_arg(strs, char*);
          str != NULL;
          str = va_arg(strs, char*))
     {
         str_len += strlen (str);
+        if (++str_count >= max_strs)
+            pfemn ("Max strings exceeded");
     }
     va_end (strs);
 
     // allocate
-    if ((str = (char*) malloc (str_len + 1)) == NULL) {
-        pfem ("malloc error: %s", strerror (errno));
-        pem  ("Failed to allocate space for strings:");
-        va_start (strs, ignore);
-        for (sub_str = va_arg(strs, char*);
-             sub_str != NULL;
-             sub_str = va_arg(strs, char*))
-        {
-            pem ("\"%s\"", sub_str);
-        }
-        va_end (strs);
-        return NULL;
-    }
+    if ((str = (char*) malloc (str_len + 1)) == NULL)
+        pfemn_errno  ("Failed to allocate space for string (length: %d)", str_len);
     str [0] = '\0';
 
     // create string
-    va_start (strs, ignore);
+    va_start (strs, max_strs);
     for (sub_str = va_arg(strs, char*);
          sub_str != NULL;
          sub_str = va_arg(strs, char*))
@@ -218,65 +151,67 @@ concatenate_strings_impl (int ignore, ...)
 int
 insert_output_end_marker (state_t *state)
 {
-    int ret;
-
     switch (state->debugger->index) {
-        case (DEBUGGER_GDB):
-            ret = send_command (state,"echo >END\n");
-            if (ret == FAIL) {
-                pfemr (ERR_DBG_CMD);
-            }
-            break;
-        case (DEBUGGER_PDB):
-            ret = send_command (state, "p \">END\"\n");
-            if (ret == FAIL) {
-                pfemr (ERR_DBG_CMD);
-            }
-            break;
+    case (DEBUGGER_GDB):
+        if (send_command (state,"echo >END\n") == FAIL)
+            pfemr (ERR_DBG_CMD);
+        break;
+    case (DEBUGGER_PDB):
+        if (send_command (state, "p \">END\"\n") == FAIL)
+            pfemr (ERR_DBG_CMD);
+        break;
     }
-
     return A_OK;
 }
 
 
 
 int
-send_command (state_t *state,
-              char    *command)
+send_command_impl (state_t *state,
+              int max_strs, ...)
 {
-    int ret;
-
-    ret = write (state->debugger->stdin_pipe, command, strlen (command));
-    if (ret == -1) {
-        pfem ("write error: %s", strerror (errno));
-        pemr ("Command: \"%s\"", command);
+    int str_count = 0;
+    char *str;
+    va_list strs;
+    va_start (strs, max_strs);
+    for (str = va_arg(strs, char*);
+         str != NULL;
+         str = va_arg(strs, char*))
+    {
+        if (write (state->debugger->stdin_pipe, str, strlen (str)) == -1)
+            pfemr_errno ("Command write error for \"%s\"", str);
+        if (++str_count >= max_strs)
+            pfemr ("Max strings exceeded");
     }
-
+    va_end (strs);
     return A_OK;
 }
 
 
 
 int
-send_command_mp (state_t *state,
-                 char *command)
+send_command_mp_impl (state_t *state,
+                      int max_strs, ...)
 {
-    int ret;
-
-    ret = send_command (state, command);
-    if (ret == FAIL) {
-        pfemr ("Failed to send command");
+    int str_count = 0;
+    char *str;
+    va_list strs;
+    va_start (strs, max_strs);
+    for (str = va_arg(strs, char*);
+         str != NULL;
+         str = va_arg(strs, char*))
+    {
+        if (write (state->debugger->stdin_pipe, str, strlen (str)) == -1)
+            pfemr_errno ("Command write error for \"%s\"", str);
+        if (++str_count >= max_strs)
+            pfemr ("Max strings exceeded");
     }
 
-    ret = insert_output_end_marker (state);
-    if (ret == FAIL) {
+    if (insert_output_end_marker (state) == FAIL)
         pfemr (ERR_OUT_MARK);
-    }
 
-    ret = parse_debugger_output (state);
-    if (ret == FAIL) {
+    if (parse_debugger_output (state) == FAIL)
         pfemr (ERR_DBG_PARSE);
-    }
 
     return A_OK;
 }
@@ -482,20 +417,17 @@ cp_wchar (buff_data_t *dest_buff_data,
             dest_buff_data->buff_len *= 2;
             ++dest_buff_data->times_doubled;
 
-            tmp = (char*) realloc (dest_buff_data->buff, sizeof (char) * dest_buff_data->buff_len);
-            if (tmp == NULL) {
-                pfem ("realloc error: %s", strerror (errno));
-                peme ("Failed to reallocate window buffer (code: %s, times doubled: %d, buff size: %d)",
-                            dest_buff_data->code, dest_buff_data->times_doubled, dest_buff_data->buff_len);
-            }
+            // realloc
+            if ((tmp = (char*) realloc (dest_buff_data->buff, sizeof (char) * dest_buff_data->buff_len)) == NULL)
+                pfeme_errno ("Failed to reallocate window buffer (code: %s, times doubled: %d, buff size: %d)",
+                             dest_buff_data->code, dest_buff_data->times_doubled, dest_buff_data->buff_len);
 
             dest_buff_data->buff = tmp;
         }
 
         // or loop back to buffer start
-        else {
+        else
             dest_buff_data->buff_pos = 0;
-        }
     }
 }
 
@@ -589,12 +521,8 @@ cp_dchar (debugger_t *debugger,
             *len     *= 2;
             *doubled += 1;
 
-            tmp = (char*) realloc (buff, sizeof (char) * *len);
-            if (tmp == NULL) {
-                pfem ("realloc error: %s", strerror (errno));
-                pem  ("Failed to reallocate \"%s\" buffer", title);
-                peme ("Buffer size: %d, position: %d, Times doubled: %d)", *len, *pos, *doubled);
-            }
+            if ((tmp = (char*) realloc (buff, sizeof (char) * *len)) == NULL)
+                pfeme_errno  ("Failed to reallocate \"%s\" buffer (size: %d, position: %d, times doubled: %d)", title, *len, *pos, *doubled);
 
             switch (buff_index) {
                 case PATH_BUF:
@@ -619,10 +547,27 @@ cp_dchar (debugger_t *debugger,
         }
 
         // or loop back to buffer start
-        else {
+        else
             *pos = 0;
-        }
     }
+}
+
+
+
+int
+copy_to_clipboard (char *str)
+{
+    char *cmd_str;
+
+    if ((cmd_str = concatenate_strings ("printf \"", str, "\" | xclip -selection clipboard")) == NULL)
+        pfemr ("Failed to create string \"%s\"", str);
+
+    if (system (cmd_str) == -1)
+        pfemr_errno ("system() error: \"%s\"", strerror (errno));
+
+    free (cmd_str);
+
+    return A_OK;
 }
 
 
@@ -636,27 +581,17 @@ create_buff_from_file (char *path)
     char *buff;
 
     // create buffer
-    if (stat (path, &st) != 0) {
-        pfem ("stat error: \"%s\"", strerror (errno));
-        pem  ("Failed to get status of file \"%s\"", path);
-        return NULL;
-    }
-    if ((buff = (char*) malloc (st.st_size + 1)) == NULL) {
-        pfem ("malloc error: \"%s\"", strerror (errno));
-        pem  ("Failed to allocate buffer for path \"%s\"", path);
-        return NULL;
-    }
+    if (stat (path, &st) != 0)
+        pfemn_errno  ("Failed to get status of file \"%s\"", path);
+    if ((buff = (char*) malloc (st.st_size + 1)) == NULL)
+        pfemn_errno  ("Failed to allocate buffer for path \"%s\"", path);
 
     // copy file contents
-    if ((fp = fopen (path, "r")) == NULL) {
-        pfem ("fopen error: \"%s\"", strerror (errno));
-        pem  ("Failed to open file \"%s\"", path);
-        return NULL;
-    }
+    if ((fp = fopen (path, "r")) == NULL)
+        pfemn_errno  ("Failed to open file \"%s\"", path);
     i = 0;
-    while ((ch = fgetc (fp)) != EOF && i < st.st_size) {
+    while ((ch = fgetc (fp)) != EOF && i < st.st_size)
         buff [i++] = ch;
-    }
     buff [i] = '\0';
     fclose (fp);
 

@@ -3,6 +3,7 @@
 #include "get_local_vars.h"
 #include "../data.h"
 #include "../utilities.h"
+#include "../error.h"
 #include "../plugins.h"
 
 
@@ -14,23 +15,16 @@ static int get_local_vars_pdb (state_t *state);
 int
 get_local_vars (state_t *state)
 {
-    int ret;
-
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            ret = get_local_vars_gdb (state);
-            if (ret == FAIL) {
+            if (get_local_vars_gdb (state) == FAIL)
                 pfemr ("Failed to get local variables (GDB)");
-            }
             break;
         case (DEBUGGER_PDB):
-            ret = get_local_vars_pdb (state);
-            if (ret == FAIL) {
+            if (get_local_vars_pdb (state) == FAIL)
                 pfemr ("Failed to get local variables (PDB)");
-            }
             break;
     }
-
     return A_OK;
 }
 
@@ -39,8 +33,7 @@ get_local_vars (state_t *state)
 static int
 get_local_vars_gdb (state_t *state)
 {
-    int          ret,
-                 index,
+    int          index,
                  tmp_index,
                  rem_index;
     window_t    *win;
@@ -55,10 +48,8 @@ get_local_vars_gdb (state_t *state)
     dest_data = win->buff_data;
     index     = 1;
 
-    ret = send_command_mp (state, "-stack-list-locals 1\n");
-    if (ret == FAIL) {
+    if (send_command_mp (state, "-stack-list-locals 1\n") == FAIL)
         pfemr (ERR_DBG_CMD);
-    }
 
     dest_data->buff_pos = 0;
     dest_data->buff[0] = '\0';
@@ -164,8 +155,7 @@ get_local_vars_pdb (state_t *state)
     int          open_arrs,
                  index,
                  tmp_index,
-                 rem_index,
-                 ret;
+                 rem_index;
     window_t    *win;
     char        *src_ptr;
     buff_data_t *dest_data;
@@ -177,10 +167,8 @@ get_local_vars_pdb (state_t *state)
     dest_data = win->buff_data;
     index     = 1;
 
-    ret = send_command_mp (state, "locals()\n");
-    if (ret == FAIL) {
+    if (send_command_mp (state, "locals()\n") == FAIL)
         pfemr (ERR_DBG_CMD);
-    }
 
     dest_data->buff_pos = 0;
     dest_data->buff[0] = '\0';

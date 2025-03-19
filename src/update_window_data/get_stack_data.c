@@ -1,5 +1,6 @@
 #include "../data.h"
 #include "../utilities.h"
+#include "../error.h"
 #include "../plugins.h"
 
 static int get_stack_data_gdb (state_t *state);
@@ -10,23 +11,16 @@ static int get_stack_data_pdb (state_t *state);
 int
 get_stack_data (state_t *state)
 {
-    int ret;
-
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            ret = get_stack_data_gdb (state);
-            if (ret == FAIL) {
+            if (get_stack_data_gdb (state) == FAIL)
                 pfemr ("Failed to get stack data (GDB)");
-            }
             break;
         case (DEBUGGER_PDB):
-            ret = get_stack_data_pdb (state);
-            if (ret == FAIL) {
+            if (get_stack_data_pdb (state) == FAIL)
                 pfemr ("Failed to get stack data (PDB)");
-            }
             break;
     }
-
     return A_OK;
 }
 
@@ -34,7 +28,6 @@ get_stack_data (state_t *state)
 static int
 get_stack_data_gdb (state_t *state)
 {
-    int       ret;
     window_t *win;
     char     *src_ptr,
              *tmp_ptr;
@@ -54,10 +47,8 @@ get_stack_data_gdb (state_t *state)
     dest_buff->buff[0] = '\0';
     dest_buff->changed = true;
 
-    ret = send_command_mp (state, "-stack-list-frames\n");
-    if (ret == FAIL) {
+    if (send_command_mp (state, "-stack-list-frames\n") == FAIL)
         pfemr (ERR_DBG_CMD);
-    }
 
     if (strstr (src_ptr, "error") == NULL) {
 
@@ -125,7 +116,6 @@ get_stack_data_gdb (state_t *state)
 static int
 get_stack_data_pdb (state_t *state)
 {
-    int       ret;
     window_t *win;
     char     *src_ptr;
     buff_data_t *dest_buff;
@@ -134,10 +124,8 @@ get_stack_data_pdb (state_t *state)
     src_ptr   = state->debugger->cli_buffer;
     dest_buff = win->buff_data;
 
-    ret = send_command_mp (state, "where\n");
-    if (ret == FAIL) {
+    if (send_command_mp (state, "where\n") == FAIL)
         pfemr (ERR_DBG_CMD);
-    }
 
     dest_buff->buff_pos = 0;
 

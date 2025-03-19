@@ -3,6 +3,7 @@
 #include "_no_buff_data.h"
 #include "../data.h"
 #include "../utilities.h"
+#include "../error.h"
 #include "../plugins.h"
 
 
@@ -14,23 +15,16 @@ static int get_register_data_pdb (state_t *state);
 int
 get_register_data (state_t *state)
 {
-    int ret;
-
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            ret = get_register_data_gdb (state);
-            if (ret == FAIL) {
+            if (get_register_data_gdb (state) == FAIL)
                 pfemr ("Failed to get register data (GDB)");
-            }
             break;
         case (DEBUGGER_PDB):
-            ret = get_register_data_pdb (state);
-            if (ret == FAIL) {
+            if (get_register_data_pdb (state) == FAIL)
                 pfemr ("Failed to get register data (PDB)");
-            }
             break;
     }
-
     return A_OK;
 }
 
@@ -38,7 +32,6 @@ get_register_data (state_t *state)
 static int
 get_register_data_gdb (state_t *state)
 {
-    int ret;
     window_t *win;
     char *src_ptr;
     buff_data_t *dest_buff;
@@ -47,10 +40,8 @@ get_register_data_gdb (state_t *state)
     src_ptr   = state->debugger->cli_buffer;
     dest_buff = win->buff_data;
 
-    ret = send_command_mp (state, "info registers\n");
-    if (ret == FAIL) {
+    if (send_command_mp (state, "info registers\n") == FAIL)
         pfemr (ERR_DBG_CMD);
-    }
 
     if (strstr (src_ptr, "error") == NULL) {
 

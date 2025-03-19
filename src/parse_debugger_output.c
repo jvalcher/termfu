@@ -1,16 +1,13 @@
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
-#include <errno.h>
-
 #include "parse_debugger_output.h"
 #include "data.h"
 #include "utilities.h"
+#include "error.h"
 
 void parse_debugger_output_gdb (debugger_t*);
 void parse_debugger_output_pdb (debugger_t*);
-
-// TODO: Add Java debugger via the JVM Tool Interface
 
 
 
@@ -41,10 +38,8 @@ parse_debugger_output (state_t *state)
         bytes_read = read (debugger->stdout_pipe, 
                            debugger->reader_buffer,
                            READER_BUF_LEN - 1);
-        if (bytes_read == -1) {
-            pfem ("read error: %s", strerror (errno));
-            pemr ("Failed to read debugger stdout");
-        }
+        if (bytes_read == -1)
+            pfemr_errno ("Failed to read debugger stdout");
         debugger->reader_buffer [bytes_read] = '\0';
 
         // parse output

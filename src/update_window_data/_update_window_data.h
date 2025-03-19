@@ -4,6 +4,7 @@
 
 #include "../data.h"
 
+#define NULL_PLUGIN  -5
 
 
 /*
@@ -23,9 +24,11 @@ int  update_window (int plugin_index);
 /*
     Update multiple windows' data
     ------
-    num_windows == number of plugin index arguments
+    Usage:
+        update_windows (Asm, Brk, Src);
 */
-int  update_windows (int num_windows, ...);
+int  update_windows_impl (int num_windows, ...);
+#define update_windows(...)  update_windows_impl (100, __VA_ARGS__, NULL_PLUGIN)
 
 
 

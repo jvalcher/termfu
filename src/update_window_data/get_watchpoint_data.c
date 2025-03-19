@@ -2,6 +2,7 @@
 
 #include "../data.h"
 #include "../utilities.h"
+#include "../error.h"
 #include "../plugins.h"
 
 static int get_watchpoint_data_gdb (state_t *state);
@@ -14,23 +15,16 @@ static int get_watchpoint_data_pdb (state_t *state);
 int
 get_watchpoint_data (state_t *state)
 {
-    int ret;
-
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            ret = get_watchpoint_data_gdb (state);
-            if (ret == FAIL) {
+            if (get_watchpoint_data_gdb (state) == FAIL)
                 pfemr ("Failed to get watchpoint data (GDB)");
-            }
             break;
         case (DEBUGGER_PDB):
-            ret = get_watchpoint_data_pdb (state);
-            if (ret == FAIL) {
+            if (get_watchpoint_data_pdb (state) == FAIL)
                 pfemr ("Failed to get watchpoint data (GDB)");
-            }
             break;
     }
-
     return A_OK;
 }
 
@@ -40,9 +34,8 @@ static int
 get_watchpoint_data_gdb (state_t *state)
 {
     int           i,
-                  last_char_offset,
-                  ret;
-    char         *cmd, *ptr,
+                  last_char_offset;
+    char         *ptr,
                  *src_ptr,
                  *data_ptr,
                  *watch_val,
@@ -72,12 +65,8 @@ get_watchpoint_data_gdb (state_t *state)
         while (watch != NULL) {
 
             // send watchpoint command
-            cmd = concatenate_strings ("print ", watch->var, "\n");    
-            ret = send_command_mp (state, cmd);
-            if (ret == FAIL) {
+            if (send_command_mp (state, "print ", watch->var, "\n") == FAIL)
                 pfemr (ERR_DBG_CMD);
-            }
-            free (cmd);
 
             src_ptr  = state->debugger->cli_buffer;
             data_ptr = state->debugger->data_buffer;
@@ -87,22 +76,18 @@ get_watchpoint_data_gdb (state_t *state)
 
             // index
             i = 0;
-            ret = snprintf (index_buff, INDEX_BUF_LEN - 1, "%d", watch->index);
-            if (ret < 0) {
+            if (snprintf (index_buff, INDEX_BUF_LEN - 1, "%d", watch->index) < 0)
                 pfemr ("Failed to convert index int to string");
-            }
-            while (index_buff [i] != '\0') {
+            while (index_buff [i] != '\0')
                 cp_wchar (dest_data, index_buff [i++]);
-            }
 
             cp_wchar (dest_data, ')');
             cp_wchar (dest_data, ' ');
 
             // variable
             i = 0;
-            while (watch->var[i] != '\0') {
+            while (watch->var[i] != '\0')
                 cp_wchar (dest_data, watch->var[i++]);
-            }
 
             cp_wchar (dest_data, ' ');
             cp_wchar (dest_data, '=');
@@ -175,9 +160,7 @@ get_watchpoint_data_gdb (state_t *state)
 static int
 get_watchpoint_data_pdb (state_t *state)
 {
-    int           ret;
-    char         *cmd,
-                 *var_ptr,
+    char         *var_ptr,
                  *cli_ptr,
                  *prog_ptr,
                   index_buff [24];
@@ -199,12 +182,8 @@ get_watchpoint_data_pdb (state_t *state)
 
         while (watch != NULL) {
 
-            cmd = concatenate_strings ("p ", watch->var, "\n");    
-            ret = send_command_mp (state, cmd);
-            if (ret == FAIL) {
+            if (send_command_mp (state, "p ", watch->var, "\n") == FAIL)
                 pfemr (ERR_DBG_CMD);
-            }
-            free (cmd);
 
             // index
             cp_wchar (dest_data, '(');

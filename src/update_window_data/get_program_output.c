@@ -3,6 +3,7 @@
 #include "../data.h"
 #include "../plugins.h"
 #include "../utilities.h"
+#include "../error.h"
 
 static int get_program_output_gdb (state_t *state);
 static int get_program_output_pdb (state_t *state);
@@ -12,23 +13,16 @@ static int get_program_output_pdb (state_t *state);
 int
 get_program_output (state_t *state)
 {
-    int ret;
-
     switch (state->debugger->index) {
         case (DEBUGGER_GDB):
-            ret = get_program_output_gdb (state);
-            if (ret == FAIL) {
+            if (get_program_output_gdb (state) == FAIL)
                 pfemr ("Failed to get program output (GDB)");
-            }
             break;
         case (DEBUGGER_PDB):
-            ret = get_program_output_pdb (state);
-            if (ret == FAIL) {
+            if (get_program_output_pdb (state) == FAIL)
                 pfemr ("Failed to get program output (PDB)");
-            }
             break;
     }
-
     return A_OK;
 }
 

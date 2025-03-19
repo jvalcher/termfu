@@ -426,12 +426,6 @@ typedef struct {
     int     async_pos;
     int     async_times_doubled;
 
-    pthread_t send_key_thread;
-    pthread_t get_key_thread;
-    pthread_t display_lines_thread;
-    pthread_t update_window_thread;
-    pthread_t parse_debug_out_thread;
-
 } debugger_t;
 
 
@@ -582,6 +576,12 @@ typedef struct {
     watchpoint_t  *watchpoints;
     breakpoint_t  *breakpoints;
     bool           new_run;
+
+    pthread_t      send_key_thread;
+    pthread_t      get_key_thread;
+    pthread_t      display_lines_thread;
+    pthread_t      update_window_thread;
+    pthread_t      parse_debug_out_thread;
 
 } state_t;
 
