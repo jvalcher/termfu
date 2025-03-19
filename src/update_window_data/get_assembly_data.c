@@ -39,7 +39,6 @@ get_assembly_data_gdb (state_t *state)
     char        *src_ptr,
                 *dest_ptr,
                 *data_ptr,
-                *cmd,
                 *func;
     buff_data_t *dest_data;
 
@@ -49,10 +48,8 @@ get_assembly_data_gdb (state_t *state)
     dest_data = win->buff_data;
 
     func = (state->debugger->curr_func[0] == '\0') ? "main" : state->debugger->curr_func;
-    cmd = concatenate_strings (3, "disassemble ", func, "\n");
-    if (send_command_mp (state, cmd) == FAIL)
+    if (send_command_mp (state, "disassemble ", func, "\n") == FAIL)
         pfemr (ERR_DBG_CMD);
-    free (cmd);
 
     if (strstr (data_ptr, "error") == NULL) {
 

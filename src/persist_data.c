@@ -31,8 +31,7 @@ get_persisted_data (state_t *state)
     char  break_buff [BREAK_PATH_LEN],
          *cmd_base_gdb = "-break-insert ",
          *cmd_base_pdb = "break ",
-         *cmd_base = NULL,
-         *cmd;
+         *cmd_base = NULL;
 
     switch (state->debugger->index) {
         case DEBUGGER_GDB:
@@ -89,12 +88,8 @@ get_persisted_data (state_t *state)
                             break_buff [i] = '\0';
 
                             // insert breakpoint
-                            cmd = concatenate_strings (3, cmd_base, break_buff, "\n");    
-
-                            if (send_command_mp (state, cmd) == FAIL)
+                            if (send_command_mp (state, cmd_base, break_buff, "\n") == FAIL)
                                 pfemr (ERR_DBG_CMD);
-
-                            free (cmd);
                         }
                     }
                 }
@@ -105,7 +100,7 @@ get_persisted_data (state_t *state)
         fclose (fp);
     }
 
-    if (update_windows (4, Wat, Brk, Src, Asm) == FAIL)
+    if (update_windows (Wat, Brk, Src, Asm) == FAIL)
         pfemr (ERR_UPDATE_WINS);
 
     return A_OK;

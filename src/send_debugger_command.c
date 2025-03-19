@@ -11,6 +11,11 @@
 #define DBG_CMD_STATE  " (debugger: \"%s\", plugin index: %d, code: \"%s\")", \
                        state->debugger->title, plugin_index, get_plugin_code (plugin_index)
 
+// TODO: Change back to switch statements
+// define macro function for "Failed to send <cmd> command"
+#define F(cmd)  pfemr ("Failed to send " #cmd " command"
+
+
 const char *gdb_cmds[] = {
     NULL,               // Asm
     NULL,               // AtP
@@ -117,7 +122,7 @@ send_debugger_command (int      plugin_index,
         state->plugins[Dbg]->win->buff_data->new_data = true;
         state->plugins[Prg]->win->buff_data->new_data = true;
 
-        if (update_windows (9, Dbg, Prg, Asm, Brk, LcV, Reg, Stk, Wat, Src) == FAIL)
+        if (update_windows (Dbg, Prg, Asm, Brk, LcV, Reg, Stk, Wat, Src) == FAIL)
             pfemr (ERR_UPDATE_WINS DBG_CMD_STATE);
     }
 

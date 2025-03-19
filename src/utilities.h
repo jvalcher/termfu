@@ -9,6 +9,7 @@
 #include "parse_config_file.h"
 #include "render_layout.h"
 
+#define MAX_STRS  50
 
 
 /*
@@ -48,8 +49,12 @@ int free_nc_window_data (state_t *state);
     -------
     - Returns pointer to allocated string or NULL on error
     - Must free string after use
+    - Max of 50 strings
+    - Usage:
+        str = concatenate_strings (str1, str2, str3);
 */
-char *concatenate_strings (int num_strings, ...);
+char *concatenate_strings_impl (int num_strings, ...);
+#define concatenate_strings(...)   concatenate_strings_impl(MAX_STRS, __VA_ARGS__, NULL)
 
 
 
@@ -66,20 +71,26 @@ int insert_output_end_marker (state_t *state);
 
 
 /*
-    Send debugger command only
+    Send debugger command string(s)
     -------
-    - Must end with '\n'
+    - Final command string must end with '\n'
+    - Usage:
+        send_command (state, str1, str2, str3);
 */
-int send_command (state_t *state, char *command);
+int send_command_impl (state_t *state, int max_strs, ...);
+#define send_command(state,...)   send_command_impl(state, MAX_STRS, __VA_ARGS__, NULL)
 
 
 
 /*
-    Send debugger command string with start, end markers; parse output
+    Send debugger command string(s) plus end marker and parse output
     -------
-    - Must end with '\n'
+    - Final command string must end with '\n'
+    - Usage:
+        send_command_mp (state, str1, str2, str3);
 */
-int send_command_mp (state_t *state, char *command);
+int send_command_mp_impl (state_t *state, int max_strs, ...);
+#define send_command_mp(state,...)   send_command_mp_impl(state, MAX_STRS, __VA_ARGS__, NULL)
 
 
 

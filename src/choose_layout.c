@@ -156,7 +156,8 @@ choose_layout:
             pfemr (ERR_REND_LAYOUT);
 
         state->debugger->src_path_changed = true;
-        if (update_windows (9, Dbg, Prg, Src, Asm, Brk, LcV, Reg, Stk, Wat) == FAIL)
+
+        if (update_windows (Dbg, Prg, Src, Asm, Brk, LcV, Reg, Stk, Wat) == FAIL)
             pfemr (ERR_UPDATE_WINS);
     }
 

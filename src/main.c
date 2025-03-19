@@ -24,6 +24,12 @@ bool in_select_window;
 pthread_mutex_t mutex;
 pthread_cond_t  cond_var;
 
+// TODO: Organize tests; implement test_all
+// FIX: Fix valgrind leaks
+// TODO: Add command history (persisted, limit)
+// FIX: Wait for debugger process to start before updating window data
+// TODO: Add obj/; organize dependencies
+
 
 
 int
@@ -45,28 +51,28 @@ main (int   argc,
     if (render_layout (FIRST_LAYOUT, &state) == FAIL)
         pfeme ("Failed to render layout");
 
+    if (pthread_create (&state.update_window_thread, NULL, &update_window_thread, (void*) &state) != 0)
+        pfeme ("Failed to start update window thread");
+
     if (start_debugger (&state) == FAIL)
         pfeme ("Failed to start debugger process");
 
     if (get_persisted_data (&state) == FAIL)
         pfeme ("Failed to get persisted data");
 
-    if (pthread_create (&state.debugger->update_window_thread, NULL, update_window_thread, (void*) &state) != 0)
-        pfeme ("Failed to start update window thread");
-
     while (debugger.running) {
 
         if (pipe (key_pipe) == -1)
             pfeme ("Failed to create main pipe");
 
-        if (pthread_create(&state.debugger->get_key_thread, NULL, get_key, (void*) &state) != 0)
+        if (pthread_create (&state.get_key_thread, NULL, &get_key, (void*) &state) != 0)
             pfeme ("Failed to create get key thread");
 
-        if (pthread_create(&state.debugger->send_key_thread, NULL, send_key, (void*) &state) != 0)
+        if (pthread_create (&state.send_key_thread, NULL, &send_key, (void*) &state) != 0)
             pfeme ("Failed to create run plugin thread");
 
-        pthread_join (state.debugger->get_key_thread, NULL);
-        pthread_join (state.debugger->send_key_thread, NULL);
+        pthread_join (state.get_key_thread, NULL);
+        pthread_join (state.send_key_thread, NULL);
 
         if (state.restart_prog) {
             state.restart_prog = false;
@@ -244,7 +250,7 @@ get_key (void *state_arg)
                                       key == ESC))
         {
             state->restart_prog = true;
-            pthread_cancel (state->debugger->send_key_thread);
+            pthread_cancel (state->send_key_thread);
             pthread_exit (&ret_val);
         }
 
@@ -338,7 +344,7 @@ send_key (void *state_arg)
 
             // exit program
             if (state->debugger->running == false) {
-                pthread_cancel (state->debugger->get_key_thread);
+                pthread_cancel (state->get_key_thread);
                 pthread_exit (&ret_val);
             }
         }

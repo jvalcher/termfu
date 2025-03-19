@@ -49,17 +49,16 @@ update_window (int plugin_index)
 // TODO: remove num_updates requirement with macro magic (see concatenate_strings())
 
 int
-update_windows (int num_updates, ...)
+update_windows_impl (int num_updates, ...)
 {
-    int      i,
-             plugin_index;
+    int      plugin_index;
     va_list  plugins;
 
     va_start (plugins, num_updates);
-    for (i = 0; i < num_updates; i++) {
-
-        plugin_index = va_arg (plugins, int);
-
+    for (plugin_index = va_arg (plugins, int);
+         plugin_index != NULL_PLUGIN;
+         plugin_index = va_arg (plugins, int))
+    {
         if (update_window (plugin_index) == FAIL)
             pfemr ("Update window loop failed");
     }

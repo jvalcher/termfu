@@ -8,7 +8,7 @@ no_buff_data (int      plugin_index,
               state_t *state)
 {
     buff_data_t *data = state->plugins[plugin_index]->win->buff_data;
-    char *msg = concatenate_strings (2, NO_DATA_MSG, state->debugger->title),
+    char *msg = concatenate_strings (NO_DATA_MSG, state->debugger->title),
          *ptr = msg;
 
     data->buff_pos = 0;

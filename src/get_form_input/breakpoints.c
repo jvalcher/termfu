@@ -17,8 +17,7 @@ insert_breakpoint (state_t *state)
 {
     char *cmd_base_gdb = "-break-insert ",
          *cmd_base_pdb = "break ",
-         *cmd_base = NULL,
-         *cmd;
+         *cmd_base = NULL;
 
     if (get_form_input ("Insert breakpoint: ", state->input_buffer) == FAIL)
         pfemr (ERR_POPUP_IN);
@@ -34,12 +33,10 @@ insert_breakpoint (state_t *state)
                 break;
         }
 
-        cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
-        if (send_command_mp (state, cmd) == FAIL)
+        if (send_command_mp (state, cmd_base, state->input_buffer, "\n") == FAIL)
             pfemr (ERR_DBG_CMD);
-        free (cmd);
 
-        if (update_windows (2, Brk, Src)  == FAIL)
+        if (update_windows (Brk, Src)  == FAIL)
             pfemr (ERR_UPDATE_WIN);
     }
 
@@ -53,8 +50,7 @@ delete_breakpoint (state_t *state)
 {
     char *cmd_base_gdb = "-break-delete ",
          *cmd_base_pdb = "clear ",
-         *cmd_base = NULL,
-         *cmd;
+         *cmd_base = NULL;
 
     if (get_form_input ("Delete breakpoint: ", state->input_buffer) == FAIL)
         pfemr (ERR_POPUP_IN);
@@ -68,12 +64,10 @@ delete_breakpoint (state_t *state)
             break;
     }
 
-    cmd = concatenate_strings (3, cmd_base, state->input_buffer, "\n");    
-    if (send_command_mp (state, cmd) == FAIL)
+    if (send_command_mp (state, cmd_base, state->input_buffer, "\n") == FAIL)
         pfemr (ERR_DBG_CMD);
-    free (cmd);
 
-    if (update_windows (2, Brk, Src) == FAIL)
+    if (update_windows (Brk, Src) == FAIL)
         pfemr (ERR_UPDATE_WIN);
 
     return A_OK;
@@ -87,8 +81,7 @@ clear_all_breakpoints (state_t *state)
     breakpoint_t *curr_break;
     char *cmd_base_gdb = "-break-delete ",
          *cmd_base_pdb = "clear ",
-         *cmd_base = NULL,
-         *cmd;
+         *cmd_base = NULL;
 
     switch (state->debugger->index) {
         case DEBUGGER_GDB:
@@ -103,17 +96,15 @@ clear_all_breakpoints (state_t *state)
         curr_break = state->breakpoints;
         do {
             
-            cmd = concatenate_strings (3, cmd_base, curr_break->index, "\n");    
-            if (send_command_mp (state, cmd) == FAIL )
+            if (send_command_mp (state, cmd_base, curr_break->index, "\n") == FAIL )
                 pfemr (ERR_DBG_CMD);
-            free (cmd);
 
             curr_break = curr_break->next;  
         } while (curr_break != NULL);
     }
     state->breakpoints = NULL;
 
-    if (update_windows (2, Brk, Src) == FAIL)
+    if (update_windows (Brk, Src) == FAIL)
         pfemr (ERR_UPDATE_WIN);
 
     return A_OK;

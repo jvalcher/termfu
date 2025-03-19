@@ -12,7 +12,7 @@ B_FILE_DEV     = termfu_dev
 
 # flags
 CC             = gcc
-FLAGS          = -Wall -Wextra
+FLAGS          = -Wall -Wextra -Werror -pedantic-errors
 PROD_FLAGS     = -O3
 DEV_FLAGS      = -g
 FORMAT_FLAGS   = $(DEV_FLAGS) -fdiagnostics-format=json

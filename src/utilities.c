@@ -2,9 +2,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <stdarg.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <stdarg.h>
+#include <stdio.h>
 
 #include "utilities.h"
 #include "error.h"
@@ -102,18 +103,25 @@ clean_up (int cause)
 
 
 char*
-concatenate_strings (int num_strs, ...)
+concatenate_strings_impl (int max_strs, ...)
 {
-    int      str_len;
+    int      str_len,
+             str_count;
     char    *sub_str,
             *str;
     va_list strs;
     
     // calculate total string length
-    va_start (strs, num_strs);
     str_len = 0;
-    for (int i = 0; i < num_strs; i++) {
-        str_len += strlen (va_arg (strs, char*));
+    str_count = 0;
+    va_start (strs, max_strs);
+    for (str = va_arg(strs, char*);
+         str != NULL;
+         str = va_arg(strs, char*))
+    {
+        str_len += strlen (str);
+        if (++str_count >= max_strs)
+            pfemn ("Max strings exceeded");
     }
     va_end (strs);
 
@@ -123,15 +131,18 @@ concatenate_strings (int num_strs, ...)
     str [0] = '\0';
 
     // create string
-    va_start (strs, num_strs);
-    for (int i = 0; i < num_strs; i++) {
-        sub_str = va_arg (strs, char*);
+    va_start (strs, max_strs);
+    for (sub_str = va_arg(strs, char*);
+         sub_str != NULL;
+         sub_str = va_arg(strs, char*))
+    {
         strncat (str, sub_str, str_len - strlen(str));
     }
     va_end (strs);
 
     return str;
 }
+
 
 
 /*
@@ -141,14 +152,14 @@ int
 insert_output_end_marker (state_t *state)
 {
     switch (state->debugger->index) {
-        case (DEBUGGER_GDB):
-            if (send_command (state,"echo >END\n") == FAIL)
-                pfemr (ERR_DBG_CMD);
-            break;
-        case (DEBUGGER_PDB):
-            if (send_command (state, "p \">END\"\n") == FAIL)
-                pfemr (ERR_DBG_CMD);
-            break;
+    case (DEBUGGER_GDB):
+        if (send_command (state,"echo >END\n") == FAIL)
+            pfemr (ERR_DBG_CMD);
+        break;
+    case (DEBUGGER_PDB):
+        if (send_command (state, "p \">END\"\n") == FAIL)
+            pfemr (ERR_DBG_CMD);
+        break;
     }
     return A_OK;
 }
@@ -156,22 +167,45 @@ insert_output_end_marker (state_t *state)
 // TODO: Incorporate concatenate_strings() into send_command() functions
 
 int
-send_command (state_t *state,
-              char    *command)
+send_command_impl (state_t *state,
+              int max_strs, ...)
 {
-    if (write (state->debugger->stdin_pipe, command, strlen (command)) == -1)
-        pfemr_errno ("Command write error for \"%s\"", command);
+    int str_count = 0;
+    char *str;
+    va_list strs;
+    va_start (strs, max_strs);
+    for (str = va_arg(strs, char*);
+         str != NULL;
+         str = va_arg(strs, char*))
+    {
+        if (write (state->debugger->stdin_pipe, str, strlen (str)) == -1)
+            pfemr_errno ("Command write error for \"%s\"", str);
+        if (++str_count >= max_strs)
+            pfemr ("Max strings exceeded");
+    }
+    va_end (strs);
     return A_OK;
 }
 
 
 
 int
-send_command_mp (state_t *state,
-                 char *command)
+send_command_mp_impl (state_t *state,
+                      int max_strs, ...)
 {
-    if (send_command (state, command) == FAIL)
-        pfemr ("Failed to send command");
+    int str_count = 0;
+    char *str;
+    va_list strs;
+    va_start (strs, max_strs);
+    for (str = va_arg(strs, char*);
+         str != NULL;
+         str = va_arg(strs, char*))
+    {
+        if (write (state->debugger->stdin_pipe, str, strlen (str)) == -1)
+            pfemr_errno ("Command write error for \"%s\"", str);
+        if (++str_count >= max_strs)
+            pfemr ("Max strings exceeded");
+    }
 
     if (insert_output_end_marker (state) == FAIL)
         pfemr (ERR_OUT_MARK);
@@ -525,7 +559,7 @@ copy_to_clipboard (char *str)
 {
     char *cmd_str;
 
-    if ((cmd_str = concatenate_strings (3, "printf \"", str, "\" | xclip -selection clipboard")) == NULL)
+    if ((cmd_str = concatenate_strings ("printf \"", str, "\" | xclip -selection clipboard")) == NULL)
         pfemr ("Failed to create string \"%s\"", str);
 
     if (system (cmd_str) == -1)

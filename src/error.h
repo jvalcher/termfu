@@ -47,13 +47,13 @@
     -------------
     - Calls clean_up() first
 */
-#define pfem_impl(...) ({                                                                \
+#define pfem_impl(...) do {                                                              \
     clean_up (PROG_ERROR);                                                               \
     fprintf (stderr,                                                                     \
         "  " CYAN "%s" R ":" YELLOW "%d" R "  --  " GREEN "%s" PURPLE "()" R "\n      ", \
         __FILE__, __LINE__, __func__);                                                   \
     fprintf (stderr, __VA_ARGS__);                                                       \
-})
+} while (0)
 
 
 
@@ -62,28 +62,28 @@
 */
 
 // Message only
-#define pfem(...) ({            \
+#define pfem(...) do {          \
     pfem_impl(__VA_ARGS__);     \
     fprintf (stderr, "\n");     \
-})                              \
+} while (0)                     \
 
 // Return FAIL
-#define pfemr(...) ({       \
+#define pfemr(...) do {     \
     pfem (__VA_ARGS__);     \
     return FAIL;            \
-})
+} while (0)
 
 // Return NULL
-#define pfemn(...) ({       \
+#define pfemn(...) do {     \
     pfem (__VA_ARGS__);     \
     return NULL;            \
-})
+} while (0)
 
 // Exit
-#define pfeme(...) ({       \
+#define pfeme(...) do {     \
     pfem (__VA_ARGS__);     \
     exit (EXIT_FAILURE);    \
-})
+} while (0)
 
 
 
@@ -92,28 +92,28 @@
 */
 
 // Message only
-#define pfem_errno(...) ({                                          \
+#define pfem_errno(...) do {                                        \
     pfem_impl (__VA_ARGS__);                                        \
-    fprintf (stderr, "  (" PURPLE "%s" R ")\n", strerror(errno));    \
-})
+    fprintf (stderr, "  (" PURPLE "%s" R ")\n", strerror(errno));   \
+} while (0)
 
 // Return FAIL
-#define pfemr_errno(...) ({     \
+#define pfemr_errno(...) do {   \
     pfem_errno (__VA_ARGS__);   \
     return FAIL;                \
-})
+} while (0)
 
 // Return NULL
-#define pfemn_errno(...) ({     \
+#define pfemn_errno(...) do {   \
     pfem_errno (__VA_ARGS__);   \
     return NULL;                \
-})
+} while (0)
 
 // Exit
-#define pfeme_errno(...) ({     \
+#define pfeme_errno(...) do {   \
     pfem_errno (__VA_ARGS__);   \
     exit (EXIT_FAILURE);        \
-})
+} while (0)
 
 
 

@@ -35,7 +35,7 @@ get_watchpoint_data_gdb (state_t *state)
 {
     int           i,
                   last_char_offset;
-    char         *cmd, *ptr,
+    char         *ptr,
                  *src_ptr,
                  *data_ptr,
                  *watch_val,
@@ -65,10 +65,8 @@ get_watchpoint_data_gdb (state_t *state)
         while (watch != NULL) {
 
             // send watchpoint command
-            cmd = concatenate_strings (3, "print ", watch->var, "\n");    
-            if (send_command_mp (state, cmd) == FAIL)
+            if (send_command_mp (state, "print ", watch->var, "\n") == FAIL)
                 pfemr (ERR_DBG_CMD);
-            free (cmd);
 
             src_ptr  = state->debugger->cli_buffer;
             data_ptr = state->debugger->data_buffer;
@@ -162,8 +160,7 @@ get_watchpoint_data_gdb (state_t *state)
 static int
 get_watchpoint_data_pdb (state_t *state)
 {
-    char         *cmd,
-                 *var_ptr,
+    char         *var_ptr,
                  *cli_ptr,
                  *prog_ptr,
                   index_buff [24];
@@ -185,10 +182,8 @@ get_watchpoint_data_pdb (state_t *state)
 
         while (watch != NULL) {
 
-            cmd = concatenate_strings (3, "p ", watch->var, "\n");    
-            if (send_command_mp (state, cmd) == FAIL)
+            if (send_command_mp (state, "p ", watch->var, "\n") == FAIL)
                 pfemr (ERR_DBG_CMD);
-            free (cmd);
 
             // index
             cp_wchar (dest_data, '(');
