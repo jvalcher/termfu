@@ -24,11 +24,14 @@ bool in_select_window;
 pthread_mutex_t mutex;
 pthread_cond_t  cond_var;
 
+// TODO: Add obj/; organize dependencies
 // TODO: Organize tests; implement test_all
+// TODO: Add function benchmarks
 // FIX: Fix valgrind leaks
 // TODO: Add command history (persisted, limit)
 // FIX: Wait for debugger process to start before updating window data
-// TODO: Add obj/; organize dependencies
+// OPTIMIZE: store dereferences in variables (?)
+// TODO: Add termfu tips back in (config copy, vim breakpoints, ...)
 
 
 
