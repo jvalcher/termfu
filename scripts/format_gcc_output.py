@@ -51,8 +51,8 @@ def print_error (node_type, msg, type_str, file_path, line_number, caret_cols):
     term_size = shutil.get_terminal_size()
     term_cols = term_size.columns
     max_err_dig = 2
-    code_indent = '        '
-    msg_indent  = '        '
+    code_indent = '     '
+    msg_indent  = '     '
     type_str = ''.join([c.upper() if i == 0 else c for i,c in enumerate(type_str)])
     err_buff = ''
     msg_num = -1
@@ -63,21 +63,15 @@ def print_error (node_type, msg, type_str, file_path, line_number, caret_cols):
         # <error type>: <file path>: <line number>
         if type_str == 'Error':
             TYPE_COLOR = ERR_COLOR
-            msg_num = err_num
-            err_num += 1
             err_buff = create_indent_string (len('Warning') - len('Error'))
-            err_buff = create_indent_string ((max_err_dig - len(str(msg_num))) + len(err_buff))
+            err_buff = create_indent_string (len(err_buff))
         elif type_str == 'Warning':
             TYPE_COLOR = WARN_COLOR
-            msg_num = warn_num
-            warn_num += 1
-            err_buff = create_indent_string (max_err_dig - len(str(msg_num)))
+            err_buff = create_indent_string ()
         else:
-            msg_num = '\b'
             err_buff = create_indent_string (len('Warning') - len(type_str))
-            err_buff = create_indent_string ((max_err_dig - len(msg_num)) + len(err_buff) + 2)
-            warn_num = ''
-        error = f"{err_buff}{TYPE_COLOR}{type_str} {str(msg_num)}{RESET}:  {FILE_PATH_COLOR}{file_path}{RESET} : {LINE_NUM_COLOR}{line_number}{RESET}"
+            err_buff = create_indent_string (len(err_buff) + 2)
+        error = f"{err_buff}{TYPE_COLOR}{type_str}{RESET}:  {FILE_PATH_COLOR}{file_path}{RESET} : {LINE_NUM_COLOR}{line_number}{RESET}"
 
         # message
         prompt = ">>>  "

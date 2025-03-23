@@ -1,0 +1,34 @@
+#!/usr/bin/python3
+
+import subprocess
+import pyperclip
+from colors import *
+import signal
+import sys
+import threading
+import termios
+import tty
+
+R=RESET
+
+# Ctrl-c exit
+def handle_sigint(signum, frame):
+    print("\b\bExiting...")
+    sys.exit(0)
+signal.signal(signal.SIGINT, handle_sigint)
+
+print()
+
+# Run `$ tty`
+result = subprocess.run(['tty'], capture_output=True, text=True, check=True)
+print(f'Terminal file:  {YELLOW}{result.stdout.strip()}{RESET}')
+
+# Create GDB tty command to connect to this terminal
+termfu_cmd = f'tty {result.stdout.strip()}'
+pyperclip.copy(termfu_cmd)
+print(f'Copied command to clipboard:  {CYAN}{termfu_cmd}{RESET}')
+
+# Run `$ sleep 999999` so that you can send keys to debugged process while in this terminal
+sleep_time = '999999'
+print(f'Run command in {CYAN}termfu{R} or {CYAN}GDB{R} to show output here...  (Ctrl+C to exit)')
+subprocess.run(['sleep', sleep_time])

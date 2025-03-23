@@ -221,26 +221,43 @@ TTpppddd
 <br>
 
 
+## Tips
+
+Create a `bash` script to copy a standard `.termfu` configuration file to the current directory when starting new projects.
+```bash
+#!/bin/bash
+
+cp $HOME/Dev/configs/.termfu .
+```
+<br>
+
+Add editor shortcuts to create `file.c:123` breakpoint strings and copy them into your clipboard to use in `termfu`.
+- Vim
+```vim
+function! CreateBreakpoint()
+    let l:filename   = expand('%:t')
+    let l:linenumber = line('.')
+    let l:breakpoint = l:filename . ':' . l:linenumber
+    let @+           = l:breakpoint
+    echo l:breakpoint
+endfunction
+nnoremap <leader>b :call CreateBreakpoint()<CR>
+```
+- Neovim
+```lua
+local function create_break ()
+    local filename = vim.fn.expand('%:t')
+    local linenumber = vim.fn.line('.')
+    local breakpoint = filename .. ':' .. linenumber
+    vim.fn.setreg('+', breakpoint)
+    print(breakpoint)
+end
+```
+
+
 ## Contributing
 
-### General Guidelines
-- Bug fixes, optimizations, new debugger implementations, and plugins are welcome.
-- Use existing code conventions.
-
-### Developer notes
-- Run `make help` to print all scripts.
-- Run `make todo` to print all source file tags, such as `TODO`, `FIX`, etc.
-- Run `make build` to compile all test programs.
-- The `logd()` function in `src/utilities.h` allows for `printf()`-style debugging when running `ncurses` by outputting to `debug.out`.
-- It is recommended to create a shortcut for refreshing your terminal screen, as `ncurses` will make a mess of it when not shut down properly.
-
-### Debugging `termfu_dev` with `termfu`
-- Run `$ make debug` to start the termfu debugger. This requires `termfu` to be in your path.
-- Open a separate terminal for the debugged process.
-- Run `$ tty` and copy the terminal file name's path, e.g. `/dev/pts/1`.
-- Run `$ sleep 99999`.
-- Back in the debugger, open the prompt and run `>>> tty /dev/pts/<x>`, substituting your debugged process's terminal file name.
-- Set your breakpoint and start debugging.
-- Adjust `configs/.termfu_debugger` and `configs/.termfu_debugged` as needed
+See `CONTRIBUTING.md`.
 
 <br><br>
+

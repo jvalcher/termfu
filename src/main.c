@@ -32,6 +32,7 @@ pthread_cond_t  cond_var;
 // FIX: Wait for debugger process to start before updating window data
 // OPTIMIZE: store dereferences in variables (?)
 // TODO: Add termfu tips back in (config copy, vim breakpoints, ...)
+// TODO: Add ">>> <cmd>" to Dbg output
 
 
 

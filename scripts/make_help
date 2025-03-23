@@ -9,10 +9,7 @@ R = RESET
 
 make_commands = f'''
 
-{M}make           {R}- Build production binary {S}./termfu{R}
-
-{M}make install   {R}- Copy production binary to {S}/usr/local/bin{R}
-               {R}- Run with {S}sudo{R}
+{M}make all        {R}- Build production binary {S}./termfu{R} 
 
 {M}make install    {R}- Copy production binary to {S}/usr/local/bin{R}
                 {R}- Run with {S}sudo{R}
@@ -20,6 +17,10 @@ make_commands = f'''
 {M}make dev        {R}- Build development binary
 
 {M}make devf       {R}- Build development binary (formatted errors)
+
+{M}make clean_dev  {R}- Remove development build object files and binary
+
+{M}make clean_prod {R}- Remove production build object files and binary
 
 {M}make plugins    {R}- Print plugin indexes and codes
 
@@ -31,7 +32,10 @@ make_commands = f'''
                 {R}- Adjust {S}configs/.termfu_run_dev{R} as needed
 
 {M}make debug      {R}- Start {S}termfu{R} to debug {S}termfu_dev{R}
-                {R}- See {T}Debugging termfu_dev with termfu{R} section in {S}README.md{R}
+                {R}- See {T}Debugging termfu_dev with termfu{R} section in {S}CONTRIBUTING.md{R}
+
+{M}make debugged   {R}- Prepare terminal for `termfu_dev` process's output and key input
+                {R}- See {T}Debugging termfu_dev with termfu{R} section in {S}CONTRIBUTING.md{R}
 
 {M}make debug_gdb  {R}- Debug {S}termfu_dev{R} with gdb tui
 
