@@ -26,8 +26,10 @@ run_plugin (int      plugin_index,
         case Con:
         case Fin:
         case Kil:
+        case Nxi:
         case Nxt:
         case Run:
+        case Sti:
         case Stp:
         case Qut:
             ret = send_debugger_command (plugin_index, state);
