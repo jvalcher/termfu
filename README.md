@@ -80,12 +80,10 @@ Con : c : (c)ontinue
 Fin : f : (f)inish
 Kil : k : (k)ill
 Lay : l : (l)ayouts
-Nxi : N : (N)ext instruction
 Nxt : n : (n)ext
 Prm : m : pro(m)pt
 Qut : q : (q)uit
 Run : r : (r)un
-Sti : S : (S)tep instruction
 Stp : s : (s)tep
 Unt : u : (u)ntil
 
@@ -105,7 +103,7 @@ Wat : w : (w)atch
 
 >h
 mlq
-rnsNScufk
+rnscufk
 
 >w
 bbbooooo
