@@ -81,10 +81,12 @@ Fin : f : (f)inish
 Kil : k : (k)ill
 Lay : l : (l)ayouts
 Nxt : n : (n)ext
+Nxi : N : (N)exti
 Prm : m : pro(m)pt
 Qut : q : (q)uit
 Run : r : (r)un
 Stp : s : (s)tep
+Sti : S : (S)tepI
 Unt : u : (u)ntil
 
 # windows
@@ -102,8 +104,8 @@ Wat : w : (w)atch
 [ layout : Main ]
 
 >h
-mlq
-rnscufk
+rkmlq
+nNsScuf
 
 >w
 bbbooooo
@@ -114,8 +116,8 @@ ttpppddd
 [ layout : Assembly / Registers ]
 
 >h
-mlq
-rnscufk
+rkmlq
+nNsScuf
 
 >w
 oag
