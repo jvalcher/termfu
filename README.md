@@ -224,6 +224,7 @@ TTpppddd
 ## Contributing
 
 ### General Guidelines
+- Send PRs to [release-0.2.1](https://github.com/jvalcher/termfu/tree/release-0.2.1).
 - Bug fixes, optimizations, new debugger implementations, and plugins are welcome.
 - Use existing code conventions.
 
