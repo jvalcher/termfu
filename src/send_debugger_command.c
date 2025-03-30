@@ -75,6 +75,19 @@ send_debugger_command (int      plugin_index,
             }
             break;
 
+        case Nxi:
+            switch (debugger_index) {
+                case (DEBUGGER_GDB):
+                    ret = send_command (state, "-exec-next-instruction\n");
+                    if (ret == FAIL) {
+                        goto dbg_cmd_err;
+                    }
+                    break;
+                case (DEBUGGER_PDB):
+                    goto dbg_cmd_err;
+            }
+            break;
+
         case Nxt:
             switch (debugger_index) {
                 case (DEBUGGER_GDB):
@@ -113,6 +126,19 @@ send_debugger_command (int      plugin_index,
                     }
                     state->debugger->src_path_changed = true;
                     break;
+            }
+            break;
+
+        case Sti:
+            switch (debugger_index) {
+                case (DEBUGGER_GDB):
+                    ret = send_command (state, "-exec-step-instruction\n");
+                    if (ret == FAIL) {
+                        goto dbg_cmd_err;
+                    }
+                    break;
+                case (DEBUGGER_PDB):
+                    goto dbg_cmd_err;
             }
             break;
 
@@ -210,8 +236,14 @@ dbg_cmd_err:
         case Nxt:
             pfem ("Failed to send next command");
             break;
+        case Nxi:
+            pfem ("Failed to send next instruction command");
+            break;
         case Run:
             pfem ("Failed to send run command");
+            break;
+        case Sti:
+            pfem ("Failed to send step instruction command");
             break;
         case Stp:
             pfem ("Failed to send step command");

@@ -175,10 +175,12 @@ __Header Commands__
 | Fin     | Finish                | :heavy_check_mark: | :heavy_check_mark: |
 | Kil     | Kill                  | :heavy_check_mark: | :heavy_check_mark: |
 | Lay     | Choose layout         | :heavy_check_mark: | :heavy_check_mark: |
+| Nxi     | Next instruction      | :heavy_check_mark: |                    |
 | Nxt     | Next                  | :heavy_check_mark: | :heavy_check_mark: |
 | Prm     | Debugger prompt       | :heavy_check_mark: | :heavy_check_mark: |
 | Qut     | Quit                  | :heavy_check_mark: | :heavy_check_mark: |
 | Run     | Run, reload program   | :heavy_check_mark: | :heavy_check_mark: |
+| Sti     | Step instruction      | :heavy_check_mark: |                    |
 | Stp     | Step                  | :heavy_check_mark: | :heavy_check_mark: |
 | Unt     | Until                 | :heavy_check_mark: | :heavy_check_mark: |
 <br>
