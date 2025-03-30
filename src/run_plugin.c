@@ -27,8 +27,10 @@ run_plugin (int      plugin_index,
     case Fin:
     case Kil:
     case Nxt:
+    case Nxi:
     case Run:
     case Stp:
+    case Sti:
     case Qut:
         if (send_debugger_command (plugin_index, state) == FAIL)
             pfemr ("Failed to send debugger command" RUN_PLUG_STATE);

@@ -58,7 +58,7 @@ termfu -c .termfu_01 -p .termfu_01_data
 
 ### Basics
 - Switch between layouts with your `(l)ayouts` key.
-- Scroll window data by selecting the window via its key binding and then using the arrow, page up, etc. keys. One can also use the `hjkl` keys.
+- Scroll window data by selecting the window via its key binding and then using the arrow, page up, etc. keys. You can also use the `hjkl` keys.
 <br><br>
 
 ## Configuration
@@ -70,7 +70,7 @@ termfu -c .termfu_01 -p .termfu_01_data
 
 [ command ]
 
-gdb --interpreter=mi test_programs/hello
+gdb --interpreter=mi a.out
 
 [ plugins ]
 
@@ -138,7 +138,7 @@ wdt
 ```
 [ command ]
 
-gdb --interpreter=mi misc/vars
+gdb --interpreter=mi a.out
 
 ````
 
@@ -175,10 +175,12 @@ __Header Commands__
 | Fin     | Finish                | :heavy_check_mark: | :heavy_check_mark: |
 | Kil     | Kill                  | :heavy_check_mark: | :heavy_check_mark: |
 | Lay     | Choose layout         | :heavy_check_mark: | :heavy_check_mark: |
+| Nxi     | Next instruction      | :heavy_check_mark: |                    |
 | Nxt     | Next                  | :heavy_check_mark: | :heavy_check_mark: |
 | Prm     | Debugger prompt       | :heavy_check_mark: | :heavy_check_mark: |
 | Qut     | Quit                  | :heavy_check_mark: | :heavy_check_mark: |
 | Run     | Run, reload program   | :heavy_check_mark: | :heavy_check_mark: |
+| Sti     | Step instruction      | :heavy_check_mark: |                    |
 | Stp     | Step                  | :heavy_check_mark: | :heavy_check_mark: |
 | Unt     | Until                 | :heavy_check_mark: | :heavy_check_mark: |
 <br>
@@ -216,7 +218,7 @@ vvvooooo
 TTpppddd
 ```
 
-- The order and row of each header (`>h`) key binding in the configuration determines the corresponding title's position in the layout.
+- The order and row of each header (`>h`) key binding in the configuration determines the corresponding title's position in the header window.
 - Window (`>w`) size ratios and positions are determinded via "key-binding ASCII art."
 <br>
 
