@@ -17,7 +17,7 @@ execute_until (state_t *state)
          *cmd_base_pdb = "until ",
          *cmd_base = NULL;
 
-    if (get_form_input ("Execute until (line, filename:line): ", state->input_buffer) == FAIL)
+    if (get_form_input ("Execute until line or filename:line: ", state->input_buffer) == FAIL)
         pfemr (ERR_POPUP_IN);
 
     if (strlen (state->input_buffer) > 0) {

@@ -7,17 +7,14 @@
 
 
 /*
-    Run initial parse of debugger command output
+    Clean debugger output and put data inside of a buffer
+    -----------
+    state->debugger->data_buffer
+                   ->cli_buffer
+                   ->program_buffer
+                   ->async_buffer
 */
 int parse_debugger_output (state_t *state);
-
-
-
-/*
-    Parse specific debugger output (for testing)
-*/
-void parse_debugger_output_gdb (debugger_t *debugger);
-void parse_debugger_output_pdb (debugger_t *debugger);
 
 
 

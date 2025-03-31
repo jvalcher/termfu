@@ -1,8 +1,8 @@
 
 [ command ]
 
-gdb --quiet --interpreter=mi test_programs/hello
-#python -m pdb test_programs/gcd.py
+gdb --quiet --interpreter=mi scripts/test_programs/hello
+#python -m pdb scripts/test_programs/gcd.py
 
 [ plugins ]
 

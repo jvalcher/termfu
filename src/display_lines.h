@@ -5,25 +5,19 @@
 #include "data.h"
 
 
-
 /*
-    Display buffer or file data in Ncurses window
+    Display buffer or file data in plugin's ncurses data subwindow
     ----------
-    - Variables: 
-        key: BEG_DATA, END_DATA, ROW_DATA,
-             KEY_UP, KEY_DOWN, KEY_PPAGE, KEY_NPAGE, KEY_HOME, KEY_END
-    - Returns:
-        - A_OK, FAIL
+    - <key>:
+        - Data positions:
+            BEG_DATA    - display from start
+            END_DATA    - display last lines
+            ROW_DATA    - center on row
+        - Keys: 
+            KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT,
+            KEY_PPAGE, KEY_NPAGE, KEY_HOME, KEY_END
 */
 int  display_lines (int key, int plugin_index, state_t *state);
-
-
-
-/*
-    Display buffer lines
-*/
-int display_scroll_buff_lines (int key, int plugin_index, state_t *state);
-
 
 
 #endif

@@ -7,60 +7,8 @@
 #include "pulse_header_title_color.h"
 #include "update_window_data/_update_window_data.h"
 
-
 #define DBG_CMD_STATE  " (debugger: \"%s\", plugin index: %d, code: \"%s\")", \
                        state->debugger->title, plugin_index, get_plugin_code (plugin_index)
-
-// TODO: Change back to switch statements
-// define macro function for "Failed to send <cmd> command"
-#define F(cmd)  pfemr ("Failed to send " #cmd " command"
-
-
-const char *gdb_cmds[] = {
-    NULL,               // Asm
-    NULL,               // AtP
-    NULL,               // Brk
-    "-exec-continue\n", // Con
-    NULL,               // Dbg
-    "-exec-finish\n",   // Fin
-    "kill\n",           // Kil
-    NULL,               // Lay
-    NULL,               // LcV
-    "-exec-next\n",     // Nxt
-    NULL,               // Prg
-    NULL,               // Prm
-    "-gdb-exit\n",      // Qut
-    NULL,               // Reg
-    "-exec-run\n",      // Run
-    NULL,               // Src
-    NULL,               // Stk
-    "step\n",           // Stp
-    NULL,               // Unt
-    NULL,               // Wat
-};
-
-const char *pdb_cmds[] = {
-    NULL,               // Asm
-    NULL,               // AtP
-    NULL,               // Brk
-    "continue\n",       // Con
-    NULL,               // Dbg
-    "return\n",         // Fin
-    "restart\n",        // Kil
-    NULL,               // Lay
-    NULL,               // LcV
-    "next\n",           // Nxt
-    NULL,               // Prg
-    NULL,               // Prm
-    "quit\n",           // Qut
-    NULL,               // Reg
-    "restart\n",        // Run
-    NULL,               // Src
-    NULL,               // Stk
-    "step\n",           // Stp
-    NULL,               // Unt
-    NULL,               // Wat
-};
 
 
 
@@ -77,6 +25,7 @@ send_debugger_command (int      plugin_index,
     switch (debugger_index) {
     case (DEBUGGER_GDB):
         switch (plugin_index) {
+        case Con: if (send_command (state, "-exec-continue\n") == FAIL) goto dbg_cmd_err; break;
         case Fin: if (send_command (state, "-exec-finish\n") == FAIL) goto dbg_cmd_err; break;
         case Kil: if (send_command (state, "kill\n") == FAIL) goto dbg_cmd_err; break;
         case Nxi: if (send_command (state, "-exec-next-instruction\n") == FAIL) goto dbg_cmd_err; break;
@@ -93,6 +42,7 @@ send_debugger_command (int      plugin_index,
         break;
     case (DEBUGGER_PDB):
         switch (plugin_index) {
+        case Con: if (send_command (state, "continue\n") == FAIL) goto dbg_cmd_err; break;
         case Fin: if (send_command (state, "return\n") == FAIL) goto dbg_cmd_err; break;
         case Kil: if (send_command (state, "restart\n") == FAIL) goto dbg_cmd_err; break;
         case Nxi: break;

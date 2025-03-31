@@ -24,7 +24,6 @@ bool in_select_window;
 pthread_mutex_t mutex;
 pthread_cond_t  cond_var;
 
-// TODO: Add obj/; organize dependencies
 // TODO: Organize tests; implement test_all
 // TODO: Add function benchmarks
 // FIX: Fix valgrind leaks

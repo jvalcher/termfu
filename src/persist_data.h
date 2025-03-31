@@ -6,14 +6,14 @@
 
 
 /*
-    Get watchpoints, breakpoints from PERSIST_FILE
+    Get watchpoints, breakpoints from PERSIST_FILE or -p <file>
 */
 int get_persisted_data (state_t *state);
 
 
 
 /*
-   Save current watchpoints, breakpoints to PERSIST_FILE
+   Save current watchpoints, breakpoints to PERSIST_FILE or -p <file>
 */
 int persist_data (state_t *state);
 

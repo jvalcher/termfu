@@ -9,6 +9,8 @@
 
 /*
     Update ncurses window data (thread)
+    ----------
+    - i.e. Handle window update jobs in queue
 */
 void *update_window_thread (void *statev);
 

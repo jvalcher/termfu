@@ -9,11 +9,21 @@
 
 
 #define PROGRAM_NAME          "termfu"
-#define CONFIG_FILE           ".termfu"             // default (see -c flag)
-#define PERSIST_FILE          ".termfu_data"        // default (see -p flag)
-#define CONFIG_COMMAND_LABEL  "command"             // CONFIG_FILE section header
-#define CONFIG_PLUGINS_LABEL  "plugins"             //   "
-#define CONFIG_LAYOUTS_LABEL  "layout"              //   "
+
+
+
+/***************************
+  Configuration, data files
+ ***************************/
+
+// Default paths if -c, -p flags not used
+#define CONFIG_FILE           "./.termfu"     
+#define PERSIST_FILE          "./.termfu_data"
+
+// Config file section labels
+#define CONFIG_COMMAND_LABEL  "command"
+#define CONFIG_PLUGINS_LABEL  "plugins"
+#define CONFIG_LAYOUTS_LABEL  "layout" 
 
 
 
@@ -21,9 +31,11 @@
   Debug
  *******/
 
+// Return values
 #define A_OK   0
 #define FAIL  -1
 
+// Error messages
 #define ERR_DBG_CMD     "Failed to send debugger command"
 #define ERR_DBG_FCLOSE  "Failed to close DEBUG_OUT_FILE"
 #define ERR_DBG_PARSE   "Failed to parse debugger output"
@@ -38,8 +50,8 @@
 #define ERR_UPDATE_WIN  "Failed to update window"
 #define ERR_UPDATE_WINS "Failed to update windows"
 
-#define DEBUG_OUT_FILE  "debug.out"           // logd() output file
-#define DEBUG_PID_FILE  "/tmp/termfu.pid"     // used by `make proc_<debugger>`
+// logd() output file
+#define DEBUG_OUT_FILE  "debug.out"           
 
 
 
@@ -113,16 +125,19 @@
 /*
     layout_t
     -------
+    - Information from [ layout : <name> ] section(s) of configuration file
+      used to render ncurses window layout
+
     state->layouts
 
-    label               - layout title, displayed at top of screen
-    hdr_key_str         - header layout string derived from CONFIG_FILE or -c file
-    win_key_str         - window layout string derived from CONFIG_FILE or -c file
-    num_hdr_key_rows    - number of lines of commands in header
-    win_matrix          - window key matrix, used to render window layout
-    row_ratio           - number of rows of keys in ASCII-art window layout
-    col_ratio           - number of cols of keys in ASCII-art window layout
-    next                - next layout_t in linked list
+    label             - layout title, displayed in state->header window
+    hdr_key_str       - header layout string
+    win_key_str       - window layout string
+    num_hdr_key_rows  - number of lines of command (t)itles in header window
+    win_matrix        - window key matrix, used to render window layout
+    row_ratio         - number of rows of keys in ASCII-art window layout
+    col_ratio         - number of cols of keys in ASCII-art window layout
+    next              - next layout_t in linked list
 */
 typedef struct layout {
 
@@ -139,25 +154,28 @@ typedef struct layout {
 
 
 
-/*********
+/*********************
   Ncurses window data
- *********/
+ *********************/
 
 #define CODE_LEN          3
 #define NO_DATA_MSG       "Not supported by "
 #define FILE_PATH_LEN     256
-#define ORIG_BUF_LEN      16384     // Double ORIG_BUF_LEN MAX_DOUBLE_TIMES before
-#define MAX_DOUBLE_TIMES  3         // it loops back around to start of buffer
-
+#define ORIG_BUF_LEN      16384     
+#define MAX_DOUBLE_TIMES  3        // Double ORIG_BUF_LEN MAX_DOUBLE_TIMES before
+                                   // looping back around to start of buffer
+ 
 /*
     scroll_buff_line_t
     --------
     - Ncurses WINDOW data buffer individual line data
 
-    state->plugins[i]->win->buff_data->head_line, curr_line, tail_line
+    state->plugins[i]->win->buff_data->head_line
+                                     ->curr_line
+                                     ->tail_line
 
-    prev    - previous node
-    next    - next node
+    prev    - previous scroll_buff_line_t
+    next    - next scroll_buff_line_t
 
     ptr     - pointer to start of line in buffer
     len     - number of characters in line
@@ -199,9 +217,9 @@ typedef struct sbl_t {
     max_chars         - number of characters in longest line, used for non-wrapped 
                         buffers (Asm, Src)
 
-    head_line         - head node of scroll_buff_line_t linked list
-    curr_line         - current node
-    tail_line         - last node
+    head_line         - head scroll_buff_line_t in linked list
+    curr_line         - current line
+    tail_line         - last line
 */
 typedef struct {
 
@@ -229,7 +247,7 @@ typedef struct {
 /*
     window_t
     ------
-    - Individual ncurses WINDOW data
+    - Individual ncurses WINDOW layout data
 
     state->plugins[i]->win
 
@@ -435,7 +453,6 @@ typedef struct {
  *********/
 
 #define PLUGIN_CODE_LEN  3      // Asm, Src, ...
-#define ESC              27
 
 #define BEG_DATA         0      // display from beginning of data buffer
 #define END_DATA         1      // display end of buffer data
@@ -538,22 +555,25 @@ typedef struct watchpoint {
     state->...
 
     num_plugins         - total number of plugins
-    plugin_key_index    - array that matches key bindings to respective plugin's index in plugins.h
+    plugin_key_index    - array that matches key bindings to respective plugin's enum 
+                          index in plugins.h
                           - plugin_key_index [key] = index
     config_path         - configuration file path set by CONFIG_FILE or -c flag
     data_path           - data persistence path set by PERSIST_FILE or -p flag
-    input_buffer        - popup window input buffer
+    input_buffer        - global popup window input buffer
 
     plugins             - pointer array for plugin_t structs
-
     layouts             - linked list of layout_t structs
     curr_layout         - current layout_t struct
-    header              - header Ncurses WINDOW
-
+    header              - header ncurses WINDOW
     debugger            - debugger_t struct
     command             - debugger command string array for execvp() in start_debugger()
     wathcpoints         - linked list of watchpoint_t structs
     breakpoints         - linked list of breakpoint_t structs
+
+    get_key_thread        - receive key commands
+    send_key_thread       - send key commands to run_plugin()
+    update_window_thread  - process window data update queue
 */
 typedef struct {
 
@@ -566,11 +586,9 @@ typedef struct {
     char           input_buffer  [INPUT_BUFF_LEN];
 
     plugin_t     **plugins;
-
     layout_t      *layouts;
     layout_t      *curr_layout;
     WINDOW        *header;
-
     debugger_t    *debugger;
     char         **command;
     watchpoint_t  *watchpoints;
@@ -579,9 +597,7 @@ typedef struct {
 
     pthread_t      send_key_thread;
     pthread_t      get_key_thread;
-    pthread_t      display_lines_thread;
     pthread_t      update_window_thread;
-    pthread_t      parse_debug_out_thread;
 
 } state_t;
 

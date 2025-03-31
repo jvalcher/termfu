@@ -15,6 +15,7 @@
                         key, plugin_index, get_plugin_code (plugin_index)
 
 static int create_scroll_buffer_llist (int plugin_index, state_t *state);
+int display_scroll_buff_lines (int key, int plugin_index, state_t *state);
 
 
 

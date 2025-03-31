@@ -6,7 +6,7 @@
 
 
 /*
-    Continue program execution until line, path:line
+    Continue program execution until line or file:line
 */
 int execute_until (state_t *state);
 

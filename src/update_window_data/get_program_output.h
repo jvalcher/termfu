@@ -6,7 +6,7 @@
 
 
 /*
-    Get debugged program CLI output
+    Get debugged program's CLI output
     -------
     state->plugins[Prg]->win->buff_data
 */

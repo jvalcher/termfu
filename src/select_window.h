@@ -7,7 +7,7 @@
 
 
 /*
-    Enter window loop for scrolling through data, running commands
+    Enter window loop for scrolling through data or running window-specific commands
 */
 int select_window (int plugin_index, state_t *state);
 

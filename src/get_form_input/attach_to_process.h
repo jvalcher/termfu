@@ -6,7 +6,7 @@
 
 
 /*
-    Attach to process ID
+    Attach to process by its ID
 */
 int attach_to_process (state_t *state);
 

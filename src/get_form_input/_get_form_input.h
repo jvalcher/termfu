@@ -8,7 +8,7 @@
 /*
    Get input from ncurses form
    ------
-   state->input_form
+   - Data stored in state->input_buffer
 */
 int get_form_input (char *prompt, char *buff);
 

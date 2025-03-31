@@ -20,22 +20,6 @@ bool     program_cleaned_up = false;
 
 
 
-void
-logd (const char *formatted_string, ...)
-{
-    if (debug_out_ptr == NULL) {
-        if ((debug_out_ptr = fopen (DEBUG_OUT_FILE, "w")) == NULL)
-            pfeme_errno ("Failed to open debug out file \"%s\"", DEBUG_OUT_FILE);
-    }
-
-    va_list args;
-    va_start (args, formatted_string);
-    vfprintf (debug_out_ptr, formatted_string, args);
-    va_end (args);
-}
-
-
-
 int
 free_nc_window_data (state_t *state)
 {
@@ -164,7 +148,7 @@ insert_output_end_marker (state_t *state)
     return A_OK;
 }
 
-// TODO: Incorporate concatenate_strings() into send_command() functions
+
 
 int
 send_command_impl (state_t *state,
@@ -599,4 +583,114 @@ create_buff_from_file (char *path)
 }
 
 
+
+#ifdef DEV
+
+#define MAX_CMD_STRS 40
+
+void
+logd (const char *formatted_string, ...)
+{
+    if (debug_out_ptr == NULL) {
+        if ((debug_out_ptr = fopen (DEBUG_OUT_FILE, "w")) == NULL)
+            pfeme_errno ("Failed to open debug out file \"%s\"", DEBUG_OUT_FILE);
+    }
+
+    va_list args;
+    va_start (args, formatted_string);
+    vfprintf (debug_out_ptr, formatted_string, args);
+    va_end (args);
+}
+
+
+
+void log_state_t (state_t *state)
+{
+    int i;
+    layout_t *curr_layout = NULL;
+    breakpoint_t *curr_break = NULL;
+    watchpoint_t *curr_watch = NULL;
+
+    logd ("state->\n"
+          "\tnum_plugins: %d\n"
+          "\tplugin_key_index:\n", state->num_plugins);
+    if (state->plugin_key_index != NULL)
+        for (i = 0; i < state->num_plugins; i++)
+                logd ("\t\t[%d] %d\n", i, state->plugin_key_index[i]);
+    else
+        logd ("\t\tNULL\n");
+
+    logd ("\tconfig_path: \"%s\"\n"
+            "\tdata_path: \"%s\"\n"
+            "\tinput_buff: \n\n\"%s\"\n\n",
+            state->config_path,
+            state->data_path,
+            state->input_buffer);
+
+    logd ("\tplugins:\n");
+    if (state->plugins != NULL)
+        for (i = 0; i < state->num_plugins; i++)
+            logd ("\t\t[%d] \"%s\"\n", i, state->plugins[i]->code);
+    else
+        logd ("NULL\n");
+
+    logd ("\tlayouts:\n");
+    curr_layout = state->layouts;
+    if (state->layouts != NULL)
+        do {
+            logd ("\t\t\"%s\"\n", curr_layout->label);
+            curr_layout = curr_layout->next;
+        } while (curr_layout != NULL);
+    else
+        printf ("\t\tNULL\n");
+
+    logd ("\tcurr_layout: \"%s\"\n"
+          "\theader: %p\n"
+          "\n"
+          "\tdebugger: %p\n",
+          state->curr_layout,
+          state->header,
+          state->debugger);
+
+    logd ("\tcommand:\n");
+    if (state->command != NULL) {
+        logd ("\t\t");
+        for (i = 0; i < MAX_CMD_STRS; i++) {
+            if (state->command[i] != NULL) {
+                logd ("%s ", state->command[i]);
+            } else {
+                break;
+            }
+        }
+        logd ("\n");
+    } else {
+        logd ("\t\tNULL\n");
+    }
+
+    logd ("\twatchpoints:\n");
+    curr_watch = state->watchpoints;
+    if (curr_watch != NULL) {
+        while (curr_watch != NULL) {
+            logd ("\t\t\"%s\" \"%s\"\n", curr_watch->var, curr_watch->value);
+            curr_watch = curr_watch->next;
+        }
+    } else {
+        logd ("\t\tNULL\n");
+    }
+
+    logd ("\tbreakpoints:\n");
+    curr_break = state->breakpoints;
+    if (curr_break != NULL) {
+        while (curr_break != NULL) {
+            logd ("\t\t\"%s\" \"%s\"\n", curr_break->path, curr_break->line);
+            curr_break = curr_break->next;
+        }
+    } else {
+        logd ("\t\tNULL\n");
+    }
+
+    logd ("\tnew_run: %d\n", state->new_run);
+}
+
+#endif
 

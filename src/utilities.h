@@ -13,15 +13,6 @@
 
 
 /*
-    Log formatted string to DEBUG_OUT_FILE for debugging inside ncurses
-    --------
-    - Same usage as printf()
-*/
-void logd (const char *formatted_string, ...);
-
-
-
-/*
     Clean up before exiting program because of:
     ---------
     - Causes:
@@ -184,5 +175,23 @@ char* create_buff_from_file (char *path);
 
 
 
+#ifdef DEV
+
+/*
+    Log formatted string to DEBUG_OUT_FILE
+    --------
+    - Same usage as printf()
+*/
+void logd (const char *formatted_string, ...);
+
+
+
+/*
+    Log current state_t values to DEBUG_OUT_FILE
+*/
+void log_state_t (state_t *state);
+
 #endif
 
+
+#endif

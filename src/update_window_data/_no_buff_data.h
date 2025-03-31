@@ -6,7 +6,7 @@
 
 
 /*
-    Display message in windows not supported by current debugger
+    Display message in window indicating it is not supported by debugger
 */
 void no_buff_data (int plugin_index, state_t *state);
 

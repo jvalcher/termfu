@@ -6,7 +6,7 @@
 
 
 /*
-    Choose different layout from CONFIG_FILE
+    Open popup menu to choose different layout from configuration file
 */
 int choose_layout (state_t *state);
 

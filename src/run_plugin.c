@@ -5,7 +5,7 @@
 #include "select_window.h"
 #include "choose_layout.h"
 #include "error.h"
-#include "get_form_input/run_custom_command.h"
+#include "get_form_input/run_prompt_command.h"
 #include "get_form_input/execute_until.h"
 #include "get_form_input/attach_to_process.h"
 
@@ -57,7 +57,7 @@ run_plugin (int      plugin_index,
             pfemr ("Failed to choose layout" RUN_PLUG_STATE);
         break;
     case Prm: 
-        if (run_custom_command (state) == FAIL)
+        if (run_prompt_command (state) == FAIL)
             pfemr ("Failed to run custom prompt command" RUN_PLUG_STATE);
         break;
     case Unt: 

@@ -13,7 +13,7 @@
 
         Asm == 0
         plugin_codes[Asm] == "Asm"
-        state->plugins[Asm]->...
+        state->plugins[Asm]->code == "Asm"
 
     - MUST be sorted alphabetically for get_plugin_code_index()  [A-Z,a-z]
 */
@@ -56,8 +56,6 @@ void set_num_plugins  (state_t*);
 
 /*
     Allocate state->plugins[i]
-    ---------
-    Returns A_OK or FAIL
 */
 int allocate_plugins (state_t *state);
 
@@ -65,8 +63,6 @@ int allocate_plugins (state_t *state);
 
 /*
     Return plugin code's index
-    ------
-    Returns index or FAIL
 */
 int get_plugin_code_index (char *code, state_t *state);
 
@@ -75,19 +71,20 @@ int get_plugin_code_index (char *code, state_t *state);
 /*
     Get plugin code from index
     -------
-    Returns pointer to code or NULL
+    Returns pointer to code in plugin_codes[] or NULL
 */
 char* get_plugin_code (int plugin_index);
 
 
 
 /*
-    Allocate plugin window_t structs et al.
+    Create window_t structs et al; configure
     ----------
-
     state->plugins[i]->win
-
-    - Returns A_OK, FAIL
+    state->plugins[i]->win->topbar_title
+    state->plugins[i]->win->buff_data
+    state->plugins[i]->win->buff_data->buff
+    ...
 */
 int allocate_plugin_windows (state_t*);
 

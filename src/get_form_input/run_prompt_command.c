@@ -1,4 +1,4 @@
-#include "run_custom_command.h"
+#include "run_prompt_command.h"
 #include "_get_form_input.h"
 #include "../data.h"
 #include "../utilities.h"
@@ -10,7 +10,7 @@
 // TODO: save commands, up/down key access
 
 int
-run_custom_command (state_t *state)
+run_prompt_command (state_t *state)
 {
     char *prompt;
 

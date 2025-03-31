@@ -7,7 +7,7 @@
 
 
 /*
-    Run debugger command or enter window loop
+    Run header command, enter window loop, or other
 */
 int run_plugin (int plugin_index, state_t *state);
 
