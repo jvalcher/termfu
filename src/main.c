@@ -26,12 +26,13 @@ pthread_cond_t  cond_var;
 
 // TODO: Organize tests; implement test_all
 // TODO: Add function benchmarks
-// FIX: Fix valgrind leaks
+// FIX: Fix valgrind warnings
 // TODO: Add command history (persisted, limit)
 // FIX: Wait for debugger process to start before updating window data
-// OPTIMIZE: store dereferences in variables (?)
+// TODO: store dereferences in variables (?)
 // TODO: Add termfu tips back in (config copy, vim breakpoints, ...)
 // TODO: Add ">>> <cmd>" to Dbg output
+// TODO: Fix dependency file location for prod, dev
 
 
 
