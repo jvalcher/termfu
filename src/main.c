@@ -1,5 +1,4 @@
 #include <unistd.h>
-#include <signal.h>
 #include <ncurses.h>
 #include <sys/wait.h>
 #include <pthread.h>
@@ -15,7 +14,6 @@
 #include "persist_data.h"
 #include "plugins.h"
 
-static int   initial_configure (int, char*[], state_t*);
 static void *get_key           (void *state_arg);
 static void *send_key          (void *state_arg);
 
@@ -23,16 +21,6 @@ int  key_pipe[2];
 bool in_select_window;
 pthread_mutex_t mutex;
 pthread_cond_t  cond_var;
-
-// TODO: Organize tests; implement test_all
-// TODO: Add function benchmarks
-// FIX: Fix valgrind warnings
-// TODO: Add command history (persisted, limit)
-// FIX: Wait for debugger process to start before updating window data
-// TODO: store dereferences in variables (?)
-// TODO: Add termfu tips back in (config copy, vim breakpoints, ...)
-// TODO: Add ">>> <cmd>" to Dbg output
-// TODO: Fix dependency file location for prod, dev
 
 
 
@@ -110,117 +98,6 @@ main (int   argc,
 
 
 /*
-    SIGINT handler for Ctrl-C
-*/
-static void
-sigint_handler (int sig_num)
-{
-    (void) sig_num;
-    clean_up (PROG_EXIT);
-    fprintf (stderr, "termfu exited (SIGINT)\n");
-    exit (EXIT_FAILURE);
-}
-
-
-
-/*
-    Initial configuration
-    ---------
-    - CLI flags
-    - Set state pointer
-    - Set signals
-    - Initialize ncurses
-*/
-static int
-initial_configure (int   argc,
-                   char *argv[],
-                   state_t *state)
-{
-    int opt;
-    extern char *optarg;
-
-    state->config_path[0] = '\0';
-    state->data_path[0]   = '\0';
-
-    char *optstring = "hc:p:";
-
-    while ((opt = getopt (argc, argv, optstring)) != -1) {
-        switch (opt) {
-
-            // help
-            case 'h':
-                printf (
-                "\n"
-                "Usage: \n"
-                "\n"
-                "   $ termfu\n"
-                "\n"
-                "       Run in same directory as a %s configuration file\n"
-                "       Data persisted to ./%s\n"
-                "\n"
-                "   $ termfu [OPTION...]\n"
-                "\n"
-                "       -c CONFIG_FILE    Use this configuration file\n"
-                "       -p PERSIST_FILE   Persist sessions with this file\n"
-                "\n",
-                CONFIG_FILE, PERSIST_FILE);
-                exit (EXIT_SUCCESS);
-
-            // configuration file
-            case 'c':
-                strncpy (state->config_path, optarg, CONFIG_PATH_LEN - 1);
-                break;
-
-            // data persist file
-            case 'p':
-                strncpy (state->data_path, optarg, DATA_PATH_LEN - 1);
-                break;
-
-            default:
-                fprintf (stderr,
-                "\n"
-                "Run with -h flag to see usage instructions.\n"
-                "\n");
-                exit (EXIT_FAILURE);
-        }
-    }
-
-    // misc state
-    state->new_run = true;
-    state->restart_prog = false;
-    set_state_ptr (state);
-    set_num_plugins (state);
-
-    // signal handler(s)
-    signal (SIGINT, sigint_handler);     // Ctrl-C;  (gdb) signal 2
-
-    // ncurses
-    initscr ();
-    if (has_colors ()) {
-        start_color();
-        init_pair(RED_BLACK, COLOR_RED, COLOR_BLACK);           // RED_BLACK
-        init_pair(GREEN_BLACK, COLOR_GREEN, COLOR_BLACK);       // GREEN_BLACK
-        init_pair(YELLOW_BLACK, COLOR_YELLOW, COLOR_BLACK);     // YELLOW_BLACK
-        init_pair(BLUE_BLACK, COLOR_BLUE, COLOR_BLACK);         // BLUE_BLACK
-        init_pair(MAGENTA_BLACK, COLOR_MAGENTA, COLOR_BLACK);   // MAGENTA_BLACK
-        init_pair(CYAN_BLACK, COLOR_CYAN, COLOR_BLACK);         // CYAN_BLACK
-        init_pair(WHITE_BLACK, COLOR_WHITE, COLOR_BLACK);       // WHITE_BLACK
-        init_pair(WHITE_BLUE, COLOR_WHITE, COLOR_BLUE);         // WHITE_BLUE
-        init_pair(BLACK_BLUE, COLOR_BLACK, COLOR_BLUE);         // WHITE_BLUE
-    } 
-
-    cbreak ();
-    noecho ();
-    curs_set (0);
-    set_escdelay (0);
-    keypad (stdscr, TRUE);
-
-    return A_OK;
-}
-
-
-
-/*
     Get key input thread function
 */
 static void*
@@ -284,7 +161,6 @@ get_key (void *state_arg)
             if (write (key_pipe[PIPE_WRITE], key_str, 8) == -1)
                 pfeme_errno ("Failed to write to main key pipe");
         }
-
     }
 
     return NULL;
@@ -357,3 +233,24 @@ send_key (void *state_arg)
     return NULL;
 }
 
+
+
+/*
+
+TODO: Organize tests, implement test_all, add example gdb/mi output
+TODO: Move descriptions next to variables in data.h
+TODO: Create plugin type boolean functions (is window, form?), replace switch sections
+TODO: Add example gdb/mi output for all functions
+TODO: Add command history (persisted, limit)
+BUG: Figure out startup bug where doesn't always load debugger
+FIXME: Wait for debugger process to start before updating window data
+TODO: Add function benchmarks, history
+PERF: store dereferences in variables (?)
+TODO: Add termfu tips back in (config copy, vim breakpoints, ...)
+TODO: Add ">>> <cmd>" to Dbg output
+FIXME: Fix make plugins
+FIXME: Fix C++ class watches, add C++ test programs
+FIXME: Fix valgrind leaks
+TODO: Switch to semantic versioning, add release link to CONTRIBUTING.md, add RELEASE.md, patch versioning (v1.2.3 -> v1.2)
+
+*/

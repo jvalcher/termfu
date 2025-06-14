@@ -30,6 +30,7 @@ int  update_window (int plugin_index);
         update_windows (Asm, Brk, Src);
 */
 int  update_windows_impl (int num_windows, ...);
+    //
 #define update_windows(...)  update_windows_impl (100, __VA_ARGS__, NULL_PLUGIN)
 
 

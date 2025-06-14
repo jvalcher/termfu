@@ -2,7 +2,7 @@
     Formatted error messages
     ----------
     - Program exit error propagation
-    - clean_up() run first   (utilities.c)
+    - Runs clean_up() first   (utilities.h)
 
     - Usage:
   
@@ -47,7 +47,8 @@
     -------------
     - Calls clean_up() first
 */
-#define pfem_impl(...) do {                                                              \
+#define pfem_impl(...)                                                                   \
+do {                                                                                     \
     clean_up (PROG_ERROR);                                                               \
     fprintf (stderr,                                                                     \
         "  " CYAN "%s" R ":" YELLOW "%d" R "  --  " GREEN "%s" PURPLE "()" R "\n      ", \
@@ -62,25 +63,29 @@
 */
 
 // Message only
-#define pfem(...) do {          \
+#define pfem(...)               \
+do {                            \
     pfem_impl(__VA_ARGS__);     \
     fprintf (stderr, "\n");     \
 } while (0)                     \
 
 // Return FAIL
-#define pfemr(...) do {     \
+#define pfemr(...)          \
+do {                        \
     pfem (__VA_ARGS__);     \
     return FAIL;            \
 } while (0)
 
 // Return NULL
-#define pfemn(...) do {     \
+#define pfemn(...)          \
+do {                        \
     pfem (__VA_ARGS__);     \
     return NULL;            \
 } while (0)
 
 // Exit
-#define pfeme(...) do {     \
+#define pfeme(...)          \
+do {                        \
     pfem (__VA_ARGS__);     \
     exit (EXIT_FAILURE);    \
 } while (0)
@@ -92,25 +97,29 @@
 */
 
 // Message only
-#define pfem_errno(...) do {                                        \
+#define pfem_errno(...)                                             \
+do {                                                                \
     pfem_impl (__VA_ARGS__);                                        \
     fprintf (stderr, "  (" PURPLE "%s" R ")\n", strerror(errno));   \
 } while (0)
 
 // Return FAIL
-#define pfemr_errno(...) do {   \
+#define pfemr_errno(...)        \
+do {                            \
     pfem_errno (__VA_ARGS__);   \
     return FAIL;                \
 } while (0)
 
 // Return NULL
-#define pfemn_errno(...) do {   \
+#define pfemn_errno(...)        \
+do {                            \
     pfem_errno (__VA_ARGS__);   \
     return NULL;                \
 } while (0)
 
 // Exit
-#define pfeme_errno(...) do {   \
+#define pfeme_errno(...)        \
+do {                            \
     pfem_errno (__VA_ARGS__);   \
     exit (EXIT_FAILURE);        \
 } while (0)

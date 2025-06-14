@@ -237,15 +237,19 @@ format_window_data_Src (state_t *state)
                   i, j, k,
                   ch,
                   rows, cols,
-                  curr_line;
+                  curr_line,
+                  line_buff_len = 8;
     char         *basefile,
-                  line_buff [8];
+                  line_buff [line_buff_len];
     bool          is_curr_line;
     window_t     *win;
 
     win = state->plugins[Src]->win;
 
-    // print current source code file in top bar
+    //
+    // Print current source code file in top bar
+    //
+
     basefile = basename (state->debugger->src_path_buffer);
     left_spaces = (win->topbar_cols - strlen (basefile)) / 2;
     right_spaces = win->topbar_cols - strlen (basefile) - left_spaces;
@@ -259,8 +263,10 @@ format_window_data_Src (state_t *state)
     wattroff  (win->TWIN, COLOR_PAIR(TOPBAR_COLOR));
     wrefresh (win->TWIN);
 
+    //
+    // Highlight current line
+    //
 
-    // highlight current line
     getmaxyx (win->DWIN, rows, cols);
     is_curr_line = false;
     for (i = 0; i < rows; i++) {
@@ -282,7 +288,7 @@ format_window_data_Src (state_t *state)
                 k = 0;
                 while (true) {
                     ch = mvwinch (win->DWIN, i, j++) & A_CHARTEXT; 
-                    if (ch != ' ') {
+                    if (ch != ' ' && k < line_buff_len - 1) {
                         line_buff [k++] = ch;
                     } else {
                         break;
@@ -302,7 +308,10 @@ format_window_data_Src (state_t *state)
     }
     wattroff (win->DWIN, A_REVERSE);
 
-    // replace line number with "b<breakpoint_index>"
+    //
+    // Replace line number with "b<breakpoint_index>"
+    //
+
     char  index_buff [8],
          *src_file_ptr;
     int   num_spaces;
@@ -320,7 +329,7 @@ format_window_data_Src (state_t *state)
                 k = 0;
                 while (true) {
                     ch = mvwinch (win->DWIN, i, j++) & A_CHARTEXT; 
-                    if (ch != ' ') {
+                    if (ch != ' ' && k < line_buff_len - 1) {
                         line_buff [k++] = ch;
                     } else {
                         break;

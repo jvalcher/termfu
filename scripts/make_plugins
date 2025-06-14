@@ -3,6 +3,10 @@
 #
 # Print all plugins indexes and codes
 #
+# Usage:
+#   $ make plugins
+#
 
-(cd tests && make t=util_plugin_indexes.c)
+(make test_gdb t=tests/test_plugins.c)
 
+echo ""

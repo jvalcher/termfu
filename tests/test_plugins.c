@@ -2,6 +2,9 @@
 
 
 
+/*
+    Also called by `$ make plugins` via `../scripts/make_plugins`
+*/
 int
 main (void)
 {

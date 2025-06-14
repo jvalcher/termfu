@@ -3,8 +3,12 @@ core*
 tags
 debug.out
 .termfu*
+.tags
+commit.msg
 
+test_programs/build_c
 test_programs/hello
+test_programs/infinite_loop
 test_programs/vars
 test_programs/fib
 test_programs/infinite_loop

@@ -1,5 +1,13 @@
 #!/usr/bin/python3
 
+#
+# Configure terminal window/pane for stdout of the termfu_dev process being debugged by gdb
+# Allow stdin to go to the debugged process
+#
+# Usage:
+#   $ make debugged
+#
+
 import subprocess
 import pyperclip
 from colors import *

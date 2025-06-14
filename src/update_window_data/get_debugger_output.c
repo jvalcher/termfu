@@ -56,9 +56,9 @@ get_debugger_output_gdb (state_t *state)
             }
             dest_buff->changed = true;
         }
-    }
 
-    dest_buff->new_data = false;
+        dest_buff->new_data = false;
+    }
 
     return A_OK;
 }
@@ -88,10 +88,11 @@ get_debugger_output_pdb (state_t *state)
                 cp_wchar (dest_buff, *src_ptr++);
             }
         }
+
         dest_buff->changed = true;
+        dest_buff->new_data = false;
     }
 
-    dest_buff->new_data = false;
 
     return A_OK;
 }

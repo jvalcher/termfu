@@ -1,6 +1,7 @@
 #include <ncurses.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -17,6 +18,131 @@
 FILE    *debug_out_ptr = NULL;
 state_t *state_ptr = NULL;
 bool     program_cleaned_up = false;
+
+
+
+void
+logd (const char *formatted_string, ...)
+{
+    if (debug_out_ptr == NULL) {
+        if ((debug_out_ptr = fopen (DEBUG_OUT_FILE, "w")) == NULL) {
+            pfeme_errno ("Failed to open debug out file \"%s\"", DEBUG_OUT_FILE);
+        }
+    }
+
+    va_list args;
+    va_start (args, formatted_string);
+    vfprintf (debug_out_ptr, formatted_string, args);
+    va_end (args);
+}
+
+
+
+/*
+    SIGINT handler for Ctrl-C
+*/
+static void
+sigint_handler (int sig_num)
+{
+    (void) sig_num;
+    clean_up (PROG_EXIT);
+    fprintf (stderr, "termfu exited (SIGINT)\n");
+    exit (EXIT_FAILURE);
+}
+
+
+
+int
+initial_configure (int   argc,
+                   char *argv[],
+                   state_t *state)
+{
+    int opt;
+    extern char *optarg;
+
+    state->config_path[0] = '\0';
+    state->data_path[0]   = '\0';
+
+    char *optstring = "hc:p:";
+
+    while ((opt = getopt (argc, argv, optstring)) != -1) {
+        switch (opt) {
+
+            // help
+            case 'h':
+                printf (
+                "\n"
+                "Usage: \n"
+                "\n"
+                "   $ termfu\n"
+                "\n"
+                "       Run in same directory as a %s configuration file\n"
+                "       Data persisted to ./%s\n"
+                "\n"
+                "   $ termfu [OPTION...]\n"
+                "\n"
+                "       -c CONFIG_FILE    Use this configuration file\n"
+                "       -p PERSIST_FILE   Persist sessions with this file\n"
+                "\n",
+                CONFIG_FILE, PERSIST_FILE);
+                exit (EXIT_SUCCESS);
+
+            // configuration file
+            case 'c':
+                strncpy (state->config_path, optarg, CONFIG_PATH_LEN - 1);
+                break;
+
+            // data persist file
+            case 'p':
+                strncpy (state->data_path, optarg, DATA_PATH_LEN - 1);
+                break;
+
+            default:
+                fprintf (stderr,
+                "\n"
+                "Run with -h flag to see usage instructions.\n"
+                "\n");
+                exit (EXIT_FAILURE);
+        }
+    }
+
+    state->new_run = true;
+    state->restart_prog = false;
+    state_ptr = state;
+
+    set_num_plugins (state);
+
+    signal (SIGINT, sigint_handler);     // Ctrl-C; (gdb) signal 2
+
+    // ncurses
+    initscr ();
+    if (has_colors ()) {
+        start_color();
+        init_pair(RED_BLACK, COLOR_RED, COLOR_BLACK);           // RED_BLACK
+        init_pair(GREEN_BLACK, COLOR_GREEN, COLOR_BLACK);       // GREEN_BLACK
+        init_pair(YELLOW_BLACK, COLOR_YELLOW, COLOR_BLACK);     // YELLOW_BLACK
+        init_pair(BLUE_BLACK, COLOR_BLUE, COLOR_BLACK);         // BLUE_BLACK
+        init_pair(MAGENTA_BLACK, COLOR_MAGENTA, COLOR_BLACK);   // MAGENTA_BLACK
+        init_pair(CYAN_BLACK, COLOR_CYAN, COLOR_BLACK);         // CYAN_BLACK
+        init_pair(WHITE_BLACK, COLOR_WHITE, COLOR_BLACK);       // WHITE_BLACK
+        init_pair(WHITE_BLUE, COLOR_WHITE, COLOR_BLUE);         // WHITE_BLUE
+        init_pair(BLACK_BLUE, COLOR_BLACK, COLOR_BLUE);         // WHITE_BLUE
+    } 
+    cbreak ();
+    noecho ();
+    curs_set (0);
+    set_escdelay (0);
+    keypad (stdscr, TRUE);
+
+    return A_OK;
+}
+
+
+
+void set_state_ptr(state_t *state)
+{
+    state_ptr = state;
+}
 
 
 
@@ -42,6 +168,7 @@ free_nc_window_data (state_t *state)
             refresh ();
         }
     }
+
     return A_OK;
 }
 
@@ -373,14 +500,6 @@ file_was_updated (time_t file_mtime,
 
 
 void
-set_state_ptr (state_t *state)
-{
-    state_ptr = state;
-}
-
-
-
-void
 cp_wchar (buff_data_t *dest_buff_data,
           char ch)
 {
@@ -564,19 +683,21 @@ create_buff_from_file (char *path)
     FILE *fp;
     char *buff;
 
-    // create buffer
+    // Create buffer
     if (stat (path, &st) != 0)
         pfemn_errno  ("Failed to get status of file \"%s\"", path);
     if ((buff = (char*) malloc (st.st_size + 1)) == NULL)
         pfemn_errno  ("Failed to allocate buffer for path \"%s\"", path);
 
-    // copy file contents
     if ((fp = fopen (path, "r")) == NULL)
         pfemn_errno  ("Failed to open file \"%s\"", path);
+
+    // Copy file contents
     i = 0;
     while ((ch = fgetc (fp)) != EOF && i < st.st_size)
         buff [i++] = ch;
     buff [i] = '\0';
+
     fclose (fp);
 
     return buff;
