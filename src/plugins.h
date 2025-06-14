@@ -82,7 +82,6 @@ char* get_plugin_code (int plugin_index);
 /*
     Allocate plugin window_t structs et al.
     ----------
-
     state->plugins[i]->win
 
     - Returns A_OK, FAIL

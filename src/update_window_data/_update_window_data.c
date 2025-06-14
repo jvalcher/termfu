@@ -46,7 +46,7 @@ update_window (int plugin_index)
     return A_OK;
 }
 
-// TODO: remove num_updates requirement with macro magic (see concatenate_strings())
+
 
 int
 update_windows_impl (int num_updates, ...)

@@ -3,6 +3,8 @@ core*
 tags
 debug.out
 .termfu*
+.tags
+commit.msg
 
 test_programs/hello
 test_programs/vars

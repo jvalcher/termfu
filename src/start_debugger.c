@@ -36,6 +36,8 @@ start_debugger (state_t *state)
 
     if (insert_output_end_marker (state) == FAIL)
         pfemr (ERR_OUT_MARK);
+    
+    // TODO: Confirm debugger has started before continuing
 
     if (send_setup_commands (state) == FAIL)
         pfemr ("Failed to send setup commands");
@@ -173,11 +175,25 @@ send_setup_commands (state_t *state)
 {
     char *cmd_confirm_off = "set confirm off\n";
     switch (state->debugger->index) {
-        case DEBUGGER_GDB:
-            if (send_command_mp (state, cmd_confirm_off) == FAIL)
-                pfemr ("Failed to send GDB setup command");
-            break;
+
+    case DEBUGGER_GDB:
+        if (send_command_mp (state, cmd_confirm_off) == FAIL)
+            pfemr ("Failed to send GDB setup command");
+        break;
+
     }
     return A_OK;
 }
 
+
+
+void print_debugger_state (state_t *state)
+{
+    debugger_t *dbg = state->debugger;
+
+    logd ("title: \"%s\"\n", dbg->title);
+    logd ("running: %d\n", dbg->running);
+    logd ("curr_plugin_index: %d\n", dbg->curr_plugin_index);
+    logd ("prog_path: \"%s\"\n", dbg->prog_path);
+    logd ("main_src_path_buffer: \"%s\"\n", dbg->main_src_path_buffer);
+}

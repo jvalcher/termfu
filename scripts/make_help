@@ -9,35 +9,36 @@ R = RESET
 
 make_commands = f'''
 
-{M}make all        {R}- Build production binary {S}./termfu{R} 
+{M}make all                   {R}- Build production binary {S}./termfu{R} 
 
-{M}make install    {R}- Copy production binary to {S}/usr/local/bin{R}
-                {R}- Run with {S}sudo{R}
+{M}sudo make install          {R}- Copy production binary to {S}/usr/local/bin{R}
 
-{M}make dev        {R}- Build development binary
+{M}make dev                   {R}- Build development binary
 
-{M}make devf       {R}- Build development binary (formatted errors)
+{M}make devf                  {R}- Build development binary (formatted errors)
 
-{M}make clean_dev  {R}- Remove development build object files and binary
+{M}make clean_dev             {R}- Remove development build object files and binary
 
-{M}make clean_prod {R}- Remove production build object files and binary
+{M}make clean_prod            {R}- Remove production build object files and binary
 
-{M}make plugins    {R}- Print plugin indexes and codes
+{M}make plugins               {R}- Print plugin indexes and codes
 
-{M}make todo       {R}- Print source code tags, e.g. TODO, FIXME
+{M}make todo                  {R}- Print source code tags, e.g. TODO, FIXME
 
-{M}make build      {R}- Build sample binaries for {S}run_dev{R} below
+{M}make build_tests           {R}- Build all sample binaries for {S}run_dev{R} below
 
-{M}make run_dev    {R}- Run termfu_dev with sample binary or script
-                {R}- Adjust {S}configs/.termfu_run_dev{R} as needed
+{M}make run_dev               {R}- Run termfu_dev with sample binary or script
+                           {R}- Adjust {S}configs/.termfu_run_dev{R} as needed
 
-{M}make debug      {R}- Start {S}termfu{R} to debug {S}termfu_dev{R}
-                {R}- See {T}Debugging termfu_dev with termfu{R} section in {S}CONTRIBUTING.md{R}
+{M}make debug_dev             {R}- Debug {S}termfu_dev{R} with {S}termfu{R}
+{M}make debug_test            {R}- Debug {S}termfu_test{R} with {S}termfu{R}
+{M}make debug_dev_gdb         {R}- Debug {S}termfu_dev{R} with {S}GDB tui{R}
+{M}make debug_test_gdb        {R}- Debug {S}termfu_test{R} with {S}GDB tui{R}
+{M}make debugged              {R}- Prepare terminal for debugged process's output and key input
+                           {R}- See {T}Debugging termfu_dev or termfu_test{R} section in {S}CONTRIBUTING.md{R}
 
-{M}make debugged   {R}- Prepare terminal for `termfu_dev` process's output and key input
-                {R}- See {T}Debugging termfu_dev with termfu{R} section in {S}CONTRIBUTING.md{R}
-
-{M}make debug_gdb  {R}- Debug {S}termfu_dev{R} with gdb tui
+{M}make test_gdb t=tests/test_gdb_1.c   {R}- Run gdb test
+{M}make test_pdb t=tests/test_pdb_1.c   {R}- Run pdb test
 
 '''
 

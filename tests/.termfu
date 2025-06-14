@@ -19,7 +19,7 @@ Stp : s : (s)tep
 Trg : t : (t)arget
 Unt : u : (u)ntil
 
-# windows
+ windows
 Asm : a : (a)ssembly
 Brk : e : br(e)akpoints
 Dbg : d : (d)ebug out

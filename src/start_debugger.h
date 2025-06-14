@@ -9,7 +9,14 @@
 /*
     Configure, start debugger process
 */
-int start_debugger (state_t*);
+int start_debugger (state_t *state);
+
+
+
+/*
+    Print debugger_t info to <DEBUG_OUT_FILE>
+*/
+void print_debugger_state (state_t *state);
 
 
 

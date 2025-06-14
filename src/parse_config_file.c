@@ -25,7 +25,7 @@ static layout_t   *create_layout          (FILE*, char*);
 extern char **plugin_codes;
 extern char **win_file_names;
 
-// indexes match enums in data.h  { DEBUGGER_GDB, DEBUGGER_PDB}
+// Indexes match { DEBUGGER_GDB, DEBUGGER_PDB } enums in data.h  
 char *debuggers[] = { "gdb", "pdb" };
 
 
@@ -56,37 +56,31 @@ parse_config_file (state_t *state)
     if (allocate_plugin_windows (state) == FAIL)
         pfemr ("Failed to allocate plugin windows");
 
-    if ((fp = open_config_file (state)) == NULL) {
+    if ((fp = open_config_file (state)) == NULL)
         pfemr ("Failed to open configuration file");
-    }
 
     // parse config file
     is_first_layout = true;
     while ((ch = fgetc (fp)) != EOF) {
 
         // newline comment
-        if (ch == ('#')) {
-            while ((ch = fgetc (fp)) != ('\n')) {
+        if (ch == ('#'))
+            while ((ch = fgetc (fp)) != ('\n'))
                 ;
-            }
-        }
 
-        if (ch == '[') {
+        if (ch == '[') 
             if (get_category_and_label (fp, category, label) == FAIL)
                 pfemr ("Failed to get category and label");
-        }
 
         // create state->command
-        if (strcmp (category, CONFIG_COMMAND_LABEL) == 0) {
+        if (strcmp (category, CONFIG_COMMAND_LABEL) == 0)
             if ((state->command = create_command (fp, state)) == NULL)
                 pfemr ("Failed to create command");
-        }
 
         // create state->plugins
-        if (strcmp (category, CONFIG_PLUGINS_LABEL) == 0) {
+        if (strcmp (category, CONFIG_PLUGINS_LABEL) == 0)
             if (create_plugins (fp, state) == FAIL)
                 pfemr ("Failed to create plugins");
-        }
 
         // create linked list of state->layouts
         if (strcmp (category, CONFIG_LAYOUTS_LABEL) == 0) {
@@ -126,10 +120,13 @@ open_config_file (state_t *state)
     if (state->config_path[0] != '\0') {
         if ((file = fopen (state->config_path, "r")) == NULL)
             pfem ("Failed to open config file \"./%s\"", state->config_path);
-    } else {
+    }
+
+    else {
         if ((file = fopen (CONFIG_FILE, "r")) == NULL)
             pfem ("Failed to open config file \"./%s\"", CONFIG_FILE);
-    } 
+    }
+
     return file;
 }
 
@@ -214,12 +211,13 @@ create_command (FILE *fp,
         if (ch == ' ')
             ++n;
     } while ((ch = fgetc (fp)) != '\n');
+
     ++n;    // execvp NULL
 
+    // create array
     if ((cmd_arr = (char**) malloc (n * sizeof (char*))) == NULL)
         pfemn_errno  ("Failed to allocate cmd_arr (n = %d)", n);
 
-    // create array
     fseek (fp, save_fp, SEEK_SET);
     n = 0;  
     i = 0;

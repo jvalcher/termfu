@@ -28,15 +28,15 @@ display_lines (int      key,
     if (state->plugins[plugin_index]->has_window) {
 
         if (win->buff_data->changed) {
-            if ( create_scroll_buffer_llist (plugin_index, state) == FAIL ) 
+            if (create_scroll_buffer_llist (plugin_index, state) == FAIL) 
                 pfemr ("Failed to create scroll_buff_line_t linked list" DISP_ERR_STATE);
             win->buff_data->changed = false;
         }
 
-        if ( display_scroll_buff_lines (key, plugin_index, state) == FAIL)
+        if (display_scroll_buff_lines (key, plugin_index, state) == FAIL)
             pfemr ("Failed to display window lines" DISP_ERR_STATE);
 
-        if ( format_window_data (plugin_index, state) == FAIL)
+        if (format_window_data (plugin_index, state) == FAIL)
             pfemr ("Failed to format window data" DISP_ERR_STATE);
     }
 

@@ -3,6 +3,9 @@
 #
 # Build termfu_dev and output formatted GCC errors
 #
+# Usage:
+#   $ make devf
+#
 
 from format_gcc_output import format_gcc_output
 
