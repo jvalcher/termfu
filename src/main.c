@@ -237,7 +237,8 @@ send_key (void *state_arg)
 
 /*
 
-TODO: Organize tests, implement test_all, add example gdb/mi output
+TODO: Decouple, reorganize code
+TODO: Replace switch tables with dynamic dispatching and lookup table
 TODO: Move descriptions next to variables in data.h
 TODO: Create plugin type boolean functions (is window, form?), replace switch sections
 TODO: Add example gdb/mi output for all functions

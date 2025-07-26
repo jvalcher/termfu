@@ -6,9 +6,9 @@
 MAKEFLAGS += --no-print-directory
 
 # binaries
-B_FILE_PROD    = termfu
-B_FILE_DEV     = termfu_dev
-B_FILE_TEST	   = termfu_test
+BIN_PROD       = termfu
+BIN_DEV        = termfu_dev
+BIN_TEST	   = termfu_test
 
 PROD_DIR	   = /usr/local/bin
 
@@ -75,8 +75,8 @@ SCRIPTS_DIR	= scripts
 #
 .PHONY: all
 all: FLAGS += $(PROD_FLAGS)
-all: clean_prod $(B_FILE_PROD)
-$(B_FILE_PROD): $(PROD_OBJ_FILES)
+all: clean_prod $(BIN_PROD)
+$(BIN_PROD): $(PROD_OBJ_FILES)
 	@echo ""
 	$(CC) $(PROD_OBJ_FILES) -o $(BIN_PROD) $(NCURSES_LIBS)
 $(PROD_OBJ_DIR)/%.o : $(C_DIR)/%.c
@@ -91,8 +91,8 @@ $(PROD_OBJ_DIR)/%.o : $(C_DIR_FORM_IN)/%.c
 #
 .PHONY: dev
 dev: FLAGS += $(DEV_FLAGS)
-dev: $(B_FILE_DEV)
-$(B_FILE_DEV): $(DEV_OBJ_FILES)
+dev: $(BIN_DEV)
+$(BIN_DEV): $(DEV_OBJ_FILES)
 	@echo ""
 	$(CC) $(DEV_OBJ_FILES) -o $(BIN_DEV) $(NCURSES_LIBS)
 $(DEV_OBJ_DIR)/%.o : $(C_DIR)/%.c
@@ -107,23 +107,23 @@ $(DEV_OBJ_DIR)/%.o : $(C_DIR_FORM_IN)/%.c
 #
 .PHONY: test_gdb
 test_gdb: FLAGS += $(DEV_FLAGS)
-test_gdb: $(B_FILE_TEST) 
+test_gdb: $(BIN_TEST) 
 	@printf "\n###\nRunning \"%s\" ...\n###\n\n" $(t)
-	./$(B_FILE_TEST) -c $(CONFIG_TEST_GDB) -p $(DATA_TEST_GDB)
+	./$(BIN_TEST) -c $(CONFIG_TEST_GDB) -p $(DATA_TEST_GDB)
 	@printf ""
 
 .PHONY: test_pdb
 test_pdb: FLAGS += $(DEV_FLAGS)
-test_pdb: $(B_FILE_TEST) 
+test_pdb: $(BIN_TEST) 
 	@printf "\n###\nRunning \"%s\" ...\n###\n\n" $(t)
-	./$(B_FILE_TEST) -c $(CONFIG_TEST_PDB) -p $(DATA_TEST_PDB)
+	./$(BIN_TEST) -c $(CONFIG_TEST_PDB) -p $(DATA_TEST_PDB)
 	@printf ""
 
 .PHONY: test
 test: FLAGS += $(DEV_FLAGS)
-test: $(B_FILE_TEST) 
-$(B_FILE_TEST): $(TEST_OBJ_FILES) $(TEST_OBJ_FILE)
-	$(CC) $(TEST_OBJ_FILES) $(TEST_OBJ_FILE) $(TEST_UTIL_OBJ_FILE) -o $(B_FILE_TEST) $(NCURSES_LIBS)
+test: $(BIN_TEST) 
+$(BIN_TEST): $(TEST_OBJ_FILES) $(TEST_OBJ_FILE)
+	$(CC) $(TEST_OBJ_FILES) $(TEST_OBJ_FILE) $(TEST_UTIL_OBJ_FILE) -o $(BIN_TEST) $(NCURSES_LIBS)
 $(TEST_OBJ_FILE): $(t) $(TEST_OBJ_FILES) $(TEST_UTIL_OBJ_FILE)
 	$(CC) $(FLAGS) $(NCURSES_CFLAGS) -c $(t) -o $(TEST_OBJ_FILE)
 $(TEST_UTIL_OBJ_FILE): check_test_file $(TEST_OBJ_FILES) $(TEST_UTIL_FILE)
@@ -159,17 +159,17 @@ devf:
 .PHONY: devformat
 devformat: FLAGS += $(DEV_FLAGS)
 devformat: FLAGS += $(FORMAT_FLAGS)
-devformat: $(B_FILE_DEV)
+devformat: $(BIN_DEV)
 
 .PHONY: clean_prod
 clean_prod:
 	rm -f $(PROD_OBJ_DIR)/*
-	rm -f $(B_FILE_PROD)
+	rm -f $(BIN_PROD)
 
 .PHONY: clean_dev
 clean_dev:
 	rm -f $(DEV_OBJ_DIR)/*
-	rm -f $(B_FILE_DEV)
+	rm -f $(BIN_DEV)
 
 .PHONY: help
 help:
@@ -185,19 +185,19 @@ run_dev:
 
 .PHONY: debug_dev
 debug_dev:
-	$(B_FILE_PROD) -c $(CONFIG_DEBUG_DEV) -p $(DATA_DEBUG_DEV)
+	$(BIN_PROD) -c $(CONFIG_DEBUG_DEV) -p $(DATA_DEBUG_DEV)
 
 .PHONY: debug_test
 debug_test:
-	$(B_FILE_PROD) -c $(CONFIG_DEBUG_TEST) -p $(DATA_DEBUG_TEST)
+	$(BIN_PROD) -c $(CONFIG_DEBUG_TEST) -p $(DATA_DEBUG_TEST)
 
 .PHONY: debug_dev_gdb
 debug_dev_gdb:
-	gdb --quiet --tui --args $(B_FILE_DEV) -c $(CONFIG_DEBUGGED) -p $(DATA_DEBUGGED)
+	gdb --quiet --tui --args $(BIN_DEV) -c $(CONFIG_DEBUGGED) -p $(DATA_DEBUGGED)
 
 .PHONY: debug_test_gdb
 debug_test_gdb:
-	gdb --quiet --tui --args $(B_FILE_TEST) -c $(CONFIG_DEBUGGED) -p $(DATA_DEBUGGED)
+	gdb --quiet --tui --args $(BIN_TEST) -c $(CONFIG_DEBUGGED) -p $(DATA_DEBUGGED)
 
 .PHONY: debugged
 debugged:
