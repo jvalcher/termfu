@@ -20,7 +20,7 @@ static void *send_key          (void *state_arg);
 int  key_pipe[2];
 bool in_select_window;
 pthread_mutex_t mutex;
-pthread_cond_t  cond_var;
+pthread_cond_t cond_var;
 
 
 

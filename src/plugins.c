@@ -6,6 +6,8 @@
 #include "data.h"
 #include "error.h"
 
+#define ORIG_WIN_BUF_LEN  16384
+
 
 /*
     Plugin codes
@@ -39,7 +41,22 @@ char *plugin_codes [] = {
     "Wat"
 };
 
+int num_plugins = sizeof (plugin_codes) / sizeof (plugin_codes [0]);
 
+int win_plugins[]      = { Asm, Brk, Dbg, LcV, Prg, Reg, Src, Stk, Wat };
+
+int win_topbar_plugins[] = {
+    Brk,
+    Src,
+    Wat
+};
+char *win_topbar_titles[] = {
+    "(c)reate  (d)elete  clear (a)ll",
+    "",                                     // current source file
+    "(c)reate  (d)elete  clear (a)ll"
+};
+
+plugin_t **plugins_ptr = NULL;      // TODO: remove
 
 int
 allocate_plugins (state_t *state)
@@ -54,27 +71,10 @@ allocate_plugins (state_t *state)
             pfemr_errno ("plugin_t pointer allocation failed (index: %d, code: %s)", i, get_plugin_code (i));
     }
 
+    plugins_ptr = state->plugins;       // TODO: remove
+
     return A_OK;
 }
-
-
-
-// plugins with Ncurses WINDOWs
-int win_plugins[]      = { Asm, Brk, Dbg, LcV, Prg, Reg, Src, Stk, Wat };
-
-// window plugins with a topbar
-int win_topbar_plugins[] = {
-    Brk,
-    Src,
-    Wat
-};
-char *win_topbar_titles[] = {
-    "(c)reate  (d)elete  clear (a)ll",
-    "",                                     // current source file
-    "(c)reate  (d)elete  clear (a)ll"
-};
-
-
 
 int
 allocate_plugin_windows (state_t *state)
@@ -124,7 +124,7 @@ allocate_plugin_windows (state_t *state)
         // allocate buff_data_t, ->buff
         if ((win->buff_data = (buff_data_t*) malloc (sizeof (buff_data_t))) == NULL)
             pfemr_errno ("Failed to allocate buff_data_t (code: \"%s\")", win->code);
-        if ((win->buff_data->buff = (char*) malloc (sizeof(char) * ORIG_BUF_LEN)) == NULL )
+        if ((win->buff_data->buff = (char*) malloc (sizeof(char) * ORIG_WIN_BUF_LEN)) == NULL )
             pfemr_errno ("Failed to allocate buff_data->buff (code: \"%s\")", win->code);
         buff_data = win->buff_data;
 
@@ -141,7 +141,7 @@ allocate_plugin_windows (state_t *state)
 
         memcpy (buff_data->code, plugin_codes[j], CODE_LEN + 1);
         buff_data->buff_pos      = 0;
-        buff_data->buff_len      = ORIG_BUF_LEN;
+        buff_data->buff_len      = ORIG_WIN_BUF_LEN;
         buff_data->times_doubled = 0;
         buff_data->changed       = true;
     }
@@ -161,15 +161,11 @@ allocate_plugin_windows (state_t *state)
     return A_OK;
 }
 
-
-
-void
-set_num_plugins (state_t *state)
+int
+get_num_plugins (void)
 {
-    state->num_plugins = sizeof (plugin_codes) / sizeof (plugin_codes [0]);
+    return num_plugins;
 }
-
-
 
 int
 get_plugin_code_index (char    *code,
@@ -197,8 +193,6 @@ get_plugin_code_index (char    *code,
     pfemr ("Failed to find index for plugin code \"%s\"", code);
 }
 
-
-
 char*
 get_plugin_code (int plugin_index)
 {
@@ -208,8 +202,6 @@ get_plugin_code (int plugin_index)
     }
     pfemn ("Failed to get plugin code for index \"%d\"", plugin_index);
 }
-
-
 
 void
 print_plugin_indexes_codes (void)
@@ -232,4 +224,9 @@ print_plugin_indexes_codes (void)
 
         printf ("\033[0;32m%d\033[0m%*c%s\n", i, spaces, ' ', plugin_codes[i]);
     }
+}
+
+void set_new_data_flag (int plugin_index)
+{
+    plugins_ptr[plugin_index]->win->buff_data->new_data = true;
 }

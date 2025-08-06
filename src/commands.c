@@ -1,16 +1,28 @@
-#include "send_debugger_command.h"
-#include "data.h"
-#include "plugins.h"
-#include "utilities.h"
-#include "error.h"
-#include "debugger.h"
-#include "pulse_header_title_color.h"
-#include "update_window_data/_update_window_data.h"
+#include "commands.h"
 
-#define DBG_CMD_STATE  " (debugger: \"%s\", plugin index: %d, code: \"%s\")", \
-                        debugger_title, plugin_index, get_plugin_code (plugin_index)
+static int update_window_data(debugger_t *dbg, data_t *data)
+{
+    return A_OK;
+}
 
+int send_continue_cmd(debugger_t *dbg, data_t *data)
+{
+    switch (debugger_index(dbg)) {
+        case GDB_DEBUGGER:
+            if (send_command(dbg, "-exec-continue\n") == FAIL) 
+                goto cmd_cont_err; 
+            break;
+        case PDB_DEBUGGER:
+            break;
+    }
 
+    update_window_data(data, dbg);
+
+    return A_OK;
+
+cmd_cont_err:
+    pfemr("Failed to send %s continue command", debugger_title(dbg));
+}
 
 int send_debugger_command (int plugin_index, state_t *state)
 {

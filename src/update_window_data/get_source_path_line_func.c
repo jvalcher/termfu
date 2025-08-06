@@ -4,6 +4,7 @@
 #include "../data.h"
 #include "../plugins.h"
 #include "../utilities.h"
+#include "../debugger.h"
 #include "../error.h"
 
 static int get_source_path_line_func_gdb (state_t *state);
@@ -16,7 +17,7 @@ bool first_run = true;
 int
 get_source_path_line_func (state_t *state)
 {
-    switch (state->debugger->index) {
+    switch (debugger_index) {
         case (DEBUGGER_GDB):
             if (get_source_path_line_func_gdb (state) == FAIL)
                 pfemr ("Failed to get source, line, memory (GDB)");
@@ -140,7 +141,7 @@ get_source_path_line_func_gdb (state_t *state)
                 first_run = false;
             }
 
-            debugger->src_path_changed = true;
+            set_src_path_changed_flag (true);
         } 
 
         // line number
@@ -203,7 +204,7 @@ get_source_path_line_func_pdb (state_t *state)
                 cp_dchar (debugger, *path_ptr++, PATH_BUF);
             }
             buff_data->changed = true;
-            debugger->src_path_changed = true;
+            set_src_path_changed_flag (true);
         }
 
         ++src_ptr;

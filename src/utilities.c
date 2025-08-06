@@ -12,12 +12,12 @@
 #include "error.h"
 #include "plugins.h"
 #include "data.h"
-#include "parse_debugger_output.h"
+#include "debugger.h"
 #include "persist_data.h"
 
-FILE    *debug_out_ptr = NULL;
+FILE *debug_out_ptr = NULL;
+bool program_cleaned_up = false;
 state_t *state_ptr = NULL;
-bool     program_cleaned_up = false;
 
 
 
@@ -37,6 +37,38 @@ logd (const char *formatted_string, ...)
 }
 
 
+
+void clean_up (int type)
+{
+    if (program_cleaned_up == false) {
+        program_cleaned_up = true;
+
+        //TODO: clean_up_debugger (debugger);
+
+        if (state_ptr) {
+
+            if (state_ptr->header != NULL)
+                if (delwin (state_ptr->header) == ERR)
+                    pfem ("Failed to delete ncurses header subwindow");
+
+            if (free_nc_window_data (state_ptr) == FAIL)
+                pfem (ERR_NC_FREE);
+
+            curs_set (1);
+            endwin ();
+
+            if (persist_data (state_ptr) == FAIL)
+                pfem (ERR_PERSIST);
+        }
+
+        if (debug_out_ptr)
+            if (fclose (debug_out_ptr) != 0)
+                pfem_errno (ERR_DBG_FCLOSE);
+
+        if (type == PROG_ERROR)
+            fprintf (stderr,  RED "ERROR" CYAN " :: " R "termfu exited\n");
+    }
+}
 
 /*
     SIGINT handler for Ctrl-C
@@ -110,8 +142,6 @@ initial_configure (int   argc,
     state->restart_prog = false;
     state_ptr = state;
 
-    set_num_plugins (state);
-
     signal (SIGINT, sigint_handler);     // Ctrl-C; (gdb) signal 2
 
     // ncurses
@@ -135,13 +165,6 @@ initial_configure (int   argc,
     keypad (stdscr, TRUE);
 
     return A_OK;
-}
-
-
-
-void set_state_ptr(state_t *state)
-{
-    state_ptr = state;
 }
 
 
@@ -170,45 +193,6 @@ free_nc_window_data (state_t *state)
     }
 
     return A_OK;
-}
-
-
-
-void
-clean_up (int cause)
-{
-    if (program_cleaned_up == false) {
-        program_cleaned_up = true;
-
-        // exit ncurses
-        if (state_ptr != NULL) {
-
-            // header subwindow
-            if (state_ptr->header != NULL)
-                if (delwin (state_ptr->header) == ERR)
-                    pfem ("Failed to delete ncurses header subwindow");
-
-            // data windows
-            if (free_nc_window_data (state_ptr) == FAIL)
-                pfem (ERR_NC_FREE);
-
-            curs_set (1);
-            endwin ();
-
-            // persist breakpoint, watchpoint data
-            if (persist_data (state_ptr) == FAIL)
-                pfem (ERR_PERSIST);
-        }
-
-        // close DEBUG_OUT_FILE
-        if (debug_out_ptr != NULL)
-            if (fclose (debug_out_ptr) != 0)
-                pfem_errno (ERR_DBG_FCLOSE);
-
-        // print error header
-        if (cause == PROG_ERROR)
-            fprintf (stderr,  RED "ERROR" CYAN " :: " R "termfu exited\n");
-    }
 }
 
 
@@ -252,79 +236,6 @@ concatenate_strings_impl (int max_strs, ...)
     va_end (strs);
 
     return str;
-}
-
-
-
-/*
-    ">END"
-*/
-int
-insert_output_end_marker (state_t *state)
-{
-    switch (state->debugger->index) {
-    case (DEBUGGER_GDB):
-        if (send_command (state,"echo >END\n") == FAIL)
-            pfemr (ERR_DBG_CMD);
-        break;
-    case (DEBUGGER_PDB):
-        if (send_command (state, "p \">END\"\n") == FAIL)
-            pfemr (ERR_DBG_CMD);
-        break;
-    }
-    return A_OK;
-}
-
-
-
-int
-send_command_impl (state_t *state,
-              int max_strs, ...)
-{
-    int str_count = 0;
-    char *str;
-    va_list strs;
-    va_start (strs, max_strs);
-    for (str = va_arg(strs, char*);
-         str != NULL;
-         str = va_arg(strs, char*))
-    {
-        if (write (state->debugger->stdin_pipe, str, strlen (str)) == -1)
-            pfemr_errno ("Command write error for \"%s\"", str);
-        if (++str_count >= max_strs)
-            pfemr ("Max strings exceeded");
-    }
-    va_end (strs);
-    return A_OK;
-}
-
-
-
-int
-send_command_mp_impl (state_t *state,
-                      int max_strs, ...)
-{
-    int str_count = 0;
-    char *str;
-    va_list strs;
-    va_start (strs, max_strs);
-    for (str = va_arg(strs, char*);
-         str != NULL;
-         str = va_arg(strs, char*))
-    {
-        if (write (state->debugger->stdin_pipe, str, strlen (str)) == -1)
-            pfemr_errno ("Command write error for \"%s\"", str);
-        if (++str_count >= max_strs)
-            pfemr ("Max strings exceeded");
-    }
-
-    if (insert_output_end_marker (state) == FAIL)
-        pfemr (ERR_OUT_MARK);
-
-    if (parse_debugger_output (state) == FAIL)
-        pfemr (ERR_DBG_PARSE);
-
-    return A_OK;
 }
 
 
@@ -533,147 +444,6 @@ cp_wchar (buff_data_t *dest_buff_data,
             dest_buff_data->buff_pos = 0;
     }
 }
-
-
-
-void
-cp_dchar (debugger_t *debugger,
-          char        ch,
-          int         buff_index)
-{
-    int  *len,
-         *pos,
-         *doubled;
-    char *buff,
-         *tmp,
-         *title,
-         *path_title  = "path",
-         *form_title  = "format",
-         *data_title  = "data",
-         *cli_title   = "cli",
-         *prog_title  = "program",
-         *async_title = "async";
-
-
-    switch (buff_index) {
-        case PATH_BUF:
-            title   =  path_title;
-            buff    =  debugger->src_path_buffer;
-            len     = &debugger->src_path_len;
-            pos     = &debugger->src_path_pos;
-            doubled = &debugger->src_path_times_doubled;
-            break;
-        case MAIN_PATH_BUF:
-            title   =  path_title;
-            buff    =  debugger->main_src_path_buffer;
-            len     = &debugger->main_src_path_len;
-            pos     = &debugger->main_src_path_pos;
-            doubled = &debugger->main_src_path_times_doubled;
-            break;
-        case FORMAT_BUF:
-            title   =  form_title;
-            buff    =  debugger->format_buffer;
-            len     = &debugger->format_len;
-            pos     = &debugger->format_pos;
-            doubled = &debugger->format_times_doubled;
-            break;
-        case DATA_BUF:
-            title   =  data_title;
-            buff    =  debugger->data_buffer;
-            len     = &debugger->data_len;
-            pos     = &debugger->data_pos;
-            doubled = &debugger->data_times_doubled;
-            break;
-        case CLI_BUF:
-            title   =  cli_title;
-            buff    =  debugger->cli_buffer;
-            len     = &debugger->cli_len;
-            pos     = &debugger->cli_pos;
-            doubled = &debugger->cli_times_doubled;
-            break;
-        case PROGRAM_BUF:
-            title   =  prog_title;
-            buff    =  debugger->program_buffer;
-            len     = &debugger->program_len;
-            pos     = &debugger->program_pos;
-            doubled = &debugger->program_times_doubled;
-            break;
-        case ASYNC_BUF:
-            title   =  async_title;
-            buff    =  debugger->async_buffer;
-            len     = &debugger->async_len;
-            pos     = &debugger->async_pos;
-            doubled = &debugger->async_times_doubled;
-            break;
-        default:
-            pfeme ("Unrecognized debugger buffer index \"%d\"", buff_index);
-    }
-
-    buff [*pos] = ch;
-    buff [*pos + 1] = '\0';
-
-    if (*pos < *len - 1) {
-        *pos += 1;
-    } 
-
-    else {
-
-        // double buffer size
-        if (*doubled < MAX_DOUBLE_TIMES) {
-
-            *len     *= 2;
-            *doubled += 1;
-
-            if ((tmp = (char*) realloc (buff, sizeof (char) * *len)) == NULL)
-                pfeme_errno  ("Failed to reallocate \"%s\" buffer (size: %d, position: %d, times doubled: %d)", title, *len, *pos, *doubled);
-
-            switch (buff_index) {
-                case PATH_BUF:
-                    debugger->src_path_buffer = tmp;
-                    break;
-                case FORMAT_BUF:
-                    debugger->format_buffer = tmp;
-                    break;
-                case DATA_BUF:
-                    debugger->data_buffer = tmp;
-                    break;
-                case CLI_BUF:
-                    debugger->cli_buffer = tmp;
-                    break;
-                case PROGRAM_BUF:
-                    debugger->program_buffer = tmp;
-                    break;
-                case ASYNC_BUF:
-                    debugger->async_buffer = tmp;
-                    break;
-            }
-        }
-
-        // or loop back to buffer start
-        else
-            *pos = 0;
-    }
-}
-
-
-
-int
-copy_to_clipboard (char *str)
-{
-    char *cmd_str;
-
-    if ((cmd_str = concatenate_strings ("printf \"", str, "\" | xclip -selection clipboard")) == NULL)
-        pfemr ("Failed to create string \"%s\"", str);
-
-    if (system (cmd_str) == -1)
-        pfemr_errno ("system() error: \"%s\"", strerror (errno));
-
-    free (cmd_str);
-
-    return A_OK;
-}
-
-
 
 char*
 create_buff_from_file (char *path)

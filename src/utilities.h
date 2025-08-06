@@ -9,7 +9,6 @@
 #include "parse_config_file.h"
 #include "render_layout.h"
 
-#define MAX_STRS  50
 
 
 /*
@@ -18,7 +17,6 @@
     - Same usage as printf()
 */
 void logd (const char *formatted_string, ...);
-
 
 
 /*
@@ -34,77 +32,21 @@ int initial_configure (int argc, char *argv[], state_t *state);
 
 
 /*
-    Clean up before exiting program because of:
-    ---------
-    - Causes:
-
-        USER      - User exiting the program
-        ERROR     - Error condition
-*/
-enum {
-    PROG_EXIT,
-    PROG_ERROR
-};
-void clean_up (int cause);
-
-
-
-/*
     Free all ncurses windows in current layout except state->header
 */
 int free_nc_window_data (state_t *state);
 
 
-
 /*
-    Concatenate variable number of strings
-    -------
-    - Returns pointer to allocated string or NULL on error
-    - Must free string after use
-    - Usage:
-        str = concatenate_strings (str1, str2, str3);
+    Clean up before exiting program
 */
-char *concatenate_strings_impl (int num_strings, ...);
-    //
-#define concatenate_strings(...)   concatenate_strings_impl(MAX_STRS, __VA_ARGS__, NULL)
+enum {
+    PROG_EXIT,      // Non-error exit, e.g. signal interrupt
+    PROG_ERROR      // Program error
+};
+void clean_up (int type);
 
 
-
-/*
-   Insert debugger output marker after command(s)
-   -------
-   Ensures all debugger output is read when multiple read()s required
-   in parse_debugger_output()
-
-        ">END"
-*/
-int insert_output_end_marker (state_t *state);
-
-
-
-/*
-    Send debugger command string(s)
-    -------
-    - Final command string must end with '\n'
-    - Usage:
-        send_command (state, str1, str2, str3);
-*/
-int send_command_impl (state_t *state, int max_strs, ...);
-    //
-#define send_command(state,...)   send_command_impl(state, MAX_STRS, __VA_ARGS__, NULL)
-
-
-
-/*
-    Send debugger command string(s) plus end (m)arker and (p)arse output
-    -------
-    - Final command string must end with '\n'
-    - Usage:
-        send_command_mp (state, str1, str2, str3);
-*/
-int send_command_mp_impl (state_t *state, int max_strs, ...);
-    //
-#define send_command_mp(state,...)   send_command_mp_impl(state, MAX_STRS, __VA_ARGS__, NULL)
 
 
 
@@ -156,35 +98,6 @@ void set_state_ptr (state_t *state);
         ->times_doubled
 */
 void cp_wchar (buff_data_t *dest_buff_data, char ch);
-
-
-
-/*
-    Copy character into debugger buffer
-    ---------
-    state->debugger
-
-    Uses:
-        ->format_pos
-        ->format_len
-        ->format_times_doubled
-        ->data_pos
-        ->data_ ..l
-*/
-
-// buff_index
-enum { PATH_BUF, MAIN_PATH_BUF, FORMAT_BUF, DATA_BUF, CLI_BUF, PROGRAM_BUF, ASYNC_BUF };
-
-void cp_dchar (debugger_t *debugger, char ch, int buff_index);
-
-
-
-/*
-    Copy <str> to system clipboard
-    -------
-    - Returns A_OK, FAIL
-*/
-int copy_to_clipboard (char *str);
 
 
 

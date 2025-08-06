@@ -1,16 +1,15 @@
 /*
     Formatted error messages
     ----------
-    - Program exit error propagation
-    - Runs clean_up() first   (utilities.h)
+    - Current file, function info
+    - Error propagation
 
     - Usage:
   
-        pfemr ("Unknown character \"%c\"", ch);     // no newline character required
+        pfemr ("Unknown character \"%c\"", ch);
     
     - Output:
     
-        termfu exited with error                                // added by clean_up (PROG_ERROR)
           src_file.c : func():10 :: Unknown character "a"
           ...
 
@@ -31,7 +30,8 @@
 
 #include <stdio.h>
 
-#include "utilities.h"
+#define FAIL  0
+#define A_OK  1
 
 #define R       "\033[1;0m"         // reset to default
 #define RED     "\033[1;31m"
@@ -40,8 +40,6 @@
 #define YELLOW  "\033[1;33m"
 #define PURPLE  "\033[1;35m"
 
-
-
 /*
     Base formatted error message function
     -------------
@@ -49,14 +47,11 @@
 */
 #define pfem_impl(...)                                                                   \
 do {                                                                                     \
-    clean_up (PROG_ERROR);                                                               \
     fprintf (stderr,                                                                     \
         "  " CYAN "%s" R ":" YELLOW "%d" R "  --  " GREEN "%s" PURPLE "()" R "\n      ", \
         __FILE__, __LINE__, __func__);                                                   \
     fprintf (stderr, __VA_ARGS__);                                                       \
 } while (0)
-
-
 
 /*
     Print formatted message
@@ -89,8 +84,6 @@ do {                        \
     pfem (__VA_ARGS__);     \
     exit (EXIT_FAILURE);    \
 } while (0)
-
-
 
 /*
     Print formatted message + errno message

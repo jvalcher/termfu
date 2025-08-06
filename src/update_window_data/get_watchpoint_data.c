@@ -3,6 +3,7 @@
 #include "../data.h"
 #include "../utilities.h"
 #include "../error.h"
+#include "../debugger.h"
 #include "../plugins.h"
 
 static int get_watchpoint_data_gdb (state_t *state);
@@ -15,7 +16,7 @@ static int get_watchpoint_data_pdb (state_t *state);
 int
 get_watchpoint_data (state_t *state)
 {
-    switch (state->debugger->index) {
+    switch (debugger_index) {
         case (DEBUGGER_GDB):
             if (get_watchpoint_data_gdb (state) == FAIL)
                 pfemr ("Failed to get watchpoint data (GDB)");

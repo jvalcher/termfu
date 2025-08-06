@@ -4,6 +4,7 @@
 #include "../data.h"
 #include "../plugins.h"
 #include "../utilities.h"
+#include "../debugger.h"
 #include "../error.h"
 
 static int get_debugger_output_gdb (state_t *state);
@@ -14,7 +15,7 @@ static int get_debugger_output_pdb (state_t *state);
 int
 get_debugger_output (state_t *state)
 {
-    switch (state->debugger->index) {
+    switch (get_debugger_index()) {
         case (DEBUGGER_GDB):
             if (get_debugger_output_gdb (state) == FAIL)
                 pfemr ("Failed to get debugger output (GDB)");
@@ -36,7 +37,7 @@ get_debugger_output_gdb (state_t *state)
     buff_data_t *dest_buff;
 
     win       = state->plugins[Dbg]->win;
-    src_ptr   = state->debugger->cli_buffer;
+    src_ptr   = cli_buffer;
     dest_buff = win->buff_data;
 
     if (dest_buff->new_data) {
@@ -72,8 +73,8 @@ get_debugger_output_pdb (state_t *state)
     char     *src_ptr;
     buff_data_t *dest_buff;
 
-    win       = state->plugins[Dbg]->win;
-    src_ptr   = state->debugger->cli_buffer;
+    win = state->plugins[Dbg]->win;
+    src_ptr = cli_buffer;
     dest_buff = win->buff_data;
 
     if (dest_buff->new_data) {

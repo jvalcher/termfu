@@ -3,6 +3,7 @@
 #include "_no_buff_data.h"
 #include "../data.h"
 #include "../utilities.h"
+#include "../debugger.h"
 #include "../error.h"
 #include "../plugins.h"
 
@@ -15,7 +16,7 @@ static int get_register_data_pdb (state_t *state);
 int
 get_register_data (state_t *state)
 {
-    switch (state->debugger->index) {
+    switch (debugger_index) {
         case (DEBUGGER_GDB):
             if (get_register_data_gdb (state) == FAIL)
                 pfemr ("Failed to get register data (GDB)");

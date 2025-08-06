@@ -4,17 +4,18 @@
 #include "get_binary_path_time.h"
 #include "../utilities.h"
 #include "../error.h"
+#include "../debugger.h"
 
-static int get_binary_path_time_gdb (state_t *state);
+static int get_binary_path_time_gdb (void);
 
 
 
 int
-get_binary_path_time (state_t *state)
+get_binary_path_time (void)
 {
-    switch (state->debugger->index) {
+    switch (get_debugger_index()) {
         case DEBUGGER_GDB:
-            if (get_binary_path_time_gdb (state) == FAIL)
+            if (get_binary_path_time_gdb() == FAIL)
                 pfemr ("Failed to get binary path and update time (GDB)");
             break;
         case DEBUGGER_PDB:
@@ -26,19 +27,20 @@ get_binary_path_time (state_t *state)
 
 
 static int
-get_binary_path_time_gdb (state_t *state)
+get_binary_path_time_gdb (void)
 {
-    int   i;
+    int   i, prog_path_len;
     char *src_ptr,
          *dest_ptr;
     struct stat file_stat;
 
     const char *path_str = "Symbols from \"";
+    prog_path_len = get_prog_path_len();
 
-    src_ptr  = state->debugger->cli_buffer;
-    dest_ptr = state->debugger->prog_path;
+    src_ptr  = get_cli_buffer();
+    dest_ptr = get_prog_path();
 
-    if (send_command_mp (state, "info file\n") == FAIL)
+    if (send_command_mp ("info file\n") == FAIL)
         pfemr (ERR_DBG_CMD);
 
     if ((src_ptr = strstr (src_ptr, path_str)) != NULL) {
@@ -46,17 +48,18 @@ get_binary_path_time_gdb (state_t *state)
         // path
         i = 0;
         src_ptr += strlen (path_str);
-        while (*src_ptr != '\"' && i < PROGRAM_PATH_LEN - 1) {
+        while (*src_ptr != '\"' && i < prog_path_len - 1) {
             *dest_ptr++ = *src_ptr++;
             ++i;
         }
         *dest_ptr = '\0';
 
         // last updated time
-        if (stat (state->debugger->prog_path, &file_stat) == -1) {
-            pfemr_errno ("Failed to get status of file \"%s\"", state->debugger->prog_path);
+        dest_ptr = get_prog_path();
+        if (stat (dest_ptr, &file_stat) == -1) {
+            pfemr_errno ("Failed to get status of file \"%s\"", dest_ptr);
         }
-        state->debugger->prog_update_time = file_stat.st_mtim.tv_sec;
+        set_prog_update_time (file_stat.st_mtim.tv_sec);
     }
 
     return A_OK;

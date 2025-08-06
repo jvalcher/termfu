@@ -4,6 +4,7 @@
 #include "../data.h"
 #include "../utilities.h"
 #include "../error.h"
+#include "../debugger.h"
 #include "../plugins.h"
 
 static int get_breakpoint_data_gdb (state_t *state);
@@ -33,7 +34,7 @@ get_breakpoint_data (state_t *state)
     }
     state->breakpoints = NULL;
 
-    switch (state->debugger->index) {
+    switch (debugger_index) {
         case (DEBUGGER_GDB):
             if (get_breakpoint_data_gdb (state) == FAIL)
                 pfemr ("Failed to get breakpoint data (GDB)");
@@ -103,7 +104,7 @@ get_breakpoint_data_gdb (state_t *state)
          *key_line     = "line=\"",
          *key_nr_rows  = "nr_rows=\"";
 
-    src_ptr   = state->debugger->data_buffer;
+    src_ptr   = data_buffer;
     dest_buff = state->plugins[Brk]->win->buff_data;
 
     if (send_command_mp (state, "-break-info\n") == FAIL)

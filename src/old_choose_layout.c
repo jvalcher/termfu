@@ -4,6 +4,7 @@
 #include "data.h"
 #include "choose_layout.h"
 #include "render_layout.h"
+#include "debugger.h"
 #include "update_window_data/_update_window_data.h"
 #include "plugins.h"
 #include "error.h"
@@ -155,7 +156,7 @@ choose_layout:
         if (render_layout (curr_layout->label, state) == FAIL)
             pfemr (ERR_REND_LAYOUT);
 
-        state->debugger->src_path_changed = true;
+        set_src_path_changed_flag (true);
 
         if (update_windows (Dbg, Prg, Src, Asm, Brk, LcV, Reg, Stk, Wat) == FAIL)
             pfemr (ERR_UPDATE_WINS);

@@ -7,6 +7,7 @@
 #include "data.h"
 #include "utilities.h"
 #include "error.h"
+#include "debugger.h"
 #include "plugins.h"
 #include "format_window_data.h"
 
@@ -54,7 +55,6 @@ create_scroll_buffer_llist (int      plugin_index,
           max_chars;
     char *ptr;
     window_t           *win;
-    debugger_t         *debugger;
     buff_data_t        *buff_data;
     scroll_buff_line_t *buff_line,
                        *curr_buff_line,
@@ -62,7 +62,6 @@ create_scroll_buffer_llist (int      plugin_index,
 
     // free scroll_buff_line_t linked list
     win = state->plugins[plugin_index]->win;
-    debugger = state->debugger;
     buff_data = win->buff_data;
     buff_line = buff_data->head_line;
     while (buff_line != NULL) {
@@ -80,21 +79,21 @@ create_scroll_buffer_llist (int      plugin_index,
     buff_data->rows              = 0;
 
     // update source file buffer if path changed
-    if (plugin_index == Src && debugger->src_path_changed) {
+    if (plugin_index == Src && src_path_changed) {
 
         if (buff_data->buff != NULL) {
             free (buff_data->buff);
         }
 
-        buff_data->buff = create_buff_from_file (debugger->src_path_buffer);
+        buff_data->buff = create_buff_from_file (src_path_buffer);
         if (buff_data->buff == NULL) {
-            buff_data->buff = create_buff_from_file (debugger->main_src_path_buffer);
+            buff_data->buff = create_buff_from_file (main_src_path_buffer);
             if (buff_data->buff == NULL) {
-                pfemr ("Failed to create buffer from file \"%s\"", debugger->main_src_path_buffer);
+                pfemr ("Failed to create buffer from file \"%s\"", main_src_path_buffer);
             }
         }
 
-        debugger->src_path_changed = false;
+        src_path_changed = false;
     }
 
     // create linked list from buffer
@@ -235,10 +234,10 @@ display_scroll_buff_lines (int      key,
         } else {
             switch (plugin_index) {
             case Src:
-                print_row = state->debugger->curr_Src_line - (win->data_win_rows / 2);
+                print_row = curr_Src_line - (win->data_win_rows / 2);
                 break;
             case Asm:
-                print_row = state->debugger->curr_Asm_line - (win->data_win_rows / 2);
+                print_row = curr_Asm_line - (win->data_win_rows / 2);
                 break;
             default:
                 print_row = 1;

@@ -4,6 +4,7 @@
 #include "../update_window_data/_update_window_data.h"
 #include "../data.h"
 #include "../utilities.h"
+#include "../debugger.h"
 #include "../error.h"
 #include "../update_window_data/_update_window_data.h"
 #include "../plugins.h"
@@ -22,7 +23,7 @@ execute_until (state_t *state)
 
     if (strlen (state->input_buffer) > 0) {
 
-        switch (state->debugger->index) {
+        switch (debugger_index) {
             case DEBUGGER_GDB:
                 cmd_base = cmd_base_gdb;
                 break;

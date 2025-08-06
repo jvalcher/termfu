@@ -12,22 +12,19 @@
 #include <ncurses.h>
 
 #include "parse_config_file.h"
+#include "debugger.h"
 #include "data.h"
 #include "plugins.h"
 #include "error.h"
 
-static FILE*       open_config_file       (state_t*);
-static int         get_category_and_label (FILE *file, char *category, char *label);
-static char      **create_command         (FILE*, state_t*);
-static int         create_plugins         (FILE*, state_t*);
-static layout_t   *create_layout          (FILE*, char*);
+static FILE* open_config_file (state_t*);
+static int get_category_and_label (FILE *file, char *category, char *label);
+static int create_command (FILE*);
+static int create_plugins (FILE*, state_t*);
+static layout_t *create_layout (FILE*, char*);
 
 extern char **plugin_codes;
 extern char **win_file_names;
-
-// Indexes match { DEBUGGER_GDB, DEBUGGER_PDB } enums in data.h  
-char *debuggers[] = { "gdb", "pdb" };
-
 
 
 int
@@ -74,7 +71,7 @@ parse_config_file (state_t *state)
 
         // create state->command
         if (strcmp (category, CONFIG_COMMAND_LABEL) == 0)
-            if ((state->command = create_command (fp, state)) == NULL)
+            if (create_command (fp) == FAIL)
                 pfemr ("Failed to create command");
 
         // create state->plugins
@@ -181,14 +178,15 @@ get_category_and_label (FILE *file,
 
 
 
-static char**
-create_command (FILE *fp,
-                state_t *state)
+/*
+    Parse debugger command, pass to debugger subprocess
+*/
+static int
+create_command (FILE *fp)
 {
     char **cmd_arr,
            buff [48];
-    int ch, n, i,
-        num_debuggers;
+    int ch, n, i;
     long save_fp;
     bool debugger_supported;
     
@@ -211,18 +209,16 @@ create_command (FILE *fp,
         if (ch == ' ')
             ++n;
     } while ((ch = fgetc (fp)) != '\n');
-
     ++n;    // execvp NULL
 
     // create array
     if ((cmd_arr = (char**) malloc (n * sizeof (char*))) == NULL)
-        pfemn_errno  ("Failed to allocate cmd_arr (n = %d)", n);
+        pfemr_errno  ("Failed to allocate cmd_arr (n = %d)", n);
 
     fseek (fp, save_fp, SEEK_SET);
     n = 0;  
     i = 0;
     debugger_supported = false;
-    num_debuggers = sizeof (debuggers) / sizeof (debuggers [0]);
 
     while ((ch = fgetc (fp)) != '\n' && ch != EOF) {
 
@@ -237,35 +233,22 @@ create_command (FILE *fp,
             if (ch == '\n')
                 ungetc (ch, fp);
 
-            // check if word == supported debugger
             if (debugger_supported == false) {
-
-                for (i = 0; i < num_debuggers; i++) {
-
-                    // set state->debugger->index and ->title
-                    if (strcmp (debuggers [i], buff) == 0) {
-                        state->debugger->index = i;
-                        memcpy (state->debugger->title, debuggers [i], DEBUG_TITLE_LEN - 1);
-                        state->debugger->title [DEBUG_TITLE_LEN - 1] = '\0';
-                        debugger_supported = true;
-                    }
-                }
+                set_debugger (buff);            // check command string, e.g. "gdb"
+                debugger_supported = true;
             }
 
             if ((cmd_arr [n] = (char*) malloc (strlen (buff) + 1)) == NULL)
-                pfemn_errno  ("Failed to allocate cmd_arr element \"%s\"", buff);
+                pfemr_errno  ("Failed to allocate cmd_arr element \"%s\"", buff);
             strcpy (cmd_arr [n++], buff); 
         }
     }
 
-    // debugger not supported
-    if (debugger_supported == false)
-        pfemn ("Debugger not supported -- See README.md for more information.\n\n");
+    cmd_arr [n] = NULL;     // execvp last argument
 
-    // execvp last argument
-    cmd_arr [n] = NULL;
+    set_debugger_command (cmd_arr);
 
-    return cmd_arr;
+    return A_OK;
 }
 
 

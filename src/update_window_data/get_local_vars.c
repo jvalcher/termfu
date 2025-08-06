@@ -3,6 +3,7 @@
 #include "get_local_vars.h"
 #include "../data.h"
 #include "../utilities.h"
+#include "../debugger.h"
 #include "../error.h"
 #include "../plugins.h"
 
@@ -15,7 +16,7 @@ static int get_local_vars_pdb (state_t *state);
 int
 get_local_vars (state_t *state)
 {
-    switch (state->debugger->index) {
+    switch (debugger_index) {
         case (DEBUGGER_GDB):
             if (get_local_vars_gdb (state) == FAIL)
                 pfemr ("Failed to get local variables (GDB)");

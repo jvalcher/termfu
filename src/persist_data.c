@@ -4,6 +4,7 @@
 #include "data.h"
 #include "update_window_data/_update_window_data.h"
 #include "plugins.h"
+#include "debugger.h"
 #include "utilities.h"
 #include "error.h"
 
@@ -33,7 +34,7 @@ get_persisted_data (state_t *state)
          *cmd_base_pdb = "break ",
          *cmd_base = NULL;
 
-    switch (state->debugger->index) {
+    switch (debugger_index) {
         case DEBUGGER_GDB:
             cmd_base = cmd_base_gdb;
             break;

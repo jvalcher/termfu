@@ -6,13 +6,13 @@ debug.out
 .tags
 commit.msg
 
-test_programs/build_c
-test_programs/hello
-test_programs/infinite_loop
-test_programs/vars
-test_programs/fib
-test_programs/infinite_loop
-test_programs/seg_fault
+tests/test_programs/hello
+tests/test_programs/infinite_loop
+tests/test_programs/vars
+tests/test_programs/fib
+tests/test_programs/infinite_loop
+tests/test_programs/seg_fault
+tests/test_programs/threads
 
 configs/.*_data
 

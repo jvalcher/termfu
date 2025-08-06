@@ -1,6 +1,7 @@
 #include "../data.h"
 #include "../utilities.h"
 #include "../error.h"
+#include "../debugger.h"
 #include "../plugins.h"
 
 static int get_stack_data_gdb (state_t *state);
@@ -11,7 +12,7 @@ static int get_stack_data_pdb (state_t *state);
 int
 get_stack_data (state_t *state)
 {
-    switch (state->debugger->index) {
+    switch (debugger_index) {
         case (DEBUGGER_GDB):
             if (get_stack_data_gdb (state) == FAIL)
                 pfemr ("Failed to get stack data (GDB)");
