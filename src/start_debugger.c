@@ -196,6 +196,7 @@ start_debugger_proc (state_t *state)
     
         debugger->pid = debugger_pid;
         debugger->running = true;
+        debugger->ready = false;
 
         close (debug_in_pipe   [PIPE_READ]);
         close (debug_out_pipe  [PIPE_WRITE]);

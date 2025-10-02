@@ -3,12 +3,17 @@ core
 tags
 debug.out
 .termfu*
+.tags
 
 test_programs/hello
 test_programs/vars
 test_programs/fib
 test_programs/infinite_loop
 test_programs/seg_fault
+
+tests/test_programs
+
+obj
 
 configs/.*_data
 

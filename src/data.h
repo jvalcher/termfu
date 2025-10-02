@@ -378,6 +378,7 @@ typedef struct {
     int     pid;
     char    title [DEBUG_TITLE_LEN];
     bool    running;
+    bool    ready;
     int     stdin_pipe;
     int     stdout_pipe;
     bool    running_plugin;

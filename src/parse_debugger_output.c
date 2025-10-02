@@ -10,8 +10,6 @@
 void parse_debugger_output_gdb (debugger_t*);
 void parse_debugger_output_pdb (debugger_t*);
 
-// TODO: Add Java debugger via the JVM Tool Interface
-
 
 
 int
@@ -46,6 +44,23 @@ parse_debugger_output (state_t *state)
             pemr ("Failed to read debugger stdout");
         }
         debugger->reader_buffer [bytes_read] = '\0';
+
+        // Wait for debugger subprocess to start
+        if (!debugger->ready) {
+            switch(debugger->index) {
+            case DEBUGGER_GDB:
+                if (strstr(debugger->reader_buffer, "(gdb)")) {
+                    debugger->ready = true;
+                }
+            break;
+            case DEBUGGER_PDB:
+                if (strstr(debugger->reader_buffer, "(Pdb)")) {
+                    debugger->ready = true;
+                }
+            break;
+            }
+            continue;
+        } 
 
         // parse output
         switch (debugger->index) {
