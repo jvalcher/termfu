@@ -85,6 +85,12 @@ int send_command_impl(debugger_t *dbg, int max_strs, ...);  //-> A_OK, FAIL
 int send_command_mp_impl(debugger_t *dbg, int max_strs, ...);
 #define send_command_mp(d,...) send_command_mp_impl((d), DBG_MAX_STRS, __VA_ARGS__, NULL)
 
+/*******
+  Flags
+ *******/
+
+void set_raw_output(debugger_t *d);
+
 /******
   Data
  ******/

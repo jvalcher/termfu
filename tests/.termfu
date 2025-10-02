@@ -1,7 +1,7 @@
 
 [ command ]
 
-gdb --interpreter=mi --quiet a.out
+gdb --interpreter=mi --quiet test
 
 [ plugins ]
 
@@ -16,10 +16,9 @@ Prm : m : pro(m)pt
 Qut : q : (q)uit
 Run : r : (r)un
 Stp : s : (s)tep
-Trg : t : (t)arget
 Unt : u : (u)ntil
 
- windows
+# windows
 Asm : a : (a)ssembly
 Brk : e : br(e)akpoints
 Dbg : d : (d)ebug out
@@ -33,12 +32,12 @@ Wat : w : (w)atch
 [ layout : Main ]
 
 >h
-mtlq
-rns
-cufk
+rklmq
+nscuf
 
 >w
-boo
-voo
-dww
+eeoooo
+wwoooo
+vvoooo
+pppddd
 

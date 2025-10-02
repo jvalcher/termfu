@@ -52,6 +52,7 @@ typedef struct debugger {
     // Output read buffer
     bool reading;
     char read_buf[DBG_READ_BUF_SIZE];
+    int raw_output;     // Flag to get raw output, no parsing
 
     // Parsed output buffers
     buffer_t *data_buf;
@@ -133,6 +134,7 @@ debugger_t* init_debugger(int dbg_index, char** command)
 
     d->command = command;
     d->read_buf[0] = '\0';
+    d->raw_output = false;
 
     if (!(d->cli_buf = create_buffer(DBG_OUT_BUF_SIZE)))
         goto cli_err;
@@ -199,6 +201,28 @@ static void start_debugger_proc(debugger_t *d)
         d->stdout_pipe = debug_out_pipe[DBG_PIPE_READ];
         close(debug_in_pipe[DBG_PIPE_READ]);
         close(debug_out_pipe[DBG_PIPE_WRITE]);
+    }
+}
+
+void set_raw_output(debugger_t *d)
+{
+    d->raw_output = true;
+}
+
+/*
+    Raw debugger output -> cli_buffer
+*/
+static void get_raw_debugger_output(debugger_t *d)
+{
+    char *buf_ptr = d->read_buf;
+    while (*buf_ptr != '\0') {
+        if (*buf_ptr == end_marker[0]) {
+            if (strncmp(buf_ptr, end_marker, strlen(end_marker)) == 0) {
+                d->reading = false;
+                break;
+            }
+        }
+        concat_buf_ch(d->cli_buf, *buf_ptr++);
     }
 }
 
@@ -289,21 +313,13 @@ static void parse_debugger_output_gdb(debugger_t *d)
                 buf_ptr += 1;
             }
 
-            //  '>'
-            else if (*buf_ptr == '>') {
-
-                //  end of command output marker
-                //
-                //     ">END\n"
-                //
-                if (strstr(buf_ptr, end_marker)) {
+            // end marker
+            else if (*buf_ptr == end_marker[0]) {
+                if (strncmp(buf_ptr, end_marker, strlen(end_marker))) {
                     d->reading = false;
                     break;
                 }
-
-                else {
-                    concat_buf_ch(d->cli_buf, *buf_ptr++);
-                }
+                concat_buf_ch(d->cli_buf, *buf_ptr++);
             }
 
             else {
@@ -402,7 +418,7 @@ static void parse_debugger_output_pdb(debugger_t *d)
                 buf_ptr  += 6;
 
                 if (*buf_ptr == '\'') {
-                    if (strstr(buf_ptr, end_marker)) {
+                    if (strncmp(buf_ptr + 1, end_marker, strlen(end_marker))) {
                         d->reading = false;
                         break;
                     }
@@ -413,7 +429,7 @@ static void parse_debugger_output_pdb(debugger_t *d)
             else if (*buf_ptr == '\'') {
 
                 // end output
-                if (strstr(buf_ptr, end_marker)) {
+                if (strncmp(buf_ptr + 1, end_marker, strlen(end_marker))) {
                     d->reading = false;
                     break;
                 }
@@ -498,13 +514,17 @@ static int parse_debugger_output(debugger_t *d)
         } 
 
         // Parse output
-        switch (d->index) {
-            case GDB_DEBUGGER:
-                parse_debugger_output_gdb(d);
-                break;
-            case PDB_DEBUGGER:
-                parse_debugger_output_pdb(d);
-                break;
+        if (d->raw_output) {
+            get_raw_debugger_output(d);
+        } else {
+            switch (d->index) {
+                case GDB_DEBUGGER:
+                    parse_debugger_output_gdb(d);
+                    break;
+                case PDB_DEBUGGER:
+                    parse_debugger_output_pdb(d);
+                    break;
+            }
         }
 
     }
@@ -542,15 +562,15 @@ int send_command_impl(debugger_t *d, int max_strs, ...)
     va_list strs;
 
     if (!d->running)
-        pfemr ("Debugger \"%s\" not running, unable to send command", d->title);
+        pfemr("Debugger \"%s\" not running, unable to send command", d->title);
 
-    va_start (strs, max_strs);
+    va_start(strs, max_strs);
     for (str = va_arg(strs, char*); str != NULL; str = va_arg(strs, char*)) {
 
         if (++str_count > max_strs)
             break;
 
-        if (write (d->stdin_pipe, str, strlen(str)) == -1)
+        if (write(d->stdin_pipe, str, strlen(str)) == -1)
             pfemr_errno ("Command write error on \"%s\"", str);
     }
     va_end (strs);
@@ -614,6 +634,10 @@ int send_command_mp_impl(debugger_t *d, int max_strs, ...)
             pfemr_errno("Command write error on \"%s\"", str);
     }
     va_end(strs);
+
+    if (d->index == GDB_DEBUGGER)
+        if (!send_command_impl(d, 1, "call ((void(*)(int))fflush)(0)\n"))
+            pfemr("Failed to flush GDB stdout");
 
     if (!insert_output_end_marker(d))
         pfemr("Failed to insert debugger output end marker");

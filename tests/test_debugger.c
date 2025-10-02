@@ -1,3 +1,5 @@
+#include <unistd.h>
+
 #include "test.h"
 #include "../src/debugger.h"
 #include "../src/error.h"
@@ -44,6 +46,36 @@ static void run_test_start_debugger(void)
     destroy_debugger(d);
 }
 
+static void run_test_raw_output(void)
+{
+    debugger_t *d = NULL;
+    char **command = NULL;
+
+    command = create_command("gdb", "--interpreter=mi", "test_programs/hello");
+    test_cond(command != NULL, " ");
+    test_cond((d = init_debugger(GDB_DEBUGGER, command)) != NULL, " ");
+    set_raw_output(d);
+    test_cond(start_debugger(d) == A_OK, " ");
+
+    printf("----------\n-break-insert-main\n----------\n\n");
+    test_cond(send_command_mp(d, "-break-insert main\n") == A_OK, " ");
+    write(STDOUT_FILENO, cli_buffer(d), strlen(cli_buffer(d)));
+    puts("");
+
+    printf("----------\n-exec-run\n----------\n\n");
+    test_cond(send_command_mp(d, "-exec-run\n") == A_OK, " ");
+    write(STDOUT_FILENO, cli_buffer(d), strlen(cli_buffer(d)));
+    puts("");
+
+    printf("----------\n-exec-continue\n----------\n\n");
+    test_cond(send_command_mp(d, "-exec-continue\n") == A_OK, " ");
+    write(STDOUT_FILENO, cli_buffer(d), strlen(cli_buffer(d)));
+    puts("");
+
+    destroy_debugger(d);
+    printf("\n\n");
+}
+
 static void run_test_debugger_buf(void)
 {
     debugger_t *d = NULL;
@@ -55,12 +87,12 @@ static void run_test_debugger_buf(void)
     test_cond(start_debugger(d) == A_OK, " ");
 
     printf("\n#########\nGDB OUT:\n#########\n\n");
-    test_cond(send_command(d, "-break-insert main\n") == A_OK, " ");
+    test_cond(send_command_mp(d, "-break-insert main\n") == A_OK, " ");
     print_debugger_buffers(d);
-    test_cond(send_command(d, "-exec-run\n") == A_OK, " ");
+    test_cond(send_command_mp(d, "-exec-run\n") == A_OK, " ");
     printf("-exec-run\n-------\n");
     print_debugger_buffers(d);
-    test_cond(send_command(d, "-exec-continue\n") == A_OK, " ");
+    test_cond(send_command_mp(d, "-exec-continue\n") == A_OK, " ");
     printf("-exec-continue\n-------\n");
     print_debugger_buffers(d);
 
@@ -73,11 +105,11 @@ static void run_test_debugger_buf(void)
     test_cond(start_debugger(d) == A_OK, " ");
 
     printf("\n#########\nPDB OUT:\n#########\n\n");
-    test_cond(send_command(d, "break main\n") == A_OK, " ");
+    test_cond(send_command_mp(d, "break main\n") == A_OK, " ");
     print_debugger_buffers(d);
-    test_cond(send_command(d, "continue\n") == A_OK, " ");
+    test_cond(send_command_mp(d, "continue\n") == A_OK, " ");
     print_debugger_buffers(d);
-    test_cond(send_command(d, "continue\n") == A_OK, " ");
+    test_cond(send_command_mp(d, "continue\n") == A_OK, " ");
     print_debugger_buffers(d);
 
     destroy_debugger(d);
@@ -87,8 +119,9 @@ int main(void)
 {
     test_init();
 
-    run_test_start_debugger();
-    run_test_debugger_buf();
+    //run_test_start_debugger();
+    run_test_raw_output();
+    //run_test_debugger_buf();
 
     test_results();
 

@@ -232,26 +232,3 @@ send_key (void *state_arg)
 
     return NULL;
 }
-
-
-
-/*
-
-TODO: Decouple, reorganize code
-TODO: Replace switch tables with dynamic dispatching and lookup table
-TODO: Move descriptions next to variables in data.h
-TODO: Create plugin type boolean functions (is window, form?), replace switch sections
-TODO: Add example gdb/mi output for all functions
-TODO: Add command history (persisted, limit)
-BUG: Figure out startup bug where doesn't always load debugger
-FIXME: Wait for debugger process to start before updating window data
-TODO: Add function benchmarks, history
-PERF: store dereferences in variables (?)
-TODO: Add termfu tips back in (config copy, vim breakpoints, ...)
-TODO: Add ">>> <cmd>" to Dbg output
-FIXME: Fix make plugins
-FIXME: Fix C++ class watches, add C++ test programs
-FIXME: Fix valgrind leaks
-TODO: Switch to semantic versioning, add release link to CONTRIBUTING.md, add RELEASE.md, patch versioning (v1.2.3 -> v1.2)
-
-*/
